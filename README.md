@@ -10,19 +10,34 @@ Team installs on Claude Code, Codex CLI, Antigravity CLI, and OpenCode. The full
 
 ## Install
 
-Team installs from one local checkout using each host's native plugin mechanism. Pick yours.
+Each host installs Team through its own plugin mechanism. Every section below
+covers the same three methods, so a method missing on a host says so instead of
+leaving you to find out. Pick yours.
 
 <details>
 <summary><strong>Claude Code</strong></summary>
+
+#### Native plugin installation
+
+```bash
+claude plugin marketplace add bostonaholic/team
+claude plugin install team@team-dev
+```
+
+The first command clones this repo as a marketplace; the second installs from
+it. Skills register as slash commands (`/team`, `/shipit`), and agents and hooks
+load with them.
+
+#### Local git checkout installation
 
 ```bash
 claude plugin marketplace add /path/to/team
 claude plugin install team@team-dev
 ```
 
-The first command registers the checkout as a marketplace; the second installs
-from it. Skills register as slash commands (`/team`, `/shipit`), and agents and
-hooks load with them.
+Same two commands against a clone on disk. Both sources declare the marketplace
+name `team-dev`, so Claude Code holds one or the other, never both: remove the
+registered one before adding the other.
 
 Developing Team itself? Run the loop Claude Code documents for local plugins:
 
@@ -77,10 +92,34 @@ claude plugin update team@team-dev
 The order matters. `plugin update` reads the cached catalog, so on its own it
 reports nothing to do.
 
+#### Live development installation
+
+```bash
+claude --plugin-dir /path/to/team
+```
+
+That loads the directory as the plugin for that session only, with no
+marketplace registration, no cachebuster, and no copy, so the next session picks
+up whatever is on disk. It leaves your installed copy untouched, which also
+makes it the way to try a worktree or a branch you have not installed. Run
+`script/dev-install claude` when you want the change in every session.
+
 </details>
 
 <details>
 <summary><strong>Codex CLI</strong></summary>
+
+#### Native plugin installation
+
+```bash
+codex plugin marketplace add bostonaholic/team
+codex plugin add team@team-dev
+```
+
+The first command registers this repo as a Git marketplace; the second installs
+from it.
+
+#### Local git checkout installation
 
 ```bash
 codex plugin marketplace add /path/to/team
@@ -117,10 +156,25 @@ directory. Keeping that link alongside a plugin install registers every skill
 twice, which halves the description budget Codex renders each one with. Both
 `script/dev-install codex` and `script/dev-uninstall codex` remove it for you.
 
+#### Live development installation
+
+Not supported by Codex CLI. The CLI has no session-scoped plugin load, so
+`script/dev-install codex` and a new thread are the whole loop after an edit.
+[openai/codex#40457](https://github.com/openai/codex/issues/40457) tracks the
+request.
+
 </details>
 
 <details>
 <summary><strong>Antigravity CLI</strong></summary>
+
+#### Native plugin installation
+
+Not supported by Antigravity CLI. `agy plugin install` takes a directory, and a
+remote target fails with `install target must be a directory`. Clone the repo
+and use the method below.
+
+#### Local git checkout installation
 
 ```bash
 agy plugin install /path/to/team
@@ -133,17 +187,27 @@ so it installs as a native Antigravity plugin — all skills and all 13 agents.
 Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
 install copies the checkout, so upgrading means installing again.
 
-Developing Team itself? The install copies, so link your checkout instead:
+#### Live development installation
 
 ```bash
 script/dev-install antigravity
 script/dev-uninstall antigravity
 ```
 
+This links the checkout into Antigravity's plugin directory instead of copying
+it, so edits are live and the next session picks them up.
+
 </details>
 
 <details>
 <summary><strong>OpenCode</strong></summary>
+
+#### Native plugin installation
+
+Not supported by OpenCode. Team publishes no package for it; the plugin is
+`opencode/team.js` in this repo, registered from a checkout.
+
+#### Local git checkout installation
 
 Requires **Node.js** for registration/removal and **OpenCode** for use. From a
 local Team checkout or linked Git worktree:
@@ -181,6 +245,12 @@ scripts.
 A busy or stale `plugins/team.js.lock` stops either operation. Confirm no
 install/uninstall process remains, then manually remove that empty lock directory
 with `rmdir` and rerun. Team never breaks locks automatically.
+
+#### Live development installation
+
+The install above is already the live one: registration links the checkout
+rather than copying it, so restarting OpenCode is all an edit needs. There is no
+separate command and nothing to reinstall.
 
 **Supported:** native registration, skill discovery, canonical file-reading
 commands, and this lifecycle. Full QRSPI execution, specialist/nested dispatch,
