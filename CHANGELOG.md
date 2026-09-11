@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.102.0] - 2026-09-10
+
 ### Changed
 
 - **`/team` runs its full pipeline on Codex CLI and Antigravity CLI, not only on Claude Code.** The orchestrator previously dispatched each specialist through Claude Code's named-agent registry alone, so a Codex or Antigravity session loaded the `/team-*` commands but could not run a phase. It now dispatches each specialist from its portable `agents/<name>.md` definition, which any host that can spawn a subagent runs; a reviewer still never runs in the author's context. Worktree setup uses the host's native support where one exists and `git worktree add` otherwise. Claude Code's behavior is unchanged. **What this asks of you:** nothing.
@@ -905,7 +907,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.101.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.102.0...HEAD
+[0.102.0]: https://github.com/bostonaholic/team/compare/v0.101.0...v0.102.0
 [0.101.0]: https://github.com/bostonaholic/team/compare/v0.100.0...v0.101.0
 [0.100.0]: https://github.com/bostonaholic/team/compare/v0.99.0...v0.100.0
 [0.99.0]: https://github.com/bostonaholic/team/compare/v0.98.0...v0.99.0
