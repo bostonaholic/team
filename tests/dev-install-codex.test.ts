@@ -51,6 +51,7 @@ import {
   makePluginFixture,
   type PluginFixture,
 } from "./helpers/codex-plugin-fixture";
+import { writeFixtureStat } from "./helpers/fixture-stat";
 
 const REPO_ROOT = join(import.meta.dir, "..");
 const FAKE_CODEX = join(REPO_ROOT, "tests", "helpers", "fake-codex.mjs");
@@ -538,8 +539,9 @@ describe("Slice 2: installed resources: codex", () => {
     test("Installed discovery observes the review requirement", () => {
       const installedRoot = install("Installed discovery observes the review requirement");
       seedDesign(topic, review);
+      environment.PATH = `${writeFixtureStat(consumer)}:${environment.PATH ?? ""}`;
 
-      const result = observe("discovery", "bash", [
+      const result = observe("discovery (fixture stat: actual file mtimes)", "bash", [
         join(installedRoot, "skills", "team", "discover-topic.sh"),
         "", "6-design.md", "--require-passing-review",
       ], { status: 0, stdout: selected, stderr: "" });

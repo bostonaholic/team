@@ -39,6 +39,7 @@ import {
   makeClaudePluginFixture,
 } from "./helpers/claude-plugin-fixture";
 import { writeFakeClaude } from "./helpers/fake-claude";
+import { writeFixtureStat } from "./helpers/fixture-stat";
 
 const tempDirs: string[] = [];
 
@@ -452,8 +453,9 @@ describe("Slice 2: installed resources: claude", () => {
     test("Installed discovery observes the review requirement", () => {
       const installedRoot = install("Installed discovery observes the review requirement");
       seedDesign(topic, review);
+      environment.PATH = `${writeFixtureStat(consumer)}:${environment.PATH ?? ""}`;
 
-      const result = observe("discovery", "bash", [
+      const result = observe("discovery (fixture stat: actual file mtimes)", "bash", [
         join(installedRoot, "skills", "team", "discover-topic.sh"),
         "", "6-design.md", "--require-passing-review",
       ], { status: 0, stdout: selected, stderr: "" });

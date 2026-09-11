@@ -1130,6 +1130,75 @@ No acceptance-test defect or unresolved Slice 3 failure surfaced.
 No newly passing case followed an implementation fix. All 48 characterization cases were already green.
 The coordinator owns the signed slice commit and subsequent committed-diff evaluation selection.
 
+### Linux CI correction after Slice 3
+
+[Linux CI run 34632097708](https://github.com/bostonaholic/team/actions/runs/34632097708)
+tested PR [#386](https://github.com/bostonaholic/team/pull/386) at head
+`83c40b6ae45118060693a5613a8a8cc30cfaf11a`. GitHub used merge revision
+`dd2c7026c4fcf68b2f8c43223a7b16fec092865e` for the test checkout.
+The run reported `2622 pass`, `4 skip`, and `3 fail`: 2629 cases across
+79 files in 37.26 seconds.
+
+The three failures were these positive discovery cases:
+
+- Claude installed resources: approved design
+- Codex installed resources: approved design
+- Recovery parser boundary: closing delimiter at line 60
+
+Each case expected its approved topic path and observed empty stdout.
+Standard error contained filesystem metadata, the fallback epoch, and an
+`integer expression expected` error.
+
+On GNU systems, `stat -f %m FILE` writes filesystem metadata before it exits
+with failure. The fallback epoch follows that stdout. The integer comparison
+then fails, and discovery does not select the approved topic.
+The retained native macOS reproduction selected the approved topic.
+A local GNU Coreutils 9.11 process reproduced the Linux behavior.
+
+Issue [#387](https://github.com/bostonaholic/team/issues/387) tracks this
+preexisting runtime bug with the `bug` label, P0 priority, and Bugs project
+status. M01 does not fix the runtime. `skills/team/discover-topic.sh` retains SHA-256
+`6be5bfffa8c6a6497e9196f4dac0ed477d2db8c4b26332e0a56377fe98943e01`.
+That digest matches the initial `e5f8538c2183654fe814010a38e55b2d531623e8`
+baseline.
+
+The test correction gives one fixture-owned `stat` command to the four
+installed discovery cases and five bare boundary cases. The command reads
+actual fixture file modification times for `-f %m` and `-c %Y`.
+This preserves the approved, missing-verdict, and parser-boundary assertions
+while controlling only the platform command.
+
+Two separate recovery cases characterize the defect. One always supplies
+deterministic GNU stdout and failure. The other uses a real GNU process when
+available and labels its deterministic fallback when unavailable.
+
+The test author then ran this existing harness command:
+
+```text
+bun test ./tests/dev-install-claude.test.ts ./tests/dev-install-codex.test.ts ./tests/pipeline-recovery.test.ts
+```
+
+It exited 0 with 84 passes, zero failures, and 701 assertions in 39.20
+seconds. The count contains 34 installer cases and 50 recovery cases.
+`bun run typecheck` also exited 0. These results are focused proof after the
+test correction. That command did not run the full suite or Linux CI.
+
+The evidence has five distinct scopes:
+
+| Evidence | What it establishes | Limit |
+| --- | --- | --- |
+| Filesystem resource bytes | Installed samples equal their fixture sources before and after source removal | It does not exercise discovery on a native host |
+| Controlled parser and discovery | Approved, missing-verdict, and boundary results use actual fixture modification times | It replaces only `stat` process behavior |
+| Real GNU process | GNU stdout contamination reproduces when GNU Coreutils is available | Availability is conditional and separately labeled |
+| Native GNU discovery | The initial Linux CI run failed the three cases above | The runtime defect remains |
+| Native-host pipeline | These checks did not execute a host pipeline | They provide no host instruction-use evidence |
+
+Raw evidence remains in `.context/issue-368/m01/ci-harness-initial-failed.log`,
+`gnu-stat-reproduction.json`, `test-architect-gnu-repair.jsonl`, and the
+artifacts named by those records. GitHub's merge checkout includes two unrelated
+tests added to main after the initial `e5f8538c` capture. The revision-bound baseline JSON,
+historical counts, logs, and metrics remain unchanged.
+
 ## Golden Master autonomous review protocol
 
 Both Slice 4 manual acceptance checks passed against source revision

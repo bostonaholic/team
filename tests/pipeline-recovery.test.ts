@@ -1,8 +1,9 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, utimesSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { writeFixtureStat } from "./helpers/fixture-stat";
 
 const ROOT = join(import.meta.dir, "..");
 const PROCESS_TIMEOUT_MS = 15_000;
@@ -198,7 +199,7 @@ describe("Slice 3: topic recovery and verdict parsing", () => {
     console.log(JSON.stringify({ operation: "fixture", case: caseName, scenario, revision, consumer, topics, reviews }));
   }
 
-  function observe(operation: string, command: string, args: string[], input: string, expected: unknown) {
+  function observe(operation: string, command: string, args: string[], input: string, expected: unknown, status = 0) {
     const start = performance.now();
     const result = spawnSync(command, args, {
       cwd: consumer, env: environment, input, encoding: "utf8",
@@ -212,7 +213,7 @@ describe("Slice 3: topic recovery and verdict parsing", () => {
       expected, actual, durationMs: performance.now() - start }));
     expect(actual.error, operation).toBeNull();
     expect(actual.signal, operation).toBeNull();
-    expect(actual.status, actual.stderr).toBe(0);
+    expect(actual.status, actual.stderr).toBe(status);
     return actual;
   }
 
@@ -272,8 +273,9 @@ describe("Slice 3: topic recovery and verdict parsing", () => {
   describe.each(BOUNDARY_CASES)("$scenario", ({ scenario, body, selected }) => {
     test("Parser boundaries preserve documented exceptions", () => {
       seed("Parser boundaries preserve documented exceptions", scenario, [{ id: "GH-369-boundary", through: "design", mtime: 1767225600 }], { "design-review-1.md": body });
+      environment.PATH = `${writeFixtureStat(consumer)}:${environment.PATH ?? ""}`;
 
-      const result = observe("bare gated discovery", "bash", [
+      const result = observe("bare gated discovery (fixture stat: actual file mtimes)", "bash", [
         join(ROOT, "skills", "team", "discover-topic.sh"), "", "6-design.md", "--require-passing-review",
       ], "", { status: 0, stdout: selected, stderr: "" });
 
@@ -294,5 +296,61 @@ describe("Slice 3: topic recovery and verdict parsing", () => {
         expect(result.stderr).toBe("");
       }, 30_000);
     });
+  });
+
+  function useGNUStat(preferNative: boolean) {
+    if (preferNative) {
+      for (const candidate of [Bun.which("gstat"), Bun.which("stat"), "/opt/homebrew/bin/gstat"]) {
+        if (!candidate) continue;
+        const probe = spawnSync(candidate, ["--version"], {
+          env: environment, encoding: "utf8", timeout: PROCESS_TIMEOUT_MS, killSignal: "SIGKILL",
+        });
+        console.log(JSON.stringify({ operation: "GNU stat probe", command: candidate, args: ["--version"],
+          status: probe.status, stdout: probe.stdout, stderr: probe.stderr,
+          error: probe.error?.message ?? null, signal: probe.signal }));
+        if (probe.status !== 0 || !probe.stdout.includes("GNU coreutils")) continue;
+        const bin = join(consumer, "stat-gnu-native");
+        mkdirSync(bin);
+        symlinkSync(candidate, join(bin, "stat"));
+        environment.PATH = `${bin}:${environment.PATH ?? ""}`;
+        console.log(JSON.stringify({ operation: "stat control", mode: "real GNU stat", executable: candidate,
+          platform: process.platform, nativeDeliveryEvidence: false }));
+        return;
+      }
+      console.log(JSON.stringify({ operation: "stat control", mode: "real GNU stat unavailable; deterministic fallback",
+        nativeDeliveryEvidence: false }));
+    }
+    environment.PATH = `${writeFixtureStat(consumer, "gnu-failure")}:${environment.PATH ?? ""}`;
+  }
+
+  describe.each([
+    { scenario: "deterministic GNU stdout/failure fixture", preferNative: false },
+    { scenario: "real GNU stat when available, otherwise deterministic fixture", preferNative: true },
+  ])("$scenario", ({ scenario, preferNative }) => {
+    test("GNU stat stdout contamination leaves an approved topic unselected", () => {
+      seed("GNU stat stdout contamination leaves an approved topic unselected", scenario,
+        [{ id: "GH-369-approved", through: "design", mtime: 1767225600 }],
+        { "design-review-1.md": review("APPROVE") });
+      useGNUStat(preferNative);
+
+      const bsd = observe("GNU stat BSD-form failure", "stat",
+        ["-f", "%m", "docs/plans/GH-369-approved/6-design.md"], "", { status: 1 }, 1);
+      expect(bsd.stdout).toContain("File:");
+      expect(bsd.stdout).toContain("docs/plans/GH-369-approved/6-design.md");
+      expect(bsd.stderr).toContain("%m");
+
+      const fallback = observe("GNU stat epoch fallback", "stat",
+        ["-c", "%Y", "docs/plans/GH-369-approved/6-design.md"], "", { status: 0, stdout: "1767225780\n" });
+      expect(fallback.stdout).toBe("1767225780\n");
+      expect(fallback.stderr).toBe("");
+
+      const result = observe("known GNU discovery failure", "bash", [
+        join(ROOT, "skills", "team", "discover-topic.sh"), "", "6-design.md", "--require-passing-review",
+      ], "", { status: 0, stdout: "", stderr: "integer comparison error", approvedTopicSelected: false });
+      expect(result.stdout).toBe("");
+      expect(result.stderr).toContain("docs/plans/GH-369-approved/6-design.md");
+      expect(result.stderr).toContain("1767225780");
+      expect(result.stderr).toMatch(/integer (?:expression )?expected/);
+    }, 30_000);
   });
 });

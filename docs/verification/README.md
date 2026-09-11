@@ -11,14 +11,20 @@ The supplied baseline used Bun 1.4.2. Free checks need no model credentials.
 | --- | --- | --- |
 | `bun run scripts/migration-inventory.ts <checkout-root>` | JSON on stdout, exit 0 | [Initial inventory](baselines/m01.json) |
 | `bun test ./tests/migration-inventory.test.ts` | Three passing acceptance cases | [Replay records](migration-baseline.md) |
-| `bun test ./tests/dev-install-claude.test.ts ./tests/dev-install-codex.test.ts` | Both installer suites pass | [Installed delivery observations](migration-baseline.md#installed-resource-delivery) |
-| `bun test ./tests/pipeline-recovery.test.ts` | 48 passing recovery and discovery cases | [Recovery observations](migration-baseline.md#topic-recovery-and-verdict-parsing) |
+| `bun test ./tests/dev-install-claude.test.ts ./tests/dev-install-codex.test.ts` | 34 passing installer cases | [Installed delivery observations](migration-baseline.md#installed-resource-delivery) |
+| `bun test ./tests/pipeline-recovery.test.ts` | 50 passing recovery and discovery cases | [Recovery observations](migration-baseline.md#topic-recovery-and-verdict-parsing) |
 | `bun test` | No failures, with conditional skips named | [Free-suite observations](migration-baseline.md) |
 | `bun run typecheck` | Exit 0 | [Typecheck observations](migration-baseline.md) |
 | `bash .claude/scripts/check-discovery-consistency.sh` | `All discovery-consistency assertions passed.` | [Discovery observations](migration-baseline.md#manual-inspection-and-cleanup) |
 | `echo "8c5bb38e357103f783d2ad80dcc8fa551891a586356ab49b3dcebf378580fa4f  golden-master/prompt.md" \| shasum -a 256 -c` | `golden-master/prompt.md: OK` | [Golden Master observations](migration-baseline.md#golden-master-autonomous-review-protocol) |
 | `RBENV_VERSION=3.3.6 BUNDLE_PATH=<bundle-path> BUNDLE_FROZEN=true JEKYLL_ENV=production rbenv exec bundle exec jekyll build --destination <outside-scratch>/site` from `docs/` | Exit 0 with the migration pages and baseline JSON | [Published-doc build](migration-baseline.md#published-documentation-build) |
 | `bun run eval:select` | Exit 0 with the selected evaluation names | [Selection observations](migration-baseline.md) |
+
+The combined focused command runs the same three suites and contains 84 cases:
+
+```bash
+bun test ./tests/dev-install-claude.test.ts ./tests/dev-install-codex.test.ts ./tests/pipeline-recovery.test.ts
+```
 
 `<checkout-root>` identifies the measured checkout. The command uses its Git revision, skills, agents, manifests, and OpenCode sources.
 The reporter and imported helpers run from the checkout containing the script.
@@ -107,6 +113,9 @@ Expect equal source and installed bytes and SHA-256 digests before and after sou
 Each resolved sample path must remain inside its installed root.
 Bare gated discovery must select `docs/plans/GH-369-approved/` and exclude the separate topic whose review lacks a verdict.
 Deleting the installed template must return exit 1 and name its missing installed path, even while the source template exists.
+The four installed discovery cases prepend a fixture-owned `stat` command.
+It reads each fixture file's actual modification time for the BSD and GNU argument forms.
+This control isolates verdict parsing from the known GNU `stat` defect in [#387](https://github.com/bostonaholic/team/issues/387).
 
 Standard output retains one JSON record per operation before cleanup.
 Only subprocess records consistently include a command, duration, and expected and actual results.
@@ -144,11 +153,16 @@ It uses unique non-Git consumer directories, complete artifacts, supported topic
 Both hooks receive the consumer directory through JSON and subprocess cwd.
 The malformed-JSON case omits `CLAUDE_PROJECT_DIR` and uses subprocess cwd.
 
-Expect 48 passing cases: 19 per hook, five bare discovery cases, and five explicit discovery cases.
+Expect 50 passing cases: 19 per hook, five bare discovery cases, five explicit discovery cases, and two GNU characterization cases.
 The [case tables](migration-baseline.md#topic-recovery-and-verdict-parsing) distinguish each hook from both discovery modes.
 Research resumes at DESIGN. Structure resumes at PLAN.
 Missing reviews, absent verdict fields, unknown tokens, and REQUEST CHANGES retain DESIGN for a design-only topic.
 APPROVE and COMMENT advance it to STRUCTURE. Review 10 supersedes review 9.
+
+The five bare discovery controls use the same fixture-owned `stat` command as the installer suites.
+Two separate cases assert the GNU defect without fixing it.
+One case always uses deterministic GNU stdout and failure behavior.
+The other uses a real GNU process when available and labels its deterministic fallback when unavailable.
 
 Both hooks read verdicts through physical line 60 without requiring a closing header delimiter.
 Bare gated discovery requires that delimiter within 60 lines.
@@ -167,6 +181,7 @@ Retain both output streams after cleanup. Inspect recorded paths for leftovers.
 The discovery script suppresses cleanup errors. Run it with an owned temporary root and inspect that root separately.
 No deliberate timeout was injected in the recorded run.
 These checks measure phase inference and shell discovery. Source reads and installed resource reads do not prove live-host behavior.
+The focused proof does not establish a corrected Linux CI run or a passing full suite.
 Confidence: high, from the locked suite, runtime parsers, and retained case observations.
 
 ## Golden Master protocol and published documentation
