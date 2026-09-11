@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`file-finder` now fits the files it finds inside its output budget.** The 28-line cap was smaller than the report format it was paired with: the title, four category headings, blank separators, and two-line wrapped descriptions spent roughly twenty-one lines before the first extra finding, so a normal repo pushed the return over the cap, the single retry also overflowed, and the RESEARCH phase stopped blocked. The output format now emits a heading only for populated categories, writes no blank or separator lines, and holds exactly one finding per line, and the producer cap rises to 40 lines (60 in multi-repo mode). The assembled `5-research.md` ceiling moves from 99/149 lines to 111/171. **What this asks of you:** nothing.
+
 ## [0.103.0] - 2026-09-10
 
 ### Added

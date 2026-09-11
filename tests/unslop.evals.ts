@@ -653,11 +653,11 @@ testUnslop(
       researcher.output.includes("manifest.json:2") &&
       researcher.output.includes("fixture-language 1");
     const producerLineCaps =
-      normalizedLineCount(finder.output) <= 28 &&
+      normalizedLineCount(finder.output) <= 40 &&
       normalizedLineCount(researcher.output) <= 60;
     const assemblyLineCaps =
-      normalizedLineCount(standalone.output) <= 99 &&
-      normalizedLineCount(fullPipeline.output) <= 99;
+      normalizedLineCount(standalone.output) <= 111 &&
+      normalizedLineCount(fullPipeline.output) <= 111;
     const deterministic =
       finder.exitReason === "success" &&
       researcher.exitReason === "success" &&

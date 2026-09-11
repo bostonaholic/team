@@ -44,34 +44,29 @@ Return a structured report organized by category. In multi-repo mode,
 prefix every file path with the repo slug, e.g.
 `frontend:src/App.tsx`, so the implementer can resolve it later. The
 slug is the `name` field from the matching entry in `4-repos.md`.
-Return at most 28 physical lines, or 38 in multi-repo mode. Terminal empty or
-whitespace-only lines count toward the limit.
+
+Write no blank or separator lines. Emit a category heading only
+when that category has at least one finding. Write exactly one finding per
+line and never wrap a line. Descriptions stay factual and never state
+inferred intent. Return at most 40 physical lines, or 60 in multi-repo
+mode. Terminal empty or whitespace-only lines count toward the limit.
 
 ```
 ## Found Files
-
 ### Source Files
-- `path/to/file.ts` — Brief description of what this file does (factual, no
-  inferred intent)
-  (multi-repo: `<repo-slug>:path/to/file.ts`)
-
+- `path/to/file.ts` — Factual description of what this file does
+- `<repo-slug>:path/to/other.ts` — Repo-slug prefix in multi-repo mode
 ### Test Files
 - `path/to/file.test.ts` — What it tests
-
 ### Configuration
 - `path/to/config.ts` — What it configures
-
 ### Documentation
 - `docs/relevant.md` — What it documents
-
 ## Suggested Reading Order
-1. Start with `path/to/core.ts` — defines the main interface
-2. Then `path/to/impl.ts` — implements the interface
-
+1. `path/to/core.ts` — Defines the main interface
+2. `path/to/impl.ts` — Implements the interface
 ## Notes
-- Any caveats, files that might be relevant but uncertain, or areas where
-  the search may be incomplete.
-- Cross-repo imports / shared contracts (multi-repo only).
+- Any uncertain file, area the search missed, or cross-repo import.
 ```
 
 ## Rules
