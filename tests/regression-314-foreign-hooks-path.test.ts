@@ -1,5 +1,5 @@
 // Regression test for issue #314. A hooks surface Team cannot own must not
-// abort the plugin install. The pull hook re-runs the Claude installer after a
+// abort the plugin install. The pull hook re-runs the dev install after a
 // pull; nothing about installing a harness depends on it, so its absence skips
 // loudly and the install proceeds (principle-optimization-never-dependency).
 //
@@ -24,7 +24,7 @@ const REPO_ROOT = join(import.meta.dir, "..");
 const HARNESSES = ["claude", "codex", "antigravity", "opencode"] as const;
 const COPIED_SCRIPTS = [
   "dev-install",
-  "dev-install-claude-pull-hook",
+  "dev-install-pull-hook",
 ] as const;
 const tempDirs: string[] = [];
 

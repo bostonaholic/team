@@ -107,7 +107,7 @@ function dispatcher(f: Fixture, operation: "install" | "uninstall", args: string
     write(path, `#!/bin/sh\nprintf '%s\\n' '${host}' >> '${calls}'\nexit ${host === fail ? 7 : 0}\n`);
     chmodSync(path, 0o755);
   }
-  const hook = join(f.checkout, "script/dev-install-claude-pull-hook");
+  const hook = join(f.checkout, "script/dev-install-pull-hook");
   write(hook, `#!/bin/sh\nprintf 'hook\\n' >> '${calls}'\n`); chmodSync(hook, 0o755);
   const result = spawnSync("/bin/bash", [join(f.checkout, "script", `dev-${operation}`), ...args], { cwd: f.checkout, env: f.env, encoding: "utf8" });
   return { status: result.status ?? -1, output: `${result.stdout}${result.stderr}`, calls: existsSync(calls) ? readFileSync(calls, "utf8").trim().split("\n") : [] };

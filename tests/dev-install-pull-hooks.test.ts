@@ -22,8 +22,9 @@ const UNINSTALL_SOURCE = join(REPO_ROOT, "script", "dev-uninstall");
 const PULL_HOOK_SOURCE = join(
   REPO_ROOT,
   "script",
-  "dev-install-claude-pull-hook",
+  "dev-install-pull-hook",
 );
+const HARNESSES = ["claude", "codex", "antigravity", "opencode"] as const;
 const tempDirs: string[] = [];
 
 type Fixture = {
@@ -92,17 +93,19 @@ function newFixture(): Fixture {
     readFileSync(UNINSTALL_SOURCE, "utf8"),
   );
   writeExecutable(
-    join(upstream, "script", "dev-install-claude-pull-hook"),
+    join(upstream, "script", "dev-install-pull-hook"),
     readFileSync(PULL_HOOK_SOURCE, "utf8"),
   );
-  writeExecutable(
-    join(upstream, "script", "dev-install-claude"),
-    '#!/usr/bin/env bash\nprintf "install\\n" >> "$HOME/install-calls"\n',
-  );
-  writeExecutable(
-    join(upstream, "script", "dev-uninstall-claude"),
-    '#!/usr/bin/env bash\nprintf "uninstall\\n" >> "$HOME/uninstall-calls"\n',
-  );
+  for (const harness of HARNESSES) {
+    writeExecutable(
+      join(upstream, "script", `dev-install-${harness}`),
+      `#!/usr/bin/env bash\nprintf "%s\\n" "${harness}" >> "$HOME/install-calls"\n`,
+    );
+    writeExecutable(
+      join(upstream, "script", `dev-uninstall-${harness}`),
+      `#!/usr/bin/env bash\nprintf "%s\\n" "${harness}" >> "$HOME/uninstall-calls"\n`,
+    );
+  }
   writeFileSync(join(upstream, "VERSION"), "one\n");
   git(upstream, "add", "-A");
   git(upstream, "commit", "-q", "-m", "initial");
@@ -134,7 +137,7 @@ function uninstall(fixture: Fixture) {
   return run(
     fixture.checkout,
     join(fixture.checkout, "script", "dev-uninstall"),
-    ["claude"],
+    [],
     fixtureEnv(fixture),
   );
 }
@@ -162,11 +165,11 @@ afterAll(() => {
 });
 
 describe("dev install: refresh after pulls (#312)", () => {
-  test("a merge-based pull reruns the Claude installer", () => {
+  test("a merge-based pull reruns the installer for every harness", () => {
     const fixture = newFixture();
     expect(install(fixture).status).toBe(0);
     expect(statSync(hookPath(fixture, "post-merge")).mode & 0o111).not.toBe(0);
-    expect(installCalls(fixture)).toHaveLength(1);
+    expect(installCalls(fixture)).toEqual(["claude"]);
 
     advanceUpstream(fixture, "two");
     const pull = run(
@@ -177,10 +180,10 @@ describe("dev install: refresh after pulls (#312)", () => {
     );
 
     expect(pull.status).toBe(0);
-    expect(installCalls(fixture)).toHaveLength(2);
+    expect(installCalls(fixture)).toEqual(["claude", ...HARNESSES]);
   });
 
-  test("a rebase-based pull reruns the Claude installer", () => {
+  test("a rebase-based pull reruns the installer for every harness", () => {
     const fixture = newFixture();
     expect(install(fixture).status).toBe(0);
     expect(statSync(hookPath(fixture, "post-rewrite")).mode & 0o111).not.toBe(
@@ -200,7 +203,7 @@ describe("dev install: refresh after pulls (#312)", () => {
     );
 
     expect(pull.status).toBe(0);
-    expect(installCalls(fixture)).toHaveLength(2);
+    expect(installCalls(fixture)).toEqual(["claude", ...HARNESSES]);
   });
 
   // The hooks live in the shared .git/hooks, so a rebase inside a linked
@@ -239,7 +242,7 @@ describe("dev install: refresh after pulls (#312)", () => {
     const first = readFileSync(hookPath(fixture, "post-merge"), "utf8");
     expect(first).toBe(
       readFileSync(
-        join(fixture.checkout, "script", "dev-install-claude-pull-hook"),
+        join(fixture.checkout, "script", "dev-install-pull-hook"),
         "utf8",
       ),
     );
@@ -249,6 +252,24 @@ describe("dev install: refresh after pulls (#312)", () => {
     expect(uninstall(fixture).status).toBe(0);
     expect(existsSync(hookPath(fixture, "post-merge"))).toBe(false);
     expect(existsSync(hookPath(fixture, "post-rewrite"))).toBe(false);
+  });
+
+  // The hooks serve every harness in the clone, so removing one harness must
+  // leave the refresh in place for the others.
+  test("a targeted uninstall leaves the pull hooks", () => {
+    const fixture = newFixture();
+    expect(install(fixture).status).toBe(0);
+
+    const result = run(
+      fixture.checkout,
+      join(fixture.checkout, "script", "dev-uninstall"),
+      ["codex"],
+      fixtureEnv(fixture),
+    );
+
+    expect(result.status).toBe(0);
+    expect(existsSync(hookPath(fixture, "post-merge"))).toBe(true);
+    expect(existsSync(hookPath(fixture, "post-rewrite"))).toBe(true);
   });
 
   // A hooks surface Team does not own is preserved, and the pull-hook refresh

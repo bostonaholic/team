@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Dev uninstall, across the harnesses Team supports. Mirrors script/dev-install,
-# including removal of the clone-local hooks installed for Claude.
+# including removal of the clone-local pull hooks.
 #
 #   script/dev-uninstall          every harness
 #   script/dev-uninstall codex    just that one
@@ -14,9 +14,11 @@ HOOK_MARKER="# Managed by Team dev install."
 
 remove_pull_hooks() {
   local common_dir hooks_dir hook_name hook_path
-  common_dir=$(git -C "$PLUGIN_ROOT" rev-parse --path-format=absolute --git-common-dir) || {
-    echo "Error: cannot resolve this checkout's common Git directory." >&2
-    return 1
+  # Removing the hooks is best-effort: a checkout whose Git directory cannot be
+  # resolved, or a hooks surface Team never owned, must not fail the uninstall.
+  common_dir=$(git -C "$PLUGIN_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || {
+    echo "Warning: cannot resolve this checkout's common Git directory; leaving Git hooks alone." >&2
+    return 0
   }
   hooks_dir="${common_dir}/hooks"
 
@@ -34,8 +36,10 @@ remove_pull_hooks() {
 case "${1:-}" in
   "")
     targets=("${HARNESSES[@]}")
+    FULL_UNINSTALL=true
     ;;
   *)
+    FULL_UNINSTALL=false
     for known in "${HARNESSES[@]}"; do
       [ "$1" = "$known" ] && targets=("$1") && break
     done
@@ -45,14 +49,6 @@ case "${1:-}" in
     fi
     ;;
 esac
-
-CLAUDE_TARGETED=false
-for harness in "${targets[@]}"; do
-  if [ "$harness" = "claude" ]; then
-    CLAUDE_TARGETED=true
-    break
-  fi
-done
 
 failed=()
 for harness in "${targets[@]}"; do
@@ -68,6 +64,8 @@ if [ ${#failed[@]} -gt 0 ]; then
   exit 1
 fi
 
-if [ "$CLAUDE_TARGETED" = true ]; then
+# The pull hooks serve the whole clone, so a targeted uninstall leaves them for
+# the harnesses that remain. Only a full uninstall removes them.
+if [ "$FULL_UNINSTALL" = true ]; then
   remove_pull_hooks
 fi

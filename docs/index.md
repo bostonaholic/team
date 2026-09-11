@@ -110,7 +110,7 @@ at the latest version" when it has not moved, so the install stamps a
 installs, restores the manifests, and prunes the copy the last run left. The
 install is a copy either way, so **re-run it after changing a skill.**
 
-It also adds clone-local hooks that re-run it after merge and rebase pulls.
+It also adds clone-local hooks that re-run the install after merge and rebase pulls.
 Existing non-Team hooks and a `core.hooksPath` outside the clone are never
 overwritten: the install still completes, and reports that it skipped the hooks
 and how to wire them up yourself. Remove the install and Team-owned hooks with:
