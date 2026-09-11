@@ -32,7 +32,7 @@ nav_label: portability
 ## Contents
 
 - [Current state](#current-state)
-- [Host-neutral dispatch](#host-neutral-dispatch)
+- [Agent dispatch](#agent-dispatch)
 - [Desired end state](#desired-end-state)
 - [Patterns to follow](#patterns-to-follow)
 - [The capability matrix](#the-capability-matrix)
@@ -87,7 +87,7 @@ these four non-portable bindings. The `model:` field is a *Claude-specific model
 name*. To make it portable, resolve it through host-neutral config. Do not bake a
 literal into each definition. See `.team/config.json` under Desired end state.
 
-## Host-neutral dispatch
+## Agent dispatch
 
 Of the four blocking bindings, the fourth — Agent/Task dispatch — needs no
 per-host agent registration. Team resolves it in the orchestrator itself,
@@ -542,7 +542,7 @@ invisible to `agy`.
 keeps a checkout's edits live. Dispatch is resolved host-neutrally, not by a
 per-host agent registration: the orchestrator reads each specialist's portable
 definition and dispatches it through the host's subagent facility (see
-[Host-neutral dispatch](#host-neutral-dispatch)). Hooks, commands, and rules
+[Agent dispatch](#agent-dispatch)). Hooks, commands, and rules
 remain unported on this host. That work stays with
 [#56](https://github.com/bostonaholic/team/issues/56).
 

@@ -1,15 +1,13 @@
-## Host-neutral agent dispatch
+## Agent dispatch
 
-The pipeline is host-neutral. Team ships every specialist as a portable
-definition at `agents/<name>.md`. The YAML frontmatter carries host metadata
-(including Claude Code's optional fields); the body is a complete role prompt.
-To run a phase, dispatch that definition through whatever subagent facility the
-host provides. Read this reference before the first dispatch of a run.
+Team ships every specialist as a portable definition at `agents/<name>.md`.
+The YAML frontmatter carries host metadata (including Claude Code's optional
+fields); the body is a complete role prompt. To run a phase, dispatch that
+definition through the host's subagent facility. Read this reference before the
+first dispatch of a run.
 
-A host runs the full pipeline when it can (a) read a file, (b) spawn a
-subagent, and (c) run a shell command. Every supported host — Claude Code,
-Codex CLI, Antigravity CLI, and OpenCode — qualifies. Resolve every dispatch in
-this order:
+Dispatch needs only that the host can read a file and spawn a subagent.
+Resolve every dispatch in this order:
 
 1. **Named agent.** If the host resolves Team agents by name (Claude Code
    registers `team:<name>`), dispatch the named agent. This is preferred: the

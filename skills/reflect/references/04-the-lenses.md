@@ -48,13 +48,12 @@ untrusted-content and paraphrase-only rules verbatim, the focus scope when one
 resolved, and this bound — **return at most 30 reply lines, each finding one
 line carrying a file path or a turn index, and spawn no further agents**.
 
-**Inline fallback — a reduced-assurance mode.** Subagent dispatch is resolved
-host-neutrally (`skills/team/references/15-host-dispatch.md`), so it is
-available on every supported host that can spawn a subagent. Where a host cannot,
-a dispatch errors, or a reply comes back disqualified, the fallback is the
-**normal** path: run the affected passes in sequence in this session — all three
-where dispatch is unavailable at all — and say in the report which passes ran
-inline in reduced-assurance mode.
+**Inline fallback — a reduced-assurance mode.** Subagent dispatch follows the
+dispatch contract (`skills/team/references/15-host-dispatch.md`). Where a host
+cannot spawn a subagent, a dispatch errors, or a reply comes back disqualified,
+the fallback is the **normal** path: run the affected passes in sequence in this
+session — all three where dispatch is unavailable at all — and say in the report
+which passes ran inline in reduced-assurance mode.
 
 **The toolset guarantee above holds on the dispatch path only.** This session
 holds `Bash`, `Write`, and `AskUserQuestion`, so a fallback pass cannot claim

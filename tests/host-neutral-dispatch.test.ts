@@ -1,11 +1,10 @@
 // tests/host-neutral-dispatch.test.ts
 //
-// L2 tripwire (free, deterministic): Team's pipeline privileges no host. The
-// orchestrator resolves every dispatch through the portable contract in
-// skills/team/references/15-host-dispatch.md, and no host-facing surface may
-// claim the pipeline needs Claude Code. The negative sweep uses a named
-// matcher so it can be pointed at a known positive — a clean sweep has not
-// distinguished absent from blind (docs/testing.md).
+// L2 tripwire (free, deterministic): the orchestrator resolves every dispatch
+// through the portable contract in skills/team/references/15-host-dispatch.md,
+// and no host-facing surface may claim the pipeline needs Claude Code. The
+// negative sweep uses a named matcher so it can be pointed at a known positive
+// — a clean sweep has not distinguished absent from blind (docs/testing.md).
 //
 // Defensive reads: a missing file → "" so content assertions FAIL cleanly
 // rather than throwing ENOENT (the mechanical gate rejects crashes).
@@ -40,7 +39,7 @@ function readIf(path: string): string {
   return existsSync(path) ? read(path) : "";
 }
 
-describe("host-neutral dispatch", () => {
+describe("agent dispatch", () => {
   test("the portable dispatch contract exists and states the resolution order", () => {
     const body = squash(readIf(DISPATCH));
     // Guard: a missing contract must fail, not vacuously pass.
@@ -60,7 +59,7 @@ describe("host-neutral dispatch", () => {
   test("the phase loop resolves dispatch through the contract", () => {
     const loop = readIf(PHASE_LOOP);
     expect(loop.length).toBeGreaterThan(0);
-    expect(loop).toContain("Host-neutral agent dispatch");
+    expect(loop).toContain("dispatch contract");
     expect(loop).toContain("references/15-host-dispatch.md");
   });
 

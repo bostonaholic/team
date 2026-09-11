@@ -2,11 +2,9 @@
 
 **You have been made tech lead. Your team never sleeps.**
 
-Team is a plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the host's main session. It persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
+Team is a plugin that orchestrates specialized agents to autonomously implement entire features end-to-end, driven by the **QRSPI** workflow. The orchestrator is the main session. It persists pipeline state as artifacts in `docs/plans/` and tracks live progress with TodoWrite.
 
-Team installs on Claude Code, on Codex CLI, and on Antigravity CLI. The pipeline is host-neutral: each specialist dispatches from its portable definition at `agents/<name>.md`, so the full pipeline runs on any host that can spawn a subagent — all three included. The standalone utilities work on all three.
-
-Per-host native bindings — hook registration and model-tier maps — are tracked in [#57 (Codex)](https://github.com/bostonaholic/team/issues/57) and [#56 (Antigravity)](https://github.com/bostonaholic/team/issues/56).
+Team installs on Claude Code, on Codex CLI, and on Antigravity CLI.
 
 **Documentation:** [team.bostonaholic.dev](https://team.bostonaholic.dev)
 
@@ -100,9 +98,7 @@ codex plugin remove team@team-dev
 
 Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex
 budgets its skill catalog, so it shortens the longest descriptions; the skills
-still work. The `/team-*` pipeline commands run the full pipeline: each phase
-dispatches its specialist from the portable `agents/<name>.md` definition, so
-no Codex-side agent registration is required. The standalone utilities run too.
+still work.
 
 Developing Team itself? Run the loop Codex documents for local plugins:
 
