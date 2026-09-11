@@ -1,4 +1,4 @@
-# Migration contract: M01
+# Playbook migration contract
 
 M01 records Team's behavior before later milestones move runtime instructions.
 Use the [verification commands](verification/README.md) and [revision-bound observations](verification/migration-baseline.md) to compare later changes.

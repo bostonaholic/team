@@ -255,7 +255,7 @@ cross-cutting recency caveat:
    on MCP (decision 4).
 
 2. **Codex lists every skill in the `$` picker, so `user-invocable: false` is a
-   Claude-Code-only guarantee (hard gap).** Team's 66 methodology and
+   Claude-Code-only guarantee (hard gap).** Team's 64 methodology and
    `principle-*` skills are reference material an agent loads, never something a
    human runs. On Claude Code, `user-invocable: false` keeps them out of the `/`
    menu. Codex has no equivalent, so they all appear under `$` and a user can
