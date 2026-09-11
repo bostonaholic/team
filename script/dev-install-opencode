@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "Error: Node.js is required. Install Node.js and rerun script/dev-install opencode." >&2
+  exit 1
+fi
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+exec node "${HERE}/dev-opencode.mjs" install

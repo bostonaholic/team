@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.103.0] - 2026-09-10
+
+### Added
+
+- **Native OpenCode installation from a live Team checkout.** `script/dev-install opencode` registers canonical skills and file-reading commands; `script/dev-uninstall opencode` removes only that checkout's link. Aggregate lifecycle commands include OpenCode. Registration preserves native configuration and credentials. Full pipeline execution, reviewer isolation, and hooks remain unverified; OpenCode session `/reflect` is unsupported.
+
 ## [0.102.0] - 2026-09-10
 
 ### Changed
@@ -907,7 +913,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.102.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.103.0...HEAD
+[0.103.0]: https://github.com/bostonaholic/team/compare/v0.102.0...v0.103.0
 [0.102.0]: https://github.com/bostonaholic/team/compare/v0.101.0...v0.102.0
 [0.101.0]: https://github.com/bostonaholic/team/compare/v0.100.0...v0.101.0
 [0.100.0]: https://github.com/bostonaholic/team/compare/v0.99.0...v0.100.0

@@ -141,15 +141,15 @@ function scriptedStubs(opts: {
   } else if (headScript === "extendedRuntime") {
     const original = readFileSync(REAL_SCRIPT, "utf-8");
     const patched = original.replace(
-      "RUNTIME_DIRS=(agents skills hooks)",
-      "RUNTIME_DIRS=(agents skills hooks docs)",
+      "RUNTIME_DIRS=(agents skills hooks opencode)",
+      "RUNTIME_DIRS=(agents skills hooks opencode docs)",
     );
     // Anti-vacuity (docs/testing.md): a renamed array would leave the fixture
     // identical to the committed script, and the test would then pass by
     // measuring nothing.
     if (patched === original) {
       throw new Error(
-        "fixture is inert: RUNTIME_DIRS=(agents skills hooks) not found in " +
+        "fixture is inert: RUNTIME_DIRS=(agents skills hooks opencode) not found in " +
           REAL_SCRIPT,
       );
     }
@@ -489,6 +489,19 @@ describe.if(HAS_JQ)("verdict mapping through the real script", () => {
     );
     expect(r.status).toBe(2);
     expect(r.stderr).toContain("must land with no bump");
+  });
+
+  test("denies an OpenCode adapter-only change without a version bump", () => {
+    const r = runHook(
+      "gh pr merge 5 --squash",
+      scriptedStubs({
+        headVersion: "0.33.2",
+        baseVersion: "0.33.2",
+        changedFiles: "opencode/team.js",
+      }),
+    );
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("cannot merge until version-bump runs at land time");
   });
 
   test("denies on the missing-bump verdict", () => {

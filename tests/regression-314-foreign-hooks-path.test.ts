@@ -21,7 +21,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const REPO_ROOT = join(import.meta.dir, "..");
-const HARNESSES = ["claude", "codex", "antigravity"] as const;
+const HARNESSES = ["claude", "codex", "antigravity", "opencode"] as const;
 const COPIED_SCRIPTS = [
   "dev-install",
   "dev-install-claude-pull-hook",

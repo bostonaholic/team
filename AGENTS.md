@@ -14,13 +14,13 @@ Team is a plugin that orchestrates specialized agents to implement features end-
 
 This project produces a **distributed plugin**. Two contexts exist:
 
-**Runtime** (`agents/`, `skills/`, `hooks/`, and the host manifests `.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/`, and the root `plugin.json`) ships to end users. Fires when someone installs the Team plugin and runs `/team`. Changes here affect all users.
+**Runtime** (`agents/`, `skills/`, `hooks/`, `opencode/`, and the host manifests `.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/`, and the root `plugin.json`) ships to end users. Fires when someone installs the Team plugin and runs `/team`. Changes here affect all users.
 
 **Development** (`.claude/`) is our workspace tooling. Fires only when developing the plugin itself. Never distributed.
 
 | Concern | Where it lives | Who runs it |
 |---------|---------------|-------------|
-| Pipeline agents, skills, hooks | `agents/`, `skills/`, `hooks/` | End users |
+| Pipeline agents, skills, hooks, OpenCode adapter | `agents/`, `skills/`, `hooks/`, `opencode/` | End users |
 | Plugin manifests | `.claude-plugin/` (Claude Code), `.codex-plugin/` + `.agents/plugins/` (Codex), root `plugin.json` (Antigravity) | End users |
 | Registry sync validation | `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
 | Pre-merge version gate | `.claude/hooks/pre-merge-guard.mjs` | Plugin developers |
@@ -29,7 +29,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Work tracking | [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1) | Plugin developers |
 | Behavioral regression harness | `tests/`, `evals/` | Plugin developers |
 | Versioning & release automation | [docs/versioning.md](docs/versioning.md), `.claude/skills/version-bump/`, `.claude/scripts/next-version.sh`, `.github/workflows/` | Plugin developers |
-| Dev install, per harness | `script/dev-install`/`dev-uninstall` (dispatch), `dev-install-<harness>` | Plugin developers |
+| Dev install, per harness | `script/dev-install`/`dev-uninstall` (Claude, Codex, Antigravity, OpenCode); [OpenCode lifecycle](docs/cross-host-portability.md#opencode) | Plugin developers |
 
 **Rule of thumb:** If it validates that the plugin is *built correctly*, it is a dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it is runtime (`hooks/`).
 

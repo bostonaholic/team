@@ -110,6 +110,7 @@ const HARNESS_DISPLAY_NAMES: Record<string, string> = {
   claude: "Claude Code",
   codex: "Codex CLI",
   antigravity: "Antigravity CLI",
+  opencode: "OpenCode",
 };
 
 const tempDirs: string[] = [];
@@ -325,6 +326,7 @@ describe("dev install: antigravity harness", () => {
       expect(blocks.length).toBeGreaterThan(0);
 
       expect(fromInstall).toContain("antigravity");
+      expect(fromInstall).toContain("opencode");
       expect(fromUninstall).toEqual(fromInstall);
       for (const block of blocks) expect(block).toEqual(fromInstall);
     });

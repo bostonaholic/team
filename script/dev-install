@@ -18,7 +18,7 @@ set -euo pipefail
 # re-run by hand. That asymmetry is an implementation detail — keep it out of
 # the output the user reads.
 
-HARNESSES=(claude codex antigravity)
+HARNESSES=(claude codex antigravity opencode)
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(dirname "$HERE")"
 HOOK_MARKER="# Managed by Team dev install."
