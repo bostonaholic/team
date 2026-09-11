@@ -8,13 +8,15 @@ function objectField(value, field) {
   }
 }
 
-function command(skill) {
+function command(skill, root) {
   return {
     description: skill.description + (skill.name === "reflect" ? " OpenCode session reflection is unsupported." : ""),
     template: [
       `The user explicitly invoked /${skill.name}.`,
       `Read the canonical skill file ${JSON.stringify(skill.file)} using the filesystem read tool, then follow its instructions.`,
       `Resolve relative references and scripts against the skill base directory ${JSON.stringify(skill.base)}.`,
+      `The installed plugin root is ${JSON.stringify(root)}. Supply resolved installed agent definitions and applicable resource paths before dispatch.`,
+      "If an installed resource is missing, stop its consuming step and report the resolved path. Never fall back to a source checkout or recursively load references.",
       "Use the following user arguments for the skill's argument references:",
       "$ARGUMENTS",
     ].join("\n"),
@@ -40,7 +42,7 @@ export default async function TeamPlugin() {
           throw new Error(`Team OpenCode command collision: ${skill.name}. Rename or remove the existing command before loading Team.`);
         }
       }
-      const commands = Object.fromEntries(catalog.map((skill) => [skill.name, command(skill)]));
+      const commands = Object.fromEntries(catalog.map((skill) => [skill.name, command(skill, root)]));
       const mergedPaths = [...new Set([...(paths ?? []), ...catalog.filter((skill) => !skill.guarded).map((skill) => skill.base)])];
       config.skills = { ...config.skills, paths: mergedPaths };
       config.command = { ...config.command, ...commands };

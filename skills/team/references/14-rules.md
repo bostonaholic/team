@@ -1,3 +1,6 @@
+Before this operation, read [artifact schema](references/artifacts.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 ## Rules
 
 - Artifacts in `docs/plans/<id>/` are the single durable record of
@@ -11,7 +14,7 @@
   substitutes for it — never supplements it. Same items in the same
   order, rewritten in place as their states change, seeded once the
   leading WORKTREE phase creates the directory; frontmatter per
-  `skills/artifact-frontmatter/SKILL.md`. On disk it is durable rather
+  [artifact schema](references/artifacts.md). On disk it is durable rather
   than session-scoped, so the review-round counts the aggregate gate
   tracks survive a restart. Report which of the two the run used
   (`principle-skip-loudly`).
@@ -38,7 +41,7 @@
 
 A topic that touches more than one repository is recorded in
 `docs/plans/<id>/4-repos.md` (schema in
-`skills/artifact-frontmatter/SKILL.md`). `4-repos.md` is settled
+[artifact schema](references/artifacts.md)). `4-repos.md` is settled
 autonomously. The questioner writes it when the description names multiple
 repos (resolving each to a sibling-directory path), and the design-author
 confirms or amends the list on research evidence. Once `4-repos.md` exists,
@@ -58,5 +61,5 @@ with frontmatter `topic`, `date`, `phase: design-review`, and
 when the highest-`<n>` file carries APPROVE or COMMENT. Downstream
 phases and the recovery hooks verify passage by reading that file —
 `6-design.md` itself carries no approval frontmatter.
-See `skills/artifact-frontmatter/SKILL.md` for the full frontmatter
+See [artifact schema](references/artifacts.md) for the full frontmatter
 convention.

@@ -37,6 +37,9 @@ This page carries both directions of each skill-to-skill load edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
+The catalog has 89 registered skills. Artifact schemas and shell rules are ordinary [installed resources](migration-contract.md#m02-artifact-and-shell-resources).
+They are read at the consuming operation and add no picker entries.
+
 ## Entry-point skills
 
 Each carries `argument-hint`, so it is a slash command, and each either kicks off a
@@ -260,13 +263,6 @@ Defines QRSPI phases, artifacts, gates, and state transitions.
 
 **Uses:** None
 
-### [artifact-frontmatter](https://github.com/bostonaholic/team/blob/main/skills/artifact-frontmatter/SKILL.md)
-
-Defines pipeline artifact schemas.
-
-**Used by:** None
-
-**Uses:** None
 
 ### [researching-codebases](https://github.com/bostonaholic/team/blob/main/skills/researching-codebases/SKILL.md)
 
@@ -692,13 +688,6 @@ Requires deterministic enforcement for reliable rules.
 
 **Uses:** None
 
-### [principle-never-interpolate](https://github.com/bostonaholic/team/blob/main/skills/principle-never-interpolate/SKILL.md)
-
-Keeps external text out of shell syntax.
-
-**Used by:** None
-
-**Uses:** None
 
 ### [principle-non-blocking-waits](https://github.com/bostonaholic/team/blob/main/skills/principle-non-blocking-waits/SKILL.md)
 

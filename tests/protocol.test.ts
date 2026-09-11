@@ -156,13 +156,13 @@ describe("multi-repo support", () => {
   const PLANNER = join(REPO_ROOT, "agents", "planner.md");
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
 
-  test("artifact-frontmatter carries the 4-repos.md schema; qrspi-workflow keeps the pointer", () => {
-    const schema = read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md"));
+  test("artifact schema carries the 4-repos.md schema; qrspi-workflow keeps the pointer", () => {
+    const schema = read(join(REPO_ROOT, "skills", "team", "references", "artifacts.md"));
     expect(schema).toContain("4-repos.md");
     expect(schema).toContain("phase: repos");
     const text = read(QRSPI);
     expect(text).toContain("4-repos.md");
-    expect(text).toContain("artifact-frontmatter/SKILL.md");
+    expect(text).toContain("team/references/artifacts.md");
   });
 
   test("worktree-isolation documents multi-repo topology", () => {
@@ -281,13 +281,13 @@ describe("conditional PRD artifact", () => {
   const DECOMPOSING_INTENT = join(REPO_ROOT, "skills", "decomposing-intent", "SKILL.md");
   const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
 
-  test("artifact-frontmatter carries the 3-prd.md schema; qrspi-workflow keeps the pointer", () => {
-    const schema = read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md"));
+  test("artifact schema carries the 3-prd.md schema; qrspi-workflow keeps the pointer", () => {
+    const schema = read(join(REPO_ROOT, "skills", "team", "references", "artifacts.md"));
     expect(schema).toContain("3-prd.md");
     expect(schema).toContain("phase: prd");
     const text = read(QRSPI);
     expect(text).toContain("3-prd.md");
-    expect(text).toContain("artifact-frontmatter/SKILL.md");
+    expect(text).toContain("team/references/artifacts.md");
   });
 
   test("decomposing-intent carries the 3-prd.md frontmatter contract", () => {
@@ -1153,7 +1153,7 @@ describe("checks and balances", () => {
 
   test("both copies of the design loop speak the APPROVE and COMMENT verdict vocabulary", () => {
     // The DESIGN loop exits on the verdict token, so both copies must still
-    // carry the two values that end it (skills/artifact-frontmatter/SKILL.md).
+    // carry the two values that end it (team/references/artifacts.md).
     // Residual: both files also use the tokens away from their exit branch —
     // in resume detection, in the phase-loop sketch, in the stop condition,
     // and in the `verdict:` frontmatter enum — so a whole-file check stays

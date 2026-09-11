@@ -1,3 +1,6 @@
+Before this operation, read [external-data rules](../team/references/external-data.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 # Sweeping Local State Procedure
 
 Git teardown removes refs and checkouts. It does not touch what grew alongside
@@ -192,7 +195,7 @@ unchanged, with one boundary that does not apply to your own merged work:
    branch.** Only the default-branch copy runs.
 3. **Never edit, re-quote, or interpolate a declared line.** It runs verbatim;
    values reach it through `TEAM_*` in the environment.
-   The general rule: `principle-never-interpolate`.
+   The general rule: [external-data rules](../team/references/external-data.md).
 4. **Never guess credentials.** A teardown command that needs them reads them
    the way the repo's own tooling does. This skill does not open `.env` files
    and does not prompt for secrets.

@@ -371,7 +371,7 @@ testUnslop(
         timeout: 240_000,
         testName: "pipeline author behavior evaluation",
         model: questioner.model,
-        systemPromptAppend: `${questioner.body}\n\n---\n\n${instructionContext(["skills/team/SKILL.md", ...PROSE_FILES])}`,
+        systemPromptAppend: `Installed plugin root: ${ROOT}\nInstalled agent definition: ${join(ROOT, "agents", "questioner.md")}\n\n${questioner.body}\n\n---\n\n${instructionContext(["skills/team/SKILL.md", "skills/decomposing-intent/SKILL.md", "skills/decomposing-intent/references/artifact-templates.md", "skills/team/references/artifacts.md", "skills/team/references/external-data.md", ...PROSE_FILES])}`,
         disallowedTools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "Task", "Agent"],
       });
       const authored = authoredWithoutSourceBlocks(result.output);
@@ -429,7 +429,7 @@ testUnslop(
         timeout: 240_000,
         testName: "technical-writer semantic veto evaluation",
         model: technicalWriter.model,
-        systemPromptAppend: `${technicalWriter.body}\n\n---\n\n${instructionContext([
+        systemPromptAppend: `Installed plugin root: ${ROOT}\nInstalled agent definition: ${join(ROOT, "agents", "technical-writer.md")}\n\n${technicalWriter.body}\n\n---\n\n${instructionContext([
           "skills/reviewing-code/SKILL.md",
           "skills/conventional-comments/SKILL.md",
           "skills/reviewing-documentation/SKILL.md",
@@ -549,7 +549,7 @@ async function runResearchProducer(agentName: "file-finder" | "researcher"): Pro
       timeout: 300_000,
       testName: `isolated Research producers and grounded assembly:${agentName}`,
       model: agent.model,
-      systemPromptAppend: `${agent.body}\n\n---\n\n${instructionContext([...procedureFiles, ...PROSE_FILES])}`,
+      systemPromptAppend: `Installed plugin root: ${ROOT}\nInstalled agent definition: ${join(ROOT, "agents", `${agentName}.md`)}\n\n${agent.body}\n\n---\n\n${instructionContext(["skills/team/references/artifacts.md", ...procedureFiles, ...PROSE_FILES])}`,
       allowedTools: ["Read", "Grep", "Glob"],
       disallowedTools: ["Bash", "Write", "Edit", "Task", "Agent", "SendMessage"],
     });
@@ -600,7 +600,7 @@ ${TASK_CONTEXT}
       maxTurns: 6,
       timeout: 240_000,
       testName: `isolated Research producers and grounded assembly:${mode}`,
-      systemPromptAppend: instructionContext([...modeFiles, ...PROSE_FILES]),
+      systemPromptAppend: instructionContext(["skills/team/references/artifacts.md", ...modeFiles, ...PROSE_FILES]),
       disallowedTools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "Task", "Agent"],
     });
   } finally {
@@ -878,11 +878,12 @@ testUnslop(
         timeout: 300_000,
         testName: "named parent fallback on unreadable prose file",
         model: parent.model,
-        systemPromptAppend: `${parent.body}\n\n---\n\n${instructionContext([
+        systemPromptAppend: `Installed plugin root: ${ROOT}\nInstalled agent definition: ${join(ROOT, "agents", "researcher.md")}\n\n${parent.body}\n\n---\n\n${instructionContext([
           "skills/principle-progress-tracking/SKILL.md",
           "skills/nested-agents/SKILL.md",
           "skills/systems-thinking/SKILL.md",
           "skills/researching-codebases/SKILL.md",
+          "skills/team/references/artifacts.md",
           ...PROSE_FILES,
         ])}`,
         allowedTools: ["Read", "Grep", "Glob"],

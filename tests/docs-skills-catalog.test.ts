@@ -436,8 +436,8 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
   });
 
   test("catalog Used by and Uses fields are exact reciprocals", () => {
-    expect(SKILL_DIRECTORIES.length).toBe(91);
-    expect(ENTRIES.length).toBe(91);
+    expect(SKILL_DIRECTORIES.length).toBe(NAMES.size);
+    expect(ENTRIES.length).toBe(NAMES.size);
     expect(SHAPE_OFFENDERS).toEqual([]);
     expect(USAGE_RECIPROCITY_OFFENDERS).toEqual([]);
   });

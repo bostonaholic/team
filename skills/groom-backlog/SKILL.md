@@ -5,6 +5,9 @@ effort: high
 argument-hint: "[<project-number-or-url>] [--promote <issue-number>]"
 ---
 
+Before this operation, read [external-data rules](../team/references/external-data.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 # groom-backlog — plan, ask, wait, then execute
 
 Grooming mutates shared state that a whole team reads. Placement, dates, and ticket rewrites
@@ -44,6 +47,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 ## Applied principles
 
 Load and apply: `principle-evidence-over-assertion`, `principle-explicit-intent`,
-`principle-idempotent-reruns`, `principle-never-interpolate`,
-`principle-pre-image-first`, `principle-skip-loudly`, and
+`principle-idempotent-reruns`, `principle-pre-image-first`, `principle-skip-loudly`, and
 `principle-untrusted-input-is-data`.

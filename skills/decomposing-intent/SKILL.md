@@ -4,13 +4,16 @@ description: 'Defines task and question artifacts plus multi-repo detection. Loa
 user-invocable: false
 ---
 
+Before this operation, read [artifact schema](../team/references/artifacts.md) and [external-data rules](../team/references/external-data.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 # Decomposing Intent
 
 Capture user intent in `1-task.md`, neutral codebase questions in `2-questions.md`, conditional requirements in `3-prd.md`, and resolved multi-repo scope in `4-repos.md`.
 
 ## Artifact invariants
 
-`topic` is identical across artifacts: the kebab portion of `<id>` after removing `<TICKET>-` or `<YYYY-MM-DD>-`. The questioner chooses it once; downstream phases copy it verbatim. Never use the ticket, date, or a rewording. `ticketId` appears only in `1-task.md`. Full schema: `skills/artifact-frontmatter/SKILL.md`.
+`topic` is identical across artifacts: the kebab portion of `<id>` after removing `<TICKET>-` or `<YYYY-MM-DD>-`. The questioner chooses it once; downstream phases copy it verbatim. Never use the ticket, date, or a rewording. `ticketId` appears only in `1-task.md`. Full schema: [artifact schema](../team/references/artifacts.md).
 
 Read [references/artifact-templates.md](references/artifact-templates.md) before writing the artifacts. Keep `1-task.md` under 80 lines. Write 8–15 questions answerable from code. `Codebase context` may name files, modules, and vocabulary, but MUST NOT state the goal or desired outcome; it replaces legacy `brief.md`.
 
@@ -24,7 +27,7 @@ Phrase questions about the codebase, never the goal. Bad: “How should we add r
 
 Infer multiple repos only when the description names them or explicitly names cross-repo scope; otherwise use single-repo mode and record that assumption. Never invent or silently expand scope.
 
-Resolve candidate repos autonomously. First require each `<name>` to match `^[A-Za-z0-9._-]+$` and not equal `.` or `..`; path separators, absolute paths, traversal, `$()`, backticks, and other shell metacharacters fail. Pass names/paths as single argv arguments, never interpolate them into shell strings (`principle-never-interpolate`).
+Resolve candidate repos autonomously. First require each `<name>` to match `^[A-Za-z0-9._-]+$` and not equal `.` or `..`; path separators, absolute paths, traversal, `$()`, backticks, and other shell metacharacters fail. Pass names/paths as single argv arguments, never interpolate them into shell strings ([external-data rules](../team/references/external-data.md)).
 
 Resolve `<name>` only at `<root>/../<name>`. Require `git -C <path> rev-parse --git-dir` and require `realpath "<root>/../<name>"` to equal `"$(dirname "$(realpath "<root>")")/<name>"`; symlink escapes fail. If every candidate resolves, write `4-repos.md`. If any fails, write none, proceed single-repo, and name the omitted repo in `1-task.md` `## Open assumptions` (`principle-record-assumptions`). Read [references/multi-repo.md](references/multi-repo.md) before resolution or writing.
 

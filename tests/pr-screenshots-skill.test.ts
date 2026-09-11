@@ -509,7 +509,7 @@ describe("Slice 1 — skill prose (L2)", () => {
     // Decision 1, A→B→C→D, as a command-ordering tripwire: pre-image read →
     // attach → splice → one body write. `--attach "$` also pins the
     // one-file-per-command, single-quoted-expansion form
-    // (principle-never-interpolate).
+    // (external-data rules).
     const upload = uploadRef();
     expect(upload.length).toBeGreaterThan(0);
 
@@ -2573,13 +2573,13 @@ describe("Slice 1 — resolution, normalization, and harvest (L2)", () => {
   test("path validation refuses a symlink and requires containment", () => {
     // A shell `-f` FOLLOWS symlinks, so the set that called itself exhaustive
     // accepted an entry naming a link to `~/.ssh/id_ed25519` and uploaded it
-    // to a live user-attachments URL (skills/principle-never-interpolate).
+    // to a live user-attachments URL (skills/external-data rules).
     const upload = uploadRef();
     expect(upload.length).toBeGreaterThan(0);
     expect(squash(upload)).toContain("symbolic link");
     expect(upload).toContain("-L ");
     expect(squash(upload)).toContain("contained");
-    expect(upload).toContain("principle-never-interpolate");
+    expect(upload).toContain("team/references/external-data.md");
   });
 
   test("the harvest is constrained to the attachment origin", () => {
@@ -2637,7 +2637,7 @@ describe("Slice 1 — resolution, normalization, and harvest (L2)", () => {
     const verify = verifyRef();
     expect(verify.length).toBeGreaterThan(0);
     expect(verify).toContain("--arg ");
-    expect(verify).toContain("principle-never-interpolate");
+    expect(verify).toContain("team/references/external-data.md");
     // No closing-quote dance inside a fenced command.
     const commands = fencedBlocks(verify).join("\n");
     expect(commands.length).toBeGreaterThan(0);

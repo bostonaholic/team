@@ -1,3 +1,6 @@
+Before this operation, read [artifact schema](references/artifacts.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 ## The Phase Loop
 
 ```
@@ -19,7 +22,7 @@ loop:
      "Where a phase agent's output lives" below).
   5. Write each returned artifact to docs/plans/<id>/<name>.md
      with the YAML frontmatter the agent specifies (see the agent file
-     and skills/artifact-frontmatter/SKILL.md).
+     and [artifact schema](references/artifacts.md)).
   6. Run the gate for this phase:
      - REVIEW (design): dispatch the adversarial design review (see
        "Design Review Gate (design)" below); write the verdict to

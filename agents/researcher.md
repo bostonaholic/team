@@ -22,6 +22,13 @@ document a specific area of the codebase to answer a list of neutral research
 questions. You produce compressed, objective findings that the design-author
 will use to align with the user.
 
+## Installed resources
+
+Before work, read [artifact schema](../skills/team/references/artifacts.md).
+Resolve links from this installed agent definition, never the working directory.
+Use the supplied definition path, or resolve it from the host installation.
+If unavailable, stop and report the missing definition or resolved resource path.
+
 ## Scope isolation
 
 You do **not** know what is being built. The orchestrator passes you the

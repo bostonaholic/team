@@ -400,8 +400,8 @@ describe("Slice 2: installed resources: claude", () => {
     });
   }
 
-  function installedRecords(root: string, stage: string, expected: ReturnType<typeof sourceRecords>) {
-    const result = observe(stage, "node", ["-e", reader, root, JSON.stringify(samples)], expected);
+  function installedRecords(root: string, stage: string, expected: ReturnType<typeof sourceRecords>, paths = samples) {
+    const result = observe(stage, "node", ["-e", reader, root, JSON.stringify(paths)], expected);
     expect(result.status, result.stderr).toBe(0);
     const records: Array<{ path: string; resolvedPath: string; bytes: number; sha256: string }> =
       JSON.parse(result.stdout);
@@ -483,4 +483,41 @@ describe("Slice 2: installed resources: claude", () => {
     expect(result.stderr).toContain(missing);
     expect(existsSync(join(fixture.root, "skills", "authoring-designs", "references", "design-template.md"))).toBe(true);
   }, 60_000);
+
+  describe("Installed resource delivery", () => {
+    function contractRecord(path: string) {
+      expect(existsSync(join(fixture.root, path)), path).toBe(true);
+      const bytes = readFileSync(join(fixture.root, path));
+      return [{ path, bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") }];
+    }
+
+    test.each(["artifacts.md", "external-data.md"])("%s preserves its digest outside the checkout after source removal", (name) => {
+      const path = join("skills", "team", "references", name);
+      const expected = contractRecord(path);
+      const installedRoot = install(name);
+      expect(installedRecords(installedRoot, "before source removal", expected, [path])).toEqual(expected);
+
+      rmSync(fixture.root, { recursive: true });
+
+      expect(existsSync(fixture.root)).toBe(false);
+      expect(installedRecords(installedRoot, "after source removal", expected, [path])).toEqual(expected);
+    });
+
+    test.each(["artifacts.md", "external-data.md"])("missing installed %s reports its path while the source remains readable", (name) => {
+      const path = join("skills", "team", "references", name);
+      const expected = contractRecord(path);
+      const installedRoot = install(name);
+      expect(installedRecords(installedRoot, "before resource removal", expected, [path])).toEqual(expected);
+      const missing = join(installedRoot, path);
+
+      rmSync(missing);
+      const result = observe("missing installed contract", "node", ["-e", reader, installedRoot, JSON.stringify([path])], { status: 1, missingPath: missing });
+
+      expect(result.status, result.stderr).toBe(1);
+      expect(result.stdout).toBe("");
+      expect(result.stderr).toContain(missing);
+      expect(contractRecord(path)).toEqual(expected);
+    });
+  });
+
 });

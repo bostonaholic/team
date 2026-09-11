@@ -20,7 +20,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { EvalCollector, assertNoBudgetRegressions } from "./helpers/eval-store";
-import { loadFixture } from "./helpers/fixtures";
+import { loadFixture, loadInstructionContext } from "./helpers/fixtures";
 import { judgeReviewerOutput, outcomeJudge } from "./helpers/llm-judge";
 import { runAgentTest } from "./helpers/session-runner";
 import { testIfSelected } from "./helpers/touchfiles";
@@ -46,6 +46,16 @@ testIfSelected(
 
       const result = await runAgentTest({
         prompt,
+        systemPromptAppend: loadInstructionContext([
+          "skills/reviewing-designs/SKILL.md",
+          "skills/reviewing-designs/references/review-brief.md",
+          "skills/technical-design-doc/SKILL.md",
+          "skills/documenting-decisions/SKILL.md",
+          "skills/conventional-comments/SKILL.md",
+          "skills/reviewing-code/SKILL.md",
+          "skills/engineering-standards/SKILL.md",
+          "skills/team/references/artifacts.md",
+        ]),
         workingDirectory: workDir,
         maxTurns: 6,
         timeout: 180_000,

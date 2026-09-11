@@ -9,9 +9,11 @@
 // Defensive reads: a missing file → "" so content assertions FAIL cleanly
 // rather than throwing ENOENT (the mechanical gate rejects crashes).
 
-import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { afterEach, describe, expect, test } from "bun:test";
+import { cpSync, existsSync, mkdtempSync, rmSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { loadInstructionContext } from "./helpers/fixtures";
 
 import { read, squash } from "./helpers/text";
 
@@ -38,6 +40,49 @@ const HOST_FACING = [
 function readIf(path: string): string {
   return existsSync(path) ? read(path) : "";
 }
+
+describe("Installed resource delivery: explicit links", () => {
+  const copies: string[] = [];
+  afterEach(() => { for (const path of copies.splice(0)) rmSync(path, { recursive: true, force: true }); });
+
+  function installedCopy() {
+    const root = mkdtempSync(join(tmpdir(), "team-contract-links-"));
+    copies.push(root);
+    cpSync(join(REPO_ROOT, "skills"), join(root, "skills"), { recursive: true });
+    return root;
+  }
+
+  function linkTargets(file: string) {
+    return [...readIf(file).matchAll(/\[[^\]]+\]\(([^)]+)\)/g)]
+      .map((match) => resolve(dirname(file), (match[1] ?? "").split("#")[0] ?? ""));
+  }
+
+  test.each([
+    ["skills/decomposing-intent/SKILL.md", "skills/team/references/artifacts.md"],
+    ["skills/decomposing-intent/SKILL.md", "skills/team/references/external-data.md"],
+    ["skills/team-design/SKILL.md", "skills/team/references/artifacts.md"],
+  ])("%s resolves its cross-skill link to %s within the installed copy", (caller, target) => {
+    const root = installedCopy();
+    const targets = linkTargets(join(root, caller!));
+    expect(targets).toContain(join(root, target!));
+    expect(() => loadInstructionContext([target!], root)).not.toThrow();
+  });
+
+  test("the installed artifact contract resolves its conditional template beside the contract or under team templates", () => {
+    const root = installedCopy();
+    const artifact = join(root, "skills/team/references/artifacts.md");
+    expect(existsSync(artifact), artifact).toBe(true);
+    const targets = linkTargets(artifact).filter((path) => path.endsWith("/conditional-artifacts.md"));
+    expect(targets).toHaveLength(1);
+    expect([
+      join(root, "skills/team/references/conditional-artifacts.md"),
+      join(root, "skills/team/templates/conditional-artifacts.md"),
+    ]).toContain(targets[0]!);
+    expect(existsSync(targets[0]!)).toBe(true);
+    expect(readIf(targets[0]!)).toContain("phase: repos");
+    expect(readIf(targets[0]!)).toContain("phase: prd");
+  });
+});
 
 describe("agent dispatch", () => {
   test("the portable dispatch contract exists and states the resolution order", () => {

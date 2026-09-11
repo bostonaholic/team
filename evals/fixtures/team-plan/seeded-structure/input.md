@@ -2,6 +2,10 @@
 agent: team-plan
 tier: periodic
 deps:
+  - skills/team/references/artifacts.md
+  - skills/planning-implementation/SKILL.md
+  - skills/engineering-standards/SKILL.md
+  - skills/systems-thinking/SKILL.md
   - skills/team-plan/**
   - skills/planning-implementation/**
   - agents/planner.md

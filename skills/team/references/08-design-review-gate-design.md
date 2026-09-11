@@ -1,3 +1,10 @@
+Before review dispatch, supply the installed plugin root and resolved `skills/reviewing-designs/SKILL.md` path.
+Resolve its brief beside that installed skill. Pass the applicable resource paths and require reads before work.
+If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
+
+Before this operation, read [artifact schema](references/artifacts.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 ### Design Review Gate (design)
 
 When the `design-author` returns a draft:
@@ -63,7 +70,7 @@ When the `design-author` returns a draft:
    `> **Design round <n>**` — prepended inside the wrap, so a reader can
    tell a design-round block from an implement-round one. Same
    frontmatter-on-first-append rules as the implement path (schema in
-   `skills/artifact-frontmatter/SKILL.md`). A resumed session that
+   [artifact schema](references/artifacts.md)). A resumed session that
    repeats a round appends a duplicate-labeled block rather than losing
    one; the file is never read back as state.
 6. On **APPROVE or COMMENT** → the review passes. Advance to STRUCTURE in

@@ -28,7 +28,7 @@ import { join } from "node:path";
 
 import { EvalCollector, assertNoBudgetRegressions } from "./helpers/eval-store";
 import type { GroundTruthNonViolation } from "./helpers/fixtures";
-import { loadFixture, loadSkillContext } from "./helpers/fixtures";
+import { loadFixture, loadInstructionContext } from "./helpers/fixtures";
 import { judgeReviewerOutput, matchesHint, outcomeJudge } from "./helpers/llm-judge";
 import { runAgentTest } from "./helpers/session-runner";
 import { testIfSelected } from "./helpers/touchfiles";
@@ -168,15 +168,12 @@ function registerPlantedBugEval(options: {
           // inline prompt alone. 180s clipped completing runs.
           timeout: 300_000,
           testName: fixtureName,
-          // The reviewer's real rule text. `reviewing-code` owns the severity
-          // regime, `conventional-comments` the finding format, and
-          // `engineering-standards` the canonical Code Comments rule set the
-          // planted-comment-* fixtures exercise. These three are the globs in
-          // every code-reviewer touchfiles entry.
-          systemPromptAppend: loadSkillContext([
-            "reviewing-code",
-            "conventional-comments",
-            "engineering-standards",
+          systemPromptAppend: loadInstructionContext([
+            "skills/reviewing-code/SKILL.md",
+            "skills/conventional-comments/SKILL.md",
+            "skills/engineering-standards/SKILL.md",
+            "skills/team/references/artifacts.md",
+            "skills/team/references/external-data.md",
           ]),
           // The fixture supplies the whole change inline, and the temp cwd is
           // empty. Every tool below would either hang on a permission prompt

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Load artifact schemas and shell safety rules as explicit installed resources, with connected evaluation inputs.
+
 ## [0.104.0] - 2026-09-11
 
 ### Fixed

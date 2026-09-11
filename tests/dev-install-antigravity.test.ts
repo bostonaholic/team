@@ -52,7 +52,9 @@ import {
   test,
 } from "bun:test";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
+  cpSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -69,6 +71,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { squash } from "./helpers/text";
+import { loadInstructionContext } from "./helpers/fixtures";
 
 // `pwd -P` in the scripts yields a physical path, so resolve this side the same
 // way. On macOS `/var` is a symlink to `/private/var`, which is exactly where an
@@ -533,5 +536,54 @@ describe("dev install: antigravity harness", () => {
       expectStatus(run(DEV_UNINSTALL, home, ["antigravity"]), 0);
       expect(linkStateOf(pluginRoot(home))).toBe("unreadable");
     });
+  });
+});
+
+describe("Installed resource delivery: Antigravity", () => {
+  function readOutside(installedRoot: string, path: string, cwd: string) {
+    return spawnSync(process.execPath, [
+      "-e", 'const { loadInstructionContext } = require(process.argv[1]); process.stdout.write(loadInstructionContext([process.argv[3]], process.argv[2]));',
+      join(import.meta.dir, "helpers/fixtures.ts"), installedRoot, path,
+    ], { cwd, env: { PATH: "", HOME: cwd, TMPDIR: cwd, LANG: "C", TZ: "UTC" }, encoding: "utf8", timeout: 10_000 });
+  }
+
+  function copiedInstallation() {
+    const home = newHome();
+    const source = join(home, "resource source");
+    cpSync(join(REPO_ROOT, "skills/team"), join(source, "skills/team"), { recursive: true });
+    const installedRoot = seedNativeInstall(home);
+    cpSync(join(source, "skills/team"), join(installedRoot, "skills/team"), { recursive: true });
+    return { source, installedRoot, home };
+  }
+
+  test.each(["artifacts.md", "external-data.md"])("%s retains its digest in a native-shaped copy after source removal", (name) => {
+    const { source, installedRoot, home } = copiedInstallation();
+    const path = join("skills/team/references", name);
+    expect(existsSync(join(source, path)), path).toBe(true);
+    const expected = createHash("sha256").update(loadInstructionContext([path], source)).digest("hex");
+    expect(loadInstructionContext([path], installedRoot)).toBe(loadInstructionContext([path], source));
+
+    rmSync(source, { recursive: true });
+
+    expect(existsSync(source)).toBe(false);
+    const result = readOutside(installedRoot, path, home);
+    expect({ status: result.status, stderr: result.stderr }).toMatchObject({ status: 0 });
+    expect(createHash("sha256").update(result.stdout).digest("hex")).toBe(expected);
+  });
+
+  test.each(["artifacts.md", "external-data.md"])("missing installed %s reports its path while source remains readable", (name) => {
+    const { source, installedRoot, home } = copiedInstallation();
+    const path = join("skills/team/references", name);
+    expect(existsSync(join(source, path)), path).toBe(true);
+    expect(loadInstructionContext([path], installedRoot)).toBe(loadInstructionContext([path], source));
+    const missing = join(installedRoot, path);
+
+    rmSync(missing);
+
+    expect(loadInstructionContext([path], source).length).toBeGreaterThan(0);
+    const result = readOutside(installedRoot, path, home);
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain(missing);
   });
 });

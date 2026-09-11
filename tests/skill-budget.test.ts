@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
+import { skillNames } from "./helpers/skill-refs";
 import { description, frontmatter, read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
@@ -79,8 +80,10 @@ describe("skill source budget", () => {
 
   test("discovers the fixed skill tiers", () => {
     expect(budgets.filter(({ tier }) => tier === "entry")).toHaveLength(25);
-    expect(budgets.filter(({ tier }) => tier === "methodology")).toHaveLength(41);
-    expect(budgets.filter(({ tier }) => tier === "principle")).toHaveLength(25);
+    const names = skillNames(REPO_ROOT);
+    const principles = [...names].filter((name) => name.startsWith("principle-")).length;
+    expect(budgets.filter(({ tier }) => tier === "methodology")).toHaveLength(names.size - 25 - principles);
+    expect(budgets.filter(({ tier }) => tier === "principle")).toHaveLength(principles);
   });
 
   test("every over-budget skill has a recorded reason", () => {

@@ -1,9 +1,3 @@
----
-name: artifact-frontmatter
-description: 'Defines pipeline artifact schemas. Load when authoring or validating artifact frontmatter, `4-repos.md`, `3-prd.md`, or design-review records.'
-user-invocable: false
----
-
 # Artifact Frontmatter
 
 This is the schema contract for durable pipeline state under `docs/plans/<id>/`. Phase behavior lives in `skills/qrspi-workflow/SKILL.md`; files are the phase interface (`principle-files-are-the-contract`).
@@ -42,4 +36,4 @@ Every artifact in one directory has the identical `topic`: the `<id>` minus its 
 
 ## Conditional artifacts
 
-Before writing or validating `4-repos.md` (`phase: repos`) or `3-prd.md` (`phase: prd`), read [references/conditional-artifacts.md](references/conditional-artifacts.md) for their exact templates and ownership rules. `4-repos.md` presence enables multi-repo mode; absence means single-repo. `3-prd.md` is conditional per `skills/product-requirements-doc/SKILL.md`, referenced by `1-task.md`, autonomous, and has no `approved`/`revision`.
+Before writing or validating `4-repos.md` (`phase: repos`) or `3-prd.md` (`phase: prd`), read [conditional-artifacts.md](conditional-artifacts.md) for their exact templates and ownership rules. `4-repos.md` presence enables multi-repo mode; absence means single-repo. `3-prd.md` is conditional per `skills/product-requirements-doc/SKILL.md`, referenced by `1-task.md`, autonomous, and has no `approved`/`revision`.

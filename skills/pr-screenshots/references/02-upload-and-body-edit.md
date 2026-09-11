@@ -1,3 +1,6 @@
+Before this operation, read [external-data rules](../team/references/external-data.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 ## Upload and body edit
 
 ### The four steps, in this order
@@ -206,7 +209,7 @@ test *follows* symbolic links, so `-f` alone accepts an entry naming a link to
 `~/.ssh/id_ed25519` or to a `.env` and uploads that file to a live,
 world-readable `user-attachments` URL — the script tests the link itself, and
 resolves the path before comparing it to the root so that `..` cannot climb out
-of it (`skills/principle-never-interpolate/SKILL.md`, containment). `[ -L ]`
+of it ([external-data rules](../team/references/external-data.md), containment). `[ -L ]`
 runs **before** `[ -e ]`: `-e` follows the link, so a dangling symlink tested
 first would report as `file missing` and hide an attempted symlink behind the
 wrong class.
@@ -408,7 +411,7 @@ splice is empty" *after* every asset has already landed. The heredoc delimiter
 is **quoted**, so nothing between the markers is expanded — a caller string
 carrying `$`, a backtick, or the backslashes the normalization in
 `references/01-input-and-result.md` adds reaches the file as the literal text
-that was rendered (`principle-never-interpolate`) — and the delimiter is a
+that was rendered ([external-data rules](../team/references/external-data.md)) — and the delimiter is a
 token no rendered line can equal:
 
 ```bash

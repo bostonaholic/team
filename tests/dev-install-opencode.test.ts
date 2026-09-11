@@ -3,12 +3,64 @@ import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { chmodSync, closeSync, constants, cpSync, existsSync, lstatSync, mkdirSync, openSync, readFileSync, readdirSync, rmSync, symlinkSync, writeSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { expectStatus, fixture, load, REPO, run, skill, state, write, type Fixture, type Result } from "./helpers/opencode";
+import { loadInstructionContext } from "./helpers/fixtures";
+import { createHash } from "node:crypto";
 
 setDefaultTimeout(20_000);
 
 const fixtures: Fixture[] = [];
 function make(name = "checkout") { const f = fixture(name); fixtures.push(f); return f; }
 afterEach(() => { for (const f of fixtures.splice(0)) f.dispose(); });
+
+describe("Installed resource delivery: OpenCode", () => {
+  function readOutside(installedRoot: string, path: string, cwd: string) {
+    return spawnSync(process.execPath, [
+      "-e", 'const { loadInstructionContext } = require(process.argv[1]); process.stdout.write(loadInstructionContext([process.argv[3]], process.argv[2]));',
+      join(import.meta.dir, "helpers/fixtures.ts"), installedRoot, path,
+    ], { cwd, env: { PATH: "", HOME: cwd, TMPDIR: cwd, LANG: "C", TZ: "UTC" }, encoding: "utf8", timeout: 10_000 });
+  }
+
+  function copiedInstallation() {
+    const f = make("resource source");
+    cpSync(join(REPO, "skills/team"), join(f.checkout, "skills/team"), { recursive: true });
+    const installed = { ...f, checkout: join(f.root, "installed snapshot") };
+    cpSync(f.checkout, installed.checkout, { recursive: true });
+    expectStatus(run(installed, "install"), 0);
+    return { f, installed };
+  }
+
+  test.each(["artifacts.md", "external-data.md"])("%s retains its digest through the adapter after source removal", async (name) => {
+    const { f, installed } = copiedInstallation();
+    const path = join("skills/team/references", name);
+    expect(existsSync(join(f.checkout, path)), path).toBe(true);
+    const expected = createHash("sha256").update(loadInstructionContext([path], f.checkout)).digest("hex");
+    const config = await load(installed, {}, installed.target);
+    expect(config.command?.team?.template).toContain(join(installed.checkout, "skills/team/SKILL.md"));
+
+    rmSync(f.checkout, { recursive: true });
+
+    expect(existsSync(f.checkout)).toBe(false);
+    const result = readOutside(installed.checkout, path, f.root);
+    expect({ status: result.status, stderr: result.stderr }).toMatchObject({ status: 0 });
+    expect(createHash("sha256").update(result.stdout).digest("hex")).toBe(expected);
+  });
+
+  test.each(["artifacts.md", "external-data.md"])("missing installed %s reports its path while source remains readable", (name) => {
+    const { f, installed } = copiedInstallation();
+    const path = join("skills/team/references", name);
+    expect(existsSync(join(f.checkout, path)), path).toBe(true);
+    expect(loadInstructionContext([path], installed.checkout)).toBe(loadInstructionContext([path], f.checkout));
+    const missing = join(installed.checkout, path);
+
+    rmSync(missing);
+
+    expect(loadInstructionContext([path], f.checkout).length).toBeGreaterThan(0);
+    const result = readOutside(installed.checkout, path, f.root);
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain(missing);
+  });
+});
 function targetAt(root: string) { return join(root, "plugins/team.js"); }
 function owned(f: Fixture, path = f.target) { expect(state(path)).toEqual({ kind: "link", value: join(f.checkout, "opencode/team.js") }); }
 function failed(result: Result, diagnostic: RegExp) { expect(result.status, result.output).not.toBe(0); expect(result.output).toMatch(diagnostic); }

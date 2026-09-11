@@ -1,3 +1,6 @@
+Before this operation, read [artifact schema](../team/references/artifacts.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 ### Step 2 — capture the baseline and the recovery anchor
 
 **This runs before the fetch and before the rebase.** It is what makes step
@@ -47,7 +50,7 @@
    - Write `docs/plans/<ID>/rebase-<n>.md`, where `<n>` is one past the
      highest existing `rebase-<n>.md` — append a new file per run, never
      overwrite a previous one.
-   - Frontmatter per `skills/artifact-frontmatter/SKILL.md`, plus the
+   - Frontmatter per [artifact schema](../team/references/artifacts.md), plus the
      branch, `$ORIG_SHA`, `$REMOTE_SHA_BEFORE`, the resolved base and which
      discovery tier supplied it, and the baseline table. Step 3 appends
      `$MERGE_BASE` once the fetch has run.

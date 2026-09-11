@@ -62,7 +62,7 @@ const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
 const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
 const TEAM_IMPLEMENT_SKILL = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
 const TEAM_PR_SKILL = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
-const ARTIFACT_SKILL = join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md");
+const ARTIFACT_SKILL = join(REPO_ROOT, "skills", "team", "references", "artifacts.md");
 const ENG_REVIEW_SKILL = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
 const REVIEWING_DESIGNS_SKILL = join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md");
 const TEAM_DESIGN_SKILL = join(REPO_ROOT, "skills", "team-design", "SKILL.md");
@@ -821,7 +821,7 @@ describe("orchestrator contract in skills/team-implement/SKILL.md (L2)", () => {
   });
 });
 
-describe("artifact schema in skills/artifact-frontmatter/SKILL.md (L2)", () => {
+describe("artifact schema in team/references/artifacts.md (L2)", () => {
   test("documents cross-model-notes.md with phase: cross-model-review", () => {
     const text = read(ARTIFACT_SKILL);
     expect(text).toContain(NOTES_FILENAME);
@@ -869,7 +869,7 @@ describe("PR contract in skills/team-pr/SKILL.md (L2)", () => {
     expect(spec).toMatch(/replac|exclud/i);
   });
 
-  test("the literal notes filename agrees across team, team-implement, team-pr, and artifact-frontmatter skills", () => {
+  test("the literal notes filename agrees across team, team-implement, team-pr, and artifact schema skills", () => {
     for (const path of [TEAM_SKILL, TEAM_IMPLEMENT_SKILL, TEAM_PR_SKILL, ARTIFACT_SKILL]) {
       expect(read(path)).toContain(NOTES_FILENAME);
     }
@@ -1083,7 +1083,7 @@ describe("design-round records (L2)", () => {
     expect(gate).toContain(ROUND_LABEL);
   });
 
-  test("artifact-frontmatter documents cross-model-raw.md with phase: cross-model-raw and the label reading rule", () => {
+  test("artifact schema documents cross-model-raw.md with phase: cross-model-raw and the label reading rule", () => {
     const text = read(ARTIFACT_SKILL);
     expect(text).toContain(RAW_FILENAME);
     expect(text).toContain("phase: cross-model-raw");
