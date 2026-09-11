@@ -39,8 +39,9 @@ clean for the whole run.
    regression in the branch, and reporting it as the latter sends someone
    after a bug that is not there.
 
-1. **Create the home worktree** on branch `<id>` off `origin/HEAD`, with
-   Claude Code's native worktree support. Call the Skill tool with
+1. **Create the home worktree** on branch `<id>` off `origin/HEAD`.
+   Use the host's native worktree support when it offers one, otherwise
+   `git worktree add`. Call the Skill tool with
    `team-worktree` and follow the
    single-repo block under "Create the worktree(s)". Only the
    home repo gets a worktree at this phase. Multi-repo secondary worktrees

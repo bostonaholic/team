@@ -32,7 +32,7 @@ nav_label: architecture
 
 Agents are **decoupled microservices**. Each agent consumes a predecessor
 artifact on disk, does work, and produces its own artifact under
-`docs/plans/<id>/`. The orchestrator is the main Claude Code session: it
+`docs/plans/<id>/`. The orchestrator is the main session: it
 walks a linear phase table, dispatches the right specialist for each phase,
 seeds and updates a TodoWrite ledger, and runs the gates.
 
@@ -611,7 +611,7 @@ skill in both directions.
 
 ## 5. Phase-table orchestrator
 
-The orchestrator (the main Claude Code session) drives `/team` by
+The orchestrator (the main session) drives `/team` by
 walking the phase table in `skills/team/SKILL.md`. Pseudocode:
 
 ```

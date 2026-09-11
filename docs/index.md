@@ -1,6 +1,6 @@
 ---
 title: Overview
-description: "Team orchestrates specialized agents that implement features end-to-end through the QRSPI pipeline. The full pipeline runs on Claude Code; the standalone utilities also work on Codex CLI and Antigravity CLI."
+description: "Team orchestrates specialized agents that implement features end-to-end through the QRSPI pipeline."
 permalink: /
 audience: [user, developer]
 nav_order: 1
@@ -18,7 +18,7 @@ reviewers. Together they drive a feature through an 8-phase pipeline (QRSPI) and
 verified pull request.
 
 Agents are decoupled microservices. Each one consumes a predecessor artifact on disk, does its
-work, and writes its own artifact. The orchestrator is the main Claude Code session. It walks a
+work, and writes its own artifact. The orchestrator is the main session. It walks a
 linear phase table with no mid-run human gates. An adversarial design review gates the design,
 and the human reviews the finished PR.
 
@@ -69,9 +69,7 @@ company-significant work from problem definition through measured outcomes.
 ## Install
 
 Team ships a native manifest for each host, so one repo installs on all three
-from a local checkout. The full pipeline needs Claude Code, because that is the
-host that dispatches the agents. The standalone utilities work on all three.
-Pick yours.
+from a local checkout. Pick yours.
 
 ### Claude Code
 
@@ -166,8 +164,7 @@ codex plugin remove team@team-dev
 
 Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex
 budgets its skill catalog, so it shortens the longest descriptions; the skills
-still work. The `/team-*` pipeline commands load but cannot dispatch Claude
-Code agents, so they will not run the pipeline. The standalone utilities do.
+still work.
 
 Developing Team itself? Run the loop Codex documents for local plugins:
 

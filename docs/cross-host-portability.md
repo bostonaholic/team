@@ -32,6 +32,7 @@ nav_label: portability
 ## Contents
 
 - [Current state](#current-state)
+- [Agent dispatch](#agent-dispatch)
 - [Desired end state](#desired-end-state)
 - [Patterns to follow](#patterns-to-follow)
 - [The capability matrix](#the-capability-matrix)
@@ -85,6 +86,29 @@ The host also interprets the agent frontmatter field semantics: `name`, `model`,
 these four non-portable bindings. The `model:` field is a *Claude-specific model
 name*. To make it portable, resolve it through host-neutral config. Do not bake a
 literal into each definition. See `.team/config.json` under Desired end state.
+
+## Agent dispatch
+
+Of the four blocking bindings, the fourth — Agent/Task dispatch — needs no
+per-host agent registration. Team resolves it in the orchestrator itself,
+through the portable definition contract in
+`skills/team/references/15-host-dispatch.md`:
+
+- Every specialist ships as `agents/<name>.md`. The body is a complete role
+  prompt; the frontmatter is host metadata.
+- A host that resolves Team agents by name (Claude Code) dispatches the named
+  agent, so the host applies the frontmatter's tool and permission restrictions.
+- Any other host reads the definition, strips frontmatter, and spawns a fresh
+  generic subagent with the body as its role instructions. No host-side agent
+  registration is required.
+- A producer may run inline only when no subagent facility exists; a reviewer
+  never runs inline, because a reviewer sharing the author's context cannot
+  judge it.
+
+The consequence for this study: the "agent dispatch" primitive is reachable on
+every host that can spawn a subagent, without a per-host shim. The remaining
+per-host work is the bindings the study already names — hook registration and
+the model-tier map — not agent registration.
 
 ## Desired end state
 
@@ -146,8 +170,9 @@ nested subagents, and structured returns.
   is running on is knowable no other way, which is how
   `resolve-transcript.mjs` tells a Claude Code session from a Codex one.
   `skills/nested-agents/SKILL.md:35` still interpolates the variable directly.
-  That command is Claude-Code-only today, because the pipeline agents it serves
-  cannot dispatch on Codex.
+  That command is Claude-Code-specific, but the pipeline it serves is not:
+  nested dispatch degrades to its documented inline fallback on every other
+  host (`skills/nested-agents/SKILL.md`, "Optimization, never a dependency").
 - **Hooks already isolate portable logic from host contract.** Each `.mjs` reads
   stdin, does Node-only work, then writes a host-shaped JSON result
   (`session-start-recover.mjs:236-244`, `post-write-validate.mjs:29-37`). The scan
@@ -514,8 +539,10 @@ points the other way, since about fifty skills in `~/.agents/skills/` were
 invisible to `agy`.
 
 **Scope.** Antigravity installs every skill and every agent, and the dev install
-keeps a checkout's edits live. What is unproven is dispatch: the pipeline
-commands install but are not claimed to run, and hooks, commands, and rules
+keeps a checkout's edits live. Dispatch is resolved host-neutrally, not by a
+per-host agent registration: the orchestrator reads each specialist's portable
+definition and dispatches it through the host's subagent facility (see
+[Agent dispatch](#agent-dispatch)). Hooks, commands, and rules
 remain unported on this host. That work stays with
 [#56](https://github.com/bostonaholic/team/issues/56).
 

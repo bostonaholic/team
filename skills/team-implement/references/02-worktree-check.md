@@ -8,7 +8,7 @@ Before any agent dispatch, decide where to work:
    to run `/team-worktree [docs/plans/<id>/]` (the path is optional —
    discovery resolves it) and stop.
 2. Run `git rev-parse --absolute-git-dir`. If the path contains
-   `/worktrees/`, you are already inside a Claude Code worktree — proceed in
+   `/worktrees/`, you are already inside a linked worktree — proceed in
    place. In multi-repo mode this should be the home repo's worktree. The
    implementer cd's into the other repos' worktrees as the plan steps
    require.
