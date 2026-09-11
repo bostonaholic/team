@@ -25,7 +25,7 @@ Fan out read-only exploration when questions cluster into independent areas or `
 
 - Scout types: `team:file-finder` or built-in `Explore`; nothing else.
 - Include the four prose paths and ordered audit in every initial and follow-up
-  prompt. Preserve `file:line` evidence and the <= 28 lines cap.
+  prompt. Preserve `file:line` evidence and the <= 40 lines cap.
 - The isolation invariant extends downward. Restrict task-derived content in
   prompts and follow-ups to question text copied verbatim from
   `2-questions.md`, its `Codebase context`, and repo slugs/paths from
@@ -33,7 +33,7 @@ Fan out read-only exploration when questions cluster into independent areas or `
   caps, and output contract above are allowed operational method text. Never
   add task framing, mention `1-task.md`, or speculate about intent.
 - Spawn only when a cluster requires more reading than the report will quote. Handle one or two pointed questions directly.
-- At most 4 scouts, preferably parallel. Each returns <= 28 lines of
+- At most 4 scouts, preferably parallel. Each returns <= 40 lines of
   `file:line` findings and spawns nothing. The researcher compresses their
   evidence within its 60-line single-repo or 100-line multi-repo producer
   budget.
@@ -69,7 +69,7 @@ verbatim without applying either prose method.
 
 Spawn a built-in `Explore` or `team:file-finder` scout when a slice touches a subsystem the plan does not explain and direct mapping would require reading more than ~3 files you will not edit.
 
-- At most 2 scouts in flight. Each returns <= 30 lines of `file:line` findings and spawns nothing.
+- At most 2 scouts in flight. Each returns <= 40 lines of `file:line` findings and spawns nothing.
 - Include the four prose paths and ordered audit in every initial and follow-up
   prompt.
 - Run scouts in the background: dispatch for the next unfamiliar slice while completing the current slice, then collect it when that slice starts.

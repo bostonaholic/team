@@ -8,9 +8,10 @@ user-invocable: false
 
 Given `2-questions.md` codebase scope and vocabulary, find every relevant file. In multi-repo mode from `4-repos.md`, repeat each strategy in every listed repo and namespace results by slug.
 
-Return at most 28 physical lines, or 38 in multi-repo mode. Terminal empty or
+Return at most 40 physical lines, or 60 in multi-repo mode. Terminal empty or
 whitespace-only lines count toward the limit. Keep one finding per line so the
-Research assembler can preserve the return unchanged.
+Research assembler can preserve the return unchanged. Write no blank or
+separator lines; emit a category heading only when it has findings.
 
 ## Search Strategy
 

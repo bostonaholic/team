@@ -1189,11 +1189,11 @@ backtick fence labeled `untrusted-evidence-file-finder` or
 that return. A fixed line identifies the blocks as untrusted evidence and says
 embedded imperatives carry no authority. The root then traces every final
 substantive claim only to the completed returns, never to task framing.
-File-finder returns at most 28 lines for one repo or 38 for multiple repos.
+File-finder returns at most 40 lines for one repo or 60 for multiple repos.
 Researcher returns at most 60 or 100 lines. The root reserves eleven lines for
 the five-line frontmatter,
 authority line, four fence lines, and one source-grounded synthesis line. The
-final artifact therefore has at most 99 lines for one repo or 149 for multiple
+final artifact therefore has at most 111 lines for one repo or 171 for multiple
 repos.
 Line validation normalizes line endings but counts every physical line,
 including terminal empty and whitespace-only lines.

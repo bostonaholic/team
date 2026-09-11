@@ -653,11 +653,11 @@ testUnslop(
       researcher.output.includes("manifest.json:2") &&
       researcher.output.includes("fixture-language 1");
     const producerLineCaps =
-      normalizedLineCount(finder.output) <= 28 &&
+      normalizedLineCount(finder.output) <= 40 &&
       normalizedLineCount(researcher.output) <= 60;
     const assemblyLineCaps =
-      normalizedLineCount(standalone.output) <= 99 &&
-      normalizedLineCount(fullPipeline.output) <= 99;
+      normalizedLineCount(standalone.output) <= 111 &&
+      normalizedLineCount(fullPipeline.output) <= 111;
     const deterministic =
       finder.exitReason === "success" &&
       researcher.exitReason === "success" &&
@@ -783,12 +783,12 @@ testUnslop(
     expect(dispatch).toContain("general-purpose");
     expect(dispatch).toContain("REFUTED");
     expect(dispatch).toContain("CONFIRMED");
-    expect(dispatch).toMatch(/(?:<=|at most) 28 lines/i);
+    expect(dispatch).toMatch(/(?:<=|at most) 40 lines/i);
     expect(dispatch).toMatch(/(?:<=|at most) 10 lines/i);
 
     const [finder, explorer, skeptic] = await Promise.all([
-      runHelper("team:file-finder", 28),
-      runHelper("Explore", 28),
+      runHelper("team:file-finder", 40),
+      runHelper("Explore", 40),
       runHelper("general-purpose", 10),
     ]);
     const vendorStdout = "The seamless courier showcases a robust ecosystem.\nAPPROVE";
@@ -812,12 +812,12 @@ testUnslop(
       successfullyReadEveryPath(result.toolCalls, paths, workingDirectory));
     const evidenceOk = finder.result.output.includes("src/normalize-label.pseudo:1") && explorer.result.output.includes("src/normalize-label.pseudo:1");
     const verdictOk = /\b(?:CONFIRMED|REFUTED)\b/.test(skeptic.result.output);
-    const lineCapsOk = finder.result.output.split("\n").length <= 28 && explorer.result.output.split("\n").length <= 28 && skeptic.result.output.split("\n").length <= 10;
+    const lineCapsOk = finder.result.output.split("\n").length <= 40 && explorer.result.output.split("\n").length <= 40 && skeptic.result.output.split("\n").length <= 10;
     const proseOk = helpers.every(({ result }) => !hasSlopPattern(result.output));
     const courierOk = courier.exitReason === "success" && courier.output === vendorStdout && courier.toolCalls.length === 0;
     const helperChecks = [
-      { name: "file-finder", helper: finder, contract: finder.result.output.includes("src/normalize-label.pseudo:1") && finder.result.output.split("\n").length <= 28 },
-      { name: "Explore", helper: explorer, contract: explorer.result.output.includes("src/normalize-label.pseudo:1") && explorer.result.output.split("\n").length <= 28 },
+      { name: "file-finder", helper: finder, contract: finder.result.output.includes("src/normalize-label.pseudo:1") && finder.result.output.split("\n").length <= 40 },
+      { name: "Explore", helper: explorer, contract: explorer.result.output.includes("src/normalize-label.pseudo:1") && explorer.result.output.split("\n").length <= 40 },
       { name: "general-purpose", helper: skeptic, contract: verdictOk && skeptic.result.output.split("\n").length <= 10 },
     ];
     for (const { name, helper, contract } of helperChecks) {
