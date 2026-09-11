@@ -15,7 +15,7 @@
 
 import { afterAll } from "bun:test";
 import { expect } from "bun:test";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -39,9 +39,15 @@ testIfSelected(
     const workDir = mkdtempSync(join(tmpdir(), "eng-design-doc-review-e2e-"));
 
     try {
+      const artifactDir = join(workDir, "docs", "plans", "2026-06-03-session-cache");
+      const design = /```markdown\r?\n([\s\S]*?)\r?\n```/.exec(fixture.body)?.[1];
+      expect(design).toBeDefined();
+      mkdirSync(artifactDir, { recursive: true });
+      writeFileSync(join(artifactDir, "6-design.md"), `${design}\n`, "utf8");
       const prompt =
         "You are adversarially reviewing a design document with fresh " +
-        "context. Use Conventional Comments and end with a verdict.\n\n" +
+        `context. Read ${join(artifactDir, "6-design.md")}. ` +
+        "Use Conventional Comments and end with a verdict.\n\n" +
         fixture.body;
 
       const result = await runAgentTest({
@@ -55,7 +61,7 @@ testIfSelected(
           "skills/reviewing-code/SKILL.md",
           "skills/engineering-standards/SKILL.md",
           "skills/team/references/artifacts.md",
-        ]),
+        ]).replaceAll("$ARGUMENTS", artifactDir),
         workingDirectory: workDir,
         maxTurns: 6,
         timeout: 180_000,

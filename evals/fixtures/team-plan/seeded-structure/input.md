@@ -46,3 +46,34 @@ Goal: handler rejects over-limit requests with a 429 + Retry-After.
 Layers: src/api/handler.js, src/api/respond.js.
 Verification: integration test sends N+1 requests and asserts the 429.
 ```
+
+```markdown 1-task.md
+---
+topic: token-bucket
+date: 2026-06-03
+phase: task
+ticketId: null
+---
+
+# Task
+
+Add a per-client request limiter to the public API so one abusive client
+cannot exhaust the backend.
+```
+
+```markdown 5-research.md
+---
+topic: token-bucket
+date: 2026-06-03
+phase: research
+---
+
+# Research findings
+
+- Requests are dispatched through `src/api/handler.js`; there is no
+  per-client throttling today.
+- A client identifier (API key) is already validated in
+  `src/api/auth.js:40`.
+- Responses are built in `src/api/respond.js`; no `Retry-After` header is
+  set anywhere.
+```

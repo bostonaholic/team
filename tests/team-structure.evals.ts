@@ -45,18 +45,19 @@ testIfSelected(
     const workDir = mkdtempSync(join(tmpdir(), "team-structure-e2e-"));
 
     try {
-      const seed = extractSeed(fixture.body, "6-design.md");
-      expect(seed).not.toBeNull();
-      // Drift guard: the working-dir TOPIC_SLUG must match the seed's topic.
-      expect(seed).toContain(`topic: ${TOPIC_SLUG}`);
-      const seedPath = join(workDir, "docs", "plans", TOPIC_ID, "6-design.md");
-      mkdirSync(dirname(seedPath), { recursive: true });
-      writeFileSync(seedPath, `${seed}\n`, "utf8");
+      for (const name of ["1-task.md", "6-design.md"]) {
+        const seed = extractSeed(fixture.body, name);
+        expect(seed).not.toBeNull();
+        expect(seed).toContain(`topic: ${TOPIC_SLUG}`);
+        const seedPath = join(workDir, "docs", "plans", TOPIC_ID, name);
+        mkdirSync(dirname(seedPath), { recursive: true });
+        writeFileSync(seedPath, `${seed}\n`, "utf8");
+      }
 
       const prompt =
         "You are running the STRUCTURE phase against the seeded " +
         `docs/plans/${TOPIC_ID}/6-design.md in your working directory. Read ` +
-        "it, slice the work into vertical slices each with a verification " +
+        "it and the matching 1-task.md, slice the work into vertical slices each with a verification " +
         "checkpoint, and reuse the topic slug.\n\n" +
         fixture.body;
 

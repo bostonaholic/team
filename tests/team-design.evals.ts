@@ -64,7 +64,8 @@ testIfSelected(
 
       const prompt =
         "You are running the DESIGN phase against the seeded " +
-        `docs/plans/${TOPIC_ID}/{task,research}.md in your working ` +
+        `docs/plans/${TOPIC_ID}/1-task.md and ` +
+        `docs/plans/${TOPIC_ID}/5-research.md in your working ` +
         "directory. Read them, draft the design, reuse the topic slug, and " +
         "list explicit open questions.\n\n" +
         fixture.body;

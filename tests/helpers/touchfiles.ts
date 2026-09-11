@@ -79,10 +79,6 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   ],
   "team-question-neutral-questions": [
     "skills/team/references/external-data.md",
-    "skills/team/references/conditional-artifacts.md",
-    "skills/product-requirements-doc/references/prd-template.md",
-    "skills/product-requirements-doc/SKILL.md",
-    "skills/decomposing-intent/references/multi-repo.md",
     "skills/decomposing-intent/references/artifact-templates.md",
     "skills/decomposing-intent/SKILL.md",
     "skills/team/references/artifacts.md",
@@ -177,8 +173,6 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   "unslop-neutral-research": [
     "skills/team/references/external-data.md",
     "skills/team/references/artifacts.md",
-    "skills/decomposing-intent/references/artifact-templates.md",
-    "skills/decomposing-intent/SKILL.md",
     "agents/file-finder.md",
     "agents/questioner.md",
     "agents/researcher.md",

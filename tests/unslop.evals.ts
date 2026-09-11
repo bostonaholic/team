@@ -364,14 +364,14 @@ testUnslop(
       const result = await runAgentTest({
         prompt:
           "Act as the pipeline questioner and root orchestrator. Author a concise QUESTION status and a handoff from these facts: the parser reads one file and may reject malformed input. " +
-          "Then relay the completed reviewer report byte-identically between the supplied markers. Preserve its verdict token and final-line placement.\n\n" +
+          "This is status and relay work only; apply the prose and artifact contracts to the supplied facts. Then relay the completed reviewer report byte-identically between the supplied markers. Preserve its verdict token and final-line placement.\n\n" +
           `<<<COMPLETED_REPORT>>>\n${completedReport}\n<<<END_COMPLETED_REPORT>>>`,
         workingDirectory: workDir,
         maxTurns: 6,
         timeout: 240_000,
         testName: "pipeline author behavior evaluation",
         model: questioner.model,
-        systemPromptAppend: `Installed plugin root: ${ROOT}\nInstalled agent definition: ${join(ROOT, "agents", "questioner.md")}\n\n${questioner.body}\n\n---\n\n${instructionContext(["skills/team/SKILL.md", "skills/decomposing-intent/SKILL.md", "skills/decomposing-intent/references/artifact-templates.md", "skills/team/references/artifacts.md", "skills/team/references/external-data.md", ...PROSE_FILES])}`,
+        systemPromptAppend: `Installed plugin root: ${ROOT}\nInstalled agent definition: ${join(ROOT, "agents", "questioner.md")}\n\n${questioner.body}\n\n---\n\n${instructionContext(["skills/team/SKILL.md", "skills/team/references/artifacts.md", "skills/team/references/external-data.md", ...PROSE_FILES])}`,
         disallowedTools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "Task", "Agent"],
       });
       const authored = authoredWithoutSourceBlocks(result.output);

@@ -54,3 +54,17 @@ A per-API-key token-bucket limiter caps request rate; over-limit requests get a
 ## Out of scope
 - Distributed/shared limits across instances.
 ```
+
+```markdown 1-task.md
+---
+topic: token-bucket
+date: 2026-06-03
+phase: task
+ticketId: null
+---
+
+# Task
+
+Add a per-client request limiter to the public API so one abusive client
+cannot exhaust the backend.
+```

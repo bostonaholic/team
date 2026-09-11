@@ -53,52 +53,57 @@ Existing Skill-tool loads and unrelated agent preloads remain in place.
 
 | Consumer | Operation | Replacement or delivery |
 | --- | --- | --- |
-| `agents/code-reviewer.md` | code-reviewer.md | skills/team/references/artifacts.md; skills/team/references/external-data.md |
-| `agents/design-author.md` | design-author.md | skills/team/references/artifacts.md; skills/team/references/external-data.md |
-| `agents/file-finder.md` | file-finder.md | skills/team/references/artifacts.md |
-| `agents/planner.md` | planner.md | skills/team/references/artifacts.md |
-| `agents/questioner.md` | questioner.md | skills/team/references/artifacts.md; skills/team/references/external-data.md |
-| `agents/researcher.md` | researcher.md | skills/team/references/artifacts.md |
-| `agents/structure-planner.md` | structure-planner.md | skills/team/references/artifacts.md |
-| `opencode/team.js` | catalog/documentation/verification | existing skillNames / loadedSkills / loadCatalog; 89 registrations |
-| `skills/authoring-designs/SKILL.md` | authoring-designs | skills/team/references/artifacts.md |
-| `skills/cross-model-review/SKILL.md` | cross-model-review | skills/team/references/external-data.md |
-| `skills/cross-model-review/references/procedure.md` | cross-model-review | skills/team/references/artifacts.md; skills/team/references/external-data.md |
-| `skills/decomposing-intent/SKILL.md` | decomposing-intent | skills/team/references/artifacts.md; skills/team/references/external-data.md |
-| `skills/decomposing-intent/references/multi-repo.md` | decomposing-intent | skills/team/references/artifacts.md |
-| `skills/eng-design-doc-review/SKILL.md` | eng-design-doc-review | existing skillNames / loadedSkills / loadCatalog; 89 registrations |
-| `skills/groom-backlog/SKILL.md` | groom-backlog | skills/team/references/external-data.md |
-| `skills/groom-backlog/references/17-hard-rules.md` | groom-backlog | skills/team/references/external-data.md |
-| `skills/pr-cleanup/SKILL.md` | pr-cleanup | skills/team/references/external-data.md |
-| `skills/pr-cleanup/references/01-input.md` | pr-cleanup | skills/team/references/external-data.md |
-| `skills/pr-cleanup/references/03-untrusted-input-pr-metadata-is-data.md` | pr-cleanup | skills/team/references/external-data.md |
-| `skills/pr-rebase/SKILL.md` | pr-rebase | skills/team/references/external-data.md |
-| `skills/pr-rebase/references/01-input.md` | pr-rebase | skills/team/references/external-data.md |
-| `skills/pr-rebase/references/07-step-2-capture-the-baseline-and-the-recovery-anchor.md` | pr-rebase | skills/team/references/artifacts.md |
-| `skills/pr-screenshots/SKILL.md` | pr-screenshots | skills/team/references/external-data.md |
-| `skills/pr-screenshots/references/01-input-and-result.md` | pr-screenshots | skills/team/references/external-data.md |
-| `skills/pr-screenshots/references/02-upload-and-body-edit.md` | pr-screenshots | skills/team/references/external-data.md |
-| `skills/pr-screenshots/references/03-verify.md` | pr-screenshots | skills/team/references/external-data.md |
-| `skills/pr-screenshots/scripts/write-companion.sh` | pr-screenshots | skills/team/references/external-data.md |
-| `skills/qrspi-workflow/SKILL.md` | qrspi-workflow | skills/team/references/artifacts.md |
-| `skills/sweeping-local-state/SKILL.md` | sweeping-local-state | skills/team/references/external-data.md |
-| `skills/sweeping-local-state/references/procedure.md` | sweeping-local-state | skills/team/references/external-data.md |
-| `skills/team-design/SKILL.md` | team-design | skills/team/references/artifacts.md |
-| `skills/team-implement/SKILL.md` | team-implement | skills/team/references/artifacts.md |
-| `skills/team-implement/references/03-execution.md` | team-implement | skills/team/references/artifacts.md |
-| `skills/team-plan/SKILL.md` | team-plan | skills/team/references/artifacts.md |
-| `skills/team-pr/references/04-screenshot-upload.md` | team-pr | skills/team/references/external-data.md |
-| `skills/team-question/SKILL.md` | team-question | skills/team/references/artifacts.md; skills/team/references/external-data.md |
-| `skills/team-research/SKILL.md` | team-research | skills/team/references/artifacts.md |
-| `skills/team-structure/SKILL.md` | team-structure | skills/team/references/artifacts.md |
-| `skills/team/references/03-the-phase-loop.md` | team | skills/team/references/artifacts.md |
-| `skills/team/references/08-design-review-gate-design.md` | team | skills/team/references/artifacts.md |
-| `skills/team/references/12-aggregate-gate-review-collection.md` | team | skills/team/references/artifacts.md |
-| `skills/team/references/14-rules.md` | team | skills/team/references/artifacts.md |
-| `skills/team/references/15-host-dispatch.md` | team | existing skillNames / loadedSkills / loadCatalog; 89 registrations |
-| `skills/team/references/artifacts.md` | team | skills/team/references/artifacts.md |
-| `skills/team/references/conditional-artifacts.md` | team | existing skillNames / loadedSkills / loadCatalog; 89 registrations |
-| `skills/team/references/external-data.md` | team | existing skillNames / loadedSkills / loadCatalog; 89 registrations |
+| `agents/code-reviewer.md` | Prepare cross-model review inputs | Read `skills/team/references/artifacts.md` and `skills/team/references/external-data.md` from the installed definition |
+| `agents/design-author.md` | Write the design artifact and resolve repository context | Read `skills/team/references/artifacts.md` and `skills/team/references/external-data.md` from the installed definition |
+| `agents/file-finder.md` | Return isolated file findings | Read `skills/team/references/artifacts.md` from the installed definition |
+| `agents/planner.md` | Write the tactical plan | Read `skills/team/references/artifacts.md` from the installed definition |
+| `agents/questioner.md` | Write task/questions and conditional repository artifacts | Read `skills/team/references/artifacts.md` and `skills/team/references/external-data.md` from the installed definition |
+| `agents/researcher.md` | Return isolated research findings | Read `skills/team/references/artifacts.md` from the installed definition |
+| `agents/structure-planner.md` | Write the vertical-slice structure | Read `skills/team/references/artifacts.md` from the installed definition |
+| `opencode/team.js` | Build command prompts from the canonical plugin base | Supply installed root and skill base without changing tool grants |
+| `skills/authoring-designs/SKILL.md` | Draft 6-design.md | Read `skills/team/references/artifacts.md` |
+| `skills/code-review/SKILL.md` | Dispatch an independent code reviewer | Installed root, definition, and applicable resource paths through `15-host-dispatch.md` for named/body-loaded calls and Explore fallback |
+| `skills/cross-model-review/SKILL.md` | Invoke vendor review adapters | Read `skills/team/references/external-data.md` |
+| `skills/cross-model-review/references/procedure.md` | Prepare and assess external review data | Read `skills/team/references/artifacts.md` and `skills/team/references/external-data.md` |
+| `skills/decomposing-intent/SKILL.md` | Separate task authority from neutral questions | Read `skills/team/references/artifacts.md` and `skills/team/references/external-data.md` |
+| `skills/decomposing-intent/references/multi-repo.md` | Resolve repositories and write conditional 4-repos.md | Read `skills/team/references/artifacts.md` and conditional-artifacts.md when applicable |
+| `skills/eng-design-doc-review/SKILL.md` | Dispatch the standalone design-review brief | Installed review-skill path, resolved review brief, and artifact schema |
+| `skills/groom-backlog/SKILL.md` | Fetch and groom backlog items | Read `skills/team/references/external-data.md` |
+| `skills/groom-backlog/references/17-hard-rules.md` | Validate tracker data before commands | Read `skills/team/references/external-data.md` |
+| `skills/nested-agents/SKILL.md` | Dispatch researcher/implementer file-finder scouts | Installed root, definition, and applicable resource paths through `15-host-dispatch.md` for initial calls and follow-ups |
+| `skills/nested-agents/references/per-agent-dispatch.md` | Apply shared setup to researcher and implementer scouts | Read shared guardrails before each applicable dispatch |
+| `skills/pr-cleanup/SKILL.md` | Start authorized merged/abandoned cleanup | Read `skills/team/references/external-data.md` |
+| `skills/pr-cleanup/references/01-input.md` | Resolve the cleanup target | Read `skills/team/references/external-data.md` |
+| `skills/pr-cleanup/references/03-untrusted-input-pr-metadata-is-data.md` | Pass PR metadata safely into cleanup commands | Read `skills/team/references/external-data.md` |
+| `skills/pr-rebase/SKILL.md` | Start an explicitly requested rebase | Read `skills/team/references/external-data.md` |
+| `skills/pr-rebase/references/01-input.md` | Resolve the rebase target | Read `skills/team/references/external-data.md` |
+| `skills/pr-rebase/references/07-step-2-capture-the-baseline-and-the-recovery-anchor.md` | Capture rebase baseline and recovery state | Read `skills/team/references/artifacts.md` |
+| `skills/pr-screenshots/SKILL.md` | Start an authorized screenshot attachment | Read `skills/team/references/external-data.md` |
+| `skills/pr-screenshots/references/01-input-and-result.md` | Resolve screenshot files and target PR | Read `skills/team/references/external-data.md` |
+| `skills/pr-screenshots/references/02-upload-and-body-edit.md` | Upload images and edit the PR body | Read `skills/team/references/external-data.md` |
+| `skills/pr-screenshots/references/03-verify.md` | Verify the uploaded image and body edit | Read `skills/team/references/external-data.md` |
+| `skills/pr-screenshots/scripts/write-companion.sh` | Write the attachment companion record | Preserved shell arguments governed by `skills/team/references/external-data.md` |
+| `skills/pr-verify/references/04-execution.md` | Trace PR checklist claims with a read-only file finder | Installed root, definition, and applicable resource paths through `15-host-dispatch.md` for initial calls and follow-ups |
+| `skills/qrspi-workflow/SKILL.md` | Advance phases using artifact state | Read `skills/team/references/artifacts.md` |
+| `skills/reflect/references/04-the-lenses.md` | Dispatch read-only transcript analysis lenses | Installed root, definition, and applicable resource paths through `15-host-dispatch.md` with existing lens scope overrides |
+| `skills/sweeping-local-state/SKILL.md` | Start local-state cleanup | Read `skills/team/references/external-data.md` |
+| `skills/sweeping-local-state/references/procedure.md` | Validate and remove owned local state | Read `skills/team/references/external-data.md` |
+| `skills/team-design/SKILL.md` | Dispatch design author and independent design review | Installed root, definition, and applicable resource paths through `15-host-dispatch.md` |
+| `skills/team-implement/SKILL.md` | Dispatch test author, implementer, and independent reviewers | Installed root, definition, and applicable resource paths through `15-host-dispatch.md` |
+| `skills/team-implement/references/03-execution.md` | Dispatch test author, implementer, and five reviewers | Read `skills/team/references/artifacts.md`. Supply installed root, definition, and applicable resource paths through `15-host-dispatch.md` |
+| `skills/team-plan/SKILL.md` | Dispatch the tactical planner | Installed root, definition, and applicable resource paths through `15-host-dispatch.md` |
+| `skills/team-pr/references/04-screenshot-upload.md` | Delegate authorized PR screenshot attachment | Read `skills/team/references/external-data.md` |
+| `skills/team-question/SKILL.md` | Dispatch task/question decomposition | Installed root, definition, and applicable resource paths through `15-host-dispatch.md` |
+| `skills/team-research/SKILL.md` | Dispatch isolated file finder and researcher | Installed root, definition, and applicable resource paths through `15-host-dispatch.md` |
+| `skills/team-structure/SKILL.md` | Dispatch structure planner | Installed root, definition, and applicable resource paths through `15-host-dispatch.md` |
+| `skills/team/references/03-the-phase-loop.md` | Dispatch the phase table and emit artifact frontmatter | Read `skills/team/references/artifacts.md`. Supply installed root, definition, and applicable resource paths through `15-host-dispatch.md` |
+| `skills/team/references/08-design-review-gate-design.md` | Dispatch design review and record verdict artifacts | Read `skills/team/references/artifacts.md` and installed review-skill/brief paths |
+| `skills/team/references/12-aggregate-gate-review-collection.md` | Collect independent reviews and record retry state | Read `skills/team/references/artifacts.md` |
+| `skills/team/references/14-rules.md` | Enforce orchestrator artifact and authority rules | Read `skills/team/references/artifacts.md` |
+| `skills/team/references/15-host-dispatch.md` | Resolve named, body-loaded, and standalone agents | Installed root, definition, and applicable resource paths through `15-host-dispatch.md` |
+| `skills/team/references/artifacts.md` | Define artifact fields and conditional ownership | Read adjacent conditional-artifacts.md only for a conditional artifact |
+| `skills/team/references/conditional-artifacts.md` | Define PRD and multi-repo artifact fields | Conditional template read from the installed schema directory |
+| `skills/team/references/external-data.md` | Define shell boundaries for external data | Ordinary installed rules read before shell-consuming operations |
 
 ### Evaluation and catalog consumers
 
@@ -106,7 +111,11 @@ Existing Skill-tool loads and unrelated agent preloads remain in place.
 `tests/code-reviewer.evals.ts` injects both resources alongside its existing review, finding, and comment procedures.
 `tests/eng-design-doc-review.evals.ts` injects the design-review procedure, criteria, and artifact schema.
 `tests/unslop.evals.ts` connects Question, both Research producers, standalone/full Research assembly, and parent fallback to the applicable schema.
-Its Question case also receives the shell rules and remaining decomposition instructions. Agent contexts include their installed definition paths.
+Its bounded Question status/relay case receives artifact, shell, and prose rules without the full decomposition workflow.
+Agent contexts include their installed definition paths.
+Structure and Plan receive matching task authority before dispatch. Plan also receives the existing token-bucket research context.
+Design review receives the unchanged planted excerpt on disk and its substituted artifact-directory argument.
+Question omits inapplicable PRD and multi-repository templates. Research retains its recorded empty-source characterization and isolation.
 The prose-only cases keep their existing inputs. Research-isolation assertions, case identities, ground truth, rubrics, and periodic tiers remain unchanged.
 
 `evals/fixtures/{team-question,team-research,team-design,team-structure,team-plan,eng-design-doc-review,code-reviewer,unslop}/*/input.md` and `tests/helpers/touchfiles.ts` track those explicit files together.
@@ -121,9 +130,14 @@ Pre-existing protocol, cross-model, methodology, screenshot, and rebase assertio
 
 ### Evidence boundaries
 
-The supplied predecessor baseline has 2,625 passes, four skips, and zero failures. It was not repeated before the move.
+The coordinator reran the predecessor baseline: 2,625 passes, four skips, and zero failures.
+Raw commands and streams remain under `.context/verification/m02-baseline/`.
 Candidate command records retain exact arguments, status, duration, stdout, and stderr under `.context/verification/m02-implementation/`.
-The producer report records candidate results and immutable acceptance-block digests; the coordinator binds them to a signed revision.
+The [corrective verification report](verification/contract-resources.md) records current checks, input identities, locked blocks, and native limitations.
+Correction evidence remains under `.context/verification/m02-review-fix/`. The coordinator owns signing and independent acceptance.
 Claude/Codex installer fakes, Antigravity's native-shaped copy, and OpenCode adapter fixtures establish installed filesystem delivery.
-Those fixtures do not establish native instruction consumption. The coordinator owns candidate native probes and their receiving-agent read traces.
+Those fixtures do not establish native instruction consumption. Coordinator-owned native traces remain under `.context/verification/m02-native/`.
+OpenCode initially guessed two wrong paths and continued. Later explicit-path controls read all resources and stopped on an intentionally missing resource.
+Codex read the resources through explicit candidate paths. Claude loaded 13 agents, but inference failed with weekly-quota HTTP 429.
+Antigravity lacked isolated authentication and timed out. These observations do not establish a general fail-fast guarantee.
 Predecessor native-host availability records are not candidate evidence. Unavailable native and paid observations remain unverified.

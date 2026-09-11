@@ -1,7 +1,7 @@
 // tests/helpers/fixtures.test.ts
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -144,6 +144,240 @@ describe("loadAgentInstructionContext", () => {
     expect(() => loadAgentInstructionContext("missing", root)).toThrow(/agents\/missing\.md/);
     expect(() => loadAgentInstructionContext("bad", root)).toThrow(/invalid model/);
     expect(() => loadAgentInstructionContext("open", root)).toThrow(/invalid frontmatter/);
+  });
+});
+
+describe("Evaluation connection: required file inputs", () => {
+  const capture = String.raw`
+    import { mock, expect } from "bun:test";
+    import { existsSync, readdirSync, readFileSync } from "node:fs";
+    import { join } from "node:path";
+    const callbacks = new Map();
+    const register = (name, callback) => callbacks.set(name, callback);
+    register.skip = () => {};
+    mock.module("bun:test", () => ({ expect, test: register, afterAll() {} }));
+    const helpers = join(process.cwd(), "tests/helpers");
+    mock.module(join(helpers, "touchfiles.ts"), () => ({ testIfSelected: register }));
+    mock.module(join(helpers, "eval-store.ts"), () => ({
+      EvalCollector: class {}, assertNoBudgetRegressions() {},
+    }));
+    const forbidden = () => { throw new Error("Paid boundary must not run"); };
+    mock.module(join(helpers, "llm-judge.ts"), () => ({
+      judgeQuality: forbidden, judgeReviewerOutput: forbidden, outcomeJudge: forbidden,
+    }));
+    let options;
+    const files = {};
+    const captured = new Error("Captured required inputs");
+    mock.module(join(helpers, "session-runner.ts"), () => ({
+      runAgentTest: async (input) => {
+        options = input;
+        const plans = join(input.workingDirectory, "docs/plans");
+        if (existsSync(plans)) {
+          for (const topic of readdirSync(plans, { withFileTypes: true })) {
+            if (!topic.isDirectory()) continue;
+            for (const file of readdirSync(join(plans, topic.name), { withFileTypes: true })) {
+              if (file.isFile()) {
+                const path = join("docs/plans", topic.name, file.name);
+                files[path] = readFileSync(join(input.workingDirectory, path), "utf8");
+              }
+            }
+          }
+        }
+        throw captured;
+      },
+    }));
+    await import(join(process.cwd(), "tests", process.argv[2]));
+    const callback = callbacks.get(process.argv[3]);
+    if (!callback) throw new Error("Missing evaluation callback: " + process.argv[3]);
+    let error = null;
+    try { await callback(); }
+    catch (failure) { if (failure !== captured) error = String(failure); }
+    process.stdout.write(JSON.stringify({ options: options ?? null, files, error }));
+  `;
+
+  function capturedInputs(file: string, name: string) {
+    const repo = join(import.meta.dir, "../..");
+    cpSync(join(repo, "tests"), join(root, "tests"), { recursive: true });
+    cpSync(join(repo, "evals/fixtures"), join(root, "evals/fixtures"), { recursive: true });
+    cpSync(join(repo, "skills"), join(root, "skills"), { recursive: true });
+    writeFileSync(join(root, "capture.ts"), capture);
+    const result = spawnSync(process.execPath, [join(root, "capture.ts"), file, name], {
+      cwd: root,
+      env: { PATH: "", HOME: root, TMPDIR: root, LANG: "C", TZ: "UTC" },
+      encoding: "utf8",
+      timeout: 10_000,
+    });
+    expect({ status: result.status, stderr: result.stderr }).toMatchObject({ status: 0 });
+    const observed = JSON.parse(result.stdout) as {
+      options: { testName: string; workingDirectory: string; prompt: string; systemPromptAppend: string };
+      files: Record<string, string>;
+      error: string | null;
+    };
+    expect(observed.error).toBeNull();
+    expect(observed.options?.testName).toBe(name);
+    expect(existsSync(observed.options.workingDirectory)).toBe(false);
+    return observed;
+  }
+
+  function expectLimiterResearch(research: string | undefined) {
+    expect(research, "5-research.md must exist before runAgentTest receives control").toBeDefined();
+    expect(research).toMatch(/^---\r?\n/);
+    const parts = research!.split(/\r?\n---\r?\n/);
+    expect(parts[0]).toMatch(/^topic: token-bucket\s*$/m);
+    expect(parts[0]).toMatch(/^phase: research\s*$/m);
+    expect(parts[1]).toContain("src/api/handler.js");
+    expect(parts[1]).toContain("src/api/respond.js");
+  }
+
+  function designInput(observed: ReturnType<typeof capturedInputs>) {
+    const paths = Object.keys(observed.files).filter((path) => path.endsWith("/6-design.md"));
+    expect(paths, "one seeded 6-design.md must exist before dispatch").toHaveLength(1);
+    return { path: paths[0]!, body: observed.files[paths[0]!]! };
+  }
+
+  function expectBoundDesign(observed: ReturnType<typeof capturedInputs>) {
+    const input = observed.options.prompt + "\n" + observed.options.systemPromptAppend;
+    expect(input.length).toBeGreaterThan(0);
+    expect(input, "substitute the artifact-directory argument before dispatch").not.toContain("$ARGUMENTS/6-design.md");
+    const design = designInput(observed);
+    const path = join(observed.options.workingDirectory, design.path);
+    expect(input.includes(design.path) || input.includes(path), design.path).toBe(true);
+  }
+
+  test("the Design callback supplies matching research (positive control)", () => {
+    const observed = capturedInputs("team-design.evals.ts", "team-design-seeded-research-and-task");
+
+    expectLimiterResearch(observed.files["docs/plans/2026-06-03-token-bucket/5-research.md"]);
+  });
+
+  test("the Plan callback supplies matching research before dispatch", () => {
+    const observed = capturedInputs("team-plan.evals.ts", "team-plan-seeded-structure");
+
+    expect(observed.files["docs/plans/2026-06-03-token-bucket/7-structure.md"]).toContain("topic: token-bucket");
+    expectLimiterResearch(observed.files["docs/plans/2026-06-03-token-bucket/5-research.md"]);
+  });
+
+  test("the Structure callback supplies a design file and resolved input path (positive control)", () => {
+    const observed = capturedInputs("team-structure.evals.ts", "team-structure-seeded-design");
+
+    expect(designInput(observed).body).toContain("topic: token-bucket");
+    expectBoundDesign(observed);
+  });
+
+  test("the design-review callback seeds the unchanged planted design excerpt", () => {
+    const fixture = loadFixture("eng-design-doc-review", "planted-missing-alternatives");
+    const excerpt = /```markdown\r?\n([\s\S]*?)\r?\n```/.exec(fixture.body)?.[1];
+    const observed = capturedInputs("eng-design-doc-review.evals.ts", "eng-design-doc-review-planted-missing-alternatives");
+
+    expect(excerpt).toBeDefined();
+    expect(designInput(observed).body.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim()).toBe(excerpt!.trim());
+  });
+
+  test("the design-review callback resolves its artifact-directory argument to the seeded file", () => {
+    const observed = capturedInputs("eng-design-doc-review.evals.ts", "eng-design-doc-review-planted-missing-alternatives");
+
+    expectBoundDesign(observed);
+  });
+});
+
+describe("Evaluation connection: seeded task authority", () => {
+  const capture = String.raw`
+    import { mock, expect } from "bun:test";
+    import { existsSync, readdirSync, readFileSync } from "node:fs";
+    import { join } from "node:path";
+    const callbacks = new Map();
+    const register = (name, callback) => callbacks.set(name, callback);
+    register.skip = () => {};
+    mock.module("bun:test", () => ({ expect, test: register, afterAll() {} }));
+    const helpers = join(process.cwd(), "tests/helpers");
+    mock.module(join(helpers, "touchfiles.ts"), () => ({ testIfSelected: register }));
+    mock.module(join(helpers, "eval-store.ts"), () => ({
+      EvalCollector: class {}, assertNoBudgetRegressions() {},
+    }));
+    const forbidden = () => { throw new Error("Paid boundary must not run"); };
+    mock.module(join(helpers, "llm-judge.ts"), () => ({
+      judgeQuality: forbidden, outcomeJudge: forbidden,
+    }));
+    let options;
+    let files = {};
+    const captured = new Error("Captured seeded files");
+    mock.module(join(helpers, "session-runner.ts"), () => ({
+      runAgentTest: async (input) => {
+        options = input;
+        const directory = join(input.workingDirectory, "docs/plans/2026-06-03-token-bucket");
+        if (existsSync(directory)) {
+          files = Object.fromEntries(readdirSync(directory).map(name =>
+            [name, readFileSync(join(directory, name), "utf8")]));
+        }
+        throw captured;
+      },
+    }));
+    await import(join(process.cwd(), "tests", process.argv[2]));
+    const callback = callbacks.get(process.argv[3]);
+    if (!callback) throw new Error("Missing evaluation callback: " + process.argv[3]);
+    let error = null;
+    try { await callback(); }
+    catch (failure) { if (failure !== captured) error = String(failure); }
+    process.stdout.write(JSON.stringify({ options: options ?? null, files, error }));
+  `;
+
+  function seededFiles(file: string, name: string) {
+    const repo = join(import.meta.dir, "../..");
+    cpSync(join(repo, "tests"), join(root, "tests"), { recursive: true });
+    cpSync(join(repo, "evals/fixtures"), join(root, "evals/fixtures"), { recursive: true });
+    cpSync(join(repo, "skills"), join(root, "skills"), { recursive: true });
+    writeFileSync(join(root, "capture.ts"), capture);
+    const result = spawnSync(process.execPath, [join(root, "capture.ts"), file, name], {
+      cwd: root,
+      env: { PATH: "", HOME: root, TMPDIR: root, LANG: "C", TZ: "UTC" },
+      encoding: "utf8",
+      timeout: 10_000,
+    });
+    expect({ status: result.status, stderr: result.stderr }).toMatchObject({ status: 0 });
+    const observed = JSON.parse(result.stdout) as {
+      options: { testName: string; workingDirectory: string } | null;
+      files: Record<string, string>;
+      error: string | null;
+    };
+    expect(observed.error).toBeNull();
+    expect(observed.options?.testName).toBe(name);
+    expect(existsSync(observed.options!.workingDirectory)).toBe(false);
+    return observed.files;
+  }
+
+  function expectLimiterTask(task: string | undefined) {
+    expect(task, "1-task.md must exist before runAgentTest receives control").toBeDefined();
+    expect(task).toMatch(/^---\r?\n/);
+    const parts = task!.split(/\r?\n---\r?\n/);
+    expect(parts[0]).toMatch(/^topic: token-bucket\s*$/m);
+    expect(parts[0]).toMatch(/^phase: task\s*$/m);
+    expect(parts[1], "task body must authorize request limiting").toMatch(/\brequest\w*\b/i);
+    expect(parts[1]).toMatch(/\b(?:limit\w*|throttl\w*)\b/i);
+    expect(parts[1]).toMatch(/\b(?:client\w*|API[ -]key\w*)\b/i);
+  }
+
+  test("the Design callback supplies matching task intent before cleanup (positive control)", () => {
+    const files = seededFiles("team-design.evals.ts", "team-design-seeded-research-and-task");
+
+    expect(files["5-research.md"]).toContain("topic: token-bucket");
+    expectLimiterTask(files["1-task.md"]);
+  });
+
+  test.each([
+    { file: "team-structure.evals.ts", name: "team-structure-seeded-design", predecessor: "6-design.md" },
+    { file: "team-plan.evals.ts", name: "team-plan-seeded-structure", predecessor: "7-structure.md" },
+  ])("$name seeds matching task authority before runAgentTest", ({ file, name, predecessor }) => {
+    const files = seededFiles(file, name);
+
+    expect(files[predecessor]).toContain("topic: token-bucket");
+    expectLimiterTask(files["1-task.md"]);
+  });
+
+  test("the Research callback receives questions without task authority", () => {
+    const files = seededFiles("team-research.evals.ts", "team-research-answers-seeded-questions");
+
+    expect(files["2-questions.md"]).toContain("topic: token-bucket");
+    expect(files).not.toHaveProperty("1-task.md");
   });
 });
 
