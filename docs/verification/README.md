@@ -2,6 +2,7 @@
 
 Use these commands from the Team checkout that contains the reporter and installed dependencies.
 Read the [migration contract](../migration-contract.md), [initial inventory](baselines/m01.json), and [recorded observations](migration-baseline.md).
+The [shared-principles report](shared-principles.md) records consolidation checks and bounded native resource reads.
 
 Dependencies are Bun, Git, Node, Bash, and the packages in `bun.lock`.
 Install missing packages with `bun install --frozen-lockfile`.
