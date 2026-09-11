@@ -4,13 +4,13 @@
 
 - `<id>` = `basename "$ARGUMENTS"`
 - Branch name = `<id>` (in every involved repo)
-- Worktree path per repo = `<repo-path>/.claude/worktrees/<id>` (per Claude
-  Code's native worktree convention. See
+- Worktree path per repo = `<repo-path>/.claude/worktrees/<id>` (the
+  `.claude/worktrees/` convention. See
   `skills/worktree-isolation/SKILL.md`)
 
 **Branch names must never contain a slash (`/`).** Use `-` as the only
 delimiter. A `/` in a branch name creates a nested ref path in
-`.git/refs/heads/`. That path collides with Claude Code's
+`.git/refs/heads/`. That path collides with the
 `.claude/worktrees/` directory convention and breaks worktree cleanup. The
 `<id>` produced by the questioner is already slash-free, but if
 `basename "$ARGUMENTS"` ever yields a name containing `/` (e.g. a ticket
@@ -72,8 +72,9 @@ Use the slash-sanitized name (`<branch>`, derived above) for both the
 worktree directory and the `-b` flag in every repo. In the common case
 `<branch>` equals `<id>`.
 
-- **Single-repo:** create the home worktree using Claude Code's native
-  worktree support, branched off `origin/HEAD`.
+- **Single-repo:** create the home worktree on branch `<id>` off
+  `origin/HEAD`, using the host's native worktree support when it offers
+  one and `git worktree add` otherwise.
 - **Multi-repo:** for each listed repo, first assert **containment**:
   the repo path's real path must be a direct child of the home repo's
   parent directory —

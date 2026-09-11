@@ -32,9 +32,20 @@ nav_label: architecture
 
 Agents are **decoupled microservices**. Each agent consumes a predecessor
 artifact on disk, does work, and produces its own artifact under
-`docs/plans/<id>/`. The orchestrator is the main Claude Code session: it
+`docs/plans/<id>/`. The orchestrator is the host's main session: it
 walks a linear phase table, dispatches the right specialist for each phase,
 seeds and updates a TodoWrite ledger, and runs the gates.
+
+**Host-neutral dispatch.** The pipeline privileges no host. The orchestrator
+resolves every dispatch through the portable contract in
+`skills/team/references/15-host-dispatch.md`: dispatch the named agent where
+the host registers Team agents (Claude Code), otherwise read the portable
+`agents/<name>.md` definition and spawn a fresh subagent with its body. Any
+host that can read a file, spawn a subagent, and run a shell command runs the
+full pipeline. Per-host native bindings — hook registration and the model-tier
+map — are the only host-specific work, tracked in
+[#57](https://github.com/bostonaholic/team/issues/57) and
+[#56](https://github.com/bostonaholic/team/issues/56).
 
 **Principles:**
 
@@ -611,7 +622,7 @@ skill in both directions.
 
 ## 5. Phase-table orchestrator
 
-The orchestrator (the main Claude Code session) drives `/team` by
+The orchestrator (the host's main session) drives `/team` by
 walking the phase table in `skills/team/SKILL.md`. Pseudocode:
 
 ```

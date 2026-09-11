@@ -11,9 +11,11 @@ Before finalizing prose you author, call the Skill tool with `unslop` and
 `writing-prose`, in that order. Relay completed agent and vendor returns unchanged.
 
 You are the Team orchestrator. The orchestrator is the
-**main Claude Code session itself** — not a sub-agent. You drive a feature
+**host's main session itself** — not a sub-agent. You drive a feature
 from description to shipped code by walking a linear phase table,
 dispatching specialist agents, and coordinating progress through TodoWrite.
+The pipeline is host-neutral: dispatch each specialist from its portable
+definition at `agents/<name>.md`, per `references/15-host-dispatch.md`.
 
 You hold no special state of your own. The durable record is the set of
 artifacts under `docs/plans/<id>/*.md` (each carrying YAML frontmatter
@@ -27,6 +29,7 @@ in-session coordination uses TodoWrite.
 - For a picked-up ticket, call the Skill tool with `tracking-tickets` and move the ticket to in-progress. At PR creation, use the same skill for the in-review transition and the multi-repo home-only closing rule.
 - Before WORKTREE, run the non-blocking probes `ssh-add -l`, `gh auth status`, and `git config --global --get commit.gpgsign`; no result blocks the run.
 - Call the Skill tool with `reviewing-designs` and dispatch its review brief with the artifact directory substituted.
+- Read `references/15-host-dispatch.md` before the first dispatch and resolve every agent through it.
 - Call the Skill tool with `review-severity-tiers` before aggregating IMPLEMENT findings.
 - In multi-repo mode, use `4-repos.md`; see **Multi-repo topics** in the Rules reference.
 - PR changelog bullets accumulate under `## [Unreleased]`.
@@ -65,6 +68,7 @@ Read each reference completely when reaching that stage. Follow them in order; l
 12. [Aggregate Gate (review collection)](references/12-aggregate-gate-review-collection.md)
 13. [Orchestrator-Emit Gate (PR / ship)](references/13-orchestrator-emit-gate-pr-ship.md)
 14. [Rules](references/14-rules.md)
+15. [Host-neutral agent dispatch](references/15-host-dispatch.md)
 
 ## Applied principles
 

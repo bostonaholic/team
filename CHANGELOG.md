@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The `/team` pipeline is host-neutral and runs on every supported host.** The orchestrator previously dispatched each specialist only through Claude Code's named-agent registry, so a Codex or Antigravity session loaded the `/team-*` commands but could not run a phase. Dispatch now resolves through a portable contract (`skills/team/references/15-host-dispatch.md`): a host that registers Team agents by name dispatches the named agent; any other host reads the specialist's portable `agents/<name>.md` definition and spawns a fresh subagent with its body, so no host-side agent registration is required. A reviewer never runs inline, preserving the generator/evaluator invariant. The WORKTREE phase is host-neutral too — it uses the host's native worktree support where one exists and `git worktree add` otherwise. Claude Code's behavior is unchanged. **What this asks of you:** nothing; per-host native bindings (hook registration and model-tier maps) remain tracked in #56 and #57.
+
 ## [0.101.0] - 2026-09-10
 
 ### Added

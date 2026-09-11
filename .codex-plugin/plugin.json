@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Team",
     "shortDescription": "Autonomous feature pipeline: question, research, design, plan, implement, PR.",
-    "longDescription": "Team turns a feature description into a reviewed pull request. It walks an eight-phase pipeline — worktree, question, research, design, structure, plan, implement, PR — dispatching a specialist agent at each phase and persisting every artifact to disk. An adversarial design review gates the design and five reviewers gate the implementation, so the only human checkpoint is the pull request at the end. On Codex the standalone utilities run; the full pipeline needs Claude Code, which is the host that dispatches the agents.",
+    "longDescription": "Team turns a feature description into a reviewed pull request. It walks an eight-phase pipeline — worktree, question, research, design, structure, plan, implement, PR — dispatching a specialist agent at each phase and persisting every artifact to disk. An adversarial design review gates the design and five reviewers gate the implementation, so the only human checkpoint is the pull request at the end. The pipeline is host-neutral: each phase dispatches its specialist from a portable agent definition, so it runs on Codex as it does on Claude Code and Antigravity. The standalone utilities run too.",
     "developerName": "Matthew Boston",
     "category": "engineering",
     "capabilities": [

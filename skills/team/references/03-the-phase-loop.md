@@ -8,7 +8,9 @@ loop:
   3. Verify predecessor artifacts exist on disk (for STRUCTURE, that
      includes a `design-review-<n>.md` with a passing verdict). If missing,
      report a desync and suggest re-invoking the same /team-* command.
-  4. Dispatch the agent(s) (parallel where the phase table marks them).
+  4. Dispatch the agent(s) (parallel where the phase table marks them),
+     resolving every dispatch through "Host-neutral agent dispatch"
+     (`references/15-host-dispatch.md`).
      Subagents never pause for user input — each resolves its own open
      questions and records them as assumptions in its artifact.
      Dispatch so the agent's result comes back to you **in full**. Some

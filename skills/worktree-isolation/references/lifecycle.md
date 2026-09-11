@@ -19,7 +19,8 @@ is at the **router level** — not per-agent. This means:
 
 When `docs/plans/<id>/4-repos.md` is **absent**, the topic touches only the
 home repo (the repo the user invoked `/team` from). The router creates
-exactly one worktree using Claude Code's native worktree support:
+exactly one worktree on branch `<id>` off `origin/HEAD`, using the host's
+native worktree support when it offers one and `git worktree add` otherwise:
 
 - Worktree path: `<repo>/.claude/worktrees/<id>`
 - Branch: `<id>`, branched from the default remote branch (`origin/HEAD`)
@@ -52,14 +53,14 @@ After all worktrees are created, the orchestrator appends a `## Worktrees`
 section to `4-repos.md` recording the per-repo worktree paths. Any later
 `/team-*` invocation rediscovers them by reading that one file.
 
-## Claude Code Native Worktrees
+## Worktree creation
 
-For the home repo, Claude Code has built-in worktree support (`--worktree
-<topic>` or dispatch into a worktree context). For more repos in
-multi-repo mode, the router uses plain `git worktree add` because Claude
-Code's native flag only knows about the repo it was launched from. Either
-mechanism produces a standard git worktree — there is no behavioral
-difference downstream.
+For the home repo, use the host's native worktree support when it offers one
+(Claude Code's `--worktree <topic>` or dispatch into a worktree context). For
+more repos in multi-repo mode, the router uses plain `git worktree add` because
+a native flag only knows about the repo the session was launched from. Either
+mechanism produces a standard git worktree — there is no behavioral difference
+downstream.
 
 ## Lifecycle
 
@@ -143,7 +144,7 @@ When teardown is warranted (post-merge or on explicit request):
 
 1. For each worktree with commits ahead of its base branch, cherry-pick
    or rebase those commits onto the target branch in that repo. Then let
-   Claude Code, or `git worktree remove`, remove the worktree.
+   the host remove the worktree, or run `git worktree remove`.
 2. Empty worktrees clean up automatically.
 3. If manual cleanup is needed: `git -C <repo-path> worktree remove
    <worktree-path>` and `git -C <repo-path> branch -D <id>`.

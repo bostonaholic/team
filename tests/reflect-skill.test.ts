@@ -1177,11 +1177,10 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
 
   test("the inline fallback is a named reduced-assurance mode on every surface", () => {
     // The toolset guarantee belongs to the dispatch path alone: the fallback
-    // runs in a session holding Bash and Write, so it cannot inherit it. On
-    // Codex and Antigravity, which install the skill but cannot dispatch Claude
-    // Code agents, the fallback is the only path — so the degradation is named
-    // where the model meets it and in the run's own report. Drift tripwire:
-    // both surfaces or neither.
+    // runs in a session holding Bash and Write, so it cannot inherit it. Where
+    // a host cannot spawn a subagent, the fallback is the only path — so the
+    // degradation is named where the model meets it and in the run's own
+    // report. Drift tripwire: both surfaces or neither.
     const lenses = flat(section(LENSES));
     const completion = flat(body());
     expect(lenses.length).toBeGreaterThan(0);
