@@ -1,4 +1,0 @@
-interface:
-  display_name: "QRSPI Workflow"
-  short_description: "Govern the pipeline's phase transitions"
-  default_prompt: "Use $qrspi-workflow to govern the pipeline's phase transitions."

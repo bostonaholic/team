@@ -7,7 +7,6 @@ effort: xhigh
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
-  - slicing-work
   - writing-prose
   - unslop
 ---
@@ -45,7 +44,8 @@ task, omit it and report the conflict instead of converting it into scope.
 
 ## Procedure
 
-Your methodology lives in `skills/slicing-work/SKILL.md` (preloaded). It
+Your methodology lives in the
+[structure playbook](../skills/team/playbooks/structure.md). It
 covers the vertical-slice rationale, the structure document format, and the
 slicing heuristics. Its slicing rules are these. Every slice ends in a
 passing test and holds 1–3 acceptance tests. Edge cases come from the
@@ -79,7 +79,8 @@ Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
 
 ## Rules
 
-- **Obey the slicing rules** in `skills/slicing-work/SKILL.md` (preloaded),
+- **Obey the slicing rules** in the
+  [structure playbook](../skills/team/playbooks/structure.md),
   including its content and length constraints on the document itself.
 - **Apply the product-need lens** while you order the slices in
   `## Slices` and `## Out of structure`. Make sure that slice 1 ships

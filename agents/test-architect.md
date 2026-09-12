@@ -7,7 +7,6 @@ effort: high
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite
 permissionMode: acceptEdits
 skills:
-  - test-first-development
   - writing-prose
   - unslop
 ---
@@ -44,14 +43,14 @@ scope defect; never copy the test into the Red suite.
 
 ## Process
 
-Your full authoring process lives in `skills/test-first-development/SKILL.md`
-(preloaded). Write every test from the structure's list with the exact names.
+Your full authoring process lives in the
+[implement playbook](../skills/team/playbooks/implement.md), test-author contract.
+Write every test from the structure's list with the exact names.
 Make sure that each one fails cleanly, with an assertion failure and never an
 error. Fix errors with obviously incomplete stubs only, never with
-implementation code. Then lock the list. Call the Skill tool with
-`test-style` — the preloaded skill points to
-it — and audit every test against its "Test Style Rules" and "Audit
-checklist", citing the failing check by name when reporting issues.
+implementation code. Then lock the list. Read the
+[testing rules](../skills/team/references/testing.md) and audit every test against
+its "Audit checklist", citing the failing check by name when reporting issues.
 
 Before writing any tests, read existing test files and match the project's
 test framework, file naming, directory structure, assertion style, and

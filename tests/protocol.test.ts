@@ -141,7 +141,7 @@ describe("reporting agents can reach the orchestrator", () => {
 });
 
 describe("multi-repo support", () => {
-  const QRSPI = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
+  const QRSPI = join(REPO_ROOT, "skills", "team", "playbooks", "feature.md");
   const WORKTREE_ISO = join(REPO_ROOT, "skills", "worktree-isolation", "SKILL.md");
   const TEAM_WT = join(REPO_ROOT, "skills", "team-worktree", "SKILL.md");
   const TEAM_IMPL = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
@@ -156,13 +156,13 @@ describe("multi-repo support", () => {
   const PLANNER = join(REPO_ROOT, "agents", "planner.md");
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
 
-  test("artifact schema carries the 4-repos.md schema; qrspi-workflow keeps the pointer", () => {
+  test("artifact schema carries the 4-repos.md schema; feature playbook keeps the pointer", () => {
     const schema = read(join(REPO_ROOT, "skills", "team", "references", "artifacts.md"));
     expect(schema).toContain("4-repos.md");
     expect(schema).toContain("phase: repos");
     const text = read(QRSPI);
     expect(text).toContain("4-repos.md");
-    expect(text).toContain("team/references/artifacts.md");
+    expect(text).toContain("references/artifacts.md");
   });
 
   test("worktree-isolation documents multi-repo topology", () => {
@@ -277,17 +277,17 @@ describe("multi-repo support", () => {
 });
 
 describe("conditional PRD artifact", () => {
-  const QRSPI = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
+  const QRSPI = join(REPO_ROOT, "skills", "team", "playbooks", "feature.md");
   const QUESTION_PLAYBOOK = join(REPO_ROOT, "skills", "team", "playbooks", "question.md");
   const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
 
-  test("artifact schema carries the 3-prd.md schema; qrspi-workflow keeps the pointer", () => {
+  test("artifact schema carries the 3-prd.md schema; feature playbook keeps the pointer", () => {
     const schema = read(join(REPO_ROOT, "skills", "team", "references", "artifacts.md"));
     expect(schema).toContain("3-prd.md");
     expect(schema).toContain("phase: prd");
     const text = read(QRSPI);
     expect(text).toContain("3-prd.md");
-    expect(text).toContain("team/references/artifacts.md");
+    expect(text).toContain("references/artifacts.md");
   });
 
   test("question playbook carries the 3-prd.md frontmatter contract", () => {
@@ -324,14 +324,14 @@ describe("implement-to-pr continuation", () => {
   });
 });
 
-// Regression guard for issue #68: qrspi-workflow's SOFT-gate examples must not
+// Regression guard for issue #68: the feature playbook's SOFT-gate examples must not
 // contradict the severity model in review-severity-tiers/SKILL.md. PR #23 made
 // code-reviewer REQUEST CHANGES Blocking (auto-fix) and ux-reviewer REQUEST
 // CHANGES Major (auto-fix), so neither can be a SOFT example. The severity
-// model lives in exactly one place — qrspi-workflow must cross-reference it,
+// model lives in exactly one place — the feature playbook must cross-reference it,
 // never restate it.
-describe("qrspi-workflow SOFT gate aligns with severity tiers (issue #68)", () => {
-  const QRSPI = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
+describe("feature playbook SOFT gate aligns with severity tiers (issue #68)", () => {
+  const QRSPI = join(REPO_ROOT, "skills", "team", "playbooks", "feature.md");
 
   // The SOFT subsection: from "### SOFT" up to the next "### " heading.
   function softSection(text: string): string {

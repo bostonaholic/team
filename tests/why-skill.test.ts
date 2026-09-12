@@ -165,8 +165,8 @@ describe("why skill: companions and handoffs", () => {
     expect(body()).toContain("skills/how/SKILL.md");
   });
 
-  test("hands a failure investigation to systematic-debugging via a Skill-tool load", () => {
-    expect(loadsSkill(body(), "systematic-debugging")).toBe(true);
+  test("hands a failure investigation to the bug diagnosis reference", () => {
+    expect(body()).toContain("team-fix/references/diagnosis.md");
   });
 });
 
@@ -194,9 +194,9 @@ describe("why skill: consumer wiring", () => {
     expect(loadsSkill(t, "why")).toBe(true);
   });
 
-  test("systematic-debugging cites why for the design-rationale half", () => {
+  test("bug diagnosis cites why for the design-rationale half", () => {
     const t = readOrEmpty(
-      join(REPO_ROOT, "skills", "systematic-debugging", "SKILL.md"),
+      join(REPO_ROOT, "skills", "team-fix", "references", "diagnosis.md"),
     );
     expect(t).toContain("skills/why/SKILL.md");
   });

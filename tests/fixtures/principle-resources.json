@@ -282,14 +282,6 @@
       ]
     },
     {
-      "path": "skills/implementing-slices/SKILL.md",
-      "destinations": [
-        "skills/team-fix/playbooks/bug-fix.md",
-        "skills/team/principles/focused-work.md",
-        "skills/team/principles/human-control.md"
-      ]
-    },
-    {
       "path": "skills/nested-agents/SKILL.md",
       "destinations": [
         "skills/team/principles/focused-work.md",
@@ -455,15 +447,6 @@
       ]
     },
     {
-      "path": "skills/qrspi-workflow/SKILL.md",
-      "destinations": [
-        "skills/team/principles/durable-state.md",
-        "skills/team/principles/human-control.md",
-        "skills/team/principles/independent-review.md",
-        "skills/team/principles/verified-results.md"
-      ]
-    },
-    {
       "path": "skills/refactoring-to-patterns/SKILL.md",
       "destinations": [
         "skills/team/principles/focused-work.md"
@@ -561,18 +544,6 @@
       "path": "skills/sweeping-local-state/references/procedure.md",
       "destinations": [
         "skills/team/principles/verified-results.md"
-      ]
-    },
-    {
-      "path": "skills/systematic-debugging/SKILL.md",
-      "destinations": [
-        "skills/team-fix/playbooks/bug-fix.md"
-      ]
-    },
-    {
-      "path": "skills/systematic-debugging/references/investigation.md",
-      "destinations": [
-        "skills/team-fix/playbooks/bug-fix.md"
       ]
     },
     {
@@ -705,32 +676,6 @@
       ]
     },
     {
-      "path": "skills/test-driven-bug-fix/SKILL.md",
-      "destinations": [
-        "skills/team-fix/playbooks/bug-fix.md"
-      ]
-    },
-    {
-      "path": "skills/test-driven-bug-fix/references/procedure.md",
-      "destinations": [
-        "skills/team-fix/playbooks/bug-fix.md"
-      ]
-    },
-    {
-      "path": "skills/test-first-development/SKILL.md",
-      "destinations": [
-        "skills/team/principles/human-control.md",
-        "skills/team/principles/verified-results.md"
-      ]
-    },
-    {
-      "path": "skills/test-first-development/references/procedure.md",
-      "destinations": [
-        "skills/team/principles/human-control.md",
-        "skills/team/principles/verified-results.md"
-      ]
-    },
-    {
       "path": "skills/why/SKILL.md",
       "destinations": [
         "skills/team/principles/focused-work.md",
@@ -751,6 +696,30 @@
         "skills/team/principles/focused-work.md",
         "skills/team/principles/independent-review.md"
       ]
+    },
+    {
+      "path": "skills/team/playbooks/feature.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/human-control.md",
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/team/playbooks/implement.md",
+      "destinations": [
+        "skills/team-fix/playbooks/bug-fix.md",
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/human-control.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/team/playbooks/structure.md",
+      "destinations": [
+        "skills/team/references/decisions.md"
+      ]
     }
   ],
   "registrations": [
@@ -763,10 +732,8 @@
     "git-commit",
     "groom-backlog",
     "how",
-    "implementing-slices",
     "nested-agents",
     "no-comments",
-    "planning-implementation",
     "pr-cleanup",
     "pr-open-comments",
     "pr-rebase",
@@ -775,7 +742,6 @@
     "pr-watch-as-author",
     "pr-watch-as-reviewer",
     "pr-watch-mechanics",
-    "qrspi-workflow",
     "refactoring-to-patterns",
     "reflect",
     "review-severity-tiers",
@@ -786,10 +752,8 @@
     "reviewing-security",
     "running-quality-checks",
     "shipit",
-    "slicing-work",
     "solid",
     "sweeping-local-state",
-    "systematic-debugging",
     "team",
     "team-design",
     "team-fix",
@@ -800,9 +764,6 @@
     "team-research",
     "team-structure",
     "team-worktree",
-    "test-driven-bug-fix",
-    "test-first-development",
-    "test-style",
     "tracking-tickets",
     "unslop",
     "verifying-ux",

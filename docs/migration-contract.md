@@ -227,3 +227,38 @@ Structure, Plan, Implement, and Review surfaces read that checklist directly ins
 The Question-to-Design eval fixtures (`team-question`, `team-research`, `team-design`, `eng-design-doc-review`) inject the playbook and reference bytes alongside the retained principles and review briefs.
 Installer fixtures sample `skills/team/playbooks/design.md` and `skills/team/references/design-template.md` for nested-resource delivery.
 Catalog description and catalog-line budgets ratchet from 8,200/11,800 to 7,000/10,000 characters after the ten registrations move.
+
+## M05: planning, implementation, and bug-fix procedures
+
+The catalog retains 25 commands and 22 methodologies, totaling 47 registrations, with 13 unchanged agent roles.
+Eight registrations move into four playbooks, two bug-fix resources, and one test-quality reference. No compatibility stubs remain.
+`7-structure.md` and `8-plan.md` ownership, acceptance-test immutability, assertion-only Red gates, the behavior-preserving refactor exception, bug classification, minimal-fix scope, mutation checks, and the two-commit rule retain their existing behavior. Both planning agents remain separate.
+
+| Retired registration | Destination | Retained contract |
+| --- | --- | --- |
+| `qrspi-workflow` | `skills/team/playbooks/feature.md` | Phase sequence, gates, state transitions, multi-repo and PRD pointers, and scope/sequencing rules. |
+| `slicing-work` | `skills/team/playbooks/structure.md`; `skills/team/references/structure-template.md` | Vertical-slice contract, verification checkpoints, and the exact `7-structure.md` template. |
+| `planning-implementation` | `skills/team/playbooks/plan.md` | `8-plan.md` template and tactical rules. |
+| `implementing-slices` | `skills/team/playbooks/implement.md` | Test-author and implementer contracts, dispatch modes, slice execution, and blockers. |
+| `test-first-development` | `skills/team/playbooks/implement.md` | Immutable acceptance tests, assertion-only Red gate, static checks, and the two test levels. |
+| `systematic-debugging` | `skills/team-fix/references/diagnosis.md`; `skills/team-fix/playbooks/bug-fix.md` | OBSERVE→HYPOTHESIZE→TEST→CONCLUDE, 5 Whys, and escalation rules. |
+| `test-driven-bug-fix` | `skills/team-fix/playbooks/bug-fix.md` | Triage buckets, reproduce-red-green-verify, mutation check, and the two atomic commits. |
+| `test-style` | `skills/team/references/testing.md` | Deterministic-input rules, audit checklist, flaky-test red flags, and the time-bomb example pair. |
+
+### Named runtime consumers
+
+| Consumer | Operation | Replacement |
+| --- | --- | --- |
+| `agents/implementer.md` | Execute slices | Read `skills/team/playbooks/implement.md` |
+| `agents/test-architect.md` | Author the acceptance suite | Read `skills/team/playbooks/implement.md` and `skills/team/references/testing.md` |
+| `agents/structure-planner.md` | Slice the design | Read `skills/team/playbooks/structure.md` |
+| `agents/planner.md` | Write the tactical plan | Read `skills/team/playbooks/plan.md` |
+| `agents/code-reviewer.md` | Review test files | Read `skills/team/references/testing.md` |
+| `skills/reviewing-code/SKILL.md` and `review-manual.md` | Apply test-quality and flaky-red-flag regimes | Read `skills/team/references/testing.md` |
+| `skills/team-fix/references/06-execution.md` | Drive reproduce-red-green-verify | Read `skills/team-fix/playbooks/bug-fix.md` and `skills/team-fix/references/diagnosis.md` |
+| `skills/why/references/05-rules.md` | Hand off a failure investigation | Read `skills/team-fix/references/diagnosis.md` |
+| `skills/team/references/artifacts.md`, `08-design-review-gate-design.md`, `execution.md` | Resolve phase behavior and verdict convention | Read `skills/team/playbooks/feature.md` |
+| `skills/team-question/SKILL.md`, `skills/team-worktree/references/02-detect-mode.md` | Resolve the multi-repo schema | Read `skills/team/playbooks/feature.md` |
+
+The Structure, Plan, Implement, and bug-fix eval fixtures inject the playbook and reference bytes alongside retained principles and dependencies.
+Catalog description and catalog-line budgets ratchet again after the eight registrations move.

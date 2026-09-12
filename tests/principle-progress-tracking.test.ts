@@ -56,7 +56,7 @@ describe("shared progress-tracking convention", () => {
     expect(text.length).toBeGreaterThan(0);
     expect(text.startsWith("---\n")).toBe(false);
     expect(existsSync(skill("principle-progress-tracking"))).toBe(false);
-    expect(text).toContain("qrspi-workflow");
+    expect(text).toContain("playbooks/feature.md");
     expect(text).toContain("`in_progress`");
     expect(text).toContain("`completed`");
   });

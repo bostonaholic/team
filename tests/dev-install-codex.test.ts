@@ -361,8 +361,14 @@ describe("Slice 2: installed resources: codex", () => {
   const samples = [
     "skills/team/SKILL.md",
     "skills/team/playbooks/design.md",
+    "skills/team/playbooks/feature.md",
+    "skills/team/playbooks/structure.md",
+    "skills/team/playbooks/plan.md",
+    "skills/team/playbooks/implement.md",
     "skills/team/principles/verified-results.md",
     "skills/team/references/design-template.md",
+    "skills/team/references/structure-template.md",
+    "skills/team/references/testing.md",
     "skills/team/registry.json",
     "skills/team/discover-topic.sh",
   ];

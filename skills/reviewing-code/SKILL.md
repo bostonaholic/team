@@ -47,13 +47,13 @@ PASS only when format, lint, typecheck, build, and test pass. Any failure return
 ✅ APPROVE: done criteria met, no blockers, tests pass. ❌ REQUEST CHANGES: a
 Blocking issue; return to IMPLEMENT. 💬 COMMENT: only non-blocking suggestions.
 
-**Test-quality flags.** Call the Skill tool with `test-style`. One change-detector, mock-chain,
+**Test-quality flags.** Read the [testing rules](../team/references/testing.md). One change-detector, mock-chain,
 overbroad equality, test logic, method-named test, or opaque helper is `suggestion:`;
 repetition across tests is `issue:`.
 
 **Flaky-test red flags (always blocking).** When a test outcome depends on a
 nondeterministic input, the first occurrence is `issue (blocking)`. The catalog
-lives only in `skills/test-style/SKILL.md`.
+lives only in the [testing rules](../team/references/testing.md).
 
 **Comment red flags.** Call the Skill tool with `engineering-standards`. **Blocking on first occurrence:**
 ticket/issue IDs, plan/slice/phase markers, or introduced TODO/FIXME in code comments. **Style escalation:** one occurrence is

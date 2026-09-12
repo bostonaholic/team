@@ -67,7 +67,7 @@ testIfSelected(
           "skills/team/principles/durable-state.md",
           "skills/team/principles/focused-work.md",
           "skills/team/references/artifacts.md",
-          "skills/planning-implementation/SKILL.md",
+          "skills/team/playbooks/plan.md",
           "skills/engineering-standards/SKILL.md",
           "skills/team/references/dependencies.md",
         ]),
