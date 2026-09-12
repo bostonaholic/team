@@ -5,10 +5,13 @@ effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 
-Before dispatch, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
+Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 Before artifact work, read [artifact schema](../team/references/artifacts.md).
 
 # Team Structure — How Do We Get There?
+
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 Before finalizing prose you author, call the Skill tool with `unslop` and
 `writing-prose`, in that order.
@@ -66,7 +69,7 @@ unreviewed or REQUEST-CHANGES candidates are skipped:
    no review artifact exists, or the latest verdict is REQUEST CHANGES,
    **refuse**: report that the design has not passed review and suggest
    `/team-design $ARGUMENTS` — never slice an unreviewed design.
-   No recorded verdict counts as not passed (`principle-fail-closed`).
+   No recorded verdict counts as not passed ([verified results rules](../team/principles/verified-results.md)).
 2. Dispatch `structure-planner`, which writes `$ARGUMENTS/7-structure.md`
    with vertical slices. The artifact carries plain frontmatter
    (`topic`, `date`, `phase: structure`) — no approval fields, because

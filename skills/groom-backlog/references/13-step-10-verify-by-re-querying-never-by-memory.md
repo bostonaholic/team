@@ -10,5 +10,5 @@ closure is verified by re-query too: the state, the resolution label, and the ev
 comment. Never move the card by hand — the board automation lands it in Done. Record each landed
 step in `$RUN_DIR/8-plan.md`. A failure mid-plan stops the run, reports which steps landed and
 which remain, and never rolls back silently.
-The step applies `principle-evidence-over-assertion`: a verdict rests on
+The step applies [verified results rules](../team/principles/verified-results.md): a verdict rests on
 a re-queried authoritative value, never on memory or on a write's zero exit.

@@ -7,6 +7,9 @@ argument-hint: "[<pr-number-or-url>]"
 
 # pr-open-comments — fetch, verify, recommend
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Pull every **unresolved** review thread on a pull request. Hand the user a
 decision list: for each comment, show the request, the options, and one
 recommended option with a one-line rationale.
@@ -38,5 +41,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-evidence-over-assertion` and
-`principle-plan-present-wait`.
+Read and apply: [verified results rules](../team/principles/verified-results.md) and
+[human control rules](../team/principles/human-control.md).

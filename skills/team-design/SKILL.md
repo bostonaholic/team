@@ -6,13 +6,13 @@ argument-hint: "[docs/plans/<id>/]"
 ---
 
 Before this operation, read [artifact schema](../team/references/artifacts.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.
+If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
-Before dispatch, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
+Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 
 Before review dispatch, supply the installed plugin root and resolved `skills/reviewing-designs/SKILL.md` path.
 Resolve its brief beside that installed skill. Pass the applicable resource paths and require reads before work.
-If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
 
 
 # Team Design — Where Are We Going?
@@ -64,7 +64,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 
    If `$ARGUMENTS/6-design.md` already exists, skip this dispatch and
    resume at step 3 — never re-draft an existing design.
-   Both this skip and step 3's never-re-review skip are idempotent re-runs: converge on the same end state, never duplicate work (`principle-idempotent-reruns`).
+   Both this skip and step 3's never-re-review skip are idempotent re-runs: converge on the same end state, never duplicate work ([durable state rules](../team/principles/durable-state.md)).
 3. **Design review gate.** If the latest
    `$ARGUMENTS/design-review-<n>.md` already carries a passing verdict
    (APPROVE or COMMENT), skip straight to step 4 — never re-review a
@@ -121,7 +121,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    - **Unparseable verdict or reviewer crash** — retry the review once
      with the error; on second failure, halt loudly. Fail closed —
      never advance on a missing verdict.
-     A missing verdict counts as not passed (`principle-fail-closed`).
+     A missing verdict counts as not passed ([verified results rules](../team/principles/verified-results.md)).
 4. **Stop once `$ARGUMENTS/6-design.md` exists and the latest
    `$ARGUMENTS/design-review-<n>.md` verdict is APPROVE or COMMENT.**
 

@@ -65,14 +65,14 @@ describe("pr-watch-mechanics skill: the cycle contract", () => {
     const t = body();
     expect(t).toContain("sleep 1860");
     expect(t).toContain("run_in_background: true");
-    expect(t).toContain("principle-non-blocking-waits");
+    expect(t).toContain("team/references/execution.md");
     expect(t).not.toContain("sleep 600");
   });
 
   test("the bound is 3 cycles and is declared with the loop", () => {
     const t = flat(body());
     expect(t).toContain("Soft cap: 3 cycles");
-    expect(t).toContain("principle-bounded-loops");
+    expect(t).toContain("team/references/execution.md");
   });
 
   test("the soft cap hands off to the scheduled job and never self-re-arms", () => {

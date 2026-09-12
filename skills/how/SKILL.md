@@ -7,6 +7,9 @@ argument-hint: "[<subsystem, feature, or question>]"
 
 # How — Architectural Explanation
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Explore the codebase to answer "how does X work?" Produce the mental
 model a senior engineer needs to start working in an unfamiliar
 subsystem — the architecture, the flow, and the sharp edges. Not
@@ -39,5 +42,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-generator-evaluator` and
-`principle-optimization-never-dependency`.
+Read and apply: [independent review rules](../team/principles/independent-review.md) and
+[focused work rules](../team/principles/focused-work.md).

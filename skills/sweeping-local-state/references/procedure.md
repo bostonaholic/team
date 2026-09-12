@@ -219,4 +219,4 @@ One line per thing that happened, and nothing else:
 - `No recorded temp paths.` when the caller recorded none.
 
 Anything left on disk is named.
-The general rule: `principle-skip-loudly`.
+The general rule: [verified results rules](../team/principles/verified-results.md).

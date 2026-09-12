@@ -1,3 +1,6 @@
+Before dispatch, resolve [independent review](../team/principles/independent-review.md), [verified results](../team/principles/verified-results.md), [focused work](../team/principles/focused-work.md). Pass their absolute installed paths with the retained brief.
+The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
+
 ## Execution
 
 1. **Parse the target and the question.** Resolve per `## Input`. State
@@ -34,12 +37,12 @@
    and the tools that serve it, the code anchor from step 2, and the
    user's question **verbatim — never your hypothesis, the user's
    embedded guess, or a wanted answer**
-   (`principle-blind-the-investigator`).
+   ([independent review rules](../team/principles/independent-review.md)).
 
    If the `Agent` tool or the `Explore` type is unavailable, run the
    category searches yourself, inline, source by source — the fan-out is
    an optimization, never a dependency
-   (`principle-optimization-never-dependency`). Never
+   ([focused work rules](../team/principles/focused-work.md)). Never
    substitute a full-tool agent silently.
 
 5. **Synthesize.** Weigh the returned evidence against the

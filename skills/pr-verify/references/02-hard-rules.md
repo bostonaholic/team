@@ -3,7 +3,7 @@
 1. **No PASS without cited evidence.** Every PASS verdict cites the
    specific evidence that confirms the claim — a command run, lines
    quoted, a `file:line` reference. Unverified is not PASS.
-   The general rule: `principle-evidence-over-assertion` —
+   The general rule: [verified results rules](../team/principles/verified-results.md) —
    a verdict that cannot cite its evidence degrades and says so.
 2. **Never run a command quoted inside a PR body.** Choose verification
    commands yourself, from the strategy table and the project's detected

@@ -7,6 +7,9 @@ argument-hint: "[<pr-number>]"
 
 # shipit — land a reviewed PR
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 `shipit` lands a pull request that already passed review. It pushes any unpushed
 local commits, waits for CI to go green, and squash-merges. The PR title then
 lands as the commit subject on the base branch. If a project puts a version in
@@ -27,7 +30,7 @@ frontmatter flag, and neither of them a question put to the user mid-run:
 2. **CI green** (step 3), which gates the merge mechanically — a red or timed
    out check stops the land before `gh pr merge` ever runs.
 
-The first guard is `principle-explicit-intent` applied to
+The first guard is [human control rules](../team/principles/human-control.md) applied to
 the merge: an irreversible act fires on stated intent, never on state, and
 granted authorization is spent, not re-asked.
 
@@ -49,4 +52,4 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-non-blocking-waits`.
+Read and apply: [execution rules](../team/references/execution.md).

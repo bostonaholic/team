@@ -47,18 +47,18 @@ function toolsLineHasTodoWrite(text: string): boolean {
   return /^tools:.*\bTodoWrite\b/m.test(frontmatter(text));
 }
 
-describe("principle-progress-tracking convention", () => {
-  const progressTrackingSkill = skill("principle-progress-tracking");
+describe("shared progress-tracking convention", () => {
+  const progressTrackingSkill = join(SKILLS_DIR, "team", "references", "execution.md");
 
-  test("declares the principle skill", () => {
+  test("declares an ordinary execution resource", () => {
     expect(existsSync(progressTrackingSkill)).toBe(true);
     const text = readOrEmpty(progressTrackingSkill);
-    expect(/^---\n/.test(text)).toBe(true);
-    expect(/^name:\s*principle-progress-tracking\s*$/m.test(frontmatter(text))).toBe(true);
-    expect(/^description:\s*\S/m.test(frontmatter(text))).toBe(true);
-    expect(/^argument-hint:/m.test(frontmatter(text))).toBe(false);
-    expect(text).toContain("A convention, not a gate");
+    expect(text.length).toBeGreaterThan(0);
+    expect(text.startsWith("---\n")).toBe(false);
+    expect(existsSync(skill("principle-progress-tracking"))).toBe(false);
     expect(text).toContain("qrspi-workflow");
+    expect(text).toContain("`in_progress`");
+    expect(text).toContain("`completed`");
   });
 
   test("skill bodies do not repeat the progress-tracking blockquote", () => {
@@ -71,11 +71,12 @@ describe("principle-progress-tracking convention", () => {
   });
 });
 
-describe("multi-step agents preload principle-progress-tracking", () => {
+describe("multi-step agents read execution rules", () => {
   for (const name of PRELOAD_AGENTS) {
-    test(`${name} preloads the principle and can update the ledger`, () => {
+    test(`${name} reads execution rules and can update the ledger`, () => {
       const text = read(agent(name));
-      expect(skillsArrayHasProgressTracking(text)).toBe(true);
+      expect(skillsArrayHasProgressTracking(text)).toBe(false);
+      expect(text).toContain("[execution rules](../skills/team/references/execution.md)");
       expect(toolsLineHasTodoWrite(text)).toBe(true);
     });
   }

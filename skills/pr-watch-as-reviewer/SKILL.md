@@ -8,6 +8,9 @@ disable-model-invocation: true
 
 # pr-watch-as-reviewer — reviewer-side watch-and-approve loop
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 `pr-watch-as-reviewer` is the reviewer-side mirror of
 `pr-watch-as-author`. You post
 review comments on a PR you are reviewing, then arm the skill. It polls
@@ -76,5 +79,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-bounded-loops`, `principle-generator-evaluator`,
-`principle-non-blocking-waits`.
+Read and apply: [execution rules](../team/references/execution.md) and
+[independent review rules](../team/principles/independent-review.md).

@@ -7,6 +7,9 @@ argument-hint: "[<pr-number-or-url>]"
 
 # pr-verify — evidence-rated test-plan verification
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Systematically verify every test-plan item in a PR against the actual
 codebase, git history, or filesystem, and rate the evidence for each. The
 output is a per-item verdict table plus one final verdict on the PR's
@@ -23,5 +26,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-evidence-over-assertion`, `principle-least-privilege`,
-and `principle-optimization-never-dependency`.
+Read and apply: [verified results rules](../team/principles/verified-results.md), [independent review rules](../team/principles/independent-review.md),
+and [focused work rules](../team/principles/focused-work.md).

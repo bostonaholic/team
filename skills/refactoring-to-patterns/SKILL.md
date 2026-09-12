@@ -6,6 +6,9 @@ user-invocable: false
 
 # Refactoring to Patterns
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Change internal structure without changing observable behavior. Every step keeps tests green. Never combine refactoring and feature work in one commit.
 
 ## When to refactor
@@ -26,7 +29,7 @@ Refactor before an imminent change that current structure obstructs, on the thir
 | Primitive Obsession | Replace Data Value with Object; Replace Type Code with Class or Subclasses |
 | Conditional Complexity | Replace Conditional with Polymorphism; Introduce Null Object; Decompose Conditional |
 | Middle Man | Remove Middle Man; Inline Method |
-| Speculative Generality / Dead Code | Remove Dead Code; Inline Class; Collapse Hierarchy; Remove Parameter (`principle-subtract-before-you-add`) |
+| Speculative Generality / Dead Code | Remove Dead Code; Inline Class; Collapse Hierarchy; Remove Parameter ([focused work rules](../team/principles/focused-work.md)) |
 
 **Mixed abstraction levels:** a function calls functions one level below its own, never two or more. Extract low-level byte/format work from high-level orchestration behind a name at the caller's level.
 

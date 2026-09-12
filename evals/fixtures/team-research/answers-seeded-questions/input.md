@@ -2,6 +2,9 @@
 agent: team-research
 tier: periodic
 deps:
+  - skills/team/principles/durable-state.md
+  - skills/team/principles/independent-review.md
+  - skills/team/principles/verified-results.md
   - skills/team/references/artifacts.md
   - skills/researching-codebases/SKILL.md
   - skills/finding-files/SKILL.md

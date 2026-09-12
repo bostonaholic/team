@@ -6,6 +6,9 @@ user-invocable: false
 
 # PR watch mechanics
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 The cycle timing, bound, and handoff every PR watch loop runs. A consuming
 skill owns what each cycle *does*; this skill owns how the loop is paced,
 bounded, and ended. `pr-watch-as-author` and `pr-watch-as-reviewer` both
@@ -33,7 +36,7 @@ A consumer binds three slots and nothing else:
   ```
 
   Run it with `run_in_background: true`. Per
-  `principle-non-blocking-waits`, a foreground wait is
+  [execution rules](../team/references/execution.md), a foreground wait is
   killed at the harness ceiling (600 s in Claude Code) and spends a turn
   per fragment.
 - **Soft cap: 3 cycles** (~90 minutes). At cycle 3, if nothing has
@@ -48,7 +51,7 @@ A consumer binds three slots and nothing else:
   wait into foreground sleeps sized under that harness's ceiling — the
   cycle count is what must hold.
 
-The cap convention is `principle-bounded-loops`: declare the
+The cap convention is [execution rules](../team/references/execution.md): declare the
 bound with the loop; hitting it is a loud, terminal, reported outcome.
 
 ## Stop conditions this skill owns

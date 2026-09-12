@@ -2,6 +2,10 @@
 agent: eng-design-doc-review
 tier: periodic
 deps:
+  - skills/team/principles/durable-state.md
+  - skills/team/principles/focused-work.md
+  - skills/team/principles/independent-review.md
+  - skills/team/principles/verified-results.md
   - skills/reviewing-designs/SKILL.md
   - skills/reviewing-designs/references/review-brief.md
   - skills/technical-design-doc/SKILL.md

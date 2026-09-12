@@ -49,5 +49,5 @@ If `$ARGUMENTS/8-plan.md` does not exist in it, run `test-architect` →
 
 Coordinate progress through TodoWrite. Seed:
 `Test-architect → Mechanical gate → Implementer (per slice) → Review round 1`.
-See `principle-progress-tracking` for the per-step tracking convention
+See [execution rules](../team/references/execution.md) for the per-step tracking convention
 agents follow within each phase.

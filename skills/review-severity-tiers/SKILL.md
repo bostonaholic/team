@@ -6,6 +6,9 @@ user-invocable: false
 
 # Review Severity Tiers
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 ## Gate Types by Reviewer
 
 | Reviewer | Gate Type | Blocks Ship? |
@@ -30,7 +33,7 @@ verdicts to one orchestrator action. Every finding has one tier.
 **A non-blocking finding never costs a round.** Each auto-fix reruns the
 implementer and all five reviewers. Blocking/Major are fixed autonomously;
 Minor reaches the human in PR review, regardless of importance.
-The human decides what to build and what to ship; the middle runs autonomously (`principle-human-owns-the-ends`).
+The human decides what to build and what to ship; the middle runs autonomously ([human control rules](../team/principles/human-control.md)).
 
 - `agents/security-reviewer.md` and `skills/reviewing-code/SKILL.md` agree: CRITICAL/HIGH are hard gates; MEDIUM/LOW do not block.
 - Technical-writer REQUIRED and RECOMMENDED are both Minor because its gate is

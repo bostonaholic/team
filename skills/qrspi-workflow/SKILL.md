@@ -5,7 +5,8 @@ user-invocable: false
 ---
 
 Before this operation, read [artifact schema](../team/references/artifacts.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.
+If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 # QRSPI Workflow
 
@@ -34,7 +35,7 @@ WORKTREE is router-owned and has no agent; see “Why first” in `skills/worktr
 
 [artifact schema](../team/references/artifacts.md) owns `<id>`, inventory, `3-prd.md`, `4-repos.md`, topic, and `ticketId` schemas. Topic matches across all artifacts. `4-repos.md` presence enables multi-repo; absence means single-repo. `3-prd.md` is autonomous and ungated.
 
-Research is blind (`principle-blind-the-investigator`). The orchestrator passes researcher/file-finder only `2-questions.md`, never the description or `1-task.md`; their prompts also forbid reading `1-task.md`. They have `Read`/`Grep`/`Glob` with `permissionMode: plan`, so prompt adherence enforces this. Missing context becomes an open question; no user pause. Any intent leak is critical: stop and report.
+Research is blind ([independent review rules](../team/principles/independent-review.md)). The orchestrator passes researcher/file-finder only `2-questions.md`, never the description or `1-task.md`; their prompts also forbid reading `1-task.md`. They have `Read`/`Grep`/`Glob` with `permissionMode: plan`, so prompt adherence enforces this. Missing context becomes an open question; no user pause. Any intent leak is critical: stop and report.
 
 ## Gates
 
@@ -44,15 +45,15 @@ Block until satisfied or explicitly overridden by the user. Examples: REQUEST CH
 
 ### SOFT
 
-Add eligible findings to PR `## Review notes`; never ask mid-run. `skills/review-severity-tiers/SKILL.md` “Severity Tiers and the Auto-Fix Boundary” alone defines gating, auto-fix, and which lower-tier findings qualify (`principle-single-source-of-truth`). Human owns the ends (`principle-human-owns-the-ends`).
+Add eligible findings to PR `## Review notes`; never ask mid-run. `skills/review-severity-tiers/SKILL.md` “Severity Tiers and the Auto-Fix Boundary” alone defines gating, auto-fix, and which lower-tier findings qualify ([durable state rules](../team/principles/durable-state.md)). Human owns the ends ([human control rules](../team/principles/human-control.md)).
 
 ### ADVISORY
 
-Non-blocking; no acknowledgment, e.g. documentation-gap analysis or style suggestions. Deterministic checks enforce rules where possible (`principle-mechanical-gates`).
+Non-blocking; no acknowledgment, e.g. documentation-gap analysis or style suggestions. Deterministic checks enforce rules where possible ([verified results rules](../team/principles/verified-results.md)).
 
 ## State and transitions
 
-Files, never conversation memory, are the phase interface (`principle-files-are-the-contract`). Rebuild state from `docs/plans/<id>/*.md` frontmatter and TodoWrite on every `/team-*` entry.
+Files, never conversation memory, are the phase interface ([durable state rules](../team/principles/durable-state.md)). Rebuild state from `docs/plans/<id>/*.md` frontmatter and TodoWrite on every `/team-*` entry.
 
 | Latest durable state | Next/current phase |
 |---|---|
@@ -74,6 +75,6 @@ Confirm IMPLEMENT only when `git log <merge-base>..<id>` is non-empty; a worktre
 
 - Always QUESTION before RESEARCH. Review DESIGN (~200 lines), never tactical PLAN (~1000 lines). STRUCTURE/PLAN are autonomous.
 - Reject horizontal database/API/UI layering; slices must be end-to-end, testable, atomic (`skills/slicing-work/SKILL.md`). Never implement without structure.
-- Add no feature, test, or abstraction beyond structure. Expand the artifact first; material expansion returns to DESIGN review (`principle-scope-fence`).
+- Add no feature, test, or abstraction beyond structure. Expand the artifact first; material expansion returns to DESIGN review ([human control rules](../team/principles/human-control.md)).
 - Move backward one phase only. A structure flaw returns to STRUCTURE; a design flaw to DESIGN.
 - Never enter PR while a HARD gate, Blocking, or Major finding remains. Fix loops never consult the user; Minor-and-below eligible findings become review notes.

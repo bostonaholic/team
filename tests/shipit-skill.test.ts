@@ -113,7 +113,7 @@ describe("shipit skill: push, wait for CI, merge", () => {
     // watch is lost rather than timed out on any repo with CI over 10 minutes.
     const t = body();
     expect(t).toContain("run_in_background: true");
-    expect(t).toContain("principle-non-blocking-waits");
+    expect(t).toContain("team/references/execution.md");
   });
 
   // `gh pr checks --watch` exits when nothing is pending RIGHT NOW, and two

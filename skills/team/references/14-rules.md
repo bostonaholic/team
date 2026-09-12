@@ -6,7 +6,7 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
 - Artifacts in `docs/plans/<id>/` are the single durable record of
   pipeline state. Each artifact's YAML frontmatter describes its phase
   and revision metadata. Write phase findings to disk before advancing.
-  The file, not conversation memory, is the interface (`principle-files-are-the-contract`).
+  The file, not conversation memory, is the interface ([durable state rules](principles/durable-state.md)).
 - TodoWrite is the orchestrator's live coordination ledger. It is
   session-scoped and is rebuilt on entry to any `/team-*` command by
   scanning artifacts.
@@ -17,7 +17,7 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
   [artifact schema](references/artifacts.md). On disk it is durable rather
   than session-scoped, so the review-round counts the aggregate gate
   tracks survive a restart. Report which of the two the run used
-  (`principle-skip-loudly`).
+  ([verified results rules](principles/verified-results.md)).
 - **Subagents never pause for user input.** Each one resolves its own open
   questions autonomously, and picks the option it would have recommended.
   It records every such choice as an explicit assumption in its artifact,

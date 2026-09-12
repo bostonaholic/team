@@ -2,6 +2,7 @@
 agent: team-structure
 tier: periodic
 deps:
+  - skills/team/principles/durable-state.md
   - skills/team/references/artifacts.md
   - skills/slicing-work/SKILL.md
   - skills/slicing-work/references/structure-template.md

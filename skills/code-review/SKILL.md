@@ -24,7 +24,7 @@ it is not a valid reviewer. Do not review inline. Run these in order:
    not read, and loading it after the dispatch is the defect this sequence
    fixes.
 2. **Dispatch.** Dispatch the `code-reviewer` agent, which preloads
-   `reviewing-code`, against the resolved target. First read [host dispatch](../team/references/15-host-dispatch.md).
+   `reviewing-code`, against the resolved target. Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md).
    Supply its installed root, definition, and applicable resource paths for named and body-loaded calls, including the fallback below.
    When the named agent is unavailable,
    dispatch the built-in read-only `Explore` subagent and write the same

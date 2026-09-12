@@ -139,4 +139,4 @@ the test proves the bug existed, the fix makes it go away.
   a bug fix.
 - **Not a workaround.** A workaround avoids the buggy code path. A fix
   corrects the buggy code. When in doubt, fix the root cause
-  (`principle-fix-root-causes`).
+  ([bug fix rules](../team-fix/playbooks/bug-fix.md)).

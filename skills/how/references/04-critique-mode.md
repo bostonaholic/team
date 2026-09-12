@@ -1,3 +1,6 @@
+Before dispatch, resolve [independent review](../team/principles/independent-review.md). Pass their absolute installed paths with the retained brief.
+The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
+
 ## Critique mode
 
 Explain first — run `## Explain mode` in full. You cannot judge an
@@ -28,7 +31,7 @@ architecture you have not established.
    line-level review belongs to `code-review`, and a rewrite may not be
    suggested without a demonstrated problem. The critics get fresh
    context and no authorship stake — that separation is the point
-   (`principle-generator-evaluator`). If dispatch is
+   ([independent review rules](../team/principles/independent-review.md)). If dispatch is
    unavailable, run the three lenses yourself sequentially and say so.
 
 2. **Judge as the lead.** You are a pragmatic lead, not an aggregator.

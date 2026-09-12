@@ -29,10 +29,10 @@ gate's polarity inverts:
 
 1. Capture the baseline — the suite and every static check — **before** any
    file moves. A baseline taken after the first move measures the change
-   rather than the pre-image (`principle-pre-image-first`), and a check that
+   rather than the pre-image ([durable state rules](principles/durable-state.md)), and a check that
    could not run at all is UNKNOWN, never a pass.
 2. Skip the `test-architect` dispatch and record the reason on a named line
-   (`principle-skip-loudly`). A silent skip is indistinguishable from a
+   ([verified results rules](principles/verified-results.md)). A silent skip is indistinguishable from a
    forgotten one.
 3. Advance only when the checks **reproduce that baseline**. A check red
    before the change stays red; a new failure is a regression, not an

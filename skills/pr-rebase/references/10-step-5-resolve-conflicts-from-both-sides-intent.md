@@ -1,3 +1,6 @@
+Before dispatch, resolve [human control](../team/principles/human-control.md), [independent review](../team/principles/independent-review.md). Pass their absolute installed paths with the retained brief.
+The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
+
 ### Step 5 — resolve conflicts from both sides' intent
 
 A rebase stops once per conflicted *commit*, and that stop can carry

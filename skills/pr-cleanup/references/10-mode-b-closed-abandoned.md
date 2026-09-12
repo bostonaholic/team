@@ -5,7 +5,7 @@ check applies, and closing an abandoned PR ALWAYS includes the full
 teardown below, not just the close. Everything is per repo; for a stack,
 order child before parent throughout.
 
-The gate is `principle-explicit-intent`: abandon intent is
+The gate is [human control rules](../team/principles/human-control.md): abandon intent is
 stated by the user, never inferred from a PR being stale, red, or unreviewed.
 
 1. **Close the PR(s):**
@@ -126,7 +126,7 @@ stated by the user, never inferred from a PR being stale, red, or unreviewed.
 
 - **Re-runs are idempotent.** An already-deleted branch or worktree is
   done, not an error — report it as such and continue.
-  The general rule: `principle-idempotent-reruns` — a re-run
+  The general rule: [durable state rules](../team/principles/durable-state.md) — a re-run
   converges, and already-done is done.
 - **`gh` unauthenticated** → stop and name the authentication failure; do
   not fall back to guessing merge state.

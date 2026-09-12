@@ -1,3 +1,5 @@
+Before each `design-author` dispatch or retry, read [host dispatch](references/15-host-dispatch.md).
+
 Before review dispatch, supply the installed plugin root and resolved `skills/reviewing-designs/SKILL.md` path.
 Resolve its brief beside that installed skill. Pass the applicable resource paths and require reads before work.
 If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
@@ -83,7 +85,7 @@ When the `design-author` returns a draft:
 8. On an **unparseable verdict or a reviewer crash** → re-dispatch the
    review once with the error. On second failure, halt loudly. Never
    advance on a missing verdict — fail closed. A missing verdict counts as
-   not passed (`principle-fail-closed`). The halt message
+   not passed ([verified results rules](principles/verified-results.md)). The halt message
    names the
    absolute worktree-rooted `docs/plans/<id>/` path, so the operator can
    open `6-design.md` and the `design-review-<n>.md` records directly. After

@@ -2,6 +2,10 @@
 agent: code-reviewer
 tier: periodic
 deps:
+  - skills/team/principles/durable-state.md
+  - skills/team/principles/focused-work.md
+  - skills/team/principles/independent-review.md
+  - skills/team/principles/verified-results.md
   - skills/team/references/artifacts.md
   - skills/team/references/external-data.md
   - agents/code-reviewer.md

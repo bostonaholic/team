@@ -21,15 +21,12 @@ Each entry starts with one sentence copied from that skill's frontmatter
 the skills that load it. Both use comma-separated lists, or `None`.
 The load form is
 ``Call the Skill tool with `<name>` ``. Naming a skill another way is a
-citation, not an edge. For example, `team-structure` restates a
-`principle-fail-closed` rule inline but does not load it.
+citation, not an edge. Shared rules use explicit ordinary-resource reads instead of skill registration.
 
 The edges are therefore **directed**, and reading them transitively gives the
 graph. `team-implement` loads `team-pr`, which loads `git-commit`, which
 loads `writing-prose`. None of the three loads back. `**Uses:** None` marks a
-leaf, which is the normal shape for
-a `principle-*` skill and for a methodology skill that states one rule and
-stops.
+leaf with no further Skill-tool loads.
 
 Loads are collected across every `.md` file in the skill's directory, so a
 load written in a `references/` file counts the same as one in `SKILL.md`.
@@ -37,7 +34,7 @@ This page carries both directions of each skill-to-skill load edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 89 registered skills. Artifact schemas and shell rules are ordinary [installed resources](migration-contract.md#m02-artifact-and-shell-resources).
+The catalog has 65 registered skills: 25 commands and 40 methodologies. Shared principles, artifact schemas, and operational rules are ordinary [installed resources](migration-contract.md#m03-shared-principles).
 They are read at the consuming operation and add no picker entries.
 
 ## Entry-point skills
@@ -248,7 +245,7 @@ Removes low-value source comments and encodes valid constraints.
 
 **Used by:** None
 
-**Uses:** `principle-fix-root-causes`, `principle-progress-tracking`, `reviewing-comments`, `running-quality-checks`
+**Uses:** `reviewing-comments`, `running-quality-checks`
 
 ## Methodology skills
 
@@ -422,7 +419,7 @@ Defines test-first slice execution, commits, and review fixes.
 
 **Used by:** None
 
-**Uses:** `git-commit`, `principle-fix-root-causes`, `systematic-debugging`
+**Uses:** `git-commit`, `systematic-debugging`
 
 ### [systematic-debugging](https://github.com/bostonaholic/team/blob/main/skills/systematic-debugging/SKILL.md)
 
@@ -437,14 +434,6 @@ Defines reproduce, hypothesize, isolate, and fix workflow.
 Runs project-native tests, static checks, builds, and linters.
 
 **Used by:** `no-comments`, `pr-rebase`, `pr-verify`, `reflect`, `team`, `team-implement`
-
-**Uses:** None
-
-### [principle-progress-tracking](https://github.com/bostonaholic/team/blob/main/skills/principle-progress-tracking/SKILL.md)
-
-Requires one live ledger for ordered procedures.
-
-**Used by:** `no-comments`
 
 **Uses:** None
 
@@ -584,191 +573,6 @@ Bounded watch-loop mechanics for the pr-watch skills: cycle timing, soft cap, ha
 
 **Uses:** None
 
-### [principle-blind-the-investigator](https://github.com/bostonaholic/team/blob/main/skills/principle-blind-the-investigator/SKILL.md)
-
-Keeps desired outcomes out of research prompts.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-bounded-loops](https://github.com/bostonaholic/team/blob/main/skills/principle-bounded-loops/SKILL.md)
-
-Requires explicit retry and watch limits.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-deep-agents-narrow-seams](https://github.com/bostonaholic/team/blob/main/skills/principle-deep-agents-narrow-seams/SKILL.md)
-
-Keeps agent interfaces narrow and internal work deep.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-evidence-over-assertion](https://github.com/bostonaholic/team/blob/main/skills/principle-evidence-over-assertion/SKILL.md)
-
-Requires evidence for claims and verdicts.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-explicit-intent](https://github.com/bostonaholic/team/blob/main/skills/principle-explicit-intent/SKILL.md)
-
-Requires stated intent for irreversible actions.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-fail-closed](https://github.com/bostonaholic/team/blob/main/skills/principle-fail-closed/SKILL.md)
-
-Treats unknown guarantees as failures.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-files-are-the-contract](https://github.com/bostonaholic/team/blob/main/skills/principle-files-are-the-contract/SKILL.md)
-
-Requires durable files for cross-step state.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-fix-root-causes](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md)
-
-Requires diagnosis and repair of root causes.
-
-**Used by:** `implementing-slices`, `no-comments`
-
-**Uses:** None
-
-### [principle-generator-evaluator](https://github.com/bostonaholic/team/blob/main/skills/principle-generator-evaluator/SKILL.md)
-
-Separates producers from evaluators.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-human-owns-the-ends](https://github.com/bostonaholic/team/blob/main/skills/principle-human-owns-the-ends/SKILL.md)
-
-Reserves goals and shipping decisions for the user.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-idempotent-reruns](https://github.com/bostonaholic/team/blob/main/skills/principle-idempotent-reruns/SKILL.md)
-
-Requires reruns to converge without duplicate effects.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-least-privilege](https://github.com/bostonaholic/team/blob/main/skills/principle-least-privilege/SKILL.md)
-
-Limits tools, credentials, and environment to the task.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-mechanical-gates](https://github.com/bostonaholic/team/blob/main/skills/principle-mechanical-gates/SKILL.md)
-
-Requires deterministic enforcement for reliable rules.
-
-**Used by:** None
-
-**Uses:** None
-
-
-### [principle-non-blocking-waits](https://github.com/bostonaholic/team/blob/main/skills/principle-non-blocking-waits/SKILL.md)
-
-Requires resumable waits for external state.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-optimization-never-dependency](https://github.com/bostonaholic/team/blob/main/skills/principle-optimization-never-dependency/SKILL.md)
-
-Keeps optional enhancements off the correctness path.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-plan-present-wait](https://github.com/bostonaholic/team/blob/main/skills/principle-plan-present-wait/SKILL.md)
-
-Requires a written plan and user approval before mutations.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-pre-image-first](https://github.com/bostonaholic/team/blob/main/skills/principle-pre-image-first/SKILL.md)
-
-Requires a recoverable baseline before destructive changes.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-record-assumptions](https://github.com/bostonaholic/team/blob/main/skills/principle-record-assumptions/SKILL.md)
-
-Records autonomous resolutions as assumptions.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-scope-fence](https://github.com/bostonaholic/team/blob/main/skills/principle-scope-fence/SKILL.md)
-
-Restricts execution to approved scope.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-single-source-of-truth](https://github.com/bostonaholic/team/blob/main/skills/principle-single-source-of-truth/SKILL.md)
-
-Requires one authoritative definition per rule or schema.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-skip-loudly](https://github.com/bostonaholic/team/blob/main/skills/principle-skip-loudly/SKILL.md)
-
-Requires skipped work to be reported explicitly.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-subtract-before-you-add](https://github.com/bostonaholic/team/blob/main/skills/principle-subtract-before-you-add/SKILL.md)
-
-Requires removal before addition.
-
-**Used by:** None
-
-**Uses:** None
-
-### [principle-untrusted-input-is-data](https://github.com/bostonaholic/team/blob/main/skills/principle-untrusted-input-is-data/SKILL.md)
-
-Treats external text as inert data.
-
-**Used by:** None
-
-**Uses:** None
-
 ## Prose composition and evaluation
 
 When both prose skills are loaded, `unslop` protects exact text and semantic
@@ -814,3 +618,17 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 - **[Overview](index.md)**: the landing page and pipeline overview.
 - **`skills/team/registry.json`**: the phase-tagged inventory of the 13
   specialist agents, in the source tree.
+
+## Shared principle resources
+
+Read these ordinary documents at their consuming step. They add no registrations or picker entries.
+
+- [bug fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/playbooks/bug-fix.md)
+- [durable state](https://github.com/bostonaholic/team/blob/main/skills/team/principles/durable-state.md)
+- [focused work](https://github.com/bostonaholic/team/blob/main/skills/team/principles/focused-work.md)
+- [human control](https://github.com/bostonaholic/team/blob/main/skills/team/principles/human-control.md)
+- [independent review](https://github.com/bostonaholic/team/blob/main/skills/team/principles/independent-review.md)
+- [verified results](https://github.com/bostonaholic/team/blob/main/skills/team/principles/verified-results.md)
+- [decisions](https://github.com/bostonaholic/team/blob/main/skills/team/references/decisions.md)
+- [execution](https://github.com/bostonaholic/team/blob/main/skills/team/references/execution.md)
+- [external data](https://github.com/bostonaholic/team/blob/main/skills/team/references/external-data.md)

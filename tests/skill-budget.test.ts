@@ -79,10 +79,10 @@ describe("skill source budget", () => {
   const budgets = skillBudgets();
 
   test("discovers the fixed skill tiers", () => {
-    expect(skillNames(REPO_ROOT).size).toBe(89);
+    expect(skillNames(REPO_ROOT).size).toBe(65);
     expect(budgets.filter(({ tier }) => tier === "entry")).toHaveLength(25);
     expect(budgets.filter(({ tier }) => tier === "methodology")).toHaveLength(40);
-    expect(budgets.filter(({ tier }) => tier === "principle")).toHaveLength(24);
+    expect(budgets.filter(({ tier }) => tier === "principle")).toHaveLength(0);
   });
 
   test("every over-budget skill has a recorded reason", () => {

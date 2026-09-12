@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Consolidate shared principles into ordinary installed resources while preserving command scope, review gates, and evaluation inputs.
+
 ## [0.104.1] - 2026-09-12
 
 ### Changed

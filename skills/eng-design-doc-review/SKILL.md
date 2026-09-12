@@ -9,9 +9,9 @@ Before review dispatch, supply the installed plugin root and resolved `skills/re
 Resolve its brief beside that installed skill. Pass the applicable resource paths and require reads before work.
 If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
 
-
 # Engineering Design Doc Review — Independent Fresh-Context Audit
-
+Before dispatch, resolve [independent review](../team/principles/independent-review.md), [verified results](../team/principles/verified-results.md), [focused work](../team/principles/focused-work.md). Pass their absolute installed paths with the retained brief. The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
+Before each consuming step, read its linked shared rules from this installed skill directory. If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 Adversarially review a design document with fresh context. The brief this
 skill dispatches lives in `skills/reviewing-designs/SKILL.md`, and the
 orchestrator loads the same brief for the DESIGN phase's adversarial
@@ -31,7 +31,7 @@ from `reviewing-designs` and dispatches the built-in read-only
 — that isolation is the whole point. It prevents self-evaluation bias.
 `Explore` holds no Write/Edit tools, so the reviewer structurally cannot
 change the artifacts it judges.
-Fresh context plus veto-without-authorship is the generator-evaluator rule (`principle-generator-evaluator`).
+Fresh context plus veto-without-authorship is the generator-evaluator rule ([independent review rules](../team/principles/independent-review.md)).
 
 ## Input
 
@@ -126,7 +126,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
   *orchestrator* records the verdict to `design-review-<n>.md` when the
   pipeline gate runs the brief. The recovery hooks fail closed on anything
   but a recorded passing verdict. The skill itself writes no artifacts.
-  The toolset, not the prose, is the guarantee for writes (`principle-least-privilege`).
+  The toolset, not the prose, is the guarantee for writes ([independent review rules](../team/principles/independent-review.md)).
 - Standalone use blocks nothing: users may run `/team-design` or
   `/team-structure` without ever invoking this skill directly.
 

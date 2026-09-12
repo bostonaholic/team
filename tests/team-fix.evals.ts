@@ -19,7 +19,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { EvalCollector, assertNoBudgetRegressions } from "./helpers/eval-store";
-import { loadFixture } from "./helpers/fixtures";
+import { loadFixture, loadInstructionContext } from "./helpers/fixtures";
 import { judgeQuality, outcomeJudge } from "./helpers/llm-judge";
 import { runAgentTest } from "./helpers/session-runner";
 import { testIfSelected } from "./helpers/touchfiles";
@@ -43,6 +43,14 @@ testIfSelected(
 
       const result = await runAgentTest({
         prompt,
+        systemPromptAppend: loadInstructionContext([
+          "skills/team/principles/human-control.md",
+          "skills/team/references/execution.md",
+          "skills/team-fix/playbooks/bug-fix.md",
+          "skills/team-fix/references/06-execution.md",
+          "skills/test-driven-bug-fix/SKILL.md",
+          "skills/test-driven-bug-fix/references/procedure.md",
+        ]),
         workingDirectory: workDir,
         maxTurns: 6,
         timeout: 180_000,

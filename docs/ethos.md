@@ -205,6 +205,8 @@ where judgment is scarce." Build the system so well that the only things left
 worth a human's attention are the two that were always theirs: **what to build,
 and what to ship**.
 
+The [shared principle resources](skills.md#shared-principle-resources) define the installed rules for scope, state, evidence, review, and focused work.
+
 ## See also
 
 - **[Vision](vision.md)**: the loop-driven end state Team builds toward.

@@ -6,6 +6,9 @@ user-invocable: false
 
 # Test-Driven Bug Fix
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Prove each bug and pin its behavior before changing production code. Read
 [references/procedure.md](references/procedure.md) for detailed checks, examples,
 and commit templates.
@@ -64,5 +67,5 @@ test: reproduce <bug description> with failing test
 fix: <minimal description of the fix>
 ```
 
-The fix targets the root cause (`principle-fix-root-causes`). It is not a
+The fix targets the root cause ([bug fix rules](../team-fix/playbooks/bug-fix.md)). It is not a
 refactor, feature, or workaround.

@@ -1,3 +1,5 @@
+Before each dispatch or retry, read [host dispatch](references/15-host-dispatch.md).
+
 ## Where a phase agent's output lives
 
 Phase agents split into two kinds, and the split decides what a lost result
@@ -21,4 +23,4 @@ held elsewhere, re-dispatch rather than working from the preview. A summary of
 a research report is not a research report, and DESIGN downstream cannot tell
 the difference until it is already reasoning from a gap.
 Each dispatch is a narrow seam — declared inputs in, one bounded output back,
-complexity inside the agent (`principle-deep-agents-narrow-seams`).
+complexity inside the agent ([focused work rules](principles/focused-work.md)).

@@ -6,7 +6,8 @@ argument-hint: "[<project-number-or-url>] [--promote <issue-number>]"
 ---
 
 Before this operation, read [external-data rules](../team/references/external-data.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.
+If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 # groom-backlog — plan, ask, wait, then execute
 
@@ -18,7 +19,7 @@ its auto-apply bar. That checkpoint is the ethos applied, not a hole in it. The 
 autonomous middle earns its autonomy from mechanical gates. A grooming judgment has none, so
 the user's answer stays this skill's one gate until a loop-driven controller replaces it.
 
-The shape is `principle-plan-present-wait`: plan the mutations to a file,
+The shape is [human control rules](../team/principles/human-control.md): plan the mutations to a file,
 present each consequential choice with one recommendation, and execute only the answered
 subset.
 
@@ -46,6 +47,7 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-evidence-over-assertion`, `principle-explicit-intent`,
-`principle-idempotent-reruns`, `principle-pre-image-first`, `principle-skip-loudly`, and
-`principle-untrusted-input-is-data`.
+Read and apply: [verified results rules](../team/principles/verified-results.md),
+[human control rules](../team/principles/human-control.md),
+[durable state rules](../team/principles/durable-state.md), and
+[external data rules](../team/references/external-data.md).
