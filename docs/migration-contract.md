@@ -405,5 +405,29 @@ The capability index lives in `docs/verification/`: invocation, prerequisites, e
 The verifier and ux-reviewer agents drop their `skills:` preloads and read the playbook and brief by installed path.
 Catalog description and catalog-line budgets ratchet again after the two registrations move.
 
+## M10: task routes with durable scope and recovery
+
+The catalog retains 25 commands and 0 methodologies, totaling 25 registrations, with 13 unchanged agent roles. No registration is added or removed.
+`/team` gains six leading-argument routes selected only from the first whitespace-separated token of the invocation: `investigate`, `plan`, and `prototype` stop at their deliverable with no commit, push, or PR; `feature`, `fix`, and `refactor` run their full pipeline to a draft PR. An unprefixed `/team <description>` keeps the existing full feature behavior, and the standalone `/team-*` phase commands keep their existing meaning.
+
+| Change | Contract |
+| --- | --- |
+| `skills/team/references/routing.md` (new) | Route recognition from the leading argument only; the route table mapping each route to an existing playbook and stopping point; missing-task and incidental-word rules; limited-scope forbidden effects; continuation rules. |
+| `skills/team/references/artifacts.md` | `1-task.md` gains `route` and `routeStatus` (additive). `route` records the selected route before dispatch; `routeStatus: complete` marks a finished limited-scope route. Neither appears on `2-questions.md`. |
+| `hooks/session-start-recover.mjs`, `hooks/pre-compact-anchor.mjs` | Read `route` from `1-task.md`. For a limited-scope route, report completion or in-progress and never enter the feature phase table, so a finished plan is not read as permission to implement. Missing `route` metadata grants no new effect: it falls through to the existing phase inference. |
+| `skills/team/SKILL.md`, `references/01-input.md`, `references/02-setup.md` | Route selection precedes worktree setup. Limited-scope routes write artifacts in place and create no production worktree. |
+
+### Named consumers
+
+| Consumer | Operation | Change |
+| --- | --- | --- |
+| `skills/team/SKILL.md` | Select the route and stop condition | Read `references/routing.md` before setup |
+| `skills/team/references/01-input.md` | Recognize the leading-argument route | Read `routing.md` before resolving the description |
+| `skills/team/references/02-setup.md` | Select the route before worktree setup | Limited-scope routes skip the WORKTREE phase |
+| `skills/team/references/artifacts.md` | Define the route schema | `route` and `routeStatus` on `1-task.md` |
+| `hooks/session-start-recover.mjs`, `hooks/pre-compact-anchor.mjs` | Report limited-scope completion instead of implementation | Read `route` and `routeStatus` |
+
+Recovery for pre-migration artifacts is unchanged: a topic with no `route` metadata resumes through the existing phase table, and the existing recovery tests (pipeline-recovery) pass without route metadata. The new route recovery cases prove a completed `plan`/`investigate`/`prototype` is reported complete, never as IMPLEMENT.
+
 
 

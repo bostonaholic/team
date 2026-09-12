@@ -19,6 +19,9 @@ import { join } from "node:path";
 
 const ID_RE = /^([A-Za-z][A-Za-z0-9_]*-\d+|\d{4}-\d{2}-\d{2})-[a-z0-9][a-z0-9-]*$/;
 const PHASE_FILES = ["1-task", "2-questions", "5-research", "6-design", "7-structure", "8-plan"];
+// Routes that stop at their deliverable and never enter the feature phase
+// table. A completed one must not be read as "ready to implement".
+const LIMITED_ROUTES = new Set(["investigate", "plan", "prototype"]);
 
 async function readStdinJSON() {
   const chunks = [];
@@ -231,6 +234,14 @@ async function main() {
   const active = await findActiveTopic(rootDir);
   if (!active) process.exit(0);
   const hasWorktree = worktreeMatches(worktreePaths(rootDir), active.id);
+  const task = await readFrontmatter(join(active.dir, "1-task.md"));
+  const route = task.route;
+  if (LIMITED_ROUTES.has(route)) {
+    const complete = task.routeStatus === "complete";
+    const ctx = limitedScopeContext(route, active, complete);
+    process.stderr.write(JSON.stringify({ hookSpecificOutput: { additionalContext: ctx } }) + "\n");
+    process.exit(0);
+  }
   const phase = await inferPhase(active.dir, rootDir, active.id, hasWorktree);
   if (!phase) process.exit(0);
   const ctx = [
@@ -243,6 +254,27 @@ async function main() {
   ].join("\n");
   process.stderr.write(JSON.stringify({ hookSpecificOutput: { additionalContext: ctx } }) + "\n");
   process.exit(0);
+}
+
+function limitedScopeContext(route, active, complete) {
+  return complete
+    ? [
+        "[Team Pipeline Recovery]",
+        "A completed limited-scope /team route was detected.",
+        "",
+        `Phase: COMPLETE | Id: ${active.id}`,
+        `Artifact directory: ${active.dir}`,
+        `Route: ${route} — complete. This finished route does not authorize implementation; to implement, make an explicit new request.`,
+      ].join("\n")
+    : [
+        "[Team Pipeline Recovery]",
+        "A limited-scope /team route was detected.",
+        "",
+        `Phase: ${route.toUpperCase()} | Id: ${active.id}`,
+        `Artifact directory: ${active.dir}`,
+        `Route: ${route} — limited scope. It stops at its deliverable and never implements, commits, pushes, or opens a PR.`,
+        `To continue: re-invoke /team ${route} to resume this limited-scope route.`,
+      ].join("\n");
 }
 
 main();

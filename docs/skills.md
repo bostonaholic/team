@@ -45,7 +45,7 @@ full run or drives one phase of the QRSPI pipeline.
 
 ### [team](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
 
-Runs the 8-phase QRSPI feature pipeline.
+Runs the 8-phase QRSPI feature pipeline, or a leading-argument route.
 
 **Used by:** None
 

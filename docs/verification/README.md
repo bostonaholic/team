@@ -197,6 +197,36 @@ These checks measure phase inference and shell discovery. Source reads and insta
 The focused proof does not establish a corrected Linux CI run or a passing full suite.
 Confidence: high, from the locked suite, runtime parsers, and retained case observations.
 
+## Task routing and limited-scope recovery
+
+Run the route recovery and routing suites from the Team checkout:
+
+```bash
+mkdir -p .context/verification/routes
+bun test ./tests/route-recovery.test.ts ./tests/route-routing.test.ts > .context/verification/routes/routes.stdout.log 2> .context/verification/routes/routes.stderr.log
+result=$?
+printf '%s\n' "$result" > .context/verification/routes/routes.exit
+```
+
+The routing suite reads the `skills/team/references/routing.md` contract and its
+wiring (`SKILL.md`, `01-input.md`, `02-setup.md`, `artifacts.md`, both hooks) and
+asserts the leading-argument-only recognition, the six route names, the
+missing-task rule, the limited-scope forbidden effects, and the `route` /
+`routeStatus` schema. The recovery suite drives both hooks against disposable
+non-Git consumer directories and asserts:
+
+- a completed `plan` / `investigate` / `prototype` route (with `routeStatus:
+  complete`) reports `Phase: COMPLETE` and never `IMPLEMENT`, even when
+  `8-plan.md` is present;
+- an in-progress limited-scope route reports its own phase and the
+  "never implements, commits, pushes, or opens a PR" contract;
+- a legacy topic with no `route` metadata resumes through the phase table
+  unchanged, so missing metadata grants no new effect.
+
+Expect 26 passing cases (12 recovery subprocess cases across two hooks, plus 14
+routing tripwires). The route words in issue bodies or quoted text are covered
+by the routing tripwire, not by a subprocess.
+
 ## Golden Master protocol and published documentation
 
 Review isolation rule 5, pipeline step 3, metrics, and the result example in
