@@ -343,9 +343,8 @@ describe("pr-watch-as-reviewer skill: Third-party participant stop", () => {
 });
 
 // A rejected verdict that repeats on a thread already carrying the viewer's
-// own reply stops instead of rebutting again. The stop-conditions count grew
-// in an earlier change too, so this asserts the current total: nine
-// conditions, six owned by this skill.
+// own reply stops instead of rebutting again. This also asserts the current
+// stop-conditions total: nine conditions, six owned by this skill.
 describe("pr-watch-as-reviewer skill: Dispute stands — a rejected verdict repeating after the viewer's own reply", () => {
   function actOnVerdictSection(): string {
     const t = squash(fileBody(POLL));
@@ -358,8 +357,8 @@ describe("pr-watch-as-reviewer skill: Dispute stands — a rejected verdict repe
   test("a rejected verdict repeated on a thread that already carries the viewer's own reply below the first comment stops instead of rebutting", () => {
     // "first comment" and "stop" alone already appear in this section today
     // in unrelated sentences (the resolve rule, a resolve-failure note), so
-    // the checks below pin the fuller phrases the design and structure both
-    // use, which are absent until the new rule lands.
+    // the checks below pin the fuller phrases that are unique to the
+    // terminal-repeat rule.
     const section = actOnVerdictSection();
     expect(section.length).toBeGreaterThan(0);
     expect(section).toContain("already carries");
@@ -368,7 +367,7 @@ describe("pr-watch-as-reviewer skill: Dispute stands — a rejected verdict repe
   });
 
   test("addressed, answered, and pending verdicts still render and act exactly as today — the terminal-repeat rule is scoped to a rejected verdict only", () => {
-    // The new rule lives in the Act-on-every-verdict section (per the plan);
+    // The Dispute-stands rule lives in the Act-on-every-verdict section.
     // "already carries" also appears earlier in the file in an unrelated
     // sentence, so the check is scoped here to avoid a false match on that.
     const section = actOnVerdictSection();
