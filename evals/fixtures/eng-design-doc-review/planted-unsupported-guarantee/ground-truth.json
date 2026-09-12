@@ -1,0 +1,13 @@
+{
+  "bugs": [
+    {
+      "id": "unsupported-thread-safety-guarantee",
+      "category": "unsupported-guarantee",
+      "severity": "blocking",
+      "description": "The design asserts thread-safety with no lock, synchronization, or concurrency mechanism named — a consequential unsupported guarantee. The review must flag it as blocking even though a small experiment cannot reproduce the hazard.",
+      "detection_hint": "(thread-?safe|thread safety|concurr).{0,120}(no|without|unsupported|unproven|unverified|missing|mechanism|lock|synchroniz|assert|claim)"
+    }
+  ],
+  "minimum_detection": 1.0,
+  "max_false_positives": 2
+}

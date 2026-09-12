@@ -95,6 +95,14 @@ Copy the `topic` value verbatim from the predecessor artifact
   no gate and needs no extra research.
 - **Apply the system dependency checks.** Follow `## System dependency checks`
   in the design playbook: name adjacent components and co-changing surfaces.
+- **Make decisions observable.** Follow `## Make decisions observable` in the
+  design playbook. Start a shared interface change from the caller — `## Caller
+  examples` (the actual user prompt, call, or read) then `## Interface` (inputs,
+  outputs, errors, ownership). Prototype only an unresolved question observation
+  can answer, and record it as an `## Experiments` entry with Question,
+  Alternatives, Experiment, Observation, and Decision. Prototype code stays
+  disposable: it never reaches production without the normal implementation
+  checks, and it never approves the design.
 
 ## Output to orchestrator
 
