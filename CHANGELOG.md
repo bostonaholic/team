@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Both PR watch loops now stop and name the login when a third party comments on an unresolved thread the loop is driving.** A resolved thread is unaffected, and a deleted-account (`null`) commenter still counts as a third party. **What this asks of you:** nothing.
+
 ## [0.108.1] - 2026-09-14
 
 ### Fixed
