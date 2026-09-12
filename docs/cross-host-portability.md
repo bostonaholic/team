@@ -243,8 +243,8 @@ rather than behavior.
 ## Gap analysis
 
 After verifying every capability against the host repos (2026-06-27), the gap
-picture is narrower than the earlier draft assumed. Two hard gaps remain, plus a
-cross-cutting recency caveat:
+picture is narrower than the earlier draft assumed. One hard gap remains, one
+was resolved by the playbook migration, plus a cross-cutting recency caveat:
 
 1. **Codex does not expose MCP *prompts* as slash commands (hard gap).** Codex MCP
    supports tools and resources (`read_mcp_resource` and `list_mcp_resources`). It
@@ -255,13 +255,16 @@ cross-cutting recency caveat:
    on MCP (decision 4).
 
 2. **Codex lists every skill in the `$` picker, so `user-invocable: false` is a
-   Claude-Code-only guarantee (hard gap).** Team's 40 registered methodology skills are reference material an agent loads, never something a
-   human runs. On Claude Code, `user-invocable: false` keeps them out of the `/`
-   menu. Codex has no equivalent, so they all appear under `$` and a user can
-   invoke any of them directly. There is no workaround short of moving those
-   skills out of `skills/` entirely, which would end load-by-name on both hosts.
-   Team accepts the clutter. See
-   [the divergence note](#57-codex-port) for the evidence behind that.
+   Claude-Code-only guarantee (resolved by the playbook migration).** Before the
+   migration, Team's registered methodology and `principle-*` skills were
+   reference material an agent loaded, never something a human ran. On Claude
+   Code, `user-invocable: false` kept them out of the `/` menu. Codex had no
+   equivalent, so they all appeared under `$` and a user could invoke any of
+   them directly. The [playbook migration](migration-contract.md) moved that
+   content out of `skills/` into ordinary references and playbooks read by
+   path, so no methodology or principle registration remains for Codex to
+   list. The `$` picker now shows only the 25 entry-point commands. See
+   [the divergence note](#57-codex-port) for the historical evidence.
 
 3. **Recency risk.** This is cross-cutting rather than a primitive gap. Codex's
    hooks and multi-agent are young. They rolled out from March to May 2026
@@ -393,7 +396,7 @@ full parity. It starts from the matrix and works around the named gaps.
   equivalent — `policy.allow_implicit_invocation: false` in each skill's
   `agents/openai.yaml` — keeps all four out of the implicit catalog. The
   divergence is deliberate and the validator finding is expected.
-- **Codex ignores `user-invocable: false` for registered methodologies.** Ordinary principles now use installed file reads and add no picker entries.
+- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook migration removed those registrations, so only the 25 entry commands remain in the picker. Ordinary principles now use installed file reads and add no picker entries.
   Historical probe evidence: the `$` picker was fed by the `skills/list` app-server method, which returned all
   100 Team skills with `enabled: true`, `team:principle-fix-root-causes` among
   them. Its `SkillMetadata` payload carries nine fields — `dependencies`,
@@ -572,8 +575,8 @@ absolute file/base pointer. The template declares explicit invocation, requests
 a filesystem read, resolves relative references against the canonical base, and
 supplies `$ARGUMENTS`. It embeds no skill body and sets no model or agent override.
 This preserves literal shell examples and argument references inside canonical
-skill content. Even `user-invocable: false` methodology skills appear in the
-command menu. Commands include `/reflect`, whose description states that OpenCode
+skill content. Even the guarded `disable-model-invocation: true` skills appear
+in the command menu. Commands include `/reflect`, whose description states that OpenCode
 session reflection is unsupported: its transcript resolver supports Claude Code
 and Codex only.
 

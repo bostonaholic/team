@@ -238,6 +238,15 @@ streams and produced artifacts are local evidence under
 `.context/verification/m12/`; the record's limits name the single-sample,
 tiny-codebase, and tool-fidelity gaps.
 
+## Compatibility report
+
+The [compatibility report](compatibility.md) closes the migration: it recounts
+the final 25-skill catalog, sweeps the 66 retired names for leftovers, and
+compares instruction content against the [initial inventory](baselines/m01.json).
+The [final inventory](baselines/m13.json) is committed beside it. The report
+names the three still-unavailable checks — paid evaluations, native live-host
+instruction use, and the external Golden Master run — rather than passing them.
+
 ## Golden Master protocol and published documentation
 
 Review isolation rule 5, pipeline step 3, metrics, and the result example in

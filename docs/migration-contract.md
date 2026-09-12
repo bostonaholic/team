@@ -459,3 +459,37 @@ Full matched-case results, methodology, and limits live in
 13-agent invariant remain enforced by `tests/architecture.test.ts`,
 `tests/thin-agents.test.ts`, and the registry-sync hook; no new tripwire was
 needed because the keep-existing decision adds no runtime change.
+
+## M13: complete migration validation
+
+The catalog retains 25 commands and 0 methodologies, totaling 25 registrations,
+with 13 unchanged agent roles and zero justified exceptions. The final catalog
+is the parent brief's 25-entry-point list with no forced count and no capability
+demoted past its entry-point contract.
+
+The [compatibility report](verification/compatibility.md) records the closing
+recount, the 66-name leftover audit, and the measured outcome against the M01
+baseline. The [final inventory](verification/baselines/m13.json) is committed
+beside the initial inventory for direct comparison. Key results:
+
+- **Registrations 91 → 25 (−72.5%).** Entry/methodology/principle split moves
+  from 25/41/25 to 25/0/0. Codex manifests and OpenCode commands each drop 91 →
+  25.
+- **Always-loaded surface falls.** Root `SKILL.md` words 30,722 → 11,604
+  (−62%); declared preloads 68 → 0.
+- **Total instruction words fall 5.8%** (127,433 → 120,042). The migration
+  moved text more than it deleted text: the 66 retired `SKILL.md` bodies became
+  ordinary resources read by path, so the word total barely moves while the
+  load surface collapses. Agent bodies grew 10.7% because one-consumer
+  instructions moved inline.
+- **No leftovers.** No retired directory, dangling load, preload, or accidental
+  manifest registration remains. All 17 non-manifest resources were preserved;
+  the three moved scripts run byte-identical from `skills/team/references/`.
+- **Free suite green.** `bun test` reports 2876 pass / 4 skip / 0 fail;
+  typecheck, discovery consistency, and the focused route/recovery/gate suites
+  all pass.
+
+The unresolved evidence is explicit: paid evaluations (no
+`EVALS_ANTHROPIC_API_KEY`), native live-host instruction use, and the external
+Golden Master run remain unavailable rather than passed. The Golden Master
+frozen prompt and files are unchanged; the runbook reconciliation stays at M01.

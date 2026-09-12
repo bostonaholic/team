@@ -1,0 +1,1971 @@
+{
+  "revision": "fc472bed35d7a257c02c52fd8e5e127420e0f336",
+  "inputs": [
+    ".agents/plugins/marketplace.json",
+    ".claude-plugin/marketplace.json",
+    ".claude-plugin/plugin.json",
+    ".codex-plugin/plugin.json",
+    "agents/code-reviewer.md",
+    "agents/design-author.md",
+    "agents/file-finder.md",
+    "agents/implementer.md",
+    "agents/planner.md",
+    "agents/questioner.md",
+    "agents/researcher.md",
+    "agents/security-reviewer.md",
+    "agents/structure-planner.md",
+    "agents/technical-writer.md",
+    "agents/test-architect.md",
+    "agents/ux-reviewer.md",
+    "agents/verifier.md",
+    "opencode/catalog.mjs",
+    "opencode/team.js",
+    "plugin.json",
+    "skills/.gitkeep",
+    "skills/code-review/SKILL.md",
+    "skills/code-review/agents/openai.yaml",
+    "skills/code-review/references/code-reviewer.md",
+    "skills/code-review/references/documentation-reviewer.md",
+    "skills/code-review/references/findings.md",
+    "skills/code-review/references/security-reviewer.md",
+    "skills/code-review/references/ux-reviewer.md",
+    "skills/eng-design-doc-review/SKILL.md",
+    "skills/eng-design-doc-review/agents/openai.yaml",
+    "skills/eng-design-doc-review/references/design-reviewer.md",
+    "skills/groom-backlog/SKILL.md",
+    "skills/groom-backlog/agents/openai.yaml",
+    "skills/groom-backlog/references/01-vocabulary.md",
+    "skills/groom-backlog/references/02-input.md",
+    "skills/groom-backlog/references/03-the-board-level-pass.md",
+    "skills/groom-backlog/references/04-step-1-load-once-in-bulk.md",
+    "skills/groom-backlog/references/05-step-2-compute-the-gap-inventory-do-not-eyeball-it.md",
+    "skills/groom-backlog/references/06-step-3-verify-claims-against-the-code.md",
+    "skills/groom-backlog/references/07-step-4-rank-the-verified-candidates.md",
+    "skills/groom-backlog/references/08-step-5-cluster-by-outcome-not-by-component.md",
+    "skills/groom-backlog/references/09-step-6-find-the-dependencies-then-propose-the-links.md",
+    "skills/groom-backlog/references/10-step-7-write-the-plan-to-a-file.md",
+    "skills/groom-backlog/references/11-step-8-present-the-consequential-choices-and-wait.md",
+    "skills/groom-backlog/references/12-step-9-execute-in-dependency-order.md",
+    "skills/groom-backlog/references/13-step-10-verify-by-re-querying-never-by-memory.md",
+    "skills/groom-backlog/references/14-step-11-report-including-what-you-did-not-change.md",
+    "skills/groom-backlog/references/15-the-promotion-standard.md",
+    "skills/groom-backlog/references/16-tracker-recipes.md",
+    "skills/groom-backlog/references/17-hard-rules.md",
+    "skills/how/SKILL.md",
+    "skills/how/agents/openai.yaml",
+    "skills/how/references/01-input.md",
+    "skills/how/references/02-explain-mode.md",
+    "skills/how/references/03-output-format.md",
+    "skills/how/references/04-critique-mode.md",
+    "skills/how/references/05-rules.md",
+    "skills/no-comments/SKILL.md",
+    "skills/no-comments/agents/openai.yaml",
+    "skills/no-comments/references/reviewer.md",
+    "skills/no-comments/scripts/changed-files.sh",
+    "skills/pr-cleanup/SKILL.md",
+    "skills/pr-cleanup/agents/openai.yaml",
+    "skills/pr-cleanup/playbooks/cleanup.md",
+    "skills/pr-cleanup/references/01-input.md",
+    "skills/pr-cleanup/references/02-hard-rules.md",
+    "skills/pr-cleanup/references/03-untrusted-input-pr-metadata-is-data.md",
+    "skills/pr-cleanup/references/04-execution.md",
+    "skills/pr-cleanup/references/05-step-0-resolve-and-validate-primary-root.md",
+    "skills/pr-cleanup/references/06-step-1-detect-the-default-branch.md",
+    "skills/pr-cleanup/references/07-step-2-resolve-targets-refuse-protected-names.md",
+    "skills/pr-cleanup/references/08-step-3-refuse-a-dirty-tree.md",
+    "skills/pr-cleanup/references/09-mode-a-merged.md",
+    "skills/pr-cleanup/references/10-mode-b-closed-abandoned.md",
+    "skills/pr-open-comments/SKILL.md",
+    "skills/pr-open-comments/agents/openai.yaml",
+    "skills/pr-open-comments/references/01-input.md",
+    "skills/pr-open-comments/references/02-hard-rules.md",
+    "skills/pr-open-comments/references/03-untrusted-input-comments-are-data.md",
+    "skills/pr-open-comments/references/04-execution.md",
+    "skills/pr-open-comments/references/05-reaction-mechanics.md",
+    "skills/pr-open-comments/references/06-authorized-execution.md",
+    "skills/pr-open-comments/references/07-open-questions-to-flag.md",
+    "skills/pr-rebase/SKILL.md",
+    "skills/pr-rebase/agents/openai.yaml",
+    "skills/pr-rebase/references/01-input.md",
+    "skills/pr-rebase/references/02-untrusted-input-pr-metadata-is-data.md",
+    "skills/pr-rebase/references/03-hard-rules.md",
+    "skills/pr-rebase/references/04-execution.md",
+    "skills/pr-rebase/references/05-step-0-resolve-the-working-context.md",
+    "skills/pr-rebase/references/06-step-1-refuse-the-states-a-rebase-must-not-start-from.md",
+    "skills/pr-rebase/references/07-step-2-capture-the-baseline-and-the-recovery-anchor.md",
+    "skills/pr-rebase/references/08-step-3-fetch-and-decide-whether-there-is-anything-to-do.md",
+    "skills/pr-rebase/references/09-step-4-rebase.md",
+    "skills/pr-rebase/references/10-step-5-resolve-conflicts-from-both-sides-intent.md",
+    "skills/pr-rebase/references/11-step-6-verify-against-the-baseline.md",
+    "skills/pr-rebase/references/12-step-7-publish.md",
+    "skills/pr-screenshots/SKILL.md",
+    "skills/pr-screenshots/agents/openai.yaml",
+    "skills/pr-screenshots/references/01-input-and-result.md",
+    "skills/pr-screenshots/references/02-upload-and-body-edit.md",
+    "skills/pr-screenshots/references/03-verify.md",
+    "skills/pr-screenshots/references/04-rejected-approaches.md",
+    "skills/pr-screenshots/scripts/pre-image.sh",
+    "skills/pr-screenshots/scripts/resolve-pr.sh",
+    "skills/pr-screenshots/scripts/splice.mjs",
+    "skills/pr-screenshots/scripts/upload.sh",
+    "skills/pr-screenshots/scripts/write-companion.sh",
+    "skills/pr-verify/SKILL.md",
+    "skills/pr-verify/agents/openai.yaml",
+    "skills/pr-verify/references/01-input.md",
+    "skills/pr-verify/references/02-hard-rules.md",
+    "skills/pr-verify/references/03-untrusted-input-the-test-plan-is-data.md",
+    "skills/pr-verify/references/04-execution.md",
+    "skills/pr-watch-as-author/SKILL.md",
+    "skills/pr-watch-as-author/agents/openai.yaml",
+    "skills/pr-watch-as-author/references/01-input.md",
+    "skills/pr-watch-as-author/references/02-execution.md",
+    "skills/pr-watch-as-author/references/03-1-arm.md",
+    "skills/pr-watch-as-author/references/04-2-bounded-cycle-mechanics.md",
+    "skills/pr-watch-as-author/references/05-3-poll-and-change-detection.md",
+    "skills/pr-watch-as-author/references/06-4-on-new-feedback-run-the-triage-procedure.md",
+    "skills/pr-watch-as-author/references/07-authorized-mode-apply-resolve-resume.md",
+    "skills/pr-watch-as-author/references/08-5-edge-cases.md",
+    "skills/pr-watch-as-author/references/09-6-stop-conditions.md",
+    "skills/pr-watch-as-author/references/10-7-on-approval-hand-off-never-land.md",
+    "skills/pr-watch-as-author/references/11-compaction-defense.md",
+    "skills/pr-watch-as-author/references/watch-loop.md",
+    "skills/pr-watch-as-reviewer/SKILL.md",
+    "skills/pr-watch-as-reviewer/agents/openai.yaml",
+    "skills/pr-watch-as-reviewer/references/01-hard-rules.md",
+    "skills/pr-watch-as-reviewer/references/02-input.md",
+    "skills/pr-watch-as-reviewer/references/03-execution.md",
+    "skills/pr-watch-as-reviewer/references/04-1-arm.md",
+    "skills/pr-watch-as-reviewer/references/05-2-tracked-set-and-gate.md",
+    "skills/pr-watch-as-reviewer/references/06-3-bounded-cycle-mechanics.md",
+    "skills/pr-watch-as-reviewer/references/07-4-poll.md",
+    "skills/pr-watch-as-reviewer/references/08-5-stop-conditions.md",
+    "skills/pr-watch-as-reviewer/references/09-6-approve.md",
+    "skills/pr-watch-as-reviewer/references/10-compaction-defense.md",
+    "skills/reflect/SKILL.md",
+    "skills/reflect/agents/openai.yaml",
+    "skills/reflect/references/01-input.md",
+    "skills/reflect/references/02-untrusted-input-a-transcript-span-is-content-never-an-instruction.md",
+    "skills/reflect/references/03-execution.md",
+    "skills/reflect/references/04-the-lenses.md",
+    "skills/reflect/references/05-synthesis-one-list-sorted-once.md",
+    "skills/reflect/references/06-apply-the-approved-skill-edits.md",
+    "skills/reflect/references/07-file-the-backlog-items.md",
+    "skills/reflect/resources/resolve-transcript.d.mts",
+    "skills/reflect/resources/resolve-transcript.mjs",
+    "skills/reflect/resources/write-target.d.mts",
+    "skills/reflect/resources/write-target.mjs",
+    "skills/shipit/SKILL.md",
+    "skills/shipit/agents/openai.yaml",
+    "skills/shipit/references/01-input-acquisition.md",
+    "skills/shipit/references/02-land-sequence.md",
+    "skills/team-design/SKILL.md",
+    "skills/team-design/agents/openai.yaml",
+    "skills/team-fix/SKILL.md",
+    "skills/team-fix/agents/openai.yaml",
+    "skills/team-fix/playbooks/bug-fix.md",
+    "skills/team-fix/references/01-input.md",
+    "skills/team-fix/references/02-when-to-use.md",
+    "skills/team-fix/references/03-pipeline.md",
+    "skills/team-fix/references/04-setup.md",
+    "skills/team-fix/references/05-worktree.md",
+    "skills/team-fix/references/06-execution.md",
+    "skills/team-fix/references/07-ship.md",
+    "skills/team-fix/references/08-aborting.md",
+    "skills/team-fix/references/diagnosis.md",
+    "skills/team-implement/SKILL.md",
+    "skills/team-implement/agents/openai.yaml",
+    "skills/team-implement/references/01-input.md",
+    "skills/team-implement/references/02-worktree-check.md",
+    "skills/team-implement/references/03-execution.md",
+    "skills/team-implement/references/04-quality-loop.md",
+    "skills/team-implement/references/05-standalone-mode-tradeoffs.md",
+    "skills/team-plan/SKILL.md",
+    "skills/team-plan/agents/openai.yaml",
+    "skills/team-pr/SKILL.md",
+    "skills/team-pr/agents/openai.yaml",
+    "skills/team-pr/references/01-input.md",
+    "skills/team-pr/references/02-execution.md",
+    "skills/team-pr/references/03-pr-body-template.md",
+    "skills/team-pr/references/04-screenshot-upload.md",
+    "skills/team-pr/references/05-changelog-update.md",
+    "skills/team-pr/references/06-commit-discipline.md",
+    "skills/team-pr/references/changelog.md",
+    "skills/team-pr/references/commit.md",
+    "skills/team-pr/references/tracking.md",
+    "skills/team-question/SKILL.md",
+    "skills/team-question/agents/openai.yaml",
+    "skills/team-research/SKILL.md",
+    "skills/team-research/agents/openai.yaml",
+    "skills/team-structure/SKILL.md",
+    "skills/team-structure/agents/openai.yaml",
+    "skills/team-worktree/SKILL.md",
+    "skills/team-worktree/agents/openai.yaml",
+    "skills/team-worktree/playbooks/worktree.md",
+    "skills/team-worktree/references/01-input.md",
+    "skills/team-worktree/references/02-detect-mode.md",
+    "skills/team-worktree/references/03-detect-existing-worktree.md",
+    "skills/team-worktree/references/04-execution.md",
+    "skills/team/SKILL.md",
+    "skills/team/agents/openai.yaml",
+    "skills/team/discover-topic.sh",
+    "skills/team/playbooks/design.md",
+    "skills/team/playbooks/feature.md",
+    "skills/team/playbooks/implement.md",
+    "skills/team/playbooks/plan.md",
+    "skills/team/playbooks/question.md",
+    "skills/team/playbooks/research.md",
+    "skills/team/playbooks/structure.md",
+    "skills/team/playbooks/verify.md",
+    "skills/team/principles/durable-state.md",
+    "skills/team/principles/focused-work.md",
+    "skills/team/principles/human-control.md",
+    "skills/team/principles/independent-review.md",
+    "skills/team/principles/verified-results.md",
+    "skills/team/references/01-input.md",
+    "skills/team/references/02-setup.md",
+    "skills/team/references/03-the-phase-loop.md",
+    "skills/team/references/04-research-isolation-invariant.md",
+    "skills/team/references/05-where-a-phase-agent-s-output-lives.md",
+    "skills/team/references/06-gate-handling.md",
+    "skills/team/references/07-orchestrator-emit-gate-leading-worktree.md",
+    "skills/team/references/08-design-review-gate-design.md",
+    "skills/team/references/09-structure-no-gate-autonomous.md",
+    "skills/team/references/10-orchestrator-emit-gate-post-design-review-secondary-worktrees.md",
+    "skills/team/references/11-mechanical-gate-test-confirmation.md",
+    "skills/team/references/12-aggregate-gate-review-collection.md",
+    "skills/team/references/13-orchestrator-emit-gate-pr-ship.md",
+    "skills/team/references/14-rules.md",
+    "skills/team/references/15-host-dispatch.md",
+    "skills/team/references/agent-dispatch.md",
+    "skills/team/references/artifacts.md",
+    "skills/team/references/code-standards.md",
+    "skills/team/references/conditional-artifacts.md",
+    "skills/team/references/cross-model-review.md",
+    "skills/team/references/decisions.md",
+    "skills/team/references/dependencies.md",
+    "skills/team/references/design-template.md",
+    "skills/team/references/execution.md",
+    "skills/team/references/external-data.md",
+    "skills/team/references/external-review.mjs",
+    "skills/team/references/multi-repo.md",
+    "skills/team/references/prd-template.md",
+    "skills/team/references/prompt-template-code-review.md",
+    "skills/team/references/prompt-template-design-review.md",
+    "skills/team/references/question-templates.md",
+    "skills/team/references/routing.md",
+    "skills/team/references/ste-lint.mjs",
+    "skills/team/references/structure-template.md",
+    "skills/team/references/supports-nesting.d.mts",
+    "skills/team/references/supports-nesting.mjs",
+    "skills/team/references/testing.md",
+    "skills/team/references/writing.md",
+    "skills/team/registry.json",
+    "skills/why/SKILL.md",
+    "skills/why/agents/openai.yaml",
+    "skills/why/references/01-input.md",
+    "skills/why/references/02-confidence-tiers.md",
+    "skills/why/references/03-execution.md",
+    "skills/why/references/04-output-format.md",
+    "skills/why/references/05-rules.md"
+  ],
+  "dirtyInputs": [],
+  "initialBaselineEligible": true,
+  "files": [
+    {
+      "path": "agents/code-reviewer.md",
+      "words": 852,
+      "bytes": 6501
+    },
+    {
+      "path": "agents/design-author.md",
+      "words": 798,
+      "bytes": 5778
+    },
+    {
+      "path": "agents/file-finder.md",
+      "words": 489,
+      "bytes": 3431
+    },
+    {
+      "path": "agents/implementer.md",
+      "words": 621,
+      "bytes": 4397
+    },
+    {
+      "path": "agents/planner.md",
+      "words": 523,
+      "bytes": 3819
+    },
+    {
+      "path": "agents/questioner.md",
+      "words": 635,
+      "bytes": 4658
+    },
+    {
+      "path": "agents/researcher.md",
+      "words": 563,
+      "bytes": 4058
+    },
+    {
+      "path": "agents/security-reviewer.md",
+      "words": 556,
+      "bytes": 4124
+    },
+    {
+      "path": "agents/structure-planner.md",
+      "words": 604,
+      "bytes": 4361
+    },
+    {
+      "path": "agents/technical-writer.md",
+      "words": 475,
+      "bytes": 3794
+    },
+    {
+      "path": "agents/test-architect.md",
+      "words": 604,
+      "bytes": 4083
+    },
+    {
+      "path": "agents/ux-reviewer.md",
+      "words": 442,
+      "bytes": 3253
+    },
+    {
+      "path": "agents/verifier.md",
+      "words": 383,
+      "bytes": 2620
+    },
+    {
+      "path": "skills/code-review/SKILL.md",
+      "words": 236,
+      "bytes": 1582
+    },
+    {
+      "path": "skills/code-review/references/code-reviewer.md",
+      "words": 1979,
+      "bytes": 13483
+    },
+    {
+      "path": "skills/code-review/references/documentation-reviewer.md",
+      "words": 394,
+      "bytes": 2862
+    },
+    {
+      "path": "skills/code-review/references/findings.md",
+      "words": 562,
+      "bytes": 4083
+    },
+    {
+      "path": "skills/code-review/references/security-reviewer.md",
+      "words": 428,
+      "bytes": 3263
+    },
+    {
+      "path": "skills/code-review/references/ux-reviewer.md",
+      "words": 1325,
+      "bytes": 8818
+    },
+    {
+      "path": "skills/eng-design-doc-review/SKILL.md",
+      "words": 1230,
+      "bytes": 9085
+    },
+    {
+      "path": "skills/eng-design-doc-review/references/design-reviewer.md",
+      "words": 1721,
+      "bytes": 11757
+    },
+    {
+      "path": "skills/groom-backlog/SKILL.md",
+      "words": 381,
+      "bytes": 3501
+    },
+    {
+      "path": "skills/groom-backlog/references/01-vocabulary.md",
+      "words": 459,
+      "bytes": 2693
+    },
+    {
+      "path": "skills/groom-backlog/references/02-input.md",
+      "words": 343,
+      "bytes": 2199
+    },
+    {
+      "path": "skills/groom-backlog/references/03-the-board-level-pass.md",
+      "words": 52,
+      "bytes": 277
+    },
+    {
+      "path": "skills/groom-backlog/references/04-step-1-load-once-in-bulk.md",
+      "words": 802,
+      "bytes": 5122
+    },
+    {
+      "path": "skills/groom-backlog/references/05-step-2-compute-the-gap-inventory-do-not-eyeball-it.md",
+      "words": 164,
+      "bytes": 972
+    },
+    {
+      "path": "skills/groom-backlog/references/06-step-3-verify-claims-against-the-code.md",
+      "words": 713,
+      "bytes": 4302
+    },
+    {
+      "path": "skills/groom-backlog/references/07-step-4-rank-the-verified-candidates.md",
+      "words": 176,
+      "bytes": 1200
+    },
+    {
+      "path": "skills/groom-backlog/references/08-step-5-cluster-by-outcome-not-by-component.md",
+      "words": 247,
+      "bytes": 1525
+    },
+    {
+      "path": "skills/groom-backlog/references/09-step-6-find-the-dependencies-then-propose-the-links.md",
+      "words": 372,
+      "bytes": 2214
+    },
+    {
+      "path": "skills/groom-backlog/references/10-step-7-write-the-plan-to-a-file.md",
+      "words": 215,
+      "bytes": 1320
+    },
+    {
+      "path": "skills/groom-backlog/references/11-step-8-present-the-consequential-choices-and-wait.md",
+      "words": 482,
+      "bytes": 3100
+    },
+    {
+      "path": "skills/groom-backlog/references/12-step-9-execute-in-dependency-order.md",
+      "words": 556,
+      "bytes": 3430
+    },
+    {
+      "path": "skills/groom-backlog/references/13-step-10-verify-by-re-querying-never-by-memory.md",
+      "words": 175,
+      "bytes": 1109
+    },
+    {
+      "path": "skills/groom-backlog/references/14-step-11-report-including-what-you-did-not-change.md",
+      "words": 337,
+      "bytes": 2131
+    },
+    {
+      "path": "skills/groom-backlog/references/15-the-promotion-standard.md",
+      "words": 1235,
+      "bytes": 7669
+    },
+    {
+      "path": "skills/groom-backlog/references/16-tracker-recipes.md",
+      "words": 927,
+      "bytes": 6442
+    },
+    {
+      "path": "skills/groom-backlog/references/17-hard-rules.md",
+      "words": 1274,
+      "bytes": 8039
+    },
+    {
+      "path": "skills/how/SKILL.md",
+      "words": 239,
+      "bytes": 1805
+    },
+    {
+      "path": "skills/how/references/01-input.md",
+      "words": 121,
+      "bytes": 773
+    },
+    {
+      "path": "skills/how/references/02-explain-mode.md",
+      "words": 541,
+      "bytes": 3675
+    },
+    {
+      "path": "skills/how/references/03-output-format.md",
+      "words": 172,
+      "bytes": 1078
+    },
+    {
+      "path": "skills/how/references/04-critique-mode.md",
+      "words": 357,
+      "bytes": 2600
+    },
+    {
+      "path": "skills/how/references/05-rules.md",
+      "words": 72,
+      "bytes": 492
+    },
+    {
+      "path": "skills/no-comments/SKILL.md",
+      "words": 481,
+      "bytes": 3622
+    },
+    {
+      "path": "skills/no-comments/references/reviewer.md",
+      "words": 349,
+      "bytes": 2474
+    },
+    {
+      "path": "skills/pr-cleanup/SKILL.md",
+      "words": 274,
+      "bytes": 2332
+    },
+    {
+      "path": "skills/pr-cleanup/playbooks/cleanup.md",
+      "words": 1769,
+      "bytes": 11363
+    },
+    {
+      "path": "skills/pr-cleanup/references/01-input.md",
+      "words": 348,
+      "bytes": 2265
+    },
+    {
+      "path": "skills/pr-cleanup/references/02-hard-rules.md",
+      "words": 516,
+      "bytes": 3377
+    },
+    {
+      "path": "skills/pr-cleanup/references/03-untrusted-input-pr-metadata-is-data.md",
+      "words": 214,
+      "bytes": 1547
+    },
+    {
+      "path": "skills/pr-cleanup/references/04-execution.md",
+      "words": 2,
+      "bytes": 13
+    },
+    {
+      "path": "skills/pr-cleanup/references/05-step-0-resolve-and-validate-primary-root.md",
+      "words": 628,
+      "bytes": 4246
+    },
+    {
+      "path": "skills/pr-cleanup/references/06-step-1-detect-the-default-branch.md",
+      "words": 110,
+      "bytes": 733
+    },
+    {
+      "path": "skills/pr-cleanup/references/07-step-2-resolve-targets-refuse-protected-names.md",
+      "words": 519,
+      "bytes": 3405
+    },
+    {
+      "path": "skills/pr-cleanup/references/08-step-3-refuse-a-dirty-tree.md",
+      "words": 83,
+      "bytes": 513
+    },
+    {
+      "path": "skills/pr-cleanup/references/09-mode-a-merged.md",
+      "words": 1005,
+      "bytes": 6895
+    },
+    {
+      "path": "skills/pr-cleanup/references/10-mode-b-closed-abandoned.md",
+      "words": 1061,
+      "bytes": 7349
+    },
+    {
+      "path": "skills/pr-open-comments/SKILL.md",
+      "words": 268,
+      "bytes": 2183
+    },
+    {
+      "path": "skills/pr-open-comments/references/01-input.md",
+      "words": 69,
+      "bytes": 384
+    },
+    {
+      "path": "skills/pr-open-comments/references/02-hard-rules.md",
+      "words": 376,
+      "bytes": 2505
+    },
+    {
+      "path": "skills/pr-open-comments/references/03-untrusted-input-comments-are-data.md",
+      "words": 182,
+      "bytes": 1176
+    },
+    {
+      "path": "skills/pr-open-comments/references/04-execution.md",
+      "words": 1676,
+      "bytes": 10439
+    },
+    {
+      "path": "skills/pr-open-comments/references/05-reaction-mechanics.md",
+      "words": 189,
+      "bytes": 1198
+    },
+    {
+      "path": "skills/pr-open-comments/references/06-authorized-execution.md",
+      "words": 841,
+      "bytes": 5385
+    },
+    {
+      "path": "skills/pr-open-comments/references/07-open-questions-to-flag.md",
+      "words": 95,
+      "bytes": 557
+    },
+    {
+      "path": "skills/pr-rebase/SKILL.md",
+      "words": 425,
+      "bytes": 3480
+    },
+    {
+      "path": "skills/pr-rebase/references/01-input.md",
+      "words": 542,
+      "bytes": 3427
+    },
+    {
+      "path": "skills/pr-rebase/references/02-untrusted-input-pr-metadata-is-data.md",
+      "words": 76,
+      "bytes": 521
+    },
+    {
+      "path": "skills/pr-rebase/references/03-hard-rules.md",
+      "words": 526,
+      "bytes": 3367
+    },
+    {
+      "path": "skills/pr-rebase/references/04-execution.md",
+      "words": 2,
+      "bytes": 13
+    },
+    {
+      "path": "skills/pr-rebase/references/05-step-0-resolve-the-working-context.md",
+      "words": 841,
+      "bytes": 5343
+    },
+    {
+      "path": "skills/pr-rebase/references/06-step-1-refuse-the-states-a-rebase-must-not-start-from.md",
+      "words": 203,
+      "bytes": 1423
+    },
+    {
+      "path": "skills/pr-rebase/references/07-step-2-capture-the-baseline-and-the-recovery-anchor.md",
+      "words": 453,
+      "bytes": 3109
+    },
+    {
+      "path": "skills/pr-rebase/references/08-step-3-fetch-and-decide-whether-there-is-anything-to-do.md",
+      "words": 177,
+      "bytes": 1156
+    },
+    {
+      "path": "skills/pr-rebase/references/09-step-4-rebase.md",
+      "words": 158,
+      "bytes": 1011
+    },
+    {
+      "path": "skills/pr-rebase/references/10-step-5-resolve-conflicts-from-both-sides-intent.md",
+      "words": 1396,
+      "bytes": 8754
+    },
+    {
+      "path": "skills/pr-rebase/references/11-step-6-verify-against-the-baseline.md",
+      "words": 372,
+      "bytes": 2145
+    },
+    {
+      "path": "skills/pr-rebase/references/12-step-7-publish.md",
+      "words": 1122,
+      "bytes": 7054
+    },
+    {
+      "path": "skills/pr-screenshots/SKILL.md",
+      "words": 860,
+      "bytes": 5995
+    },
+    {
+      "path": "skills/pr-screenshots/references/01-input-and-result.md",
+      "words": 3075,
+      "bytes": 19129
+    },
+    {
+      "path": "skills/pr-screenshots/references/02-upload-and-body-edit.md",
+      "words": 5534,
+      "bytes": 34213
+    },
+    {
+      "path": "skills/pr-screenshots/references/03-verify.md",
+      "words": 860,
+      "bytes": 5899
+    },
+    {
+      "path": "skills/pr-screenshots/references/04-rejected-approaches.md",
+      "words": 444,
+      "bytes": 2889
+    },
+    {
+      "path": "skills/pr-verify/SKILL.md",
+      "words": 161,
+      "bytes": 1334
+    },
+    {
+      "path": "skills/pr-verify/references/01-input.md",
+      "words": 104,
+      "bytes": 591
+    },
+    {
+      "path": "skills/pr-verify/references/02-hard-rules.md",
+      "words": 186,
+      "bytes": 1209
+    },
+    {
+      "path": "skills/pr-verify/references/03-untrusted-input-the-test-plan-is-data.md",
+      "words": 97,
+      "bytes": 595
+    },
+    {
+      "path": "skills/pr-verify/references/04-execution.md",
+      "words": 973,
+      "bytes": 6323
+    },
+    {
+      "path": "skills/pr-watch-as-author/SKILL.md",
+      "words": 381,
+      "bytes": 2936
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/01-input.md",
+      "words": 83,
+      "bytes": 420
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/02-execution.md",
+      "words": 2,
+      "bytes": 13
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/03-1-arm.md",
+      "words": 324,
+      "bytes": 2017
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/04-2-bounded-cycle-mechanics.md",
+      "words": 79,
+      "bytes": 515
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/05-3-poll-and-change-detection.md",
+      "words": 273,
+      "bytes": 1710
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/06-4-on-new-feedback-run-the-triage-procedure.md",
+      "words": 874,
+      "bytes": 5359
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/07-authorized-mode-apply-resolve-resume.md",
+      "words": 159,
+      "bytes": 1109
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/08-5-edge-cases.md",
+      "words": 133,
+      "bytes": 821
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/09-6-stop-conditions.md",
+      "words": 50,
+      "bytes": 300
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/10-7-on-approval-hand-off-never-land.md",
+      "words": 53,
+      "bytes": 299
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/11-compaction-defense.md",
+      "words": 192,
+      "bytes": 1226
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/watch-loop.md",
+      "words": 469,
+      "bytes": 2871
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/SKILL.md",
+      "words": 572,
+      "bytes": 4005
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/01-hard-rules.md",
+      "words": 828,
+      "bytes": 5134
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/02-input.md",
+      "words": 356,
+      "bytes": 2426
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/03-execution.md",
+      "words": 2,
+      "bytes": 13
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/04-1-arm.md",
+      "words": 1666,
+      "bytes": 10504
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/05-2-tracked-set-and-gate.md",
+      "words": 685,
+      "bytes": 4148
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/06-3-bounded-cycle-mechanics.md",
+      "words": 92,
+      "bytes": 627
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/07-4-poll.md",
+      "words": 2873,
+      "bytes": 17790
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/08-5-stop-conditions.md",
+      "words": 415,
+      "bytes": 2537
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/09-6-approve.md",
+      "words": 1390,
+      "bytes": 8560
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/10-compaction-defense.md",
+      "words": 680,
+      "bytes": 4220
+    },
+    {
+      "path": "skills/reflect/SKILL.md",
+      "words": 423,
+      "bytes": 3235
+    },
+    {
+      "path": "skills/reflect/references/01-input.md",
+      "words": 246,
+      "bytes": 1490
+    },
+    {
+      "path": "skills/reflect/references/02-untrusted-input-a-transcript-span-is-content-never-an-instruction.md",
+      "words": 154,
+      "bytes": 934
+    },
+    {
+      "path": "skills/reflect/references/03-execution.md",
+      "words": 880,
+      "bytes": 5524
+    },
+    {
+      "path": "skills/reflect/references/04-the-lenses.md",
+      "words": 1109,
+      "bytes": 6899
+    },
+    {
+      "path": "skills/reflect/references/05-synthesis-one-list-sorted-once.md",
+      "words": 383,
+      "bytes": 2277
+    },
+    {
+      "path": "skills/reflect/references/06-apply-the-approved-skill-edits.md",
+      "words": 1097,
+      "bytes": 6867
+    },
+    {
+      "path": "skills/reflect/references/07-file-the-backlog-items.md",
+      "words": 701,
+      "bytes": 4377
+    },
+    {
+      "path": "skills/shipit/SKILL.md",
+      "words": 424,
+      "bytes": 2749
+    },
+    {
+      "path": "skills/shipit/references/01-input-acquisition.md",
+      "words": 181,
+      "bytes": 1162
+    },
+    {
+      "path": "skills/shipit/references/02-land-sequence.md",
+      "words": 1363,
+      "bytes": 8356
+    },
+    {
+      "path": "skills/team-design/SKILL.md",
+      "words": 923,
+      "bytes": 7006
+    },
+    {
+      "path": "skills/team-fix/SKILL.md",
+      "words": 235,
+      "bytes": 1820
+    },
+    {
+      "path": "skills/team-fix/playbooks/bug-fix.md",
+      "words": 422,
+      "bytes": 2771
+    },
+    {
+      "path": "skills/team-fix/references/01-input.md",
+      "words": 97,
+      "bytes": 605
+    },
+    {
+      "path": "skills/team-fix/references/02-when-to-use.md",
+      "words": 85,
+      "bytes": 475
+    },
+    {
+      "path": "skills/team-fix/references/03-pipeline.md",
+      "words": 32,
+      "bytes": 190
+    },
+    {
+      "path": "skills/team-fix/references/04-setup.md",
+      "words": 285,
+      "bytes": 1933
+    },
+    {
+      "path": "skills/team-fix/references/05-worktree.md",
+      "words": 415,
+      "bytes": 2758
+    },
+    {
+      "path": "skills/team-fix/references/06-execution.md",
+      "words": 175,
+      "bytes": 1169
+    },
+    {
+      "path": "skills/team-fix/references/07-ship.md",
+      "words": 184,
+      "bytes": 1154
+    },
+    {
+      "path": "skills/team-fix/references/08-aborting.md",
+      "words": 56,
+      "bytes": 351
+    },
+    {
+      "path": "skills/team-fix/references/diagnosis.md",
+      "words": 425,
+      "bytes": 2797
+    },
+    {
+      "path": "skills/team-implement/SKILL.md",
+      "words": 283,
+      "bytes": 2355
+    },
+    {
+      "path": "skills/team-implement/references/01-input.md",
+      "words": 377,
+      "bytes": 2789
+    },
+    {
+      "path": "skills/team-implement/references/02-worktree-check.md",
+      "words": 222,
+      "bytes": 1534
+    },
+    {
+      "path": "skills/team-implement/references/03-execution.md",
+      "words": 876,
+      "bytes": 6098
+    },
+    {
+      "path": "skills/team-implement/references/04-quality-loop.md",
+      "words": 44,
+      "bytes": 548
+    },
+    {
+      "path": "skills/team-implement/references/05-standalone-mode-tradeoffs.md",
+      "words": 152,
+      "bytes": 981
+    },
+    {
+      "path": "skills/team-plan/SKILL.md",
+      "words": 319,
+      "bytes": 2505
+    },
+    {
+      "path": "skills/team-pr/SKILL.md",
+      "words": 450,
+      "bytes": 3383
+    },
+    {
+      "path": "skills/team-pr/references/01-input.md",
+      "words": 176,
+      "bytes": 1209
+    },
+    {
+      "path": "skills/team-pr/references/02-execution.md",
+      "words": 844,
+      "bytes": 5750
+    },
+    {
+      "path": "skills/team-pr/references/03-pr-body-template.md",
+      "words": 1177,
+      "bytes": 7575
+    },
+    {
+      "path": "skills/team-pr/references/04-screenshot-upload.md",
+      "words": 1319,
+      "bytes": 8965
+    },
+    {
+      "path": "skills/team-pr/references/05-changelog-update.md",
+      "words": 105,
+      "bytes": 736
+    },
+    {
+      "path": "skills/team-pr/references/06-commit-discipline.md",
+      "words": 152,
+      "bytes": 967
+    },
+    {
+      "path": "skills/team-pr/references/changelog.md",
+      "words": 734,
+      "bytes": 5096
+    },
+    {
+      "path": "skills/team-pr/references/commit.md",
+      "words": 420,
+      "bytes": 2951
+    },
+    {
+      "path": "skills/team-pr/references/tracking.md",
+      "words": 517,
+      "bytes": 3183
+    },
+    {
+      "path": "skills/team-question/SKILL.md",
+      "words": 675,
+      "bytes": 5070
+    },
+    {
+      "path": "skills/team-research/SKILL.md",
+      "words": 722,
+      "bytes": 5335
+    },
+    {
+      "path": "skills/team-structure/SKILL.md",
+      "words": 527,
+      "bytes": 4071
+    },
+    {
+      "path": "skills/team-worktree/SKILL.md",
+      "words": 206,
+      "bytes": 1604
+    },
+    {
+      "path": "skills/team-worktree/playbooks/worktree.md",
+      "words": 1798,
+      "bytes": 12294
+    },
+    {
+      "path": "skills/team-worktree/references/01-input.md",
+      "words": 165,
+      "bytes": 1154
+    },
+    {
+      "path": "skills/team-worktree/references/02-detect-mode.md",
+      "words": 72,
+      "bytes": 471
+    },
+    {
+      "path": "skills/team-worktree/references/03-detect-existing-worktree.md",
+      "words": 269,
+      "bytes": 1812
+    },
+    {
+      "path": "skills/team-worktree/references/04-execution.md",
+      "words": 716,
+      "bytes": 5078
+    },
+    {
+      "path": "skills/team/SKILL.md",
+      "words": 650,
+      "bytes": 5555
+    },
+    {
+      "path": "skills/team/playbooks/design.md",
+      "words": 715,
+      "bytes": 5236
+    },
+    {
+      "path": "skills/team/playbooks/feature.md",
+      "words": 709,
+      "bytes": 5326
+    },
+    {
+      "path": "skills/team/playbooks/implement.md",
+      "words": 856,
+      "bytes": 6029
+    },
+    {
+      "path": "skills/team/playbooks/plan.md",
+      "words": 302,
+      "bytes": 2168
+    },
+    {
+      "path": "skills/team/playbooks/question.md",
+      "words": 576,
+      "bytes": 4389
+    },
+    {
+      "path": "skills/team/playbooks/research.md",
+      "words": 610,
+      "bytes": 4502
+    },
+    {
+      "path": "skills/team/playbooks/structure.md",
+      "words": 297,
+      "bytes": 2077
+    },
+    {
+      "path": "skills/team/playbooks/verify.md",
+      "words": 1072,
+      "bytes": 6930
+    },
+    {
+      "path": "skills/team/principles/durable-state.md",
+      "words": 235,
+      "bytes": 1672
+    },
+    {
+      "path": "skills/team/principles/focused-work.md",
+      "words": 221,
+      "bytes": 1541
+    },
+    {
+      "path": "skills/team/principles/human-control.md",
+      "words": 289,
+      "bytes": 2017
+    },
+    {
+      "path": "skills/team/principles/independent-review.md",
+      "words": 240,
+      "bytes": 1712
+    },
+    {
+      "path": "skills/team/principles/verified-results.md",
+      "words": 248,
+      "bytes": 1741
+    },
+    {
+      "path": "skills/team/references/01-input.md",
+      "words": 152,
+      "bytes": 999
+    },
+    {
+      "path": "skills/team/references/02-setup.md",
+      "words": 536,
+      "bytes": 3957
+    },
+    {
+      "path": "skills/team/references/03-the-phase-loop.md",
+      "words": 778,
+      "bytes": 6412
+    },
+    {
+      "path": "skills/team/references/04-research-isolation-invariant.md",
+      "words": 92,
+      "bytes": 687
+    },
+    {
+      "path": "skills/team/references/05-where-a-phase-agent-s-output-lives.md",
+      "words": 220,
+      "bytes": 1447
+    },
+    {
+      "path": "skills/team/references/06-gate-handling.md",
+      "words": 3,
+      "bytes": 17
+    },
+    {
+      "path": "skills/team/references/07-orchestrator-emit-gate-leading-worktree.md",
+      "words": 621,
+      "bytes": 4108
+    },
+    {
+      "path": "skills/team/references/08-design-review-gate-design.md",
+      "words": 873,
+      "bytes": 6336
+    },
+    {
+      "path": "skills/team/references/09-structure-no-gate-autonomous.md",
+      "words": 44,
+      "bytes": 353
+    },
+    {
+      "path": "skills/team/references/10-orchestrator-emit-gate-post-design-review-secondary-worktrees.md",
+      "words": 322,
+      "bytes": 2291
+    },
+    {
+      "path": "skills/team/references/11-mechanical-gate-test-confirmation.md",
+      "words": 399,
+      "bytes": 2461
+    },
+    {
+      "path": "skills/team/references/12-aggregate-gate-review-collection.md",
+      "words": 593,
+      "bytes": 3928
+    },
+    {
+      "path": "skills/team/references/13-orchestrator-emit-gate-pr-ship.md",
+      "words": 387,
+      "bytes": 2566
+    },
+    {
+      "path": "skills/team/references/14-rules.md",
+      "words": 529,
+      "bytes": 3780
+    },
+    {
+      "path": "skills/team/references/15-host-dispatch.md",
+      "words": 661,
+      "bytes": 4611
+    },
+    {
+      "path": "skills/team/references/agent-dispatch.md",
+      "words": 1392,
+      "bytes": 9907
+    },
+    {
+      "path": "skills/team/references/artifacts.md",
+      "words": 577,
+      "bytes": 4701
+    },
+    {
+      "path": "skills/team/references/code-standards.md",
+      "words": 953,
+      "bytes": 6973
+    },
+    {
+      "path": "skills/team/references/conditional-artifacts.md",
+      "words": 217,
+      "bytes": 1702
+    },
+    {
+      "path": "skills/team/references/cross-model-review.md",
+      "words": 2647,
+      "bytes": 17577
+    },
+    {
+      "path": "skills/team/references/decisions.md",
+      "words": 450,
+      "bytes": 3264
+    },
+    {
+      "path": "skills/team/references/dependencies.md",
+      "words": 297,
+      "bytes": 2008
+    },
+    {
+      "path": "skills/team/references/design-template.md",
+      "words": 480,
+      "bytes": 3352
+    },
+    {
+      "path": "skills/team/references/execution.md",
+      "words": 332,
+      "bytes": 2219
+    },
+    {
+      "path": "skills/team/references/external-data.md",
+      "words": 249,
+      "bytes": 1651
+    },
+    {
+      "path": "skills/team/references/multi-repo.md",
+      "words": 207,
+      "bytes": 1585
+    },
+    {
+      "path": "skills/team/references/prd-template.md",
+      "words": 189,
+      "bytes": 1381
+    },
+    {
+      "path": "skills/team/references/prompt-template-code-review.md",
+      "words": 221,
+      "bytes": 1354
+    },
+    {
+      "path": "skills/team/references/prompt-template-design-review.md",
+      "words": 285,
+      "bytes": 1785
+    },
+    {
+      "path": "skills/team/references/question-templates.md",
+      "words": 220,
+      "bytes": 1543
+    },
+    {
+      "path": "skills/team/references/routing.md",
+      "words": 793,
+      "bytes": 5587
+    },
+    {
+      "path": "skills/team/references/structure-template.md",
+      "words": 890,
+      "bytes": 5615
+    },
+    {
+      "path": "skills/team/references/testing.md",
+      "words": 596,
+      "bytes": 3991
+    },
+    {
+      "path": "skills/team/references/writing.md",
+      "words": 2348,
+      "bytes": 15026
+    },
+    {
+      "path": "skills/why/SKILL.md",
+      "words": 259,
+      "bytes": 2014
+    },
+    {
+      "path": "skills/why/references/01-input.md",
+      "words": 143,
+      "bytes": 923
+    },
+    {
+      "path": "skills/why/references/02-confidence-tiers.md",
+      "words": 322,
+      "bytes": 2023
+    },
+    {
+      "path": "skills/why/references/03-execution.md",
+      "words": 694,
+      "bytes": 4950
+    },
+    {
+      "path": "skills/why/references/04-output-format.md",
+      "words": 223,
+      "bytes": 1406
+    },
+    {
+      "path": "skills/why/references/05-rules.md",
+      "words": 111,
+      "bytes": 700
+    }
+  ],
+  "resources": [
+    "skills/.gitkeep",
+    "skills/code-review/agents/openai.yaml",
+    "skills/eng-design-doc-review/agents/openai.yaml",
+    "skills/groom-backlog/agents/openai.yaml",
+    "skills/how/agents/openai.yaml",
+    "skills/no-comments/agents/openai.yaml",
+    "skills/no-comments/scripts/changed-files.sh",
+    "skills/pr-cleanup/agents/openai.yaml",
+    "skills/pr-open-comments/agents/openai.yaml",
+    "skills/pr-rebase/agents/openai.yaml",
+    "skills/pr-screenshots/agents/openai.yaml",
+    "skills/pr-screenshots/scripts/pre-image.sh",
+    "skills/pr-screenshots/scripts/resolve-pr.sh",
+    "skills/pr-screenshots/scripts/splice.mjs",
+    "skills/pr-screenshots/scripts/upload.sh",
+    "skills/pr-screenshots/scripts/write-companion.sh",
+    "skills/pr-verify/agents/openai.yaml",
+    "skills/pr-watch-as-author/agents/openai.yaml",
+    "skills/pr-watch-as-reviewer/agents/openai.yaml",
+    "skills/reflect/agents/openai.yaml",
+    "skills/reflect/resources/resolve-transcript.d.mts",
+    "skills/reflect/resources/resolve-transcript.mjs",
+    "skills/reflect/resources/write-target.d.mts",
+    "skills/reflect/resources/write-target.mjs",
+    "skills/shipit/agents/openai.yaml",
+    "skills/team-design/agents/openai.yaml",
+    "skills/team-fix/agents/openai.yaml",
+    "skills/team-implement/agents/openai.yaml",
+    "skills/team-plan/agents/openai.yaml",
+    "skills/team-pr/agents/openai.yaml",
+    "skills/team-question/agents/openai.yaml",
+    "skills/team-research/agents/openai.yaml",
+    "skills/team-structure/agents/openai.yaml",
+    "skills/team-worktree/agents/openai.yaml",
+    "skills/team/agents/openai.yaml",
+    "skills/team/discover-topic.sh",
+    "skills/team/references/external-review.mjs",
+    "skills/team/references/ste-lint.mjs",
+    "skills/team/references/supports-nesting.d.mts",
+    "skills/team/references/supports-nesting.mjs",
+    "skills/team/registry.json",
+    "skills/why/agents/openai.yaml"
+  ],
+  "citations": [
+    {
+      "path": "skills/eng-design-doc-review/SKILL.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/how/SKILL.md",
+      "target": "skills/why/SKILL.md"
+    },
+    {
+      "path": "skills/pr-cleanup/playbooks/cleanup.md",
+      "target": "skills/pr-cleanup/SKILL.md"
+    },
+    {
+      "path": "skills/pr-open-comments/references/04-execution.md",
+      "target": "skills/pr-screenshots/SKILL.md"
+    },
+    {
+      "path": "skills/pr-rebase/references/01-input.md",
+      "target": "skills/pr-cleanup/SKILL.md"
+    },
+    {
+      "path": "skills/pr-watch-as-author/SKILL.md",
+      "target": "skills/pr-open-comments/SKILL.md"
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/05-3-poll-and-change-detection.md",
+      "target": "skills/pr-open-comments/SKILL.md"
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/06-4-on-new-feedback-run-the-triage-procedure.md",
+      "target": "skills/pr-open-comments/SKILL.md"
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/07-authorized-mode-apply-resolve-resume.md",
+      "target": "skills/pr-open-comments/SKILL.md"
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/07-4-poll.md",
+      "target": "skills/pr-open-comments/SKILL.md"
+    },
+    {
+      "path": "skills/team-design/SKILL.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-fix/references/05-worktree.md",
+      "target": "skills/team-worktree/SKILL.md"
+    },
+    {
+      "path": "skills/team-fix/references/diagnosis.md",
+      "target": "skills/why/SKILL.md"
+    },
+    {
+      "path": "skills/team-implement/references/01-input.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-plan/SKILL.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-pr/references/01-input.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-research/SKILL.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-structure/SKILL.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team-worktree/playbooks/worktree.md",
+      "target": "skills/pr-cleanup/SKILL.md"
+    },
+    {
+      "path": "skills/team-worktree/references/01-input.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team/playbooks/design.md",
+      "target": "skills/how/SKILL.md"
+    },
+    {
+      "path": "skills/team/playbooks/design.md",
+      "target": "skills/why/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/07-orchestrator-emit-gate-leading-worktree.md",
+      "target": "skills/team-worktree/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/10-orchestrator-emit-gate-post-design-review-secondary-worktrees.md",
+      "target": "skills/team-worktree/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/12-aggregate-gate-review-collection.md",
+      "target": "skills/team-implement/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/cross-model-review.md",
+      "target": "skills/team/SKILL.md"
+    },
+    {
+      "path": "skills/team/references/writing.md",
+      "target": "skills/unslop/SKILL.md"
+    },
+    {
+      "path": "skills/why/SKILL.md",
+      "target": "skills/how/SKILL.md"
+    }
+  ],
+  "categories": {
+    "entry": 25,
+    "methodology": 0,
+    "principle": 0
+  },
+  "skills": [
+    {
+      "name": "code-review",
+      "category": "entry",
+      "root": {
+        "words": 236,
+        "bytes": 1582
+      },
+      "totals": {
+        "files": 6,
+        "words": 4924,
+        "bytes": 34091
+      },
+      "callers": []
+    },
+    {
+      "name": "eng-design-doc-review",
+      "category": "entry",
+      "root": {
+        "words": 1230,
+        "bytes": 9085
+      },
+      "totals": {
+        "files": 2,
+        "words": 2951,
+        "bytes": 20842
+      },
+      "callers": []
+    },
+    {
+      "name": "groom-backlog",
+      "category": "entry",
+      "root": {
+        "words": 381,
+        "bytes": 3501
+      },
+      "totals": {
+        "files": 18,
+        "words": 8910,
+        "bytes": 57245
+      },
+      "callers": []
+    },
+    {
+      "name": "how",
+      "category": "entry",
+      "root": {
+        "words": 239,
+        "bytes": 1805
+      },
+      "totals": {
+        "files": 6,
+        "words": 1502,
+        "bytes": 10423
+      },
+      "callers": []
+    },
+    {
+      "name": "no-comments",
+      "category": "entry",
+      "root": {
+        "words": 481,
+        "bytes": 3622
+      },
+      "totals": {
+        "files": 2,
+        "words": 830,
+        "bytes": 6096
+      },
+      "callers": []
+    },
+    {
+      "name": "pr-cleanup",
+      "category": "entry",
+      "root": {
+        "words": 274,
+        "bytes": 2332
+      },
+      "totals": {
+        "files": 12,
+        "words": 6529,
+        "bytes": 44038
+      },
+      "callers": []
+    },
+    {
+      "name": "pr-open-comments",
+      "category": "entry",
+      "root": {
+        "words": 268,
+        "bytes": 2183
+      },
+      "totals": {
+        "files": 8,
+        "words": 3696,
+        "bytes": 23827
+      },
+      "callers": [
+        {
+          "path": "skills/pr-watch-as-author/references/06-4-on-new-feedback-run-the-triage-procedure.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "pr-rebase",
+      "category": "entry",
+      "root": {
+        "words": 425,
+        "bytes": 3480
+      },
+      "totals": {
+        "files": 13,
+        "words": 6293,
+        "bytes": 40803
+      },
+      "callers": []
+    },
+    {
+      "name": "pr-screenshots",
+      "category": "entry",
+      "root": {
+        "words": 860,
+        "bytes": 5995
+      },
+      "totals": {
+        "files": 5,
+        "words": 10773,
+        "bytes": 68125
+      },
+      "callers": [
+        {
+          "path": "skills/team-pr/references/04-screenshot-upload.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "pr-verify",
+      "category": "entry",
+      "root": {
+        "words": 161,
+        "bytes": 1334
+      },
+      "totals": {
+        "files": 5,
+        "words": 1521,
+        "bytes": 10052
+      },
+      "callers": []
+    },
+    {
+      "name": "pr-watch-as-author",
+      "category": "entry",
+      "root": {
+        "words": 381,
+        "bytes": 2936
+      },
+      "totals": {
+        "files": 13,
+        "words": 3072,
+        "bytes": 19596
+      },
+      "callers": []
+    },
+    {
+      "name": "pr-watch-as-reviewer",
+      "category": "entry",
+      "root": {
+        "words": 572,
+        "bytes": 4005
+      },
+      "totals": {
+        "files": 11,
+        "words": 9559,
+        "bytes": 59964
+      },
+      "callers": []
+    },
+    {
+      "name": "reflect",
+      "category": "entry",
+      "root": {
+        "words": 423,
+        "bytes": 3235
+      },
+      "totals": {
+        "files": 8,
+        "words": 4993,
+        "bytes": 31603
+      },
+      "callers": []
+    },
+    {
+      "name": "shipit",
+      "category": "entry",
+      "root": {
+        "words": 424,
+        "bytes": 2749
+      },
+      "totals": {
+        "files": 3,
+        "words": 1968,
+        "bytes": 12267
+      },
+      "callers": []
+    },
+    {
+      "name": "team",
+      "category": "entry",
+      "root": {
+        "words": 650,
+        "bytes": 5555
+      },
+      "totals": {
+        "files": 48,
+        "words": 26573,
+        "bytes": 186069
+      },
+      "callers": []
+    },
+    {
+      "name": "team-design",
+      "category": "entry",
+      "root": {
+        "words": 923,
+        "bytes": 7006
+      },
+      "totals": {
+        "files": 1,
+        "words": 923,
+        "bytes": 7006
+      },
+      "callers": []
+    },
+    {
+      "name": "team-fix",
+      "category": "entry",
+      "root": {
+        "words": 235,
+        "bytes": 1820
+      },
+      "totals": {
+        "files": 11,
+        "words": 2411,
+        "bytes": 16023
+      },
+      "callers": []
+    },
+    {
+      "name": "team-implement",
+      "category": "entry",
+      "root": {
+        "words": 283,
+        "bytes": 2355
+      },
+      "totals": {
+        "files": 6,
+        "words": 1954,
+        "bytes": 14305
+      },
+      "callers": []
+    },
+    {
+      "name": "team-plan",
+      "category": "entry",
+      "root": {
+        "words": 319,
+        "bytes": 2505
+      },
+      "totals": {
+        "files": 1,
+        "words": 319,
+        "bytes": 2505
+      },
+      "callers": []
+    },
+    {
+      "name": "team-pr",
+      "category": "entry",
+      "root": {
+        "words": 450,
+        "bytes": 3383
+      },
+      "totals": {
+        "files": 10,
+        "words": 5894,
+        "bytes": 39815
+      },
+      "callers": [
+        {
+          "path": "skills/team-implement/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-implement/references/03-execution.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-implement/references/05-standalone-mode-tradeoffs.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/13-orchestrator-emit-gate-pr-ship.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "team-question",
+      "category": "entry",
+      "root": {
+        "words": 675,
+        "bytes": 5070
+      },
+      "totals": {
+        "files": 1,
+        "words": 675,
+        "bytes": 5070
+      },
+      "callers": []
+    },
+    {
+      "name": "team-research",
+      "category": "entry",
+      "root": {
+        "words": 722,
+        "bytes": 5335
+      },
+      "totals": {
+        "files": 1,
+        "words": 722,
+        "bytes": 5335
+      },
+      "callers": []
+    },
+    {
+      "name": "team-structure",
+      "category": "entry",
+      "root": {
+        "words": 527,
+        "bytes": 4071
+      },
+      "totals": {
+        "files": 1,
+        "words": 527,
+        "bytes": 4071
+      },
+      "callers": []
+    },
+    {
+      "name": "team-worktree",
+      "category": "entry",
+      "root": {
+        "words": 206,
+        "bytes": 1604
+      },
+      "totals": {
+        "files": 6,
+        "words": 3226,
+        "bytes": 22413
+      },
+      "callers": [
+        {
+          "path": "skills/team-fix/references/05-worktree.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/07-orchestrator-emit-gate-leading-worktree.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team/references/10-orchestrator-emit-gate-post-design-review-secondary-worktrees.md",
+          "kind": "direct"
+        }
+      ]
+    },
+    {
+      "name": "why",
+      "category": "entry",
+      "root": {
+        "words": 259,
+        "bytes": 2014
+      },
+      "totals": {
+        "files": 6,
+        "words": 1752,
+        "bytes": 12016
+      },
+      "callers": [
+        {
+          "path": "skills/code-review/references/code-reviewer.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/how/references/05-rules.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-fix/SKILL.md",
+          "kind": "direct"
+        },
+        {
+          "path": "skills/team-fix/references/06-execution.md",
+          "kind": "direct"
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "files": 217,
+    "words": 120042,
+    "bytes": 808477
+  },
+  "registrations": {
+    "skills": 25,
+    "agents": 13,
+    "codexManifests": 25,
+    "hosts": {
+      "claude": {
+        "count": 25,
+        "evidence": "source-derived",
+        "sources": [
+          ".claude-plugin/marketplace.json",
+          ".claude-plugin/plugin.json"
+        ]
+      },
+      "codex": {
+        "count": 25,
+        "evidence": "source-derived",
+        "sources": [
+          ".agents/plugins/marketplace.json",
+          ".codex-plugin/plugin.json"
+        ]
+      },
+      "antigravity": {
+        "count": 25,
+        "evidence": "source-derived",
+        "sources": [
+          "plugin.json"
+        ]
+      }
+    },
+    "opencode": {
+      "commands": 25,
+      "discoveryPaths": 21
+    }
+  }
+}
