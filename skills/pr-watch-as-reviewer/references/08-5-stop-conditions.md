@@ -1,8 +1,8 @@
 ### 5. Stop conditions
 
-The loop stops on exactly one of eight conditions, each reported by name.
+The loop stops on exactly one of nine conditions, each reported by name.
 `pr-watch-mechanics` owns three of them: user interrupt, the 3-cycle soft
-cap, and 3 consecutive poll failures. This skill adds five:
+cap, and 3 consecutive poll failures. This skill adds six:
 
 - **Approval cast** — the gate cleared, every re-review verdict passed,
   and step 6 ran.
@@ -34,6 +34,10 @@ cap, and 3 consecutive poll failures. This skill adds five:
   carrying a comment from a third-party login. It names the login(s),
   or "comment author unavailable" for a null author. No verdict action,
   resolve, reaction, or rebuttal fires that cycle.
+- **Dispute stands** — fires when a rejected verdict repeats on a
+  thread that already carries the viewer's own reply below the first
+  comment. It stops instead of rebutting, and names the thread and the
+  disagreement.
 
 When the shared soft cap fires, two reports are this skill's to add. When
 the cap was reached with a plain comment still pending, say so explicitly

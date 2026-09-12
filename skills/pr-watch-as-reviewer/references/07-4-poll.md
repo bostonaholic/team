@@ -215,10 +215,11 @@ nothing is written and the loop keeps waiting.
   past it — see step 6's re-check rule, which covers both shapes.
 
 **Check order.** After the re-review above renders every verdict for
-this cycle, run the third-party check before any verdict action: poll →
-re-review → the third-party check → stop, or else the verdict actions
-below. A cold cycle 0 already holds every verdict at this point, because
-the cycle-0 re-review runs over state that already exists.
+this cycle, run two checks before any verdict action: poll → re-review
+→ the third-party check → the Dispute-stands check → stop, or else the
+verdict actions below. A cold cycle 0 already holds every verdict at
+this point, because the cycle-0 re-review runs over state that already
+exists.
 
 **Third-party check.** An unresolved tracked thread carrying a comment
 from a third-party login (`skills/pr-watch-mechanics/SKILL.md`, `##
@@ -258,6 +259,16 @@ one action, taken in the same cycle it is rendered:
   mutation. A resolve failure is not a stop: warn, note it in the
   snapshot, keep the verdict (which is what gates the approval), and
   carry on.
+- **Dispute stands: a repeated rejected verdict is terminal.** Before
+  rebutting a rejected verdict, check whether the thread already
+  carries any viewer comment below its first comment — a prior
+  rebuttal, or a comment you typed by hand. If it does, stop and report
+  the thread and the disagreement instead of rebutting. Key this the
+  same way "one action per verdict" below already keys a rebuttal: by
+  the thread id plus the triggering comment id. That rule already
+  blocks a rejected verdict from re-firing with no new counterpart
+  reply, so this check only tests for an existing viewer reply on the
+  thread, never a count.
 - **Rebut on a rejected verdict** with a reply on your own thread:
 
   ```bash
@@ -279,15 +290,15 @@ one action, taken in the same cycle it is rendered:
   project convention prescribes, the same one the approval body uses.
   Never restate the original comment, never re-argue a point the reply
   already conceded, and never name this skill or any agent.
-- **The exchange ends on the verdict, never on a count.** There is no
-  rebuttal limit, for the same reason neither review loop has a round
-  limit: a veto ends on agreement, not on a number. What bounds it is
-  that the author sets the pace. One rebuttal answers one reply, so the
-  skill writes again only when the author has written again — an author
-  who stops replying draws no further rebuttals, and one who keeps
-  replying is having a conversation rather than being talked at. The
-  3-cycle soft cap is the outer bound on the whole in-session watch and
-  needs no help here.
+- **The exchange ends on the verdict, never on a count.** The actual
+  bound is the Dispute-stands check above: a rejected verdict repeated
+  on a thread that already carries the viewer's own reply is terminal.
+  Short of that, the author sets the pace. One rebuttal answers one
+  reply, so the skill writes again only when the author has written
+  again — an author who stops replying draws no further rebuttals, and
+  one who keeps replying is having a conversation rather than being
+  talked at. The 3-cycle soft cap is the outer bound on the whole
+  in-session watch and needs no help here.
 - **One action per verdict.** Key it by the thread id plus the
   comment id that triggered the verdict, and skip any thread already
   acted on for that same trigger. This is what keeps a standing
