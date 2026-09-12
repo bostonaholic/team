@@ -684,22 +684,21 @@ review filter accepts only APPROVE or COMMENT from the highest-numbered
 Methodology skills carry no `argument-hint`. Agents load them through one
 of two mechanisms. The first is a `skills:` YAML **block** list in the
 agent's frontmatter, one indented `- <name>` per line. For example,
-`agents/implementer.md` declares:
+`agents/ux-reviewer.md` declares:
 
 ```yaml
 skills:
-  - writing-prose
-  - unslop
+  - verifying-ux
 ```
 
-That is three counted names, at the load limit in the Design
-guidelines below, so `implementer` carries no
-recorded reason. The block form is the contract: three
+The block form is the contract: three
 test parsers read it, and the one-line inline flow form parses to zero
 names, so it is an offender rather than a second shape.
-The second is an inline prose load instruction in the agent body. For
-example, the `implementer` body's Code quality section loads
-`solid` inline.
+The second is an inline prose load instruction in the agent body. Most
+methodology content is no longer a registered skill at all: it lives in
+ordinary references such as the [code standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/code-standards.md)
+and [writing standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/writing.md),
+which consumers read by path before work.
 
 **Two reference forms, and the form is the contract.** Every skill-to-skill
 reference is one of two kinds, and each has its own encoding:
@@ -742,9 +741,8 @@ means changing it there, deliberately.
 
 Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them
-out of the `/` slash-command menu, because a `/writing-prose` command is
-meaningless to a user. They stay fully loadable by their two mechanisms
-above. Neither the `skills:` preload nor a by-path load is affected by
+out of the `/` slash-command menu. They stay fully loadable by their two
+mechanisms above. Neither the `skills:` preload nor a by-path load is affected by
 the field, which governs only menu visibility. Setting
 `disable-model-invocation` is a separate per-skill call with its own
 recorded reason, and no methodology skill has one: the model auto-loading
@@ -760,26 +758,27 @@ Team's side, and the workarounds that look plausible all fail — see
 [cross-host-portability.md](cross-host-portability.md#57-codex-port)
 before spending time on it.
 
-`unslop` follows this model-invocable methodology contract. The shared
-`skills/` directory exposes it to every host, and `agents/openai.yaml` supplies
-Codex discovery metadata. Its Team-authored categories separate AI-pattern
-detection from the sentence mechanics owned by `writing-prose`.
+The consolidated [writing standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/writing.md)
+carry the former `unslop` and `writing-prose` content as one ordinary
+reference. Its Team-authored categories separate AI-pattern detection from
+sentence mechanics within one file.
 
-When both prose methods apply, the author scans the untouched draft with
-`unslop` before `writing-prose` edits it. Exact source text stays byte-identical.
-The semantic guard protects normative force, permission, real uncertainty, and
+The author scans the untouched draft with the exact-text and semantic guard
+before applying style edits. Exact source text stays byte-identical. The
+semantic guard protects normative force, permission, real uncertainty, and
 meaningful time relations. It outranks style substitutions.
 
-All registry phase agents preload both prose owners. The root `team` skill and
-each registry-derived phase entry explicitly reload them for orchestrator prose.
-Agents audit only text they author. Orchestrators store and relay completed agent
-and vendor reports unchanged. The fresh design reviewer can use Read, Grep,
-Glob, and Skill, but no mutating tool. The technical writer uses the semantic
-guard to veto a readability finding that would change meaning.
+Every agent and entry point reads the writing standards before finalizing
+prose. Agents audit only text they author. Orchestrators store and relay
+completed agent and vendor reports unchanged. The fresh design reviewer can
+use Read, Grep, Glob, and Skill, but no mutating tool. The technical writer
+uses the semantic guard to veto a readability finding that would change
+meaning.
 
-Claude Code may retain both methods for later utilities in the same context
-before compaction. Compaction can evict that retained content. A recovered
-pipeline phase uses its phase entry and reloads both methods explicitly.
+Claude Code may retain the writing standards for later utilities in the same
+context before compaction. Compaction can evict that retained content. A
+recovered pipeline phase uses its phase entry and reloads the writing
+standards explicitly.
 
 The trigger-phrase convention keys on the `user-invocable` field —
 not on `argument-hint`, which `docs/skills.md` uses to sort skill
@@ -906,11 +905,11 @@ entry points. Descriptions are at most 200 characters, or 150 for methodology.
 3. **Shared principles:** five ordinary documents define human control, durable state, verified results, independent review, and focused work.
    Execution, external-data, decisions, and bug-fix resources own the remaining operational rules.
    Question, Research, Design, Structure, Plan, and Implement procedures live in playbooks with shared templates and dependency, testing, and diagnosis references.
+   Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
    Twelve agent bodies read execution rules. File-finder retains its single-step contract.
-   Resources use no skill frontmatter or discovery metadata. Keep the 22 methodologies and 25 commands registered.
+   Resources use no skill frontmatter or discovery metadata. Keep the 2 methodologies and 25 commands registered.
    Do not add principle registrations, recursive loading, compatibility stubs, or a resource registry.
-   `solid` remains a methodology skill and counts toward preload limits.
 
 ### Codex host manifests
 
@@ -1172,10 +1171,10 @@ all governed by `skills/team/references/agent-dispatch.md`:
   Nesting is invisible to the orchestrator: no phase-table, gate, or
   artifact contract depends on it.
 
-Before any non-vendor dispatch, the parent resolves and Reads the `unslop` and
-`writing-prose` routers and references under `${CLAUDE_PLUGIN_ROOT}`. Claude
+Before any non-vendor dispatch, the parent resolves and Reads the writing
+standards reference under `${CLAUDE_PLUGIN_ROOT}`. Claude
 Code substitutes that installed plugin root before dispatch. The prompt carries
-all four absolute, read-only paths. The helper Reads them before it audits its
+the resolved, read-only path. The helper Reads it before it audits its
 authored report. If any Read fails, the parent discards the return. Research
 scouts fall back to inline reading. Reviewer skeptics keep the finding by
 default. Vendor couriers receive no prose paths and relay stdout unchanged.

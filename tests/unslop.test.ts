@@ -2,8 +2,7 @@ import { expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-import { loadedSkills } from "./helpers/skill-refs";
-import { description, frontmatter, read, squash } from "./helpers/text";
+import { frontmatter, read, squash } from "./helpers/text";
 import { E2E_TIERS, E2E_TOUCHFILES } from "./helpers/touchfiles";
 import {
   FALLBACK_CANDIDATE,
@@ -29,36 +28,11 @@ const ROOT = process.cwd();
 const path = (...parts: string[]): string => join(ROOT, ...parts);
 const readOrEmpty = (file: string): string => (existsSync(file) ? read(file) : "");
 
-const UNSLOP = path("skills", "unslop", "SKILL.md");
-const RULES = path("skills", "unslop", "references", "rules.md");
-const OPENAI = path("skills", "unslop", "agents", "openai.yaml");
+const WRITING = path("skills", "team", "references", "writing.md");
 const EVALS = path("tests", "unslop.evals.ts");
 const COMPLETE_CORE_OUTPUT = `ZERO: The API returns cached data.
 ONE: Operators may use this option.
 MANY: The cache module stores request IDs.`;
-
-function preloads(file: string): string[] {
-  const lines = frontmatter(readOrEmpty(file)).split("\n");
-  const names: string[] = [];
-  let inside = false;
-  for (const line of lines) {
-    if (/^skills:\s*$/.test(line)) {
-      inside = true;
-      continue;
-    }
-    if (!inside) continue;
-    const item = /^\s+-\s+([a-z0-9-]+)\s*$/.exec(line)?.[1];
-    if (item === undefined) break;
-    names.push(item);
-  }
-  return names;
-}
-
-function orderedLoads(file: string): string[] {
-  return loadedSkills(readOrEmpty(file)).filter(
-    (name) => name === "unslop" || name === "writing-prose",
-  );
-}
 
 function registry(): {
   phases: { name: string }[];
@@ -70,81 +44,62 @@ function registry(): {
   };
 }
 
-test("unslop package is Team-authored and always applies", () => {
-  const router = readOrEmpty(UNSLOP);
-  const rules = readOrEmpty(RULES);
-  const manifest = readOrEmpty(OPENAI);
-  const metadata = frontmatter(router);
+test("writing standards are Team-authored and always apply", () => {
+  const writing = readOrEmpty(WRITING);
 
-  expect(existsSync(UNSLOP)).toBe(true);
-  expect(existsSync(RULES)).toBe(true);
+  expect(existsSync(WRITING)).toBe(true);
   expect(existsSync(path("skills", "unslop", "LICENSE"))).toBe(false);
-  expect(existsSync(OPENAI)).toBe(true);
-  expect(metadata).toMatch(/^name:\s*unslop\s*$/m);
-  expect(metadata).toMatch(/^user-invocable:\s*false\s*$/m);
-  expect(metadata).not.toMatch(/^disable-model-invocation:/m);
-  expect(description(router).length).toBeGreaterThan(0);
-  expect(description(router).length).toBeLessThanOrEqual(150);
-  expect(description(router)).toBe(
-    "Use whenever writing or revising prose. Must always apply.",
-  );
-  expect(router.split("\n").length - Number(router.endsWith("\n"))).toBeLessThanOrEqual(80);
-  expect(manifest).toMatch(/^interface:\s*$/m);
-  expect(manifest).toMatch(/^\s+display_name:\s*"Unslop"\s*$/m);
-  expect(manifest).toMatch(/^\s+short_description:\s*"[^"]{25,64}"\s*$/m);
-  expect(manifest).toContain('default_prompt: "Use $unslop to remove AI-writing patterns without changing meaning."');
-  expect(manifest).not.toMatch(/allow_implicit_invocation:\s*false/);
-  expect(rules).toContain("https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md");
-  expect(rules).toMatch(/inspired by Lauren Tan/i);
-  expect(rules).toMatch(/authored for Team/i);
-  expect(rules).not.toMatch(/adapted .*MIT|upstream rule|\|\s*ID\s*\|/i);
+  expect(existsSync(path("skills", "unslop", "SKILL.md"))).toBe(false);
+  expect(existsSync(path("skills", "writing-prose", "SKILL.md"))).toBe(false);
+  expect(writing.startsWith("---\n")).toBe(false);
+  expect(writing).toContain("https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md");
+  expect(writing).toMatch(/inspired by Lauren Tan/i);
+  expect(writing).toMatch(/authored for Team/i);
+  expect(writing).not.toMatch(/adapted .*MIT|upstream rule|\|\s*ID\s*\|/i);
 });
 
 test("ordered prose composition preserves semantics and contracts", () => {
-  const router = squash(readOrEmpty(UNSLOP));
-  const writing = squash(readOrEmpty(path("skills", "writing-prose", "SKILL.md")));
-  const untouched = router.indexOf("untouched authored draft");
-  const checklist = router.indexOf("checklist", untouched);
-  const style = router.indexOf("writing-prose", checklist);
-  const rescan = router.indexOf("rescan", style);
-  const audit = router.indexOf("self-audit", rescan);
+  const writing = squash(readOrEmpty(WRITING));
+  const untouched = writing.indexOf("untouched authored draft");
+  const checklist = writing.indexOf("checklist", untouched);
+  const style = writing.indexOf("Apply style rules", checklist);
+  const rescan = writing.indexOf("rescan", style);
+  const audit = writing.indexOf("self-audit", rescan);
 
   expect(untouched).toBeGreaterThanOrEqual(0);
   expect(checklist).toBeGreaterThan(untouched);
   expect(style).toBeGreaterThan(checklist);
   expect(rescan).toBeGreaterThan(style);
   expect(audit).toBeGreaterThan(rescan);
-  expect(router).toMatch(/zero .*match/i);
-  expect(router).toMatch(/recorded .* (?:cannot|must not).*(?:erase|hide|close)/i);
-  expect(router).toContain("must");
-  expect(router).toContain("shall");
-  expect(router).toContain("should");
-  expect(router).toContain("may");
-  expect(router).toContain("might");
-  expect(router).toContain("could");
-  expect(router).toMatch(/permission/i);
-  expect(router).toMatch(/uncertaint/i);
-  expect(router).toMatch(/progressive.*perfect|perfect.*progressive/i);
-  expect(router).toMatch(/frontmatter/i);
-  expect(router).toMatch(/parser token/i);
-  expect(router).toMatch(/templates?/i);
-  expect(router).toMatch(/commands?/i);
-  expect(router).toMatch(/flags?/i);
-  expect(router).toMatch(/numbers?/i);
-  expect(router).toMatch(/code/i);
-  expect(router).toMatch(/identifiers?/i);
-  expect(router).toMatch(/quotes?/i);
-  expect(router).toMatch(/user text/i);
-  expect(router).toMatch(/vendor/i);
-  expect(router).not.toMatch(/skills\/writing-prose\/(?:SKILL\.md|references\/style-guide\.md)/);
-  expect(writing).toMatch(/when .*unslop.*loaded/i);
+  expect(writing).toMatch(/zero .*match/i);
+  expect(writing).toMatch(/recorded .* (?:cannot|must not).*(?:erase|hide|close)/i);
+  expect(writing).toContain("must");
+  expect(writing).toContain("shall");
+  expect(writing).toContain("should");
+  expect(writing).toContain("may");
+  expect(writing).toContain("might");
+  expect(writing).toContain("could");
+  expect(writing).toMatch(/permission/i);
+  expect(writing).toMatch(/uncertaint/i);
+  expect(writing).toMatch(/progressive.*perfect|perfect.*progressive/i);
+  expect(writing).toMatch(/frontmatter/i);
+  expect(writing).toMatch(/parser token/i);
+  expect(writing).toMatch(/templates?/i);
+  expect(writing).toMatch(/commands?/i);
+  expect(writing).toMatch(/flags?/i);
+  expect(writing).toMatch(/numbers?/i);
+  expect(writing).toMatch(/code/i);
+  expect(writing).toMatch(/identifiers?/i);
+  expect(writing).toMatch(/quotes?/i);
+  expect(writing).toMatch(/user text/i);
+  expect(writing).toMatch(/vendor/i);
   expect(writing).toMatch(/untouched .*draft/i);
   expect(writing).toMatch(/checklist/i);
-  expect(writing).toMatch(/before .*edit/i);
+  expect(writing).toMatch(/byte-identical|byte for byte/i);
 });
 
 test("Team rule groups cover evidence, directness, concrete language, format, and voice", () => {
-  const rules = squash(readOrEmpty(RULES));
+  const rules = squash(readOrEmpty(WRITING));
 
   expect(rules).toContain("Claims must earn their place");
   expect(rules).toContain("State facts directly");
@@ -165,11 +120,11 @@ test("Team rule groups cover evidence, directness, concrete language, format, an
   expect(rules).toMatch(/offers for more help/i);
   expect(rules).toMatch(/claim, evidence, normative force, uncertainty, and time relation/i);
 });
-test("registry-derived producer coverage", () => {
+
+test("registry-derived producer coverage reads the writing standards", () => {
   const inventory = registry();
   const agentFailures = inventory.agents.flatMap(({ name }) => {
-    const names = preloads(path("agents", `${name}.md`));
-    return names.includes("writing-prose") && names.includes("unslop") ? [] : [name];
+    return readOrEmpty(path("agents", `${name}.md`)).includes("references/writing.md") ? [] : [name];
   });
   const entryFiles = [
     path("skills", "team", "SKILL.md"),
@@ -178,20 +133,19 @@ test("registry-derived producer coverage", () => {
     ),
   ];
   const entryFailures = entryFiles
-    .filter((file) => !existsSync(file) || orderedLoads(file).join(",") !== "unslop,writing-prose")
+    .filter((file) => !existsSync(file) || !readOrEmpty(file).includes("writing.md"))
     .map((file) => file.slice(ROOT.length + 1));
-  const teamLoads = new Set(orderedLoads(path("skills", "team", "SKILL.md")));
-  const gitCommitLoads = orderedLoads(path("skills", "team-pr", "references", "commit.md"));
-  const changelogLoads = orderedLoads(path("skills", "team-pr", "references", "changelog.md"));
+  const commitReads = readOrEmpty(path("skills", "team-pr", "references", "commit.md")).includes("writing.md");
+  const changelogReads = readOrEmpty(path("skills", "team-pr", "references", "changelog.md")).includes("writing.md");
   const architecture = squash(readOrEmpty(path("docs", "architecture.md")));
 
   expect(inventory.agents.length).toBeGreaterThan(0);
   expect(inventory.phases.length).toBeGreaterThan(0);
   expect(agentFailures).toEqual([]);
   expect(entryFailures).toEqual([]);
-  expect(teamLoads).toEqual(new Set(["unslop", "writing-prose"]));
-  expect(gitCommitLoads).toEqual(["writing-prose"]);
-  expect(changelogLoads).toEqual(["writing-prose"]);
+  expect(commitReads).toBe(true);
+  expect(changelogReads).toBe(true);
+  expect(architecture).toMatch(/writing standards/i);
   expect(architecture).toMatch(/before compaction|pre-compaction/i);
   expect(architecture).toMatch(/compaction.*(?:evict|retention)/i);
   expect(architecture).toMatch(/recover.*reload/i);
@@ -202,14 +156,8 @@ test("fresh reviewer and technical-writer boundaries", () => {
   const brief = reviewer;
   const technicalWriter = squash(readOrEmpty(path("agents", "technical-writer.md")));
 
-  expect(orderedLoads(path("skills", "eng-design-doc-review", "references", "design-reviewer.md"))).toEqual([
-    "unslop",
-    "writing-prose",
-  ]);
-  expect(loadedSkills(brief).filter((name) => name === "unslop" || name === "writing-prose")).toEqual([
-    "unslop",
-    "writing-prose",
-  ]);
+  expect(reviewer).toContain("references/writing.md");
+  expect(reviewer).toContain("references/code-standards.md");
   expect(squash(reviewer)).toMatch(/Read, Grep, Glob, and Skill/i);
   expect(squash(brief)).toMatch(/Read, Grep, Glob, and Skill/i);
   expect(squash(reviewer)).toMatch(/(?:no|not|forbid).*(?:Write|Edit).*(?:Bash).*(?:Agent)/i);

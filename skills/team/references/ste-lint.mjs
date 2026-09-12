@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ste-lint: score prose drift against the writing-prose skill.
+// ste-lint: score prose drift against the writing standards reference.
 //
 // Credit: the approach — a small mechanical scorer that reports prose
 // violations per 100 words — comes from the "cure for AI slop" writing kit at
@@ -7,7 +7,7 @@
 // (consulted 2026-08-03). The kit carries the MIT License, Copyright (c) 2026
 // Ege Çelebi. None of its code is used here: this implementation was written
 // from scratch for this repository. Its violation categories come from the
-// self-lint checklist in skills/writing-prose/SKILL.md, and its word lists
+// self-lint checklist in skills/team/references/writing.md, and its word lists
 // hold that skill's delete-list rows and a curated subset of its
 // substitution-table rows, plus inflected forms of those rows ("seamlessly",
 // "comprehensively", "utilization"). The grammar
@@ -24,7 +24,7 @@
 //
 //     node "<skill-dir>/ste-lint.mjs" [--breakdown] [--cap N] [path ...]
 //
-// `<skill-dir>` is `${CLAUDE_PLUGIN_ROOT}/skills/writing-prose` on Claude
+// `<skill-dir>` is `${CLAUDE_PLUGIN_ROOT}/skills/team/references` on Claude
 // Code. Codex sets no plugin-root variable, so pass the literal directory
 // there. This file reads no environment variable and holds no relative
 // import, so it runs unchanged from whatever path a host installs it to.
@@ -70,7 +70,7 @@ function verbForms(base, ...irregular) {
   return [base, third, `${base}ed`, `${base}ing`];
 }
 
-// Word lists compiled from skills/writing-prose/SKILL.md. Membership is
+// Word lists compiled from skills/team/references/writing.md. Membership is
 // curated for a low false-positive rate, so substitution-table rows whose
 // left side is a common correct word in software prose (e.g. "may",
 // "required", "modify") are left out. Every list is kept alphabetical.
@@ -414,7 +414,7 @@ function render(name, result, breakdown) {
 }
 
 const USAGE = 'usage: ste-lint [--breakdown] [--cap N] [path ...]\n\n' +
-  "Score prose against the mechanical rules in skills/writing-prose/SKILL.md,\n" +
+  "Score prose against the mechanical rules in skills/team/references/writing.md,\n" +
   "as violations per 100 words.\n";
 const HELP = `${USAGE}
     -b, --breakdown                  also print per-category violation counts

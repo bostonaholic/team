@@ -1,8 +1,111 @@
-# Writing Prose Style Guide
+# Writing Standards
 
-The authoring bar for documentation, and the rubric a reviewer holds prose to.
+The authoring procedure and prose bar for every artifact and finding. Read this
+file before finalizing any prose you author. Apply exact-text and meaning
+protection before prose style.
 
-## Write for one busy reader
+## Protect exact text first
+
+Do not rewrite source material: user text, quotes, vendor output, code,
+identifiers, commands, flags, numbers, frontmatter, schemas, parser tokens, or
+templates. Use source material as evidence, but keep its bytes unchanged.
+
+## Preserve meaning
+
+Protect normative `must`, `shall`, and `should`. Protect `may` when it grants
+permission or states possibility. Preserve real uncertainty carried by `may`,
+`might`, or `could`. Preserve progressive and perfect tense when they encode
+current activity, completion, duration, or event order. Change these forms only
+when the resulting claim has the same meaning.
+
+Exact-text contracts take first precedence. This semantic guard takes second.
+Style edits take third.
+
+## Compose prose methods in this order
+
+1. Save the untouched authored draft and classify protected text.
+2. Scan that draft for each distinct rule below. Record a checklist by rule and
+   affected claim. Zero initial matches make an empty checklist.
+3. Apply style rules only to unprotected prose. A recorded checklist item
+   cannot be erased, hidden, or closed by its edits.
+4. Resolve each recorded item against the original claim and evidence. A
+   grammar-only change does not resolve an unsupported claim.
+5. Then rescan the composed result for every distinct pattern.
+6. Run the self-audit and fix each remaining issue.
+
+## Self-audit (meaning)
+
+- Does each claim retain its evidence, tone, normative force, uncertainty, and
+  time relation?
+- Did every recorded match receive a substantive resolution?
+- Did the rescan find no unresolved owned pattern?
+- Is every protected source span byte-identical?
+
+## Rules
+
+Use these checks on prose you author. Pattern detection and meaning
+preservation come first; sentence mechanics such as plain words, active voice,
+sentence length, filler, and consistent names follow.
+
+### Claims must earn their place
+
+- Remove a claim when the available evidence does not support it. A participle
+  such as "ensuring" or "showcasing" does not prove an effect.
+- Name the source of a claim. Replace "experts say" or "reports suggest" with
+  a citation, or remove the attribution.
+- Replace praise, importance claims, and generic conclusions with a fact,
+  instruction, measurement, or cited decision.
+- Keep real uncertainty. Do not make evidence sound stronger than it is.
+
+### State facts directly
+
+- Prefer `is`, `has`, or the concrete action over inflated substitutes.
+- Remove contrast frames such as "not only X, but also Y" when two direct facts
+  say the same thing.
+- Do not force facts into groups of three. Use the number the subject requires.
+- Use "from X to Y" only for actual endpoints on one scale. Otherwise name the
+  topics separately.
+- Replace supporting adverbs with a measured result or a precise verb.
+
+### Name the concrete subject
+
+- Remove stock AI vocabulary such as "seamless", "robust", "holistic", or
+  "transformative" when it contributes no technical meaning.
+- Replace vague metaphors with the file, function, service, boundary, action, or
+  measured effect they hide.
+- In particular, rewrite "center of gravity", "moves the needle", "surface
+  area", "shape of the problem", "the right seam", "unlocks", and "tees up".
+- Do not personify code or use an aphorism where a literal statement works.
+- Keep one name for one concept. Do not rotate synonyms for variety.
+
+### Format only for structure
+
+- Use headings, lists, and bold text only when they express real hierarchy.
+- Use sentence case for headings.
+- Remove repeated bold-label-and-colon prefixes from list items.
+- Keep a colon for a list or example, not as a dramatic sentence connector.
+- Replace curly quotation marks with straight quotation marks in authored text.
+- Remove decorative emoji.
+- Avoid em dashes and imitation dashes. Split the sentence or use a comma when
+  the relationship remains clear.
+
+### Remove assistant mannerisms
+
+- Start with the requested information. Remove greetings, congratulations,
+  praise, and agreement that add no information.
+- Remove offers for more help and statements about the act of answering.
+- Remove canned openings and conclusions, rhetorical fragments, and repeated
+  sentence templates.
+- Keep the user's tone unless it conflicts with evidence or an exact contract.
+
+### Decide whether a rewrite passes
+
+A rewrite passes only when it removes the pattern and preserves the original
+claim, evidence, normative force, uncertainty, and time relation. If a style
+change would alter any of those, keep the original wording. Protected source
+text stays byte-identical.
+
+## One busy reader
 
 The rules that follow govern sentences. This one governs the whole document.
 
@@ -12,11 +115,11 @@ is the same job: one busy reader, one decision, no time. So are a design
 summary, a changelog entry, a review comment, and a status report. Apply these
 rules to any text that asks a reader to decide or act.
 
-- **Lead with the point.** Put the recommendation, the finding, or the request
-  in the first sentence. Support follows it. A reader who stops after the first
-  paragraph must still know what you want.
-- **Make the title say something.** "Move the launch to March" beats "Launch".
-  A PR title states the change, not the area it touches.
+- **Lead with the recommendation.** Put the recommendation, the finding, or the
+  request in the first sentence. Support follows it. A reader who stops after
+  the first paragraph must still know what you want.
+- **Make the title say something.** A PR title states the change, not the area
+  it touches.
 - **Name the action, the owner, and the date.** Close with what the reader does
   next. A document that asks for nothing gets nothing.
 - **Cut the throat-clearing.** Delete "The purpose of this document is to" and
@@ -38,10 +141,22 @@ rules to any text that asks a reader to decide or act.
   no unexplained jargon.
 - **Define terms at first use.** Every acronym, domain term, or jargon word is
   defined or linked when it first appears.
-- **One idea per sentence.**
-- **Avoid nominalizations.** "Make a decision" → "decide". They hide the actor
-  and the action.
+- **One idea per sentence.** Prefer one plain verb to a nominalization.
 - **Use American spelling.** "color", not "colour"; "analyze", not "analyse".
+- Use one consistent name for each thing.
+
+## Two modes
+
+Choose per sentence:
+
+- **Strict:** instructions, numbered steps, warnings, errors, and runbook
+  commands. Cap at 20 words. Use imperative form, one instruction per sentence,
+  and condition before command. Ban `would`, `could`, and `might`.
+- **STE-flavored:** design documents, ADRs, PRDs, changelogs, commit bodies, and
+  review comments. Cap at 25 words. Declarative prose is allowed. Use `would`
+  or `could` only for an actual alternative or consequence. Ban `might`.
+
+A consuming skill's format contract wins. These modes govern sentence prose.
 
 ## Simplified Technical English (ASD-STE100)
 
@@ -55,93 +170,29 @@ from the "cure for AI slop" writing kit at
 The kit carries the MIT License, © 2026 Ege Çelebi. This file restates the
 ideas in its own words.
 
-### Two modes
-
-The mode follows the text type, not the document. One document can hold both.
-
-- **Strict** governs instruction text: numbered steps, warnings, error
-  messages, runbook commands.
-- **STE-flavored** governs descriptive prose: design documents, ADRs, PRDs,
-  changelog entries, commit bodies, review comments.
-
-They differ in three ways only:
-
-- **Sentence cap.** 20 words strict, 25 STE-flavored.
-- **Form.** Strict requires the imperative, one instruction per sentence, and
-  the condition before the command. STE-flavored permits declarative
-  paragraphs.
-- **Conditional mood.** Strict bans "would", "could", and "might". STE-flavored
-  permits "would" and "could" only to state a real alternative or consequence,
-  never as a hedge. "Might" is banned in both: for a real possibility write
-  "can". Otherwise delete the hedge.
-
-Apply the mode **per sentence, not per document** — a rationale paragraph can
-embed one imperative instruction, which takes strict mode while the sentences
-around it take STE-flavored. Every other rule below binds both modes. When a
-consuming skill's format rule conflicts with a prose rule (git-commit's
-50-character subject, changelog's headings), the consuming skill wins. These
-modes govern sentence-level prose only.
-
 ### The mechanical rules
 
-Each rule shows the rejected form (Non-STE) and the fix (STE).
-
-- **Keep sentences short.** A number, an abbreviation, quoted text, or a
-  hyphenated group counts as one word. Split a long sentence rather than
-  compress it.
-- **Write one instruction per sentence.** Combine actions only when the reader
-  must do them at the same time.
-  - Non-STE: *Set the TEST switch to the middle position and release the
-    SHORT-CIRCUIT TEST switch.* (two separate actions)
-  - STE: *1. Set the TEST switch to the middle position. 2. Release the
-    SHORT-CIRCUIT TEST switch.*
-  - STE (simultaneous, so one sentence is correct): *Hold the panel in its
-    open position and install the fastener.*
-- **Use the imperative for instructions.**
-  - Non-STE: *The test can be continued.* → STE: *Continue the test.*
-  - Non-STE: *Oil and grease are to be removed with a degreasing agent.* →
-    STE: *Remove oil and grease with a degreasing agent.*
-- **Put the condition before the command, divided by a comma.**
-  - Non-STE: *Set the switch to NORMAL when the light comes on.*
-  - STE: *When the light comes on, set the switch to NORMAL.*
 - **Use simple verb tenses only** — simple present, simple past, simple future,
   imperative, infinitive, and past participle as an adjective. No perfect or
   progressive tenses. Use an "-ing" form only inside a technical noun ("error
   handling", "logging").
-  - Non-STE: *The operator has adjusted the linkage.* → STE: *The operator
-    adjusted the linkage.*
-- **Do not stack auxiliaries.**
-  - Non-STE: *It would seem that the cache may serve to reduce the load time.*
-    → STE: *The cache reduces the load time.*
 - **Use the active voice.** Passive is permitted only when the actor is
   unknown, irrelevant, or deliberately omitted ("The request was rejected").
-  Convert a passive by naming the actor as the subject, switching to the
-  imperative, or using "you".
-  - Non-STE: *These values are used by the computer to calculate the energy
-    consumption.* → STE: *The computer calculates the energy consumption from
-    these values.*
-  - Non-STE: *The volume control can be adjusted.* → STE: *Adjust the volume
-    control.* (procedure) or *You can adjust the volume control.* (description)
+- **Do not stack auxiliaries.**
+- **Write one instruction per sentence.** Combine actions only when the reader
+  must do them at the same time.
+- **Use the imperative for instructions.**
+- **Put the condition before the command, divided by a comma.**
 - **Give each word one meaning, and each thing one name.** No synonyms for
   variety.
-  - Non-STE: *Make sure that the servo control unit is open. Do the test of
-    the actuator. Disconnect the control unit.* (three names, one component)
-  - STE: pick *actuator* and use it in all three sentences.
 - **Limit noun clusters to three words.**
-  - Non-STE: *Runway light connection resistance calibration*
-  - STE: *Calibration of the resistance of the runway light connection*
 - **Do not omit words to shorten a sentence.** Keep subjects, verbs, and
   articles. No contractions.
-  - Non-STE: *If installed, remove the shims.* → STE: *If shims are installed,
-    remove them.*
-  - Non-STE: *Rotary switch to INPUT.* → STE: *Set the rotary switch to INPUT.*
 - **Use a vertical list for complex text.** End the lead-in with a colon, one
   item per line. Never a semicolon — write two sentences.
 - **Keep paragraphs short.** No more than six sentences, one topic each, topic
   sentence first.
 - **Put warnings and cautions before the step they protect.**
-  - STE: *WARNING: Disconnect the power before you open the panel. The
-    terminals carry line voltage and can cause injury.*
 - **Name the thing.** "The component" → "the UserProfile component". "The
   file" → "`config/database.yml`". Put commands, paths, and identifiers in
   code blocks.
@@ -231,30 +282,21 @@ handling retries twice, then surfaces the error".
 
 ## Self-lint
 
-Run this on any governed text before you finalize it. Each item names one
-defect. Fix every hit.
+Before returning text, fix every:
 
-1. **Over-cap sentence** — over the mode's cap (20 strict, 25 STE-flavored).
-   Split it.
-2. **Semicolon** — replace with a period and two sentences.
-3. **Contraction** — expand it.
-4. **Passive with a known actor** — name the actor as the subject.
-5. **Hidden action** — an "-ing" main verb, a nominalization, a phrasal verb
-   the substitution table maps, or stacked auxiliaries. Write one plain verb.
-6. **Two names for one thing** — pick one and use it everywhere.
-7. **Banned word** — a delete-list word or a substitution-table word. Delete
-   the first kind. Replace the second.
-8. **Conditional mood** — in strict mode, any "would", "could", or "might". In
-   STE-flavored mode, "would" or "could" as a hedge, or any "might".
-9. **Empty closer** — a closing sentence that states no measurable property
-   ("provides a solid foundation for..."). Delete it.
-10. **Buried point** — the recommendation, the finding, or the request does not
-    appear in the first paragraph. Move it to the first sentence.
+1. sentence over its mode cap;
+2. semicolon or contraction;
+3. passive construction with a known actor;
+4. hidden action or stacked auxiliary;
+5. second name for one thing;
+6. banned or substitution-table word;
+7. disallowed conditional mood;
+8. closer with no measurable fact;
+9. buried point — the recommendation, the finding, or the request does not
+   appear in the first paragraph.
 
-The self-lint applies to the text an author returns, never to quoted
-counter-examples — this file's own Non-STE examples break the rules on
-purpose. If a reviewer cites an item and the author disputes it, the
-finding format carries the disagreement.
+Do not self-lint quoted counter-examples. Review disagreements use the
+[finding format](../code-review/references/findings.md).
 
 ## Mechanical score
 
@@ -265,11 +307,12 @@ A bundled script scores prose against the mechanical rules, as violations per
 node "<skill-dir>/ste-lint.mjs" --breakdown --cap 25 "<file>"
 ```
 
-Replace `<skill-dir>` with the absolute path of the directory holding this
-file. On Claude Code that is `${CLAUDE_PLUGIN_ROOT}/skills/writing-prose`, and
-the host sets that variable only for a skill loaded from an installed plugin.
-Codex sets no equivalent variable, so give the literal directory there. The
-script reads no environment variable — only the paths you pass it.
+Replace `<skill-dir>` with the absolute path of the directory holding
+`ste-lint.mjs`. On Claude Code that is
+`${CLAUDE_PLUGIN_ROOT}/skills/team/references`, and the host sets that
+variable only for a skill loaded from an installed plugin. Codex sets no
+equivalent variable, so give the literal directory there. The script reads no
+environment variable — only the paths you pass it.
 
 The default cap of 20 scores instruction text; `--cap 25` scores descriptive
 prose. The score is a drift signal, not a gate. Nothing runs it automatically.
@@ -293,8 +336,10 @@ When reviewing documentation, evaluate three dimensions:
   one concept carries one name throughout, and that a reader can locate the
   answer to a specific question in under 30 seconds.
 
-The technical-writer's review methodology lives in
-`skills/code-review/references/documentation-reviewer.md`. It applies these principles to
-reviews and carries the documentation-gap review process and the
-REQUIRED/RECOMMENDED doc-change classification. This skill stays the authoring
-bar.
+For documentation-gap review and `REQUIRED`/`RECOMMENDED` classification, read
+`../code-review/references/documentation-reviewer.md`.
+
+The detection categories above are inspired by Lauren Tan's [Cursor pstack
+unslop
+skill](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md).
+The categories, contracts, and wording were authored for Team.

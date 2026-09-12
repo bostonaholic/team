@@ -66,8 +66,8 @@ describe("no-comments skill: reviewer separation", () => {
     expect(loadsSkill(text, "running-quality-checks")).toBe(true);
   });
 
-  test("reviewer brief loads the canonical comment rules", () => {
-    expect(loadsSkill(source(METHODOLOGY), "engineering-standards")).toBe(true);
+  test("reviewer brief reads the canonical comment rules", () => {
+    expect(source(METHODOLOGY)).toContain("code-standards.md");
   });
 
   test("review dispatch uses the built-in read-only Explore agent", () => {

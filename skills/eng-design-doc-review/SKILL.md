@@ -20,9 +20,9 @@ you want an independent, fresh-context audit of a design document.
 
 Write the prose this skill governs at a seventh-grade reading level, in
 STE-flavored mode — short sentences, common words, no unexplained jargon.
-Full methodology: `writing-prose`. Before
-you finalize prose this skill governs, call the Skill tool with
-`writing-prose` and apply its `## Self-lint` checklist.
+Full methodology: the [writing standards](../team/references/writing.md). Before
+you finalize prose this skill governs, read the
+[writing standards](../team/references/writing.md) and apply its `## Self-lint` checklist.
 
 There is **no custom review agent**. This skill loads the review brief
 from `references/design-reviewer.md` and dispatches the built-in read-only

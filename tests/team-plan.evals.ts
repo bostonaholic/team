@@ -68,7 +68,7 @@ testIfSelected(
           "skills/team/principles/focused-work.md",
           "skills/team/references/artifacts.md",
           "skills/team/playbooks/plan.md",
-          "skills/engineering-standards/SKILL.md",
+          "skills/team/references/code-standards.md",
           "skills/team/references/dependencies.md",
         ]),
         workingDirectory: workDir,

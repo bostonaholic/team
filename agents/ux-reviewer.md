@@ -8,8 +8,6 @@ tools: Read, Grep, Glob, Bash, TodoWrite, SendMessage
 permissionMode: plan
 skills:
   - verifying-ux
-  - writing-prose
-  - unslop
 ---
 
 # UX Reviewer Agent
@@ -18,6 +16,7 @@ skills:
 
 Before work, read [execution rules](../skills/team/references/execution.md) and the
 [code reviewer brief](../skills/code-review/references/code-reviewer.md).
+Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Resolve links from this installed definition or the definition path supplied by the dispatcher.
 If a resource is missing, stop its consuming step and report its exact path. Never use checkout fallback.
 

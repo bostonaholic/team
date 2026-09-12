@@ -16,15 +16,15 @@ deps:
   - skills/code-review/**
   - skills/team/references/cross-model-review.md
   - skills/team/references/agent-dispatch.md
-  - skills/engineering-standards/**
+  - skills/team/references/code-standards.md
   - skills/team-research/**
   - skills/team/**
   - skills/team/references/execution.md
   - skills/code-review/**
   - skills/eng-design-doc-review/**
   - skills/code-review/**
-  - skills/unslop/**
-  - skills/writing-prose/**
+  - skills/team/references/writing.md
+  - skills/team/references/writing.md
   - evals/fixtures/unslop/neutral-research/**
 ---
 

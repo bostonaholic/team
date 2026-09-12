@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Consolidate coding and writing policy into two references — `skills/team/references/code-standards.md` and `skills/team/references/writing.md` — removing the `engineering-standards`, `solid`, `refactoring-to-patterns`, `unslop`, and `writing-prose` skills. Comment, scope, error-handling, and SOLID rules are stated once; the prose linter moves to `skills/team/references/ste-lint.mjs`; exact-text and normative-meaning protection precede prose style. The catalog drops from 32 to 27 registrations.
 - Consolidate delivery, worktree, and agent execution contracts into per-entry-point references, preserving signing, cleanup, tracking, watch-loop mechanics, cross-model review, and nested-dispatch authorization.
 - Consolidate reviewer briefs and finding contracts into per-entry-point references, preserving reviewer read-only independence, fresh-context inputs, verdict formats, and aggregation semantics.
 - Consolidate planning, implementation, and bug-fix procedures into playbooks, and test-quality policy into one reference, preserving acceptance-scope fences, Red gates, and bug-fix classification and commit rules.

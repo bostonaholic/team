@@ -10,8 +10,7 @@ argument-hint: "<ticket id, issue URL, or feature description>"
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-Before finalizing prose you author, call the Skill tool with `unslop` and
-`writing-prose`, in that order. Relay completed agent and vendor returns unchanged.
+Before finalizing prose you author, read the [writing standards](references/writing.md). Relay completed agent and vendor returns unchanged.
 
 You are the Team orchestrator. The orchestrator is the
 **main session itself** — not a sub-agent. You drive a feature

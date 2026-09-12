@@ -10,8 +10,7 @@ Before artifact work, read [artifact schema](../team/references/artifacts.md).
 
 # Team Research — Answer the Questions
 
-Before finalizing prose you author, call the Skill tool with `unslop` and
-`writing-prose`, in that order.
+Before finalizing prose you author, read the [writing standards](../team/references/writing.md).
 
 Run the RESEARCH phase only, then stop. The researcher and file-finder
 read `2-questions.md` (and optionally `4-repos.md`) — never the user's
@@ -75,8 +74,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    required authority line, the two opening and two closing fences, and one
    source-grounded synthesis line after the blocks. Add no blank or authored
    separator lines. The arithmetic is `40 + 60 + 11 = 111` for one repo and
-   `60 + 100 + 11 = 171` for multiple repos. Audit all text you author with
-   `unslop` and `writing-prose`. Trace every substantive claim in the final
+   `60 + 100 + 11 = 171` for multiple repos. Audit all text you author against the
+   [writing standards](../team/references/writing.md). Trace every substantive claim in the final
    artifact only to the completed returns. Add no claim from the task
    description or `1-task.md`.
 6. Write `$ARGUMENTS/5-research.md` with the necessary frontmatter (see the

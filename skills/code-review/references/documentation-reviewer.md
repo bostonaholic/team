@@ -7,7 +7,7 @@ diff with existing docs and classify each gap.
 ## Applying Prose Principles to Reviews
 
 When the technical-writer agent identifies documentation gaps or assesses
-documentation quality, apply the writing-prose principles:
+documentation quality, apply the [writing standards](../team/references/writing.md):
 
 1. **Classify by impact.** Weight readability and accuracy by affected readers.
 

@@ -337,3 +337,42 @@ The bundled scripts and vendor adapters (`external-review.mjs`, `supports-nestin
 The four nested-dispatch agents drop their `nested-agents` preloads and read `agent-dispatch.md` from the installed plugin; `code-reviewer` additionally drops `cross-model-review` and reads `cross-model-review.md`. The git-commit and changelog eval fixtures keep their names but list the new reference paths in `deps`; the unslop and team-fix fixtures do the same for `cross-model-review`, `nested-agents`, and `tracking-tickets`.
 Catalog description and catalog-line budgets ratchet again after the eight registrations move.
 
+## M08: coding and writing references
+
+The catalog retains 25 commands and 2 methodologies, totaling 27 registrations, with 13 unchanged agent roles.
+Five registrations consolidate into two ordinary references plus the preserved prose linter. No compatibility stubs remain.
+Comment, scope, and error-handling constraints are stated once; exact-text and normative-meaning protection precede prose style.
+
+| Retired registration | Destination | Retained contract |
+| --- | --- | --- |
+| `engineering-standards` | `skills/team/references/code-standards.md` | Core philosophy, the Code Comments rule set, the design-first workflow, the quality checklist, the "Construct with collaborators, call with work" constructor rule, explicit error handling, scope discipline, and the "When Reviewing" criteria. |
+| `solid` | `skills/team/references/code-standards.md` | The five SOLID principles and the reviewer's name-principle-cite-consequence rule. |
+| `refactoring-to-patterns` | `skills/team/references/code-standards.md` | Rule of Three timing, the safe refactoring procedure, and the refactor-first-own-commit rule. The smell catalog was deleted. |
+| `unslop` | `skills/team/references/writing.md` | Exact-text protection, normative-meaning preservation, the compose-order procedure, and the six rule groups (claims, directness, concrete subject, format, mannerisms, rewrite pass). |
+| `writing-prose` | `skills/team/references/writing.md`; `skills/team/references/ste-lint.mjs` | Plain language, the two modes (strict / STE-flavored), the STE mechanical rules and word substitutions, the delete list, the self-lint checklist, one busy reader, documentation-quality assessment, and the prose linter. |
+
+The `ste-lint.mjs` script moves to `skills/team/references/ste-lint.mjs` and keeps running unchanged: no relative import, no environment read for its own location, and a `<skill-dir>` placeholder in the documented command.
+Every agent and entry point reads `writing.md` before finalizing prose; the planner, implementer, and code-reviewer read `code-standards.md`. The prose preloads are removed.
+
+### Measurement
+
+The five moved registrations held 4,908 whitespace-delimited words across seven Markdown files.
+The two replacements hold 3,301 words, a 1,607-word (33%) reduction across all moved resources, not only the `SKILL.md` bodies.
+`ste-lint.mjs` moves byte-for-byte with only its internal self-references updated, so it is excluded from the prose count.
+
+### Named runtime consumers
+
+| Consumer | Operation | Replacement |
+| --- | --- | --- |
+| `agents/planner.md` | Plan against the quality checklist | Read `skills/team/references/code-standards.md` |
+| `agents/implementer.md` | Apply comment discipline, SOLID, and refactoring rules | Read `skills/team/references/code-standards.md` |
+| `agents/code-reviewer.md` | Review comments, SOLID, and the When Reviewing criteria | Read `skills/team/references/code-standards.md` |
+| `skills/code-review/references/code-reviewer.md` | Comment red flags and SOLID findings | Read `code-standards.md` and `writing.md` |
+| `skills/eng-design-doc-review/references/design-reviewer.md` | Design lens and finding prose | Read `code-standards.md` and `writing.md` |
+| `skills/no-comments/references/reviewer.md` | Comment classification | Read `code-standards.md` |
+| Every agent and entry point | Author prose | Read `skills/team/references/writing.md` |
+| `skills/team/references/agent-dispatch.md` | Helper prose audit | Read `writing.md` |
+
+Catalog description and catalog-line budgets ratchet again after the five registrations move.
+
+

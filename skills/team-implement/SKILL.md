@@ -13,8 +13,7 @@ Before artifact work, read [artifact schema](../team/references/artifacts.md).
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-Before finalizing prose you author, call the Skill tool with `unslop` and
-`writing-prose`, in that order. Relay completed reviewer reports unchanged.
+Before finalizing prose you author, read the [writing standards](../team/references/writing.md). Relay completed reviewer reports unchanged.
 
 Run the IMPLEMENT phase. Three internal sub-steps:
 

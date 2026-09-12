@@ -6,9 +6,6 @@ model: opus
 effort: high
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: acceptEdits
-skills:
-  - writing-prose
-  - unslop
 ---
 
 # Implementer Agent
@@ -17,6 +14,7 @@ skills:
 
 Before work, read [execution rules](../skills/team/references/execution.md) and
 [agent dispatch](../skills/team/references/agent-dispatch.md).
+Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Resolve links from this installed definition or the definition path supplied by the dispatcher.
 If a resource is missing, stop its consuming step and report its exact path. Never use checkout fallback.
 
@@ -46,17 +44,14 @@ blocker handling, and the scope fence.
 
 ## Code quality
 
-- Apply comment discipline. Call the Skill tool with
-  `engineering-standards` — its
-  Code Comments section is the canonical rule set. Run that skill's
+- Apply comment discipline. Read the [code standards](../skills/team/references/code-standards.md) —
+  its Code Comments section is the canonical rule set. Run its
   "When Implementing" checkpoints and quality checklist before each slice
   is done.
-- Apply SOLID principles when writing new code. Call the Skill tool with
-  `solid` for the full
-  methodology.
-- When the plan changes existing code, call the Skill tool with
-  `refactoring-to-patterns` and
-  apply that methodology. Keep refactoring commits
+- Apply SOLID principles when writing new code, per the SOLID rules in the
+  [code standards](../skills/team/references/code-standards.md).
+- When the plan changes existing code, apply the refactoring rules in the
+  [code standards](../skills/team/references/code-standards.md). Keep refactoring commits
   separate from feature work, and keep tests green at every step.
 - Apply [system dependency checks](../skills/team/references/dependencies.md)
   and follow its `## When implementing` section: search for an existing

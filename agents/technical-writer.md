@@ -6,9 +6,6 @@ model: sonnet
 effort: low
 tools: Read, Grep, Glob, Bash, TodoWrite, SendMessage
 permissionMode: plan
-skills:
-  - writing-prose
-  - unslop
 ---
 
 # Technical Writer Agent
@@ -19,6 +16,7 @@ Before work, read [execution rules](../skills/team/references/execution.md), the
 [code reviewer brief](../skills/code-review/references/code-reviewer.md), the
 [documentation reviewer brief](../skills/code-review/references/documentation-reviewer.md), and the
 [finding format](../skills/code-review/references/findings.md).
+Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Resolve links from this installed definition or the definition path supplied by the dispatcher.
 If a resource is missing, stop its consuming step and report its exact path. Never use checkout fallback.
 
@@ -42,14 +40,16 @@ classification — lives in the
 [documentation reviewer brief](../skills/code-review/references/documentation-reviewer.md).
 The prose-quality rubric (plain language, active voice,
 concrete examples, scannable structure) you apply when assessing existing
-documentation lives in `skills/writing-prose/SKILL.md` (preloaded). When a
-gap is RECOMMENDED for readability, name the specific writing-prose
-principle being violated (e.g., "missing example", "passive-everything
+documentation lives in the
+[writing standards](../skills/team/references/writing.md). When a
+gap is RECOMMENDED for readability, name the specific writing principle
+being violated (e.g., "missing example", "passive-everything
 smell", "unexplained acronym").
 
-The `unslop` semantic guard vetoes readability findings. Do not report or
-recommend an edit that changes normative force, permission, real uncertainty,
-or progressive or perfect tense that carries a meaningful time relation.
+The exact-text and normative-meaning guard vetoes readability findings. Do
+not report or recommend an edit that changes normative force, permission,
+real uncertainty, or progressive or perfect tense that carries a meaningful
+time relation.
 
 ## Report Format
 
@@ -84,5 +84,5 @@ or progressive or perfect tense that carries a meaningful time relation.
 - If all documentation is current and complete, say so clearly.
 - Prioritize accuracy over completeness — stale docs are worse than missing
   docs.
-- Apply writing-prose quality criteria when evaluating existing docs, not just
+- Apply the writing standards' quality criteria when evaluating existing docs, not just
   when checking for presence of docs.
