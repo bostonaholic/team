@@ -8,6 +8,11 @@ import { test } from "bun:test";
 
 export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-null-deref": [
+    "skills/team/references/artifacts.md",
+    "skills/team/references/external-data.md",
+    "skills/reviewing-code/SKILL.md",
+    "skills/conventional-comments/SKILL.md",
+    "skills/engineering-standards/SKILL.md",
     "agents/code-reviewer.md",
     "skills/reviewing-code/**",
     "skills/conventional-comments/**",
@@ -16,6 +21,11 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/code-reviewer.md",
   ],
   "planted-time-bomb": [
+    "skills/team/references/artifacts.md",
+    "skills/team/references/external-data.md",
+    "skills/reviewing-code/SKILL.md",
+    "skills/conventional-comments/SKILL.md",
+    "skills/engineering-standards/SKILL.md",
     "agents/code-reviewer.md",
     "skills/reviewing-code/**",
     "skills/conventional-comments/**",
@@ -28,6 +38,11 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   // can alter this fixture's outcome — it is a dep alongside the reviewer
   // agent and the severity skill.
   "planted-comment-violations": [
+    "skills/team/references/artifacts.md",
+    "skills/team/references/external-data.md",
+    "skills/reviewing-code/SKILL.md",
+    "skills/conventional-comments/SKILL.md",
+    "skills/engineering-standards/SKILL.md",
     "agents/code-reviewer.md",
     "skills/reviewing-code/**",
     "skills/conventional-comments/**",
@@ -37,6 +52,11 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/code-reviewer.md",
   ],
   "planted-comment-process-narration": [
+    "skills/team/references/artifacts.md",
+    "skills/team/references/external-data.md",
+    "skills/reviewing-code/SKILL.md",
+    "skills/conventional-comments/SKILL.md",
+    "skills/engineering-standards/SKILL.md",
     "agents/code-reviewer.md",
     "skills/reviewing-code/**",
     "skills/conventional-comments/**",
@@ -58,15 +78,26 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/changelog.md",
   ],
   "team-question-neutral-questions": [
+    "skills/team/references/external-data.md",
+    "skills/decomposing-intent/references/artifact-templates.md",
+    "skills/decomposing-intent/SKILL.md",
+    "skills/team/references/artifacts.md",
     "skills/team-question/**",
     "skills/decomposing-intent/**",
-    "skills/artifact-frontmatter/**",
     "agents/questioner.md",
     "tests/team-question.evals.ts",
     "evals/fixtures/team-question/neutral-questions/**",
     "evals/rubrics/team-question.md",
   ],
   "eng-design-doc-review-planted-missing-alternatives": [
+    "skills/reviewing-designs/SKILL.md",
+    "skills/reviewing-designs/references/review-brief.md",
+    "skills/technical-design-doc/SKILL.md",
+    "skills/documenting-decisions/SKILL.md",
+    "skills/conventional-comments/SKILL.md",
+    "skills/reviewing-code/SKILL.md",
+    "skills/engineering-standards/SKILL.md",
+    "skills/team/references/artifacts.md",
     "skills/eng-design-doc-review/**",
     "skills/reviewing-designs/**",
     "skills/technical-design-doc/**",
@@ -86,6 +117,9 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   // The four seeded-state evals share tests/helpers/seed.ts (extractSeed); a
   // change to it could alter any of their outcomes, so each lists it as a dep.
   "team-research-answers-seeded-questions": [
+    "skills/finding-files/SKILL.md",
+    "skills/researching-codebases/SKILL.md",
+    "skills/team/references/artifacts.md",
     "skills/team-research/**",
     "skills/researching-codebases/**",
     "skills/finding-files/**",
@@ -96,6 +130,12 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/team-research.md",
   ],
   "team-design-seeded-research-and-task": [
+    "skills/team/references/external-data.md",
+    "skills/systems-thinking/SKILL.md",
+    "skills/decision-making/SKILL.md",
+    "skills/authoring-designs/references/design-template.md",
+    "skills/authoring-designs/SKILL.md",
+    "skills/team/references/artifacts.md",
     "skills/team-design/**",
     "skills/authoring-designs/**",
     "agents/design-author.md",
@@ -105,6 +145,10 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/team-design.md",
   ],
   "team-structure-seeded-design": [
+    "skills/systems-thinking/SKILL.md",
+    "skills/slicing-work/references/structure-template.md",
+    "skills/slicing-work/SKILL.md",
+    "skills/team/references/artifacts.md",
     "skills/team-structure/**",
     "skills/slicing-work/**",
     "agents/structure-planner.md",
@@ -114,6 +158,10 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/team-structure.md",
   ],
   "team-plan-seeded-structure": [
+    "skills/systems-thinking/SKILL.md",
+    "skills/engineering-standards/SKILL.md",
+    "skills/planning-implementation/SKILL.md",
+    "skills/team/references/artifacts.md",
     "skills/team-plan/**",
     "skills/planning-implementation/**",
     "agents/planner.md",
@@ -123,6 +171,8 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/team-plan.md",
   ],
   "unslop-neutral-research": [
+    "skills/team/references/external-data.md",
+    "skills/team/references/artifacts.md",
     "agents/file-finder.md",
     "agents/questioner.md",
     "agents/researcher.md",

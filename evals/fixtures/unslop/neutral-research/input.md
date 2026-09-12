@@ -2,6 +2,8 @@
 agent: unslop
 tier: periodic
 deps:
+  - skills/team/references/artifacts.md
+  - skills/team/references/external-data.md
   - agents/file-finder.md
   - agents/questioner.md
   - agents/researcher.md

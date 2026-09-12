@@ -4,6 +4,9 @@ description: 'Defines QRSPI phases, artifacts, gates, and state transitions. Loa
 user-invocable: false
 ---
 
+Before this operation, read [artifact schema](../team/references/artifacts.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 # QRSPI Workflow
 
 Eight sequential phases; none are skippable:
@@ -29,7 +32,7 @@ WORKTREE is router-owned and has no agent; see “Why first” in `skills/worktr
 
 ## Artifact and isolation invariants
 
-`skills/artifact-frontmatter/SKILL.md` owns `<id>`, inventory, `3-prd.md`, `4-repos.md`, topic, and `ticketId` schemas. Topic matches across all artifacts. `4-repos.md` presence enables multi-repo; absence means single-repo. `3-prd.md` is autonomous and ungated.
+[artifact schema](../team/references/artifacts.md) owns `<id>`, inventory, `3-prd.md`, `4-repos.md`, topic, and `ticketId` schemas. Topic matches across all artifacts. `4-repos.md` presence enables multi-repo; absence means single-repo. `3-prd.md` is autonomous and ungated.
 
 Research is blind (`principle-blind-the-investigator`). The orchestrator passes researcher/file-finder only `2-questions.md`, never the description or `1-task.md`; their prompts also forbid reading `1-task.md`. They have `Read`/`Grep`/`Glob` with `permissionMode: plan`, so prompt adherence enforces this. Missing context becomes an open question; no user pause. Any intent leak is critical: stop and report.
 

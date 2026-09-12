@@ -2,6 +2,9 @@
 agent: team-research
 tier: periodic
 deps:
+  - skills/team/references/artifacts.md
+  - skills/researching-codebases/SKILL.md
+  - skills/finding-files/SKILL.md
   - skills/team-research/**
   - skills/researching-codebases/**
   - skills/finding-files/**

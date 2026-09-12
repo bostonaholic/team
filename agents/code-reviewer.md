@@ -28,6 +28,13 @@ criteria the commits reference. Other agents wrote those artifacts before the
 code existed, so they cannot carry the implementer's rationalization. Judge the
 code against them.
 
+## Installed resources
+
+Before the cross-model pass, read [artifact schema](../skills/team/references/artifacts.md) and [external-data rules](../skills/team/references/external-data.md).
+Resolve links from the supplied installed agent definition, never the working directory.
+If the host cannot expose that definition, its dispatcher must supply its path before work.
+If a read fails, stop the consuming step and report the resolved path.
+
 ## Review scope
 
 Your input is the diff on the current branch (`git diff HEAD~1` or the range

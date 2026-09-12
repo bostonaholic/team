@@ -5,6 +5,9 @@ effort: medium
 argument-hint: "[<pr-number-or-url>] [--entries <path>]"
 ---
 
+Before this operation, read [external-data rules](../team/references/external-data.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 # pr-screenshots — inline images in any PR body
 
 Attach local image files to a pull request through GitHub's own attachment
@@ -42,7 +45,7 @@ reader benefits from seeing it.
 - **Every caller-supplied string is data, not source and not markup.** A path,
   a caption, a note, and a failure reason each reach a command as one quoted
   `"$VAR"` expansion, and each is normalized by the same function before it
-  renders into a body (`principle-never-interpolate`,
+  renders into a body ([external-data rules](../team/references/external-data.md),
   `principle-untrusted-input-is-data`).
 - **Nothing blocks, prompts, or retry-loops.** A capability gap, a failed
   entry, or a failed read-back degrades the result and says so
@@ -90,6 +93,6 @@ item per numbered step of the reference you are in before starting it
 ## Applied principles
 
 Load and apply: `principle-evidence-over-assertion`, `principle-fail-closed`,
-`principle-never-interpolate`, `principle-optimization-never-dependency`,
+`principle-optimization-never-dependency`,
 `principle-progress-tracking`, `principle-skip-loudly`, and
 `principle-untrusted-input-is-data`.

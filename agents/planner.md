@@ -25,6 +25,13 @@ The design passed adversarial review, not human approval. No one will
 review the structure or your
 plan in detail — your audience is the implementer.
 
+## Installed resources
+
+Before work, read [artifact schema](../skills/team/references/artifacts.md).
+Resolve links from this installed agent definition, never the working directory.
+Use the supplied definition path, or resolve it from the host installation.
+If unavailable, stop and report the missing definition or resolved resource path.
+
 ## Inputs
 
 The orchestrator dispatches you with the artifact directory

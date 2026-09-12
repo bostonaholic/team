@@ -82,7 +82,7 @@ ready for review or merges it.
 ## 2. Artifact layout & frontmatter
 
 > **Runtime canon:** the schema below is carried for agents by
-> `skills/artifact-frontmatter/SKILL.md`. This section is the
+> [artifact schema](https://github.com/bostonaholic/team/blob/main/skills/team/references/artifacts.md). This section is the
 > doc-surface copy. The executable `ID_RE` / `PHASE_FILES` definitions
 > live in `hooks/session-start-recover.mjs`.
 
@@ -170,7 +170,7 @@ result line and fenced output at capture time. Like the notes file, it is
 invisible to discovery: neither is a phase artifact, and neither is ever
 read back as state. Both frontmatter schemas
 (`phase: cross-model-review` and `phase: cross-model-raw`, no `verdict`)
-live in `skills/artifact-frontmatter/SKILL.md`.
+live in [artifact schema](https://github.com/bostonaholic/team/blob/main/skills/team/references/artifacts.md).
 
 ## 3. Pipeline (QRSPI)
 
@@ -724,6 +724,10 @@ remove: it reads as a file to go open. Name resolution is what replaces the
 path's rename-detection, and it is strictly stronger — it catches a rename
 *and* a typo, where a path assertion only ever confirmed a string was
 present. `skills/git-commmit/SKILL.md` passed the old check.
+
+Artifact schemas and shell rules use ordinary resources under `skills/team/references/`, outside skill registration.
+Consumers explicitly read their installed paths before work; missing files stop the consuming operation with the resolved path.
+The [dispatch contract](https://github.com/bostonaholic/team/blob/main/skills/team/references/15-host-dispatch.md) supplies definition and resource paths for named, body-loaded, and standalone agents.
 
 The load form applies **only where the other skill is genuinely needed**. A
 citation keeps its path and its ordinary wording: a schema lookup, a "see

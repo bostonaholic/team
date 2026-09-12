@@ -1,3 +1,6 @@
+Before this operation, read [external-data rules](../team/references/external-data.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 ## Input
 
 `$ARGUMENTS` is one of:
@@ -45,5 +48,5 @@ Refusals, before anything else runs:
   Then run `git check-ref-format --branch "$BRANCH"` as an additional
   ref-syntax check — a syntax check, not a shell control; only the
   allowlist makes a name safe to place in a command.
-  The general rule is `principle-never-interpolate`: prose
+  The general rule is [external-data rules](../team/references/external-data.md): prose
   travels by file or stdin, and only allowlisted scalars enter command text.

@@ -5,6 +5,16 @@ effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 
+Before this operation, read [artifact schema](../team/references/artifacts.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
+Before dispatch, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
+
+Before review dispatch, supply the installed plugin root and resolved `skills/reviewing-designs/SKILL.md` path.
+Resolve its brief beside that installed skill. Pass the applicable resource paths and require reads before work.
+If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
+
+
 # Team Design — Where Are We Going?
 
 Before finalizing prose you author, call the Skill tool with `unslop` and
@@ -95,7 +105,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    orchestrator-authored label
    line — the literal `> **Design round <n>**` — prepended inside the
    wrap; same frontmatter-on-first-append rules as the other gates
-   (schema in `skills/artifact-frontmatter/SKILL.md`). Then act on the
+   (schema in [artifact schema](../team/references/artifacts.md)). Then act on the
    verdict:
    - **APPROVE or COMMENT** — the review passes. Advance.
    - **REQUEST CHANGES** — re-dispatch `design-author` with the

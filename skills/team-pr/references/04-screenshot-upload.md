@@ -1,3 +1,6 @@
+Before this operation, read [external-data rules](../team/references/external-data.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 ## Screenshot Upload
 
 Caller policy only. The upload mechanics, the section's markdown shape, and the
@@ -52,7 +55,7 @@ are in `skills/pr-screenshots/references/01-input-and-result.md`. Use that
 construction: a path and a caption are caller text, so each is bound as a `jq`
 argument and never pasted into a JSON string, where a quote or a backslash in
 one rewrites the document rather than filling a slot in it
-(`principle-never-interpolate`).
+([external-data rules](../team/references/external-data.md)).
 
 ### Call the skill
 

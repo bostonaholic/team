@@ -22,7 +22,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { EvalCollector, assertNoBudgetRegressions } from "./helpers/eval-store";
-import { loadFixture } from "./helpers/fixtures";
+import { loadFixture, loadInstructionContext } from "./helpers/fixtures";
 import { judgeQuality, outcomeJudge } from "./helpers/llm-judge";
 import { runAgentTest } from "./helpers/session-runner";
 import { testIfSelected } from "./helpers/touchfiles";
@@ -46,6 +46,12 @@ testIfSelected(
 
       const result = await runAgentTest({
         prompt,
+        systemPromptAppend: loadInstructionContext([
+          "skills/team/references/artifacts.md",
+          "skills/decomposing-intent/SKILL.md",
+          "skills/decomposing-intent/references/artifact-templates.md",
+          "skills/team/references/external-data.md",
+        ]),
         workingDirectory: workDir,
         maxTurns: 6,
         timeout: 180_000,

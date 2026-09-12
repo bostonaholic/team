@@ -3,11 +3,14 @@
 import { afterEach, describe, expect, test } from "bun:test";
 
 import {
+  E2E_TOUCHFILES,
+  GLOBAL_TOUCHFILES,
   filterByTier,
   globMatch,
   globToRegex,
   selectTests,
 } from "./touchfiles";
+import { loadFixture } from "./fixtures";
 
 const TOUCHFILES: Record<string, string[]> = {
   "alpha": ["src/alpha/**"],
@@ -105,5 +108,32 @@ describe("filterByTier", () => {
   test("invalid env throws a named error", () => {
     const sel = new Set<keyof typeof TIERS>(["gate-only"]);
     expect(() => filterByTier(sel, TIERS, "bogus")).toThrow(/EVALS_TIER/);
+  });
+});
+
+describe("Evaluation connection: resource selection", () => {
+  const consumers = [
+    { agent: "team-question", caseName: "neutral-questions", name: "team-question-neutral-questions", source: "skills/team-question/SKILL.md" },
+    { agent: "team-research", caseName: "answers-seeded-questions", name: "team-research-answers-seeded-questions", source: "skills/team-research/SKILL.md" },
+    { agent: "team-design", caseName: "seeded-research-and-task", name: "team-design-seeded-research-and-task", source: "skills/team-design/SKILL.md" },
+    { agent: "team-structure", caseName: "seeded-design", name: "team-structure-seeded-design", source: "skills/team-structure/SKILL.md" },
+    { agent: "team-plan", caseName: "seeded-structure", name: "team-plan-seeded-structure", source: "skills/team-plan/SKILL.md" },
+  ];
+  const cases = [
+    ...consumers.map((consumer) => ({ ...consumer, resource: "skills/team/references/artifacts.md" })),
+    { ...consumers[0]!, resource: "skills/team/references/external-data.md" },
+  ];
+
+  describe.each(cases)("$name / $resource", ({ agent, caseName, name, source, resource }) => {
+    test("a planted resource change selects the case through both dependency declarations", () => {
+      const fixture = loadFixture(agent, caseName);
+      const fixtureDependencies = { [name]: fixture.frontmatter.deps };
+      expect(selectTests([source], E2E_TOUCHFILES, GLOBAL_TOUCHFILES).selected.has(name)).toBe(true);
+      expect(selectTests([source], fixtureDependencies, []).selected.has(name)).toBe(true);
+
+      expect(selectTests([resource], E2E_TOUCHFILES, GLOBAL_TOUCHFILES).selected.has(name)).toBe(true);
+      expect(selectTests([resource], fixtureDependencies, []).selected.has(name)).toBe(true);
+      expect(selectTests(["unrelated/no-consumer.md"], fixtureDependencies, []).selected.has(name)).toBe(false);
+    });
   });
 });

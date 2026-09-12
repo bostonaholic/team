@@ -255,7 +255,7 @@ cross-cutting recency caveat:
    on MCP (decision 4).
 
 2. **Codex lists every skill in the `$` picker, so `user-invocable: false` is a
-   Claude-Code-only guarantee (hard gap).** Team's 66 methodology and
+   Claude-Code-only guarantee (hard gap).** Team's 64 methodology and
    `principle-*` skills are reference material an agent loads, never something a
    human runs. On Claude Code, `user-invocable: false` keeps them out of the `/`
    menu. Codex has no equivalent, so they all appear under `$` and a user can
@@ -284,7 +284,7 @@ cross-cutting recency caveat:
    - *Why:* the expensive, divergent, high-churn surface is exactly the bindings
      (three manifest formats ship today — Claude Code's, Codex's, and
      Antigravity's — atop per-host hook schemas and still-moving host APIs),
-     while the stable, valuable surface, the 91 agent/skill bodies and 3 hook
+     while the stable, valuable surface, the agent and skill definitions and 3 hook
      logic files, is *already portable*. The hybrid boundary lines up with the
      natural portable/non-portable seam, so it minimizes both duplication and the
      blast radius of churn.
@@ -335,7 +335,7 @@ cross-cutting recency caveat:
    - *Why:* it pulls the one irreducibly host-varying value out of the portable
      definitions, since the agent `model:` frontmatter is a Claude-specific model
      name and meaningless on Codex, and puts it behind a single host-agnostic
-     indirection, so the 91 agent/skill bodies never carry a host-specific model
+     indirection, so the agent and skill definitions never carry a host-specific model
      literal. The per-host shims *read* `.team/config.json`; they never restate
      it.
 
@@ -720,3 +720,16 @@ handle.
 - **[#50](https://github.com/bostonaholic/team/issues/50)**: the source issue this study delivers.
 - **[#57 Codex port](https://github.com/bostonaholic/team/issues/57)**: the epic that executes this matrix for Codex CLI.
 - **[#56 Antigravity backend](https://github.com/bostonaholic/team/issues/56)**: the epic that runs the pipeline against the Antigravity CLI as an alternate model backend (formerly the Gemini CLI port).
+
+## Installed contract resources
+
+Artifact schemas and shell rules are ordinary files under `skills/team/references/`: `artifacts.md` and `external-data.md`.
+They add no skill registrations. Read conditional artifact templates only when their operation applies.
+
+Both named and body-loaded dispatches supply the installed root, agent definition, and applicable resource paths before work.
+Standalone agents resolve their installed definition or receive its path from the dispatcher.
+Skill links resolve from the loaded `SKILL.md`; agent links resolve from the installed `agents/<name>.md`.
+Claude uses its plugin root. Codex and Antigravity use the supplied installed path. OpenCode keeps its canonical realpath base.
+A missing resource stops its consuming step with the resolved path. No source-checkout fallback or recursive loading applies.
+
+Filesystem fixture results establish path and byte delivery. Native receiving-agent read traces establish instruction consumption separately.

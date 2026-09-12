@@ -4,6 +4,9 @@ description: 'Defines the design-document procedure. Load when drafting or revis
 user-invocable: false
 ---
 
+Before this operation, read [artifact schema](../team/references/artifacts.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 # Authoring Designs
 
 Confirm repo scope, resolve choices autonomously as recorded assumptions, and write `6-design.md`. Use seventh-grade STE-flavored prose; call the Skill tool with `writing-prose` and apply `## Self-lint` before finalizing.
@@ -16,7 +19,7 @@ If `docs/plans/<id>/4-repos.md` exists, treat it as the working scope and name e
 
 If absent but `5-research.md` indicates multiple repos, resolve each candidate autonomously. Require `<name>` to match `^[A-Za-z0-9._-]+$` and not equal `.` or `..`; reject separators, absolute paths, traversal, and shell metacharacters. Resolve only `<root>/../<name>`, confirm its `.git` with Glob/Read (the questioner uses `git -C <path> rev-parse --git-dir`), and never record a path unless verified as a direct child of the home repo's parent.
 
-When all candidates resolve, write `docs/plans/<id>/4-repos.md` from `skills/artifact-frontmatter/SKILL.md` before drafting. If any fails, remain single-repo and name the omitted repo/work in `## Risks`. Never silently expand repo scope.
+When all candidates resolve, write `docs/plans/<id>/4-repos.md` from [artifact schema](../team/references/artifacts.md) before drafting. If any fails, remain single-repo and name the omitted repo/work in `## Risks`. Never silently expand repo scope.
 
 ## Resolve choices autonomously
 

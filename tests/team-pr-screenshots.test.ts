@@ -340,7 +340,7 @@ describe("Slice 3: the companion recipe delegates its mechanics", () => {
     // write was one the session had to invent. It is also the one place
     // caller-derived text — captions carrying `\[`, `\]`, `\!`, `\<`, `\>` —
     // crosses from JSON into a shell-visible file, so an improvised heredoc
-    // there breaks `principle-never-interpolate`.
+    // there breaks `external-data rules`.
     const multiRepo = multiRepoBlock();
     expect(multiRepo.length).toBeGreaterThan(0);
     expect(multiRepo).toContain('"$COMPANION_DIR" "$RESULT_FILE"');

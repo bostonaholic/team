@@ -1,11 +1,38 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { cpSync, mkdirSync, readFileSync, readdirSync, renameSync, symlinkSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, symlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { REPO, expectStatus, fixture, load, rejection, run, skill, state, write, type Config, type Fixture } from "./helpers/opencode";
+import { skillNames } from "./helpers/skill-refs";
+// @ts-expect-error The runtime catalog is JavaScript without declarations.
+import { loadCatalog } from "../opencode/catalog.mjs";
 
 const fixtures: Fixture[] = [];
 function make(name = "checkout", catalog: "one" | "empty" | "full" = "one") { const f = fixture(name, catalog); fixtures.push(f); return f; }
 afterEach(() => { for (const f of fixtures.splice(0)) f.dispose(); });
+
+describe("Installed resource delivery: catalog", () => {
+  test.each(["artifact-frontmatter", "principle-never-interpolate"])("%s is absent from native discovery and commands", async (name) => {
+    const f = make("contract catalog", "full");
+    const config = await load(f);
+    const names = skillNames(f.checkout);
+    expect(names.has("team")).toBe(true);
+    expect(config.command?.team).toBeDefined();
+    expect(names.has(name)).toBe(false);
+    expect(config.command?.[name]).toBeUndefined();
+  });
+
+  test("ordinary artifact and external-data resources add no catalog entries", () => {
+    const f = make("ordinary resources", "full");
+    expect(existsSync(join(f.checkout, "skills/team/references/artifacts.md"))).toBe(true);
+    expect(existsSync(join(f.checkout, "skills/team/references/external-data.md"))).toBe(true);
+    const catalog = loadCatalog(f.checkout) as Array<{ name: string }>;
+    const names = catalog.map(({ name }) => name);
+    expect(names).toContain("team");
+    expect(names.sort()).toEqual([...skillNames(f.checkout)].sort());
+    expect(names).not.toContain("artifacts");
+    expect(names).not.toContain("external-data");
+  });
+});
 
 const badHeaders = [
   ["missing header", "# no frontmatter\n"],

@@ -1,3 +1,6 @@
+Before this operation, read [external-data rules](../team/references/external-data.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 ## Input
 
 `$ARGUMENTS` is optional and carries scalars only:
@@ -45,7 +48,7 @@ release branch, that quietly rewrites the branch onto the wrong history.
 `headRefName`, a user argument — passes a character allowlist before it
 reaches any command: only `^[A-Za-z0-9._/-]+$`, with no leading `-` and no
 `..`. Set `LC_ALL=C` in the same invocation so the class is byte-exact
-(`principle-never-interpolate`; the full collation rationale
+([external-data rules](../team/references/external-data.md); the full collation rationale
 stays in `skills/pr-cleanup/SKILL.md` `## Input`):
 
 ```sh
@@ -60,5 +63,5 @@ esac
 shell control — only the allowlist makes a name safe to place in a command.
 Capture an external name into a variable in the SAME invocation that uses it
 and reference it only as `"$BASE"`, never as a pasted literal
-(`principle-never-interpolate`; the sharper full rationale
+([external-data rules](../team/references/external-data.md); the sharper full rationale
 stays in `skills/pr-cleanup/SKILL.md`).

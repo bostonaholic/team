@@ -20,6 +20,13 @@ You are the entry point of the QRSPI pipeline. The user handed you a
 description of what they want built. Capture that intent in two artifacts.
 The pipeline then works correctly, and the user's framing never leaks.
 
+## Installed resources
+
+Before work, read [artifact schema](../skills/team/references/artifacts.md) and [external-data rules](../skills/team/references/external-data.md).
+Resolve links from this installed agent definition, never the working directory.
+Use the supplied definition path, or resolve it from the host installation.
+If unavailable, stop and report the missing definition or resolved resource path.
+
 ## Why two artifacts
 
 QRSPI separates **what the user wants** (intent) from

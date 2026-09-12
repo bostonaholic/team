@@ -1,3 +1,6 @@
+Before this operation, read [external-data rules](../team/references/external-data.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 ## Hard rules
 
 These hold in every mode and on every tracker. An approval answers the plan's questions. It
@@ -31,7 +34,7 @@ never relaxes a rule below.
    itself resolved, such as an issue number matched against the loaded board, travels
    positionally (`gh issue close "$N"`), because the command that takes it has no flag
    route.
-   The general rule: `principle-never-interpolate`.
+   The general rule: [external-data rules](../team/references/external-data.md).
 3. **Never close a decision, investigation, or spike ticket** because the code already
    answers the question. Attach the evidence as decision input and leave it open — the
    deliverable is a recorded decision, not a code state.

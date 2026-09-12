@@ -6,8 +6,8 @@ user-invocable: false
 
 # Sweeping Local State
 
-Remove only provisioned resources and recorded temp paths. Read
-[references/procedure.md](references/procedure.md). `skills/pr-cleanup/SKILL.md` and `worktree-isolation` own git state.
+Read [external-data rules](../team/references/external-data.md) from the installed skill directory before teardown; stop with the resolved path on failure.
+Remove only provisioned resources and recorded temp paths. Read [references/procedure.md](references/procedure.md). `skills/pr-cleanup/SKILL.md` and `worktree-isolation` own git state.
 
 ## Ownership boundary
 
@@ -50,7 +50,7 @@ printf '%s\n' "$DECL" |
 Run lines verbatim in file order. Report failures and continue. Kill and report
 `TIMEOUT` after roughly 120 seconds. **Never invent a teardown command.**
 **Never edit, re-quote, or interpolate a declared line**
-(`principle-never-interpolate`). Never guess credentials.
+([external-data rules](../team/references/external-data.md)). Never guess credentials.
 
 ## Recorded temp paths
 

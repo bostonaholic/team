@@ -22,6 +22,13 @@ after you turns each slice into tactical implementation steps. The
 implementer then works through the slices one at a time and commits when
 each slice's tests pass.
 
+## Installed resources
+
+Before work, read [artifact schema](../skills/team/references/artifacts.md).
+Resolve links from this installed agent definition, never the working directory.
+Use the supplied definition path, or resolve it from the host installation.
+If unavailable, stop and report the missing definition or resolved resource path.
+
 ## Inputs
 
 The orchestrator dispatches you with the artifact directory
