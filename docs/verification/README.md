@@ -227,6 +227,17 @@ Expect 26 passing cases (12 recovery subprocess cases across two hooks, plus 14
 routing tripwires). The route words in issue bodies or quoted text are covered
 by the routing tripwire, not by a subprocess.
 
+## Preparation handoffs measurement
+
+The [handoffs record](handoffs.md) holds the M12 matched-case measurement and
+the keep-existing decision: neither the Structure-to-Plan merge nor the
+file-finder merge demonstrates a simplification that preserves intent
+validation, research isolation, and independent downstream review. The 13 roles,
+the STRUCTURE/PLAN split, and the parallel RESEARCH dispatch are retained. Raw
+streams and produced artifacts are local evidence under
+`.context/verification/m12/`; the record's limits name the single-sample,
+tiny-codebase, and tool-fidelity gaps.
+
 ## Golden Master protocol and published documentation
 
 Review isolation rule 5, pipeline step 3, metrics, and the result example in

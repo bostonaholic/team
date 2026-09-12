@@ -429,5 +429,33 @@ The catalog retains 25 commands and 0 methodologies, totaling 25 registrations, 
 
 Recovery for pre-migration artifacts is unchanged: a topic with no `route` metadata resumes through the existing phase table, and the existing recovery tests (pipeline-recovery) pass without route metadata. The new route recovery cases prove a completed `plan`/`investigate`/`prototype` is reported complete, never as IMPLEMENT.
 
+## M11: design review grounded in caller examples
 
+The design playbook and template add `## Caller examples`, `## Interface`, and
+`## Experiments`; the design reviewer brief distinguishes supported defects from
+plausible unresolved risks and speculative requirements. The catalog count is
+unchanged at 25 registrations with 13 agent roles.
 
+## M12: preparation handoffs measurement
+
+The catalog retains 25 commands and 0 methodologies, totaling 25 registrations,
+with 13 unchanged agent roles. No registration is added or removed.
+
+Matched-case measurement compared the current two-producer Structure-to-Plan
+flow with one producer writing both artifacts, and the current parallel
+file-finder/researcher RESEARCH dispatch with one producer doing both. The
+measured decision is a keep-existing result: neither merge demonstrates a
+simplification that preserves intent validation, research isolation, and
+independent downstream review. The Structure/Plan merge saves ~31% cost through
+prompt-cache reuse but collapses the PLAN phase's fresh-context revalidation of
+planned actions against `1-task.md` and changes recovery, the phase table, and
+the registry. The file-finder merge removes the cheap parallel mechanical search
+(haiku, 20 search calls) that the opus researcher does not replicate, and
+serializes a dispatch the phase table runs in parallel. The 13 roles, the
+STRUCTURE/PLAN split, and the parallel RESEARCH dispatch are retained.
+
+Full matched-case results, methodology, and limits live in
+[the handoffs record](verification/handoffs.md). The catalog count and the
+13-agent invariant remain enforced by `tests/architecture.test.ts`,
+`tests/thin-agents.test.ts`, and the registry-sync hook; no new tripwire was
+needed because the keep-existing decision adds no runtime change.
