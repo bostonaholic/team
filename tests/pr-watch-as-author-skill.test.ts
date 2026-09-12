@@ -56,9 +56,9 @@ function flat(text: string): string {
   return text.replace(/\n/g, " ");
 }
 
-// pr-watch-thread-escalation: single-file guarded readers, so a phrase search
-// scoped to one reference file cannot accidentally match the same words in a
-// different file that body() would otherwise concatenate them next to.
+// Single-file guarded readers, so a phrase search scoped to one reference
+// file cannot accidentally match the same words in a different file that
+// body() would otherwise concatenate them next to.
 const AUTHOR_POLL = join(REFERENCES, "05-3-poll-and-change-detection.md");
 const AUTHOR_TRIAGE = join(REFERENCES, "06-4-on-new-feedback-run-the-triage-procedure.md");
 const AUTHOR_STOP_CONDITIONS = join(REFERENCES, "09-6-stop-conditions.md");
@@ -147,8 +147,8 @@ describe("pr-watch-as-author skill: pinned edge cases", () => {
     expect(t).toContain("CHANGES_REQUESTED");
   });
 
-  // pr-watch-thread-escalation, slice 3: the needs-clarification recipient
-  // text widens to cover a choice the user owns, not only an unclear ask.
+  // The needs-clarification recipient text widens to cover a choice the user
+  // owns, not only an unclear ask.
   test("the CHANGES_REQUESTED needs-clarification edge case widens who it asks — the reviewer when unclear, the user when the user owns the choice", () => {
     const t = squash(fileBody(AUTHOR_EDGE_CASES));
     const idx = t.indexOf("CHANGES_REQUESTED");
@@ -188,12 +188,12 @@ describe("pr-watch-as-author skill: team-pr handoff", () => {
 
 });
 
-// pr-watch-thread-escalation, slice 1: a third-party login on an unresolved
-// tracked thread stops the loop before the triage call that cycle. Unlike
-// the reviewer side, the check also requires the viewer to have replied on
-// the thread first — a second reviewer commenting on a thread the loop
-// never answered stays ordinary feedback.
-describe("pr-watch-as-author skill: third-party participant stop (design decisions 3, 6, 7, 11)", () => {
+// A third-party login on an unresolved tracked thread stops the loop before
+// the triage call that cycle. Unlike the reviewer side, the check also
+// requires the viewer to have replied on the thread first — a second
+// reviewer commenting on a thread the loop never answered stays ordinary
+// feedback.
+describe("pr-watch-as-author skill: third-party participant stop", () => {
   function pollSection(): string {
     const t = squash(fileBody(AUTHOR_POLL));
     const start = t.indexOf("a trimmed GraphQL");

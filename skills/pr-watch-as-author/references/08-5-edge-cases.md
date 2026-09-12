@@ -11,6 +11,6 @@
   threads, there is no verifiable ask to triage. Emit a status line that
   names the reviewer and the requested-changes state, then treat it as a
   needs-clarification exclusion and stop the loop. Suggest that the user
-  ask the reviewer when the ask itself is unclear, or present the
-  choice to the user when the user owns it. Watching past it would hide
-  a blocking signal.
+  ask the reviewer when the ask itself is unclear. Otherwise, present
+  the choice to the user when the user owns it, as this report already
+  does. Watching past it would hide a blocking signal.
