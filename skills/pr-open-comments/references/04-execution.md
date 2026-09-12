@@ -120,9 +120,11 @@ reaction in the menu, so choosing an option is choosing the signal it sends.
 The verdict feeds steps 5–7. `ALREADY ADDRESSED` maps to option **F**.
 `STALE` and `INACCURATE` usually map to a reply that answers the reviewer
 (**C**), or to a decline (**D**) where the claim does not hold, rather than
-to a code change. Neither maps to **G** — both are verdicts you reached
-with evidence, so the ask is understood. Never mark a thread stale or
-inaccurate on a hunch — cite the file, line, or commit that proves it.
+to a code change. An unclear ask never applies to either — both are
+verdicts you reached with evidence — but a one-way-door choice
+`decision-making` returns to the user still lands on **G** as usual. Never
+mark a thread stale or inaccurate on a hunch — cite the file, line, or
+commit that proves it.
 
 ### Step 5 — Classify each open thread
 
