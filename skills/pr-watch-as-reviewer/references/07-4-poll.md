@@ -214,6 +214,23 @@ nothing is written and the loop keeps waiting.
   comment's passing verdict is likewise voided when the head advances
   past it — see step 6's re-check rule, which covers both shapes.
 
+**Check order.** After the re-review above renders every verdict for
+this cycle, run the third-party check before any verdict action: poll →
+re-review → the third-party check → stop, or else the verdict actions
+below. A cold cycle 0 already holds every verdict at this point, because
+the cycle-0 re-review runs over state that already exists.
+
+**Third-party check.** An unresolved tracked thread carrying a comment
+from a third-party login (`skills/pr-watch-mechanics/SKILL.md`, `##
+Third-party definition`) stops the loop before any verdict action that
+cycle — no resolve, no reaction, no rebuttal on any thread. Every
+reviewer-side tracked thread opens with the viewer's own comment (step
+2), so the check reduces to a third distinct login on an unresolved
+tracked thread. It reads only fields the poll query already selects —
+`isResolved` and each comment's `id` and `author { login }` — so it
+needs no new poll field. Report the login(s), or "comment author
+unavailable" for a `null` author.
+
 **Act on every verdict.** A verdict that changes nothing the author
 can see is a verdict that was never delivered. Each one maps to exactly
 one action, taken in the same cycle it is rendered:

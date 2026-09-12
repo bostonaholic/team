@@ -18,7 +18,7 @@ moment; a dropped one costs them the feedback.
 Report:
 
 - the stop reason (approval, merge, close, user interrupt, 3-cycle soft
-  cap, or 3 consecutive poll failures)
+  cap, 3 consecutive poll failures, or third-party participant)
 - the active mode (present-then-stop or authorized)
 - the number of cycles consumed
 - the handoff — on approval,

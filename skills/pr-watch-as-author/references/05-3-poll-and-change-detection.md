@@ -3,9 +3,12 @@
 Each poll is one Bash call that combines:
 
 - `gh pr view --json state,reviewDecision,isDraft`
-- a trimmed GraphQL `reviewThreads` query — thread ids and `isResolved`
-  only. Past 100 threads it paginates with `after:` cursors (see the
-  pagination pitfall in `skills/pr-open-comments/SKILL.md`)
+- a trimmed GraphQL `reviewThreads` query — thread ids, `isResolved`,
+  and each thread's comment `id` and `author { login }`, matching the
+  reviewer's fields. This adds no new round trip: the fields ride the
+  same query, one more field per node. Past 100 threads it paginates
+  with `after:` cursors (see the pagination pitfall in
+  `skills/pr-open-comments/SKILL.md`)
 - the latest review submission, in the same GraphQL call —
   `reviews(last: 1) { nodes { author { login } state body submittedAt } }`.
   A COMMENT-type review that carries only a body changes no other polled

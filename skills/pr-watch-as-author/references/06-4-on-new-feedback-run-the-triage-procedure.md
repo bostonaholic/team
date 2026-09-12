@@ -1,5 +1,15 @@
 ### 4. On new feedback — run the triage procedure
 
+**Check order.** Before the triage call, check for a third party: an
+unresolved thread carrying both a comment from the viewer and a comment
+from a third-party login (`skills/pr-watch-mechanics/SKILL.md`, `##
+Third-party definition`) stops the loop for that cycle instead of
+triaging — no triage call, no reply, no resolve. Unlike the reviewer
+side, the viewer-comment half is not automatic: a thread the viewer
+never replied on stays ordinary feedback even with a second reviewer
+commenting on it. Report the login(s), or "comment author unavailable"
+for a null author.
+
 When a poll detects a change, call the Skill tool with `pr-open-comments`
 and follow it. This skill never restates the triage steps — the fetch, verification, and punch-list format
 live there.
