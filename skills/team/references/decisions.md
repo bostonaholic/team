@@ -20,6 +20,8 @@ Classify before comparing options:
 
 For a one-way door, define the heuristic before evaluating any option: 3–7 independent criteria tied to the desired outcome, always including Reversibility and Risk with the two largest weights (together over 50 of 100). State each criterion's measurement, evidence source, and 0–5 anchors. Score every option against every criterion with evidence, multiply each weight by its score divided by 5 and sum, test sensitivity, then choose the highest-scoring eligible option. Return the context, heuristic, scorecard, deciding result, sensitivity, confidence, assumptions, facts that can reopen the decision, and next action.
 
+When the caller names a decision owner other than itself and the decision classifies as a one-way door, return the framed choice, the options, and the classification. Do not pick. Two-way doors keep today's fast pick, so ordinary triage is unaffected.
+
 Distinguish observed facts, estimates, and assumptions. Keep criteria independent. Restart and rescore when a new criterion appears after scoring. Use ranges instead of false precision.
 
 ## Architecture decision records

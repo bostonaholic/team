@@ -175,7 +175,7 @@ Standard option menu (pick the options that apply):
 - **D. Decline (will not fix)** — reply with `<one-line rationale>`.
 - **E. Defer** — file a follow-up issue / TODO and resolve with a link.
 - **F. Mark resolved as-is** — current code already addresses it (cite commit/line).
-- **G. Needs clarification** — ask the reviewer `<specific question>` before acting.
+- **G. Needs clarification** — ask the reviewer when the ask itself is unclear, present the choice to the user when the user owns it, before acting.
 
 **C answers, G asks.** Both post a reply and touch no code, and the
 direction is the whole difference: C is the answer to a reviewer's question

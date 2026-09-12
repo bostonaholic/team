@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A one-way-door dispute `pr-open-comments` cannot settle now returns to you as an option-G recommendation, instead of `decision-making` picking a side.** A two-way door keeps today's fast pick. **What this asks of you:** nothing.
 - **`pr-watch-as-reviewer` now stops instead of rebutting when a rejected verdict repeats on a thread that already carries your reply.** A fresh addressed, answered, or pending verdict still renders and acts as before. **What this asks of you:** nothing.
 
 ## [0.108.1] - 2026-09-14

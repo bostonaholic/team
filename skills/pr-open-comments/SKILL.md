@@ -14,8 +14,11 @@ Pull every **unresolved** review thread on a pull request. Hand the user a
 decision list: for each comment, show the request, the options, and one
 recommended option with a one-line rationale.
 
-Apply the [decision method](../team/references/decisions.md) for a thread with two or more viable
-responses. Use its result as the recommendation.
+Apply the [decision method](../team/references/decisions.md) for a thread with two or more
+viable responses, naming the user as the decision owner. Use its result as
+the recommendation. When the choice classifies as a one-way door, the
+decision method returns the framed choice and its options instead of
+picking, and the menu below carries option G as the recommendation.
 
 Default mode is autonomous above the bar and careful below it. An item
 gets the full [Authorized Execution](#authorized-execution) treatment
