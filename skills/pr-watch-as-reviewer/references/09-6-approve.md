@@ -15,10 +15,13 @@ version of that file. **A tracked comment has no `path`, so it cannot be
 narrowed that way: re-check every tracked comment whenever the head
 moved after its verdict.** Failing closed on the whole set is the only
 sound option when the item does not say which files it covers. A
-rejected verdict here rebuts and blocks the cast, before any
-confirmation is asked — resume polling on the loop path, and on the
-immediate path stop and report the open dispute rather than starting a
-loop that was not asked for. A pending
+rejected verdict here blocks the cast, before any confirmation is
+asked. When the thread does not yet carry the viewer's own reply, it
+rebuts, then resumes polling on the loop path, or on the immediate path
+stops and reports the open dispute rather than starting a loop that was
+not asked for. When the thread already carries the viewer's own reply,
+Dispute stands (step 5) fires instead, on either path: stop and report
+the thread and the disagreement without rebutting again. A pending
 verdict here means the approval condition does not hold: never cast, and
 on the loop path resume polling. A thread the skill itself resolved is
 re-checked here on exactly the same terms as one the author resolved:
