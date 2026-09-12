@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Both PR watch loops now stop and name the login when a third party comments on an unresolved thread the loop is driving.** A resolved thread is unaffected, and a deleted-account (`null`) commenter still counts as a third party. **What this asks of you:** nothing.
+
 ### Changed
 
+- **A one-way-door dispute `pr-open-comments` cannot settle now returns to you as an option-G recommendation, instead of `decision-making` picking a side.** A two-way door keeps today's fast pick. **What this asks of you:** nothing.
+- **`pr-watch-as-reviewer` now stops instead of rebutting when a rejected verdict repeats on a thread that already carries your reply.** A fresh addressed, answered, or pending verdict still renders and acts as before. **What this asks of you:** nothing.
 - **The clone-local pull hooks now re-run `script/dev-install` for every harness, and install for every target rather than only `claude`.** A merge or rebase pull refreshes whichever harnesses that checkout installed, so a Codex-only install gets the same auto-refresh Claude had. Because the hooks serve the whole clone, only a full `script/dev-uninstall` removes them; a targeted one leaves them for the harnesses that remain. The hook file moves from `script/dev-install-claude-pull-hook` to `script/dev-install-pull-hook`. **What this asks of you:** nothing; re-running `script/dev-install` replaces the old hook.
 
 ## [0.104.0] - 2026-09-11

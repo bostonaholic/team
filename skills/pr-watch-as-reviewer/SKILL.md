@@ -53,8 +53,10 @@ so a reader can see which evidence the approval rested on.
 
 **Every verdict is published where the author will see it.** A reply
 that meets the concern resolves the thread. A reply that does not draws
-a rebuttal naming the specific gap. A reply that is read, judged, and
-then left sitting is the failure mode this skill exists to avoid: the
+a rebuttal naming the specific gap, unless the thread already carries
+your own reply — a repeat then stands as a dispute for you to settle,
+not another rebuttal. A reply that is read, judged, and then left
+sitting is the failure mode this skill exists to avoid: the
 author cannot tell a considered acceptance from an unread one, and a
 thread that stays open with no answer reads as a reviewer who
 disappeared. Silence is not an answer.

@@ -1,8 +1,8 @@
 ### 5. Stop conditions
 
-The loop stops on exactly one of seven conditions, each reported by name.
+The loop stops on exactly one of nine conditions, each reported by name.
 `pr-watch-mechanics` owns three of them: user interrupt, the 3-cycle soft
-cap, and 3 consecutive poll failures. This skill adds four:
+cap, and 3 consecutive poll failures. This skill adds six:
 
 - **Approval cast** — the gate cleared, every re-review verdict passed,
   and step 6 ran.
@@ -30,13 +30,25 @@ cap, and 3 consecutive poll failures. This skill adds four:
   happened instead. Never cast anyway, and never downgrade the decline
   into a skip without warning. (A "no" to the loop-path confirmation at
   arm is a refusal to arm, not a stop — that loop never started.)
+- **Third-party participant** — fires on an unresolved tracked thread
+  carrying a comment from a third-party login. It names the login(s),
+  or "comment author unavailable" for a null author. No verdict action,
+  resolve, reaction, or rebuttal fires that cycle — nor does the
+  approval.
+- **Dispute stands** — fires when a rejected verdict repeats on a
+  thread that already carries the viewer's own reply below the first
+  comment. It stops instead of rebutting, and names the thread and the
+  disagreement. No verdict action, resolve, reaction, or rebuttal fires
+  on any thread that cycle — nor does the approval.
 
 When the shared soft cap fires, two reports are this skill's to add. When
 the cap was reached with a plain comment still pending, say so explicitly
 and name the comment: this is the expected outcome for a comment the
 author never engaged, not a malfunction, and the reader should not have
-to infer that from a bare handoff. The cap is also where an unsettled
-disagreement lands, since a rejected verdict rebuts rather than stops:
-name each thread still holding one, what the last rebuttal argued, and
-how the author answered it. That is the case most worth a human read —
-the argument is on the record and open, and deciding it is yours.
+to infer that from a bare handoff. The cap can also be where an
+unsettled disagreement lands: a rejected verdict that never draws a
+second reply never reaches the Dispute-stands check, so it rebuts once
+and then waits on the author. Name each thread still holding one, what
+the last rebuttal argued, and how the author answered it. That is the
+case most worth a human read — the argument is on the record and open,
+and deciding it is yours.

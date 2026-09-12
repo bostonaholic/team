@@ -120,9 +120,11 @@ reaction in the menu, so choosing an option is choosing the signal it sends.
 The verdict feeds steps 5–7. `ALREADY ADDRESSED` maps to option **F**.
 `STALE` and `INACCURATE` usually map to a reply that answers the reviewer
 (**C**), or to a decline (**D**) where the claim does not hold, rather than
-to a code change. Neither maps to **G** — both are verdicts you reached
-with evidence, so the ask is understood. Never mark a thread stale or
-inaccurate on a hunch — cite the file, line, or commit that proves it.
+to a code change. An unclear ask never applies to either — both are
+verdicts you reached with evidence — but a one-way-door choice
+`decision-making` returns to the user still lands on **G** as usual. Never
+mark a thread stale or inaccurate on a hunch — cite the file, line, or
+commit that proves it.
 
 ### Step 5 — Classify each open thread
 
@@ -175,13 +177,15 @@ Standard option menu (pick the options that apply):
 - **D. Decline (will not fix)** — reply with `<one-line rationale>`.
 - **E. Defer** — file a follow-up issue / TODO and resolve with a link.
 - **F. Mark resolved as-is** — current code already addresses it (cite commit/line).
-- **G. Needs clarification** — ask the reviewer `<specific question>` before acting.
+- **G. Needs clarification** — ask the reviewer when the ask itself is unclear, present the choice to the user when the user owns it, before acting.
 
-**C answers, G asks.** Both post a reply and touch no code, and the
-direction is the whole difference: C is the answer to a reviewer's question
-you understood, and G is your question about an ask you did not. Only G is
-a Hard Rule 3 exclusion, so only a G item can never auto-apply at any
-confidence.
+**C answers, G asks.** C is the answer to a reviewer's question you
+understood, and it posts a reply. G covers two different blockers: your
+question about an ask you did not understand, or a one-way-door choice
+the user owns rather than you. The first posts a reply; the second
+presents the choice to the user instead and touches no code either way.
+Only G is a Hard Rule 3 exclusion, so only a G item can never auto-apply
+at any confidence.
 
 Each option also carries the reaction it places on the thread's opening
 comment, and the menu states it, so the user picks the signal along with
@@ -195,7 +199,7 @@ the action. Nothing is posted until they do.
 | D. Decline (will not fix) | 👎 `THUMBS_DOWN` when the decline rests on an `INACCURATE` verdict; none when the ask is sound and only the priority or scope is wrong |
 | E. Defer | 👍 `THUMBS_UP` |
 | F. Mark resolved as-is | 👍 `THUMBS_UP` |
-| G. Needs clarification | none — the ask is not understood well enough to judge |
+| G. Needs clarification | none — the ask is not understood well enough to judge, or the choice belongs to the user |
 
 The user can override any of these — say so when presenting a 👎, since
 that is the one signal a reviewer reads as a rejection. A reaction is never

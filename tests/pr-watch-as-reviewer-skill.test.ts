@@ -23,7 +23,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { frontmatter, read, squash } from "./helpers/text";
 import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
@@ -44,6 +44,17 @@ function body(): string {
 }
 function fm(): string {
   return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
+}
+
+// Single-file guarded readers, so a phrase search scoped to one reference
+// file cannot accidentally match the same words in a different file that
+// body() would otherwise concatenate them next to.
+const POLL = join(REFERENCES, "07-4-poll.md");
+const STOP_CONDITIONS = join(REFERENCES, "08-5-stop-conditions.md");
+const COMPACTION_DEFENSE = join(REFERENCES, "10-compaction-defense.md");
+const HARD_RULES = join(REFERENCES, "01-hard-rules.md");
+function fileBody(path: string): string {
+  return existsSync(path) ? read(path) : "";
 }
 
 describe("pr-watch-as-reviewer skill: runtime standalone utility frontmatter", () => {
@@ -291,5 +302,100 @@ describe("pr-watch-as-reviewer skill: GraphQL variable flags are literal-string 
 describe("pr-watch-as-reviewer skill: PENDING-review check is a fenced snippet", () => {
   test("the pending-review GraphQL check appears in a fenced code block", () => {
     expect(/```bash[\s\S]{0,400}reviews\(last: 1, states: \[PENDING\]\)/.test(body())).toBe(true);
+  });
+});
+
+// A third-party login on an unresolved tracked thread stops the loop before
+// any verdict action that cycle.
+describe("pr-watch-as-reviewer skill: Third-party participant stop", () => {
+  test("the third-party check runs after re-review and before acting on a verdict", () => {
+    const t = squash(fileBody(POLL));
+    const reReviewIdx = t.indexOf("Re-review every new settlement");
+    const actIdx = t.indexOf("Act on every verdict.");
+    const thirdPartyIdx = t.indexOf("third-party");
+    expect(reReviewIdx).toBeGreaterThan(-1);
+    expect(actIdx).toBeGreaterThan(reReviewIdx);
+    expect(thirdPartyIdx).toBeGreaterThan(reReviewIdx);
+    expect(thirdPartyIdx).toBeLessThan(actIdx);
+  });
+
+  test("Third-party participant fires on an unresolved tracked thread and names the login(s), or comment author unavailable for a null author", () => {
+    const t = squash(fileBody(STOP_CONDITIONS));
+    const start = t.indexOf("Third-party participant");
+    expect(start).toBeGreaterThan(-1);
+    const section = t.slice(start, start + 400);
+    expect(section).toContain("unresolved tracked thread");
+    expect(section).toContain("the login(s)");
+    expect(section).toContain("comment author unavailable");
+  });
+
+  test("a firing Third-party participant stop takes no verdict action, resolve, reaction, or rebuttal that cycle", () => {
+    const t = squash(fileBody(STOP_CONDITIONS));
+    const start = t.indexOf("Third-party participant");
+    expect(start).toBeGreaterThan(-1);
+    const section = t.slice(start, start + 400);
+    expect(section).toContain("No verdict action, resolve, reaction, or rebuttal");
+  });
+
+  test("compaction-defense names third-party participant in the stop-reason list", () => {
+    expect(squash(fileBody(COMPACTION_DEFENSE))).toContain("third-party participant");
+  });
+});
+
+// A rejected verdict that repeats on a thread already carrying the viewer's
+// own reply stops instead of rebutting again. This also asserts the current
+// stop-conditions total: nine conditions, six owned by this skill.
+describe("pr-watch-as-reviewer skill: Dispute stands — a rejected verdict repeating after the viewer's own reply", () => {
+  function actOnVerdictSection(): string {
+    const t = squash(fileBody(POLL));
+    const start = t.indexOf("Act on every verdict.");
+    if (start < 0) return "";
+    const end = t.indexOf("React to the settlement");
+    return end > start ? t.slice(start, end) : t.slice(start);
+  }
+
+  test("a rejected verdict repeated on a thread that already carries the viewer's own reply below the first comment stops instead of rebutting", () => {
+    // "first comment" and "stop" alone already appear in this section today
+    // in unrelated sentences (the resolve rule, a resolve-failure note), so
+    // the checks below pin the fuller phrases that are unique to the
+    // terminal-repeat rule.
+    const section = actOnVerdictSection();
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain("already carries");
+    expect(section).toContain("below its first comment");
+    expect(section).toContain("stop and report the thread and the disagreement");
+  });
+
+  test("addressed, answered, and pending verdicts still render and act exactly as today — the terminal-repeat rule is scoped to a rejected verdict only", () => {
+    // The Dispute-stands rule lives in the Act-on-every-verdict section.
+    // "already carries" also appears earlier in the file in an unrelated
+    // sentence, so the check is scoped here to avoid a false match on that.
+    const section = actOnVerdictSection();
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain("already carries");
+    // ...and the existing verdict-action table is untouched by it.
+    expect(section).toContain("| **addressed** / **answered** | resolve the thread | nothing to resolve");
+    expect(section).toContain("| **pending** | leave open, write nothing | leave open, write nothing |");
+  });
+
+  test("stop-conditions file names Dispute stands among nine conditions, six owned by this skill", () => {
+    const t = squash(fileBody(STOP_CONDITIONS));
+    expect(t).toContain("Dispute stands");
+    expect(t).toContain("one of nine conditions");
+    expect(t).toContain("adds six");
+  });
+
+  test("compaction-defense names Dispute stands in the stop-reason list", () => {
+    expect(squash(fileBody(COMPACTION_DEFENSE))).toContain("Dispute stands");
+  });
+
+  test("01-hard-rules.md and 07-4-poll.md no longer claim there is no bound on rebuttals", () => {
+    const hardRules = squash(fileBody(HARD_RULES));
+    const poll = squash(fileBody(POLL));
+    // Guard: an empty file must fail, not vacuously pass the absence checks.
+    expect(hardRules.length).toBeGreaterThan(0);
+    expect(poll.length).toBeGreaterThan(0);
+    expect(hardRules).not.toContain("no round count anywhere");
+    expect(poll).not.toContain("There is no rebuttal limit");
   });
 });

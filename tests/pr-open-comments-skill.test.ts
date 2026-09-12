@@ -53,6 +53,15 @@ function authorizedSection(): string {
   return start >= 0 ? text.slice(start) : "";
 }
 
+// decision-making has no test file of its own — its one-way-door rule is
+// exercised only through this call site, so its SKILL.md is read directly
+// here, the same guarded-single-file pattern pr-watch-as-author-skill.test.ts
+// uses for skills/team-pr/SKILL.md.
+const DECISION_MAKING_SKILL = join(REPO_ROOT, "skills", "decision-making", "SKILL.md");
+function decisionMakingBody(): string {
+  return existsSync(DECISION_MAKING_SKILL) ? read(DECISION_MAKING_SKILL) : "";
+}
+
 describe("pr-open-comments skill: runtime standalone utility frontmatter", () => {
   test("skill file lives under runtime skills/ (distributed)", () => {
     expect(existsSync(SKILL)).toBe(true);
@@ -214,5 +223,59 @@ describe("pr-open-comments skill: the reaction follows the user's decision", () 
     const step = start >= 0 && end > start ? text.slice(start, end) : "";
     expect(step.length).toBeGreaterThan(0);
     expect(step).toContain("THUMBS_UP");
+  });
+});
+
+// A one-way-door dispute this skill cannot settle routes to the user through
+// the existing option G, instead of decision-making picking a side.
+describe("pr-open-comments skill: a one-way-door dispute routes to the user through option G", () => {
+  test("decision-making returns the framed choice, options, and classification instead of picking when the caller names an owner and the choice is a one-way door", () => {
+    const t = squash(decisionMakingBody());
+    expect(t).toContain("decision owner other than itself");
+    expect(t).toContain("classifies as a one-way door");
+    expect(t).toContain("return the framed choice, the options, and the classification");
+    expect(t).toContain("Do not pick");
+  });
+
+  test("a two-way door keeps today's fast pick unchanged", () => {
+    expect(squash(decisionMakingBody())).toContain("Two-way doors keep today's fast pick");
+  });
+
+  test("the pr-open-comments call site names the user as the decision owner", () => {
+    const t = squash(body());
+    const idx = t.indexOf("Call the Skill tool with `decision-making`");
+    expect(idx).toBeGreaterThan(-1);
+    const window = t.slice(idx, idx + 300);
+    expect(window).toContain("decision owner");
+  });
+
+  test("a returned one-way-door choice's menu carries option G as the recommendation", () => {
+    const t = squash(body());
+    const idx = t.indexOf("Call the Skill tool with `decision-making`");
+    expect(idx).toBeGreaterThan(-1);
+    const window = t.slice(idx, idx + 500);
+    expect(window).toContain("option G");
+  });
+
+  test("the option-G menu line keeps its bold label and widens who it asks", () => {
+    const text = existsSync(join(REFERENCES, "04-execution.md")) ? read(join(REFERENCES, "04-execution.md")) : "";
+    const t = squash(text);
+    expect(t).toContain("**G. Needs clarification**");
+    const idx = t.indexOf("G. Needs clarification");
+    const line = t.slice(idx, idx + 200);
+    expect(line).toContain("ask the reviewer when the ask itself is unclear");
+    expect(line).toContain("present the choice to the user when the user owns it");
+  });
+
+  test("the authorized-execution G exclusion carries the same widened recipient text", () => {
+    const text = existsSync(join(REFERENCES, "06-authorized-execution.md"))
+      ? read(join(REFERENCES, "06-authorized-execution.md"))
+      : "";
+    const t = squash(text);
+    const idx = t.indexOf("NEEDS CLARIFICATION");
+    expect(idx).toBeGreaterThan(-1);
+    const window = t.slice(idx, idx + 200);
+    expect(window).toContain("ask the reviewer when the ask itself is unclear");
+    expect(window).toContain("present the choice to the user when the user owns it");
   });
 });

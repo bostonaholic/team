@@ -65,3 +65,16 @@ each is reported by name:
 A consumer adds its own terminal conditions (an approval, a merge or
 close, a state its gate depends on) and reports them the same way. It
 never restates the three above.
+
+## Third-party definition
+
+Both watch loops share one term for a stop condition each owns. This
+section defines it once. Neither loop gains a fourth mechanics-owned
+condition from it.
+
+A **third login** is a comment author login on a thread that is neither
+the viewer's login nor the login of the thread's earliest non-viewer
+comment (the **original counterpart**). A `null` `author` counts as a
+third-party login — a deleted account is still a login the loop cannot
+name. The term applies only inside a thread marked `isResolved: false`,
+because a resolved thread is not a live exchange.

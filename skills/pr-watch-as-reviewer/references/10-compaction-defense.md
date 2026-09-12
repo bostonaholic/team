@@ -44,7 +44,8 @@ Report:
 
 - the stop reason (approval cast, merged/closed
   without approval, user interrupt, 3-cycle soft cap, 3 consecutive
-  poll failures, the empty-tracked-set stop, or confirmation declined)
+  poll failures, the empty-tracked-set stop, third-party participant,
+  Dispute stands, or confirmation declined)
 - the number of cycles consumed
 - when an approval was cast: its URL, the cited head SHA, and the
   per-item verdict summary (each thread's path or each plain comment's
