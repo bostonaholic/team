@@ -68,16 +68,13 @@ never restates the three above.
 
 ## Third-party definition
 
-Both watch loops need one shared term for a stop condition each owns.
-This section defines the term once. Neither loop gains a fourth
-mechanics-owned condition from it.
+Both watch loops share one term for a stop condition each owns. This
+section defines it once. Neither loop gains a fourth mechanics-owned
+condition from it.
 
 A **third login** is a comment author login on a thread that is neither
 the viewer's login nor the login of the thread's earliest non-viewer
 comment (the **original counterpart**). A `null` `author` counts as a
-third-party login: a deleted account is still a login the loop cannot
-name, and the loop must not guess who it was.
-
-The term applies only inside a thread marked `isResolved: false`. A
-resolved thread is not a live exchange, so a login that joins one there
-is never a third party.
+third-party login — a deleted account is still a login the loop cannot
+name. The term applies only inside a thread marked `isResolved: false`,
+because a resolved thread is not a live exchange.
