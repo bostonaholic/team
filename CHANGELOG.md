@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Both PR watch loops now stop and name the login when a third party comments on an unresolved thread the loop is driving.** A resolved thread is unaffected, and a deleted-account (`null`) commenter still counts as a third party. **What this asks of you:** nothing.
 
+### Changed
+
+- **`pr-watch-as-reviewer` now stops instead of rebutting when a rejected verdict repeats on a thread that already carries your reply.** A fresh addressed, answered, or pending verdict still renders and acts as before. **What this asks of you:** nothing.
+
 ## [0.108.1] - 2026-09-14
 
 ### Fixed
