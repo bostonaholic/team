@@ -36,8 +36,10 @@ without warning:
    different benchmark.
 4. **Always start from the baseline tag**, on a fresh branch, never from a moved
    `main`. The baseline tag never moves.
-5. **Do not coach the pipeline.** Submit the prompt verbatim and approve only the
-   single design gate. Any steering defeats the measurement.
+5. **Do not coach or steer the pipeline.** Submit the prompt verbatim, then let
+   the [autonomous design-review gate](../skills/team/references/08-design-review-gate-design.md)
+   run without human input. Human steering before the PR invalidates the
+   comparison. Human review starts after the pipeline opens the PR.
 6. **Never merge a run's output into Linkboard `main`.** Each run is a throwaway
    branch off the tag, and a merge would drift the baseline. Close or archive the
    run PR for inspection, so the baseline stays frozen.
@@ -91,9 +93,13 @@ bin/rails test                                        # pre-existing suite must 
 - Note the wall-clock **start**.
 - Run `/team` with the **verbatim** text from [`prompt.md`](./prompt.md) as its
   argument.
-- Let it run autonomously. At the **one design gate**, review the design doc and
-  approve it if it aligns. Record any round-trips. Do not steer it in any other
-  way.
+- Let the pipeline run without human input. The autonomous gate can revise and
+  review the design for multiple rounds.
+- Record each autonomous review round and its terminal verdict. `APPROVE` or
+  `COMMENT` lets the pipeline continue. `REQUEST CHANGES` follows the linked
+  gate's retry procedure.
+- If the gate halts without a parseable verdict, record the halt and stop the
+  benchmark. Do not repair or steer the run.
 - At completion the pipeline opens a **PR in the Linkboard repo**. Record the PR
   link. Note the wall-clock **end**.
 
@@ -107,12 +113,20 @@ summary. The vector records these fields as a minimum:
 - **tokens**: input and output **separately**, plus cache-read and
   cache-creation. Roll them up, and also break them down per phase and per agent.
 - **cost**: from the run model's pricing.
-- **shape**: vertical slices, hard-gate review-retry loops, human-gate
-  round-trips, and agent or subagent dispatches.
+- **shape**: vertical slices, hard-gate review-retry loops, autonomous design
+  review rounds, terminal verdict, missing-verdict halt,
+  `human_gate_round_trips`, and agent or subagent dispatches.
 - **output and effectiveness**: files touched, lines added and removed, new
   tests, new-feature acceptance tests pass, pre-existing suite still green,
   code-review and security-review verdicts, and the PR link.
-- **identity**: `model`, `provider`, `backend`, `pipeline_version`, `date`.
+- **identity**: `model`, `provider`, `backend`, `pipeline_version`, `date`, and
+  `interaction_protocol`.
+
+Use `autonomous-design-review-v1` for a run that follows this protocol. Set
+`human_gate_round_trips` to zero because no human approves the design. Keep that
+metric for historical records. Label earlier approval-based records separately.
+Their interaction count and elapsed time are not directly comparable with
+autonomous runs.
 
 > **Until #136's extractor exists,** record these fields by hand from the session
 > into the JSON shape below. The transcript holds the token and usage figures.
@@ -161,10 +175,19 @@ summary. The vector records these fields as a minimum:
   "provider": "anthropic",
   "backend": "claude-code",
   "pipeline_version": "team vX.Y.Z (commit …)",
+  "interaction_protocol": "autonomous-design-review-v1",
   "time_s": { "total": 0, "question": 0, "research": 0, "design": 0, "structure": 0, "plan": 0, "implement": 0, "pr": 0 },
   "tokens": { "input": 0, "output": 0, "cache_read": 0, "cache_creation": 0, "per_phase": {} },
   "cost_usd": 0,
-  "shape": { "slices": 0, "review_retry_loops": 0, "human_gate_round_trips": 0, "agent_dispatches": 0 },
+  "shape": {
+    "slices": 0,
+    "review_retry_loops": 0,
+    "design_review_rounds": 0,
+    "design_review_terminal_verdict": "APPROVE",
+    "design_review_missing_verdict_halt": false,
+    "human_gate_round_trips": 0,
+    "agent_dispatches": 0
+  },
   "effectiveness": {
     "feature_tests_pass": true,
     "preexisting_suite_green": true,

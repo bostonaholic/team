@@ -25,28 +25,33 @@
 //   skill a second time and halves the description budget each one is
 //   rendered with.
 
-import { afterAll, describe, expect, test } from "bun:test";
+import { afterAll, afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   chmodSync,
+  cpSync,
   existsSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   rmSync,
   symlinkSync,
+  unlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 
 import {
   fixtureBaseVersion,
   makePluginFixture,
   type PluginFixture,
 } from "./helpers/codex-plugin-fixture";
+import { writeFixtureStat } from "./helpers/fixture-stat";
 
 const REPO_ROOT = join(import.meta.dir, "..");
 const FAKE_CODEX = join(REPO_ROOT, "tests", "helpers", "fake-codex.mjs");
@@ -252,7 +257,7 @@ describe("dev install: codex harness", () => {
     expect(status).not.toBe(0);
     expect(output).toContain("not a symlink");
     expect(readFileSync(join(target, "USER_DATA.md"), "utf8")).toBe("not ours\n");
-    // Nothing installed: the migration is a precondition, not a side effect.
+    // Nothing installed: the install is a precondition, not a side effect.
     expect(cachedVersions(home)).toHaveLength(0);
   });
 
@@ -350,4 +355,218 @@ describe("dev uninstall: codex harness", () => {
     expect(output).toContain("not a symlink");
     expect(existsSync(join(target, "USER_DATA.md"))).toBe(true);
   });
+});
+
+describe("Slice 2: installed resources: codex", () => {
+  const samples = [
+    "skills/team/SKILL.md",
+    "skills/authoring-designs/SKILL.md",
+    "skills/principle-fail-closed/SKILL.md",
+    "skills/authoring-designs/references/design-template.md",
+    "skills/team/registry.json",
+    "skills/team/discover-topic.sh",
+  ];
+  const reader = String.raw`
+    const { readFileSync, realpathSync } = require("node:fs");
+    const { join } = require("node:path");
+    const { createHash } = require("node:crypto");
+    const root = realpathSync(process.argv[1]);
+    const records = JSON.parse(process.argv[2]).map(path => {
+      const resolvedPath = realpathSync(join(root, path));
+      const bytes = readFileSync(resolvedPath);
+      return {
+        path, resolvedPath, bytes: bytes.length,
+        sha256: createHash("sha256").update(bytes).digest("hex"),
+      };
+    });
+    process.stdout.write(JSON.stringify(records));
+  `;
+  let owned: string[] = [];
+  let fixture: PluginFixture;
+  let home: string;
+  let consumer: string;
+  let revision: string;
+  let caseName: string;
+  let environment: NodeJS.ProcessEnv;
+
+  function observe(
+    operation: string,
+    command: string,
+    args: string[],
+    expected: unknown,
+    cwd = consumer,
+  ) {
+    const start = performance.now();
+    const result = spawnSync(command, args, {
+      cwd,
+      encoding: "utf8",
+      env: environment,
+      timeout: 15_000,
+      killSignal: "SIGKILL",
+    });
+    const actual = {
+      status: result.status,
+      stdout: result.stdout ?? "",
+      stderr: result.stderr ?? "",
+      error: result.error?.message ?? null,
+      signal: result.signal,
+    };
+    console.log(JSON.stringify({
+      host: "codex", case: caseName, revision, operation, command, args, cwd,
+      expected, actual, durationMs: performance.now() - start,
+    }));
+    expect(actual.error, operation).toBeNull();
+    expect(actual.signal, operation).toBeNull();
+    return actual;
+  }
+
+  beforeEach(() => {
+    owned = [];
+    caseName = "setup";
+    revision = "";
+    fixture = newFixture();
+    owned.push(fixture.root);
+    home = newHome();
+    owned.push(home);
+    consumer = mkdtempSync(join(tmpdir(), "team-codex-consumer-"));
+    owned.push(consumer);
+    mkdirSync(join(home, "tmp"));
+    environment = {
+      ...process.env, HOME: home, TMPDIR: join(home, "tmp"),
+      CODEX_HOME: join(home, ".codex"), CLAUDE_CONFIG_DIR: join(home, ".claude"),
+      PATH: `${stubCodex(home)}:${process.env.PATH ?? ""}`, FAKE_CLAUDE_FAIL: "", LANG: "C", LC_ALL: "C", TZ: "UTC",
+    };
+    const source = observe("source revision", "git", ["rev-parse", "HEAD"], { status: 0 }, REPO_ROOT);
+    expect(source.status, source.stderr).toBe(0);
+    revision = source.stdout.trim();
+    unlinkSync(join(fixture.root, "skills"));
+    mkdirSync(join(fixture.root, "skills"), { recursive: true });
+    for (const name of ["team", "authoring-designs", "principle-fail-closed"]) {
+      cpSync(join(REPO_ROOT, "skills", name), join(fixture.root, "skills", name), { recursive: true });
+    }
+  });
+
+  afterEach(() => {
+    const failures: unknown[] = [];
+    for (const path of owned) {
+      try {
+        rmSync(path, { recursive: true, force: true });
+        console.log(JSON.stringify({
+          host: "codex", case: caseName, revision, operation: "cleanup",
+          path, expected: "absent", actual: existsSync(path) ? "present" : "absent",
+        }));
+        expect(existsSync(path), path).toBe(false);
+      } catch (error) {
+        console.log(JSON.stringify({
+          host: "codex", case: caseName, revision, operation: "cleanup",
+          path, expected: "absent", error: String(error),
+        }));
+        failures.push(error);
+      }
+    }
+    owned = [];
+    if (failures.length > 0) throw new AggregateError(failures, "Installed resource fixture cleanup failed");
+  });
+
+  function install(name: string) {
+    caseName = name;
+    const result = observe("install", "bash", [fixture.install], { status: 0 });
+    expect(result.status, result.stdout + result.stderr).toBe(0);
+    const versions = cachedVersions(home);
+    expect(versions).toHaveLength(1);
+    const [version = ""] = versions;
+    const served = join(cacheRoot(home), version);
+    return realpathSync(served);
+  }
+
+  function sourceRecords() {
+    return samples.map(path => {
+      const bytes = readFileSync(join(fixture.root, path));
+      return { path, bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex") };
+    });
+  }
+
+  function installedRecords(root: string, stage: string, expected: ReturnType<typeof sourceRecords>) {
+    const result = observe(stage, "node", ["-e", reader, root, JSON.stringify(samples)], expected);
+    expect(result.status, result.stderr).toBe(0);
+    const records: Array<{ path: string; resolvedPath: string; bytes: number; sha256: string }> =
+      JSON.parse(result.stdout);
+    for (const record of records) {
+      expect(relative(root, record.resolvedPath), record.resolvedPath).toBe(record.path);
+    }
+    return records.map(({ path, bytes, sha256 }) => ({ path, bytes, sha256 }));
+  }
+
+  function seedDesign(topic: string, review: string) {
+    const directory = join(consumer, "docs", "plans", topic);
+    mkdirSync(directory, { recursive: true });
+    for (const [file, phase] of [
+      ["1-task.md", "task"], ["2-questions.md", "question"],
+      ["5-research.md", "research"], ["6-design.md", "design"],
+    ] as const) {
+      writeFileSync(join(directory, file), [
+        "---", `topic: ${topic}`, "date: 2026-09-11", `phase: ${phase}`,
+        "---", "", "# Installed discovery fixture", "",
+      ].join("\n"));
+    }
+    writeFileSync(join(directory, "design-review-1.md"), review);
+  }
+
+  test("Installed resource bytes survive source removal", () => {
+    const expected = sourceRecords();
+    const installedRoot = install("Installed resource bytes survive source removal");
+
+    expect(installedRecords(installedRoot, "before source removal", expected)).toEqual(expected);
+    rmSync(fixture.root, { recursive: true });
+    expect(existsSync(fixture.root), fixture.root).toBe(false);
+    expect(installedRecords(installedRoot, "after source removal", expected)).toEqual(expected);
+  }, 60_000);
+
+  describe.each([
+    {
+      scenario: "approved design",
+      topic: "GH-369-approved",
+      review: "---\ntopic: approved\ndate: 2026-09-11\nphase: design-review\nverdict: APPROVE\n---\n\n# Review\n",
+      selected: "docs/plans/GH-369-approved/\n",
+    },
+    {
+      scenario: "missing verdict",
+      topic: "GH-369-missing-verdict",
+      review: "---\ntopic: missing-verdict\ndate: 2026-09-11\nphase: design-review\n---\n\n# Review\n",
+      selected: "",
+    },
+  ])("$scenario", ({ topic, review, selected }) => {
+    test("Installed discovery observes the review requirement", () => {
+      const installedRoot = install("Installed discovery observes the review requirement");
+      seedDesign(topic, review);
+      environment.PATH = `${writeFixtureStat(consumer)}:${environment.PATH ?? ""}`;
+
+      const result = observe("discovery (fixture stat: actual file mtimes)", "bash", [
+        join(installedRoot, "skills", "team", "discover-topic.sh"),
+        "", "6-design.md", "--require-passing-review",
+      ], { status: 0, stdout: selected, stderr: "" });
+
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout).toBe(selected);
+      expect(result.stderr).toBe("");
+    }, 60_000);
+  });
+
+  test("Missing installed resources fail without checkout fallback", () => {
+    const expected = sourceRecords();
+    const installedRoot = install("Missing installed resources fail without checkout fallback");
+    const missing = join(installedRoot, "skills", "authoring-designs", "references", "design-template.md");
+    expect(installedRecords(installedRoot, "before resource removal", expected)).toEqual(expected);
+    rmSync(missing);
+
+    const result = observe("missing installed resource", "node", [
+      "-e", reader, installedRoot, JSON.stringify(samples),
+    ], { status: 1, missingPath: missing });
+
+    expect(result.status, result.stderr).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("ENOENT");
+    expect(result.stderr).toContain(missing);
+    expect(existsSync(join(fixture.root, "skills", "authoring-designs", "references", "design-template.md"))).toBe(true);
+  }, 60_000);
 });
