@@ -63,6 +63,11 @@ someone recomputes it. This is what happened on PR #208, which opened as
 
 ## Only runtime changes bump (the runtime-vs-dev gate)
 
+The classifier also treats exactly `scripts/export-agent-plugin.ts` as runtime
+because it determines the generated distribution. Other `scripts/` files do not
+inherit that classification. Export copies the authoritative root manifest
+version into output without assigning another version or changing land-time timing.
+
 The version, changelog, and release exist for **plugin end users**, so a bump is
 warranted **only when a PR changes the distributed plugin**: `agents/`,
 `skills/`, `hooks/`, `opencode/`, or host manifest *content* — `.claude-plugin/`,

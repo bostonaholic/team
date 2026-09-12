@@ -106,6 +106,11 @@ makes it the way to try a worktree or a branch you have not installed. Run
 
 </details>
 
+For Agent Plugins 1.0.0 clients, first install checkout dependencies with
+`bun install --frozen-lockfile`, then generate a portable package with
+`bun run export:agent-plugin /absolute/existing-parent/team-portable`.
+See the [compatibility guide](docs/agent-plugins.md) for prerequisites and limits.
+
 <details>
 <summary><strong>Codex CLI</strong></summary>
 

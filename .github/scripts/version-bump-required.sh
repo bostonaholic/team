@@ -103,6 +103,9 @@ runtime_changed=false
 if grep -qE "^($(IFS='|'; echo "${RUNTIME_DIRS[*]}"))/" <<<"$changed_files"; then
   runtime_changed=true
 fi
+if grep -qxF "scripts/export-agent-plugin.ts" <<<"$changed_files"; then
+  runtime_changed=true
+fi
 # Host manifest dirs — runtime only if a non-version line changed (a bare
 # version edit is the bump, not content). Strip diff file headers (+++/---),
 # keep added/removed lines, drop any line that touches the `"version"` field.
