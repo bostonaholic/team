@@ -64,7 +64,7 @@ const TEAM_IMPLEMENT_SKILL = join(REPO_ROOT, "skills", "team-implement", "SKILL.
 const TEAM_PR_SKILL = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
 const ARTIFACT_SKILL = join(REPO_ROOT, "skills", "team", "references", "artifacts.md");
 const ENG_REVIEW_SKILL = join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md");
-const REVIEWING_DESIGNS_SKILL = join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md");
+const REVIEWING_DESIGNS_SKILL = join(REPO_ROOT, "skills", "eng-design-doc-review", "references", "design-reviewer.md");
 const TEAM_DESIGN_SKILL = join(REPO_ROOT, "skills", "team-design", "SKILL.md");
 const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
 

@@ -189,8 +189,8 @@ describe("why skill: consumer wiring", () => {
     expect(loadsSkill(t, "why")).toBe(true);
   });
 
-  test("reviewing-code conditionally loads why before judging long-standing behavior", () => {
-    const t = readOrEmpty(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"));
+  test("code-reviewer brief conditionally loads why before judging long-standing behavior", () => {
+    const t = readOrEmpty(join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md"));
     expect(loadsSkill(t, "why")).toBe(true);
   });
 

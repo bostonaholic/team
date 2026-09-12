@@ -262,3 +262,40 @@ Eight registrations move into four playbooks, two bug-fix resources, and one tes
 
 The Structure, Plan, Implement, and bug-fix eval fixtures inject the playbook and reference bytes alongside retained principles and dependencies.
 Catalog description and catalog-line budgets ratchet again after the eight registrations move.
+
+## M06: reviewer briefs and finding contracts
+
+The catalog retains 25 commands and 15 methodologies, totaling 40 registrations, with 13 unchanged agent roles.
+Seven registrations move into six per-entry-point reference files. No compatibility stubs remain.
+Security, code, documentation, design, and comment review stay distinct; verdict formats, the report shape, gate types, severity tiers, and aggregation semantics are preserved.
+`conventional-comments` and `review-severity-tiers` consolidate into one shared finding-format reference read by both producers and reviewers.
+
+| Retired registration | Destination | Retained contract |
+| --- | --- | --- |
+| `reviewing-code` | `skills/code-review/references/code-reviewer.md` | Generator-evaluator separation, veto-without-authorship, the `## Report Format` shape, verdict criteria, the inspection contract, and the test/comment red-flag regimes. |
+| `reviewing-security` | `skills/code-review/references/security-reviewer.md` | Attack-surface identification, OWASP Top 10, extra vulnerability checks, and the CRITICAL/HIGH/MEDIUM/LOW ladder. |
+| `reviewing-documentation` | `skills/code-review/references/documentation-reviewer.md` | Documentation-gap review process and REQUIRED/RECOMMENDED classification. |
+| `conventional-comments` | `skills/code-review/references/findings.md` | Finding labels and decorations (issue/suggestion/nitpick). |
+| `review-severity-tiers` | `skills/code-review/references/findings.md` | Gate types by reviewer, the Blocking/Major/Minor tiers, the auto-fix boundary, and aggregation rules. |
+| `reviewing-designs` | `skills/eng-design-doc-review/references/design-reviewer.md` | The design-review brief, review process, calibration, verdict set, and brief rules. |
+| `reviewing-comments` | `skills/no-comments/references/reviewer.md` | Fresh-context comment classification and the REMOVE/KEEP/ENCODE vocabulary. |
+
+### Named runtime consumers
+
+| Consumer | Operation | Replacement |
+| --- | --- | --- |
+| `agents/code-reviewer.md` | Review a diff | Read `skills/code-review/references/code-reviewer.md` and `findings.md` |
+| `agents/security-reviewer.md` | Review for vulnerabilities | Read `skills/code-review/references/security-reviewer.md`, `code-reviewer.md`, and `findings.md` |
+| `agents/technical-writer.md` | Review documentation gaps | Read `skills/code-review/references/documentation-reviewer.md`, `code-reviewer.md`, and `findings.md` |
+| `agents/ux-reviewer.md` | Verify the experience | Read `skills/code-review/references/code-reviewer.md` and `findings.md` |
+| `skills/code-review/SKILL.md` | Dispatch a code reviewer | Read `references/code-reviewer.md` |
+| `skills/eng-design-doc-review/SKILL.md` | Dispatch the design reviewer | Read `references/design-reviewer.md` |
+| `skills/no-comments/SKILL.md` | Dispatch the comment reviewer | Read `references/reviewer.md` |
+| `skills/team/SKILL.md`, `team-design/SKILL.md`, `team/references/08-design-review-gate-design.md` | Run the design-review gate | Read `skills/eng-design-doc-review/references/design-reviewer.md` |
+| `skills/team/SKILL.md`, `team-implement/SKILL.md`, `team-implement/references/03-execution.md`, `team/references/12-aggregate-gate-review-collection.md`, `team/playbooks/feature.md` | Aggregate review verdicts | Read `skills/code-review/references/findings.md` |
+| `skills/cross-model-review/SKILL.md` and `references/procedure.md` | Position the disposition block and the auto-fix boundary | Read `skills/code-review/references/code-reviewer.md` and `findings.md` |
+| `skills/engineering-standards/SKILL.md`, `writing-prose/SKILL.md`, `writing-prose/references/style-guide.md`, `pr-watch-as-reviewer/references/07-4-poll.md` | Format findings | Read `skills/code-review/references/findings.md` and `documentation-reviewer.md` |
+
+The reviewer agents drop their review preloads and read the briefs from the installed plugin. The code-reviewer, eng-design-doc-review, and unslop eval fixtures inject the new reference bytes instead of the retired skill bodies.
+Catalog description and catalog-line budgets ratchet again after the seven registrations move.
+

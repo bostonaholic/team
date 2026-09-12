@@ -1,7 +1,7 @@
 Before each `design-author` dispatch or retry, read [host dispatch](references/15-host-dispatch.md).
 
-Before review dispatch, supply the installed plugin root and resolved `skills/reviewing-designs/SKILL.md` path.
-Resolve its brief beside that installed skill. Pass the applicable resource paths and require reads before work.
+Before review dispatch, supply the installed plugin root and resolved `skills/eng-design-doc-review/references/design-reviewer.md` path.
+Pass the applicable resource paths and require reads before work.
 If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
 
 Before this operation, read [artifact schema](references/artifacts.md).
@@ -43,8 +43,8 @@ When the `design-author` returns a draft:
    few places worth the expensive model, and pinning it keeps a cheaper
    machine-wide subagent default from silently weakening the review.
    Pass the
-   `## Review brief` as the prompt: call the Skill tool with
-   `reviewing-designs` to
+   `## Review brief` as the prompt: read the
+   [design reviewer brief](../../eng-design-doc-review/references/design-reviewer.md) to
    read that brief (reference it, never duplicate it here), with
    the artifact directory substituted. Each round gets a fresh subagent
    context. `Explore` holds no Write/Edit tools, so the reviewer **cannot**

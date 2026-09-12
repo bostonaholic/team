@@ -34,7 +34,7 @@ This page carries both directions of each skill-to-skill load edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 47 registered skills: 25 commands and 22 methodologies. Shared principles, playbooks, templates, and operational rules are ordinary [installed resources](migration-contract.md).
+The catalog has 40 registered skills: 25 commands and 15 methodologies. Shared principles, playbooks, templates, and operational rules are ordinary [installed resources](migration-contract.md).
 They are read at the consuming operation and add no picker entries.
 
 ## Entry-point skills
@@ -48,7 +48,7 @@ Runs the 8-phase QRSPI feature pipeline.
 
 **Used by:** None
 
-**Uses:** `changelog`, `cross-model-review`, `git-commit`, `review-severity-tiers`, `reviewing-designs`, `running-quality-checks`, `team-pr`, `team-worktree`, `tracking-tickets`, `unslop`, `worktree-isolation`, `writing-prose`
+**Uses:** `changelog`, `cross-model-review`, `git-commit`, `running-quality-checks`, `team-pr`, `team-worktree`, `tracking-tickets`, `unslop`, `worktree-isolation`, `writing-prose`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -72,7 +72,7 @@ Drafts and adversarially reviews a design.
 
 **Used by:** None
 
-**Uses:** `cross-model-review`, `reviewing-designs`, `unslop`, `writing-prose`
+**Uses:** `cross-model-review`, `unslop`, `writing-prose`
 
 ### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/SKILL.md)
 
@@ -104,7 +104,7 @@ Executes and verifies implementation slices.
 
 **Used by:** None
 
-**Uses:** `review-severity-tiers`, `running-quality-checks`, `team-pr`, `unslop`, `writing-prose`
+**Uses:** `running-quality-checks`, `team-pr`, `unslop`, `writing-prose`
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
@@ -128,7 +128,7 @@ Reviews a technical design document with fresh context.
 
 **Used by:** None
 
-**Uses:** `cross-model-review`, `reviewing-designs`, `writing-prose`
+**Uses:** `cross-model-review`, `engineering-standards`, `unslop`, `writing-prose`
 
 ## Standalone utilities
 
@@ -219,7 +219,7 @@ Mines a session for durable learnings.
 
 Investigates design rationale behind code.
 
-**Used by:** `how`, `reviewing-code`, `team-fix`
+**Used by:** `code-review`, `how`, `team-fix`
 
 **Uses:** None
 
@@ -237,7 +237,7 @@ Reviews a diff with fresh context.
 
 **Used by:** None
 
-**Uses:** `reviewing-code`
+**Uses:** `engineering-standards`, `why`, `writing-prose`
 
 ### [no-comments](https://github.com/bostonaholic/team/blob/main/skills/no-comments/SKILL.md)
 
@@ -245,66 +245,18 @@ Removes low-value source comments and encodes valid constraints.
 
 **Used by:** None
 
-**Uses:** `reviewing-comments`, `running-quality-checks`
+**Uses:** `engineering-standards`, `running-quality-checks`
 
 ## Methodology skills
 
 These carry no `argument-hint`. They are never invoked directly; agents load
 them.
 
-### [reviewing-code](https://github.com/bostonaholic/team/blob/main/skills/reviewing-code/SKILL.md)
-
-Defines adversarial code review and evidence-based findings.
-
-**Used by:** `code-review`, `reviewing-designs`
-
-**Uses:** `engineering-standards`, `review-severity-tiers`, `why`, `writing-prose`
-
-### [reviewing-comments](https://github.com/bostonaholic/team/blob/main/skills/reviewing-comments/SKILL.md)
-
-Defines fresh-context source-comment review and findings.
-
-**Used by:** `no-comments`
-
-**Uses:** `engineering-standards`
-
-### [reviewing-designs](https://github.com/bostonaholic/team/blob/main/skills/reviewing-designs/SKILL.md)
-
-Defines adversarial design review and verdicts.
-
-**Used by:** `eng-design-doc-review`, `team`, `team-design`
-
-**Uses:** `conventional-comments`, `cross-model-review`, `engineering-standards`, `reviewing-code`, `unslop`, `writing-prose`
-
-### [conventional-comments](https://github.com/bostonaholic/team/blob/main/skills/conventional-comments/SKILL.md)
-
-Defines review labels and decorations.
-
-**Used by:** `reviewing-designs`
-
-**Uses:** None
-
-### [reviewing-security](https://github.com/bostonaholic/team/blob/main/skills/reviewing-security/SKILL.md)
-
-Defines threat and OWASP review with evidence-rated findings.
-
-**Used by:** None
-
-**Uses:** None
-
 ### [cross-model-review](https://github.com/bostonaholic/team/blob/main/skills/cross-model-review/SKILL.md)
 
 Runs second-vendor reviews through machine-only CLI adapters.
 
-**Used by:** `eng-design-doc-review`, `reviewing-designs`, `team`, `team-design`
-
-**Uses:** None
-
-### [review-severity-tiers](https://github.com/bostonaholic/team/blob/main/skills/review-severity-tiers/SKILL.md)
-
-Maps reviewer findings to Blocking, Major, or Minor actions.
-
-**Used by:** `reviewing-code`, `team`, `team-implement`
+**Used by:** `eng-design-doc-review`, `team`, `team-design`
 
 **Uses:** None
 
@@ -312,7 +264,7 @@ Maps reviewer findings to Blocking, Major, or Minor actions.
 
 Defines code design, comment, and review standards.
 
-**Used by:** `reviewing-code`, `reviewing-comments`, `reviewing-designs`
+**Used by:** `code-review`, `eng-design-doc-review`, `no-comments`
 
 **Uses:** None
 
@@ -352,7 +304,7 @@ Defines safe nested-agent dispatch and fallback.
 
 Defines strict and STE-flavored prose rules.
 
-**Used by:** `changelog`, `eng-design-doc-review`, `git-commit`, `reviewing-code`, `reviewing-designs`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`
+**Used by:** `changelog`, `code-review`, `eng-design-doc-review`, `git-commit`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`
 
 **Uses:** None
 
@@ -360,15 +312,7 @@ Defines strict and STE-flavored prose rules.
 
 Use whenever writing or revising prose.
 
-**Used by:** `reviewing-designs`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`
-
-**Uses:** None
-
-### [reviewing-documentation](https://github.com/bostonaholic/team/blob/main/skills/reviewing-documentation/SKILL.md)
-
-Defines documentation-gap review and REQUIRED/RECOMMENDED findings.
-
-**Used by:** None
+**Used by:** `eng-design-doc-review`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`
 
 **Uses:** None
 
@@ -451,9 +395,6 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | Skill | Agent | How they differ |
 |---|---|---|
 | `team-research` | `researcher` | Skill dispatches the Research phase. The agent is the doer that runs the research. |
-| `reviewing-code` | `code-reviewer` | Skill is the review methodology. The agent is the reviewer that applies it. |
-| `reviewing-security` | `security-reviewer` | Skill is the security review methodology and severity ladder. The agent is the reviewer that applies it. |
-| `reviewing-documentation` | `technical-writer` | Skill is the doc-gap review methodology and classification. The agent is the reviewer that applies it. |
 | `team-question` | `questioner` | Skill drives the Question phase. The agent decomposes the intent. |
 | `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure. The agent is the tester that runs it. |
 | `team-design` | `design-author` | Skill drives the Design phase. The agent drafts the alignment doc. |
@@ -495,3 +436,9 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [PRD template](https://github.com/bostonaholic/team/blob/main/skills/team/references/prd-template.md)
 - [execution](https://github.com/bostonaholic/team/blob/main/skills/team/references/execution.md)
 - [external data](https://github.com/bostonaholic/team/blob/main/skills/team/references/external-data.md)
+- [code reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/code-reviewer.md)
+- [security reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/security-reviewer.md)
+- [documentation reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/documentation-reviewer.md)
+- [finding format](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/findings.md)
+- [design reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/references/design-reviewer.md)
+- [comment reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/no-comments/references/reviewer.md)

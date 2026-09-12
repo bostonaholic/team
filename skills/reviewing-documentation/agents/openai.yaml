@@ -1,4 +1,0 @@
-interface:
-  display_name: "Reviewing Documentation"
-  short_description: "Review a diff for documentation gaps"
-  default_prompt: "Use $reviewing-documentation to review a diff for documentation gaps."

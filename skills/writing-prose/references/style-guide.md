@@ -254,7 +254,7 @@ defect. Fix every hit.
 The self-lint applies to the text an author returns, never to quoted
 counter-examples — this file's own Non-STE examples break the rules on
 purpose. If a reviewer cites an item and the author disputes it, the
-conventional-comments framework carries the disagreement.
+finding format carries the disagreement.
 
 ## Mechanical score
 
@@ -294,7 +294,7 @@ When reviewing documentation, evaluate three dimensions:
   answer to a specific question in under 30 seconds.
 
 The technical-writer's review methodology lives in
-`skills/reviewing-documentation/SKILL.md`. It applies these principles to
+`skills/code-review/references/documentation-reviewer.md`. It applies these principles to
 reviews and carries the documentation-gap review process and the
 REQUIRED/RECOMMENDED doc-change classification. This skill stays the authoring
 bar.

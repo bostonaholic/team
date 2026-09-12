@@ -1,9 +1,14 @@
-# Reviewing Code Manual
+# Code Reviewer Brief
+
+This brief is read by the `code-reviewer` agent and any fresh-context read-only
+reviewer it dispatches. Resolve links from the installed skill directory. If a
+required read fails, stop that step with the exact path. Never use checkout
+fallback or recursive loading.
 
 Reviews must be performed by agents with fresh context. The generator (the
 agent that wrote the code) must never evaluate its own output.
 
-Write the prose this skill governs at a seventh-grade reading level, in
+Write the prose this brief governs at a seventh-grade reading level, in
 STE-flavored mode. Full methodology: `writing-prose`. Call the Skill tool
 with `writing-prose` and apply its `## Self-lint` checklist before you
 finalize.
@@ -18,7 +23,7 @@ finalize.
   the implementer.
 
 The cross-gate canon lives at [independent review rules](../team/principles/independent-review.md);
-this skill owns the code-review application.
+this brief owns the code-review application.
 
 ## Veto Without Authorship
 
@@ -34,11 +39,11 @@ Block the line, change nothing
   grinds until a person stops the run. Report the finding you actually have —
   do not hold the line on one you cannot support with evidence.
 
-## Conventional Comments
+## Finding Format
 
 Format follows the artifact. A **finding** — from the code, security, or
 docs reviewer — uses the Conventional Comments format in
-`skills/conventional-comments/SKILL.md`. A **live-verification report**, which
+[finding format](findings.md). A **live-verification report**, which
 is what the ux-reviewer produces, uses its own Working/Broken/Could Improve
 format.
 
@@ -90,7 +95,7 @@ that pass did not run.>
   (✅ APPROVE, ❌ REQUEST CHANGES, 💬 COMMENT); the word token, not the
   emoji, is what the orchestrator matches on.
 - `### Findings` entries use the Conventional Comments format
-  (`## Conventional Comments` above), each with its `file:line`
+  (`## Finding Format` above), each with its `file:line`
   reference.
 - **The output format is not a choice.** Emit all five headings, in the
   order the template gives them, on every report. Invent no section,
@@ -113,7 +118,7 @@ that pass did not run.>
 
 ## Gate Types and Severity Tiers
 
-Call the Skill tool with `review-severity-tiers`. It owns how each reviewer's
+Read [finding format](findings.md). It owns how each reviewer's
 verdict gates the pipeline: the gate-type table, the Blocking,
 Major, and Minor tiers with the auto-fix boundary, the consult guard, and the
 verdict-aggregation rules.
@@ -141,7 +146,7 @@ verdict-aggregation rules.
 
 **Test-quality flags.** Test files are part of the diff. Walk every changed
 `*test*` / `*spec*` / `__tests__/*` file against the rules in the
-[testing rules](../../team/references/testing.md).
+[testing rules](../team/references/testing.md).
 These are `suggestion:` individually and `issue:` when they appear across
 multiple tests:
 
@@ -165,7 +170,7 @@ rule keys to outcome-dependence, not token presence: a `Date.now()` in a log
 line does not flag; one feeding an assertion does. Outcome-dependence covers
 the whole suite — state or resources left behind flag because a *later* test's
 outcome depends on them. The full catalog lives in the
-[testing rules](../../team/references/testing.md) ("Flaky-test red flags (reviewer checklist)").
+[testing rules](../team/references/testing.md) ("Flaky-test red flags (reviewer checklist)").
 
 **Comment red flags.** Check in-source comments in every changed file against
 the Code Comments rules in `engineering-standards` — call the Skill tool with
@@ -256,13 +261,13 @@ no order implied:
   removal: call the Skill tool with `why`. A Chesterton's-fence deletion
   whose motivating constraint still holds is a finding; one whose
   constraint provably evaporated is not.
-- **SOLID violations** — per `skills/solid/SKILL.md`.
+- **SOLID violations** — per `../solid/SKILL.md`.
 - **Test files** — per both severity regimes above and the
-  [testing rules](../../team/references/testing.md).
+  [testing rules](../team/references/testing.md).
 
 ## Security Review
 
-The security reviewer's process lives in `skills/reviewing-security/SKILL.md`
+The security reviewer's process lives in [security reviewer brief](security-reviewer.md)
 — attack-surface identification, the OWASP Top 10 checks, the extra
 vulnerability checks, and the CRITICAL/HIGH/MEDIUM/LOW severity ladder. The
 PASS/FAIL verdict rule stays here (Verdict Criteria above): any CRITICAL or

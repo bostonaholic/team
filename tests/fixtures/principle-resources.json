@@ -496,23 +496,16 @@
       ]
     },
     {
-      "path": "skills/review-severity-tiers/SKILL.md",
+      "path": "skills/code-review/references/code-reviewer.md",
+      "destinations": [
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/code-review/references/findings.md",
       "destinations": [
         "skills/team/principles/human-control.md"
-      ]
-    },
-    {
-      "path": "skills/reviewing-code/SKILL.md",
-      "destinations": [
-        "skills/team/principles/independent-review.md",
-        "skills/team/principles/verified-results.md"
-      ]
-    },
-    {
-      "path": "skills/reviewing-code/references/review-manual.md",
-      "destinations": [
-        "skills/team/principles/independent-review.md",
-        "skills/team/principles/verified-results.md"
       ]
     },
     {
@@ -725,7 +718,6 @@
   "registrations": [
     "changelog",
     "code-review",
-    "conventional-comments",
     "cross-model-review",
     "eng-design-doc-review",
     "engineering-standards",
@@ -744,12 +736,6 @@
     "pr-watch-mechanics",
     "refactoring-to-patterns",
     "reflect",
-    "review-severity-tiers",
-    "reviewing-code",
-    "reviewing-comments",
-    "reviewing-designs",
-    "reviewing-documentation",
-    "reviewing-security",
     "running-quality-checks",
     "shipit",
     "solid",

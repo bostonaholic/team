@@ -119,7 +119,7 @@ describe("code-reviewer scoring pipeline offline replay", () => {
       // all three plants and exempted both decoys, but cited each finding
       // as `file: src/webhooks/retry.js:<line>` with a description instead
       // of quoting the planted comment text — the citation style
-      // skills/conventional-comments/SKILL.md mandates. Detection hints
+      // skills/code-review/references/findings.md mandates. Detection hints
       // that only match verbatim quotes scored it 1/3.
       const result = runReplay(
         join(TRANSCRIPT_DIR, "regression-line-cited-review.ndjson"),
