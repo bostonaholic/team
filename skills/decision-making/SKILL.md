@@ -72,3 +72,7 @@ with authorized execution without another confirmation.
 - Keep criteria independent. Avoid undefined labels such as "best" or "easy."
 - If a new criterion appears after scoring, restart and rescore every option.
 - Use ranges instead of false precision. Explain material ties.
+- When the caller names a decision owner other than itself and the decision
+  classifies as a one-way door, return the framed choice, the options, and
+  the classification. Do not pick. Two-way doors keep today's fast pick, so
+  ordinary triage is unaffected.

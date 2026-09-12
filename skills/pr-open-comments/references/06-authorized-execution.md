@@ -31,8 +31,9 @@ Exclusions (still pause and ask):
 
 - The comment was **declined / will-not-fix** — make sure of the
   rationale before you reply. Do not auto-resolve a disagreement.
-- The comment is `NEEDS CLARIFICATION` — ask the reviewer instead of
-  resolving.
+- The comment is `NEEDS CLARIFICATION` — ask the reviewer when the ask
+  itself is unclear, present the choice to the user when the user owns
+  it, instead of resolving.
 - You could not make the requested change — report it. Never reply "done"
   or resolve the thread without landed code.
 - The change would introduce a new security-sensitive construct —
