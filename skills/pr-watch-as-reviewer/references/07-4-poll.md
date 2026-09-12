@@ -198,10 +198,12 @@ nothing is written and the loop keeps waiting.
   contradicts the concern — a reply that declines it without an argument
   that holds, or one that claims a fix the branch does not show.
 - A **rejected** verdict draws a rebuttal (the verdict actions below)
-  and the loop continues — it is never itself a stop. It does block the
+  when the thread carries no viewer reply yet. It does block the
   approval for as long as it stands, so a dispute the author never
   answers rides to the soft cap, which hands off with the dispute still
-  open. Never approve
+  open. A rejected verdict rendered again on a thread that already
+  carries the viewer's reply is terminal instead of drawing another
+  rebuttal — see Dispute stands below. Never approve
   over a live rejected verdict.
 - A **pending** verdict neither stops the loop nor approves. Keep
   polling: a later push may yet meet the concern. This
@@ -242,6 +244,18 @@ one action, taken in the same cycle it is rendered:
 | **pending** | leave open, write nothing | leave open, write nothing |
 | **rejected** | post one rebuttal reply, leave open | post one rebuttal as a new top-level comment |
 
+- **Dispute stands: check every rejected verdict before any write this
+  cycle.** Before resolving, reacting, or rebutting on any thread, check
+  every thread that renders a rejected verdict this cycle: it is
+  terminal when the thread already carries any viewer comment below its
+  first comment — a prior rebuttal, or a comment you typed by hand. When
+  any one does, stop and report the thread and the disagreement instead
+  of acting, and take no verdict action, resolve, reaction, or rebuttal
+  on any thread that cycle — nor does the approval. Key it the same way
+  "one action per verdict" below already keys a rebuttal: by the thread
+  id plus the triggering comment id. That rule already blocks a rejected
+  verdict from re-firing with no new counterpart reply, so this check
+  only tests for an existing viewer reply on the thread, never a count.
 - **Resolve on a passing verdict** with `resolveReviewThread`:
 
   ```bash
@@ -259,17 +273,9 @@ one action, taken in the same cycle it is rendered:
   mutation. A resolve failure is not a stop: warn, note it in the
   snapshot, keep the verdict (which is what gates the approval), and
   carry on.
-- **Dispute stands: a repeated rejected verdict is terminal.** Before
-  rebutting a rejected verdict, check whether the thread already
-  carries any viewer comment below its first comment — a prior
-  rebuttal, or a comment you typed by hand. If it does, stop and report
-  the thread and the disagreement instead of rebutting. Key this the
-  same way "one action per verdict" below already keys a rebuttal: by
-  the thread id plus the triggering comment id. That rule already
-  blocks a rejected verdict from re-firing with no new counterpart
-  reply, so this check only tests for an existing viewer reply on the
-  thread, never a count.
-- **Rebut on a rejected verdict** with a reply on your own thread:
+- **Rebut on a rejected verdict**, reached only when the Dispute-stands
+  check above found no terminal thread, with a reply on your own
+  thread:
 
   ```bash
   gh api graphql -f threadId="$THREAD_ID" -f body="$REBUTTAL" -f query='

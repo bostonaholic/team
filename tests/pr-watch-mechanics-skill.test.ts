@@ -120,11 +120,11 @@ describe("pr-watch-mechanics skill: both watches load it", () => {
   });
 });
 
-// pr-watch-thread-escalation, slice 1: the third-party definition both watch
-// skills consume for their own "Third-party participant" stop condition.
-// Design decision 7 — defined once here, owned by neither consumer, and
-// this skill still owns exactly three stop conditions, never four.
-describe("pr-watch-mechanics skill: third-party definition (design decisions 3, 7, 11)", () => {
+// The third-party definition both watch skills consume for their own
+// "Third-party participant" stop condition — defined once here, owned by
+// neither consumer, and this skill still owns exactly three stop conditions,
+// never four.
+describe("pr-watch-mechanics skill: third-party definition", () => {
   // The new section, isolated by its own heading. An absent heading yields
   // "" so the assertions below fail rather than reading past unrelated prose.
   function thirdPartySection(): string {

@@ -53,10 +53,10 @@ function authorizedSection(): string {
   return start >= 0 ? text.slice(start) : "";
 }
 
-// pr-watch-thread-escalation, slice 3: decision-making has no test file of
-// its own — its new one-way-door rule is exercised only through this call
-// site, so its SKILL.md is read directly here, the same guarded-single-file
-// pattern pr-watch-as-author-skill.test.ts uses for skills/team-pr/SKILL.md.
+// decision-making has no test file of its own — its one-way-door rule is
+// exercised only through this call site, so its SKILL.md is read directly
+// here, the same guarded-single-file pattern pr-watch-as-author-skill.test.ts
+// uses for skills/team-pr/SKILL.md.
 const DECISION_MAKING_SKILL = join(REPO_ROOT, "skills", "decision-making", "SKILL.md");
 function decisionMakingBody(): string {
   return existsSync(DECISION_MAKING_SKILL) ? read(DECISION_MAKING_SKILL) : "";
@@ -226,10 +226,9 @@ describe("pr-open-comments skill: the reaction follows the user's decision", () 
   });
 });
 
-// pr-watch-thread-escalation, slice 3: a one-way-door dispute this skill
-// cannot settle routes to the user through the existing option G, instead of
-// decision-making picking a side.
-describe("pr-open-comments skill: a one-way-door dispute routes to the user through option G (design decision 8)", () => {
+// A one-way-door dispute this skill cannot settle routes to the user through
+// the existing option G, instead of decision-making picking a side.
+describe("pr-open-comments skill: a one-way-door dispute routes to the user through option G", () => {
   test("decision-making returns the framed choice, options, and classification instead of picking when the caller names an owner and the choice is a one-way door", () => {
     const t = squash(decisionMakingBody());
     expect(t).toContain("decision owner other than itself");

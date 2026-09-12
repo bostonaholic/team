@@ -46,9 +46,9 @@ function fm(): string {
   return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
 }
 
-// pr-watch-thread-escalation: single-file guarded readers, so a phrase search
-// scoped to one reference file cannot accidentally match the same words in a
-// different file that body() would otherwise concatenate them next to.
+// Single-file guarded readers, so a phrase search scoped to one reference
+// file cannot accidentally match the same words in a different file that
+// body() would otherwise concatenate them next to.
 const POLL = join(REFERENCES, "07-4-poll.md");
 const STOP_CONDITIONS = join(REFERENCES, "08-5-stop-conditions.md");
 const COMPACTION_DEFENSE = join(REFERENCES, "10-compaction-defense.md");
@@ -305,9 +305,9 @@ describe("pr-watch-as-reviewer skill: PENDING-review check is a fenced snippet",
   });
 });
 
-// pr-watch-thread-escalation, slice 1: a third-party login on an unresolved
-// tracked thread stops the loop before any verdict action that cycle.
-describe("pr-watch-as-reviewer skill: Third-party participant stop (design decisions 3, 6, 7, 11)", () => {
+// A third-party login on an unresolved tracked thread stops the loop before
+// any verdict action that cycle.
+describe("pr-watch-as-reviewer skill: Third-party participant stop", () => {
   test("the third-party check runs after re-review and before acting on a verdict", () => {
     const t = squash(fileBody(POLL));
     const reReviewIdx = t.indexOf("Re-review every new settlement");
@@ -342,11 +342,11 @@ describe("pr-watch-as-reviewer skill: Third-party participant stop (design decis
   });
 });
 
-// pr-watch-thread-escalation, slice 2: a rejected verdict that repeats on a
-// thread already carrying the viewer's own reply stops instead of rebutting
-// again. Slices 1 and 2 both edit the stop-conditions count, so this asserts
-// the post-slice-2 total: nine conditions, six owned by this skill.
-describe("pr-watch-as-reviewer skill: Dispute stands — a rejected verdict repeating after the viewer's own reply (design decisions 1, 2, 6)", () => {
+// A rejected verdict that repeats on a thread already carrying the viewer's
+// own reply stops instead of rebutting again. The stop-conditions count grew
+// in an earlier change too, so this asserts the current total: nine
+// conditions, six owned by this skill.
+describe("pr-watch-as-reviewer skill: Dispute stands — a rejected verdict repeating after the viewer's own reply", () => {
   function actOnVerdictSection(): string {
     const t = squash(fileBody(POLL));
     const start = t.indexOf("Act on every verdict.");

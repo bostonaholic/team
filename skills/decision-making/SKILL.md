@@ -62,9 +62,11 @@ with authorized execution without another confirmation.
    scores for options that fail a hard constraint, but mark them ineligible.
 6. **Test sensitivity.** State if reasonable weight or value changes can change
    the leader. Treat overlapping totals as uncertain.
-7. **Decide.** Choose the highest-scoring eligible option. Return the context,
-   heuristic, scorecard, deciding results, sensitivity, confidence, assumptions,
-   facts that can reopen the decision, and next action.
+7. **Decide.** When the caller names a decision owner other than itself,
+   return the framed choice, the options, and the classification. Do not
+   pick. Otherwise, choose the highest-scoring eligible option and return the
+   context, heuristic, scorecard, deciding results, sensitivity, confidence,
+   assumptions, facts that can reopen the decision, and next action.
 
 ## Rules
 
