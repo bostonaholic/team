@@ -299,3 +299,41 @@ Security, code, documentation, design, and comment review stay distinct; verdict
 The reviewer agents drop their review preloads and read the briefs from the installed plugin. The code-reviewer, eng-design-doc-review, and unslop eval fixtures inject the new reference bytes instead of the retired skill bodies.
 Catalog description and catalog-line budgets ratchet again after the seven registrations move.
 
+## M07: delivery, worktree, and agent execution contracts
+
+The catalog retains 25 commands and 7 methodologies, totaling 32 registrations, with 13 unchanged agent roles.
+Eight registrations move into six per-entry-point references, two playbooks, and two team references. No compatibility stubs remain.
+Worktree creation/validation/recovery/teardown, machine-local teardown, commit signing and Conventional Commit rules, changelog filtering, tracker pickup/link/in-review/merge semantics, watch-loop bounds, cross-model review, and nested-agent dispatch retain their existing behavior.
+
+| Retired registration | Destination | Retained contract |
+| --- | --- | --- |
+| `worktree-isolation` | `skills/team-worktree/playbooks/worktree.md` | Creation, validation, recovery, worktree reuse, the residue sweep, and explicit cleanup ownership. |
+| `sweeping-local-state` | `skills/pr-cleanup/playbooks/cleanup.md` | `.teamteardown` default-branch read, verbatim line execution, temp-path guards, and shared-resource/deletion safeguards. |
+| `git-commit` | `skills/team-pr/references/commit.md` | Conventional Commit subjects, 50/72, atomic commits, and signing rules. |
+| `changelog` | `skills/team-pr/references/changelog.md` | Keep a Changelog structure, baseline/filter, absolute URLs, and draft-status rules. |
+| `tracking-tickets` | `skills/team-pr/references/tracking.md` | Pickup/in-progress, PR linking, in-review-only-when-ready, and home-only closing semantics. |
+| `pr-watch-mechanics` | `skills/pr-watch-as-author/references/watch-loop.md` | Cycle timing, the 3-cycle soft cap, handoff, and the three loop stop conditions. |
+| `cross-model-review` | `skills/team/references/cross-model-review.md`; `external-review.mjs`; `prompt-template-code-review.md`; `prompt-template-design-review.md` | Vendor adapters, credential isolation, caps, courier dispatch, and inline producer fallback. |
+| `nested-agents` | `skills/team/references/agent-dispatch.md`; `supports-nesting.mjs`; `supports-nesting.d.mts` | Version gate, read-only helpers, caps, neutral claims, and supported nesting behavior. |
+
+The bundled scripts and vendor adapters (`external-review.mjs`, `supports-nesting.mjs`, and the role-named prompt templates) are preserved at their new locations; no verified replacement made them redundant.
+
+### Named runtime consumers
+
+| Consumer | Operation | Replacement |
+| --- | --- | --- |
+| `agents/code-reviewer.md` | Run cross-model and skeptic passes | Read `skills/team/references/cross-model-review.md` and `agent-dispatch.md`; drop `cross-model-review` and `nested-agents` preloads |
+| `agents/implementer.md` | Dispatch read-only scouts | Read `skills/team/references/agent-dispatch.md`; drop `nested-agents` preload |
+| `agents/researcher.md` | Fan out exploration scouts | Read `skills/team/references/agent-dispatch.md`; drop `nested-agents` preload |
+| `agents/security-reviewer.md` | Run skeptic passes | Read `skills/team/references/agent-dispatch.md`; drop `nested-agents` preload |
+| `skills/team/SKILL.md` | Setup, design review, PR gate | Read `tracking.md`, `changelog.md`, `cross-model-review.md`, and `worktree.md` |
+| `skills/team-fix/*` | Setup, worktree, ship | Read `tracking.md` and `worktree.md` |
+| `skills/team-pr/*` | Commit, changelog, tracking, teardown | Read `commit.md`, `changelog.md`, `tracking.md`, and `worktree.md` |
+| `skills/pr-watch-as-author/*` and `pr-watch-as-reviewer/*` | Bound the watch loop | Read `watch-loop.md` |
+| `skills/eng-design-doc-review/*`, `team-design/*`, `team/references/08-*` | Run the design cross-model pass | Read `cross-model-review.md` |
+| `skills/code-review/references/code-reviewer.md` | Place the disposition block | Read `cross-model-review.md` |
+| `skills/pr-verify/*`, `reflect/*` | Inline nested fallback | Read `agent-dispatch.md` |
+
+The four nested-dispatch agents drop their `nested-agents` preloads and read `agent-dispatch.md` from the installed plugin; `code-reviewer` additionally drops `cross-model-review` and reads `cross-model-review.md`. The git-commit and changelog eval fixtures keep their names but list the new reference paths in `deps`; the unslop and team-fix fixtures do the same for `cross-model-review`, `nested-agents`, and `tracking-tickets`.
+Catalog description and catalog-line budgets ratchet again after the eight registrations move.
+

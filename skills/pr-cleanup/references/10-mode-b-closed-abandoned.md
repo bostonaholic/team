@@ -75,7 +75,7 @@ stated by the user, never inferred from a PR being stale, red, or unreviewed.
    costs.
 
 5. **Sweep the machine-local state.** Follow
-   `skills/sweeping-local-state/SKILL.md` — all sections, full depth. Skip
+   `skills/pr-cleanup/playbooks/cleanup.md` — all sections, full depth. Skip
    "Finishing a review rather than a merge", which covers the reviewer
    case rather than this one. It removes what the git teardown above does
    not reach: databases, containers, and other resources the repo declares

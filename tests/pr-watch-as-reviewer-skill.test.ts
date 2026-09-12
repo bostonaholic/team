@@ -93,11 +93,11 @@ describe("pr-watch-as-reviewer skill: tracked set and gate", () => {
 });
 
 describe("pr-watch-as-reviewer skill: bounded cycle mechanics", () => {
-  test("cycle timing and the bound are delegated to pr-watch-mechanics, not restated", () => {
+  test("cycle timing and the bound are delegated to the watch loop, not restated", () => {
     // The interval, the soft cap, and the handoff are shared with
-    // pr-watch-as-author and live in pr-watch-mechanics, which owns their
-    // assertions. Restating them here would let the two copies drift.
-    expect(loadsSkill(body(), "pr-watch-mechanics")).toBe(true);
+    // pr-watch-as-author and live in the watch-loop reference, which owns
+    // their assertions. Restating them here would let the two copies drift.
+    expect(body()).toContain("watch-loop.md");
   });
 
   test("binds its own handoff state for the shared soft cap", () => {

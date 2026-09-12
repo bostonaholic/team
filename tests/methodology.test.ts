@@ -460,12 +460,12 @@ describe("bug-fix playbook (L2 content tripwire)", () => {
   });
 });
 
-describe("git-commit lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "git-commit", "SKILL.md");
+describe("commit discipline reference (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "team-pr", "references", "commit.md");
 
-  test("skill file exists with name: git-commit", () => {
+  test("reference exists as an ordinary file with the commit contract", () => {
     expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*git-commit\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+    expect(read(SKILL_FILE).startsWith("---\n")).toBe(false);
   });
 
   test("pins the 50/72, Conventional Commits, and atomic-commit contract", () => {
@@ -814,7 +814,7 @@ describe("comment red flags (L2 content tripwire)", () => {
 // refuted on precedent. Both halves are pinned — the claim carries its rule,
 // and precedent does not outrank one.
 describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () => {
-  const NESTED = read(join(REPO_ROOT, "skills", "nested-agents", "SKILL.md"));
+  const NESTED = read(join(REPO_ROOT, "skills", "team", "references", "agent-dispatch.md"));
   const DEPENDENCIES = read(join(REPO_ROOT, "skills", "team", "references", "dependencies.md"));
 
   test("a rule-violation claim carries the rule it cites", () => {
@@ -914,7 +914,7 @@ describe("code-review report format (L2 content tripwire)", () => {
   const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md");
   const FRONT_DOOR = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
-  const CROSS_MODEL = join(REPO_ROOT, "skills", "cross-model-review", "SKILL.md");
+  const CROSS_MODEL = join(REPO_ROOT, "skills", "team", "references", "cross-model-review.md");
 
   // Every `###` heading the report carries, in the order it is emitted. The
   // list is closed and complete: a reviewer that invents a section, or drops
@@ -1168,7 +1168,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-deep-agents-narrow-seams",
     "skills/team/principles/focused-work.md",
-    "skills/nested-agents/SKILL.md"
+    "skills/team/references/agent-dispatch.md"
   ],
   [
     "principle-subtract-before-you-add",
@@ -1193,7 +1193,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-optimization-never-dependency",
     "skills/team/principles/focused-work.md",
-    "skills/nested-agents/SKILL.md"
+    "skills/team/references/agent-dispatch.md"
   ],
   [
     "principle-bounded-loops",

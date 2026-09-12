@@ -2,7 +2,7 @@
 
 ## `4-repos.md`
 
-Write this only when a topic touches more than one repository. Its presence enables multi-repo mode under `skills/worktree-isolation/SKILL.md`; absence means single-repo. The home worktree is created in leading WORKTREE, secondary worktrees after design review.
+Write this only when a topic touches more than one repository. Its presence enables multi-repo mode under `skills/team-worktree/playbooks/worktree.md`; absence means single-repo. The home worktree is created in leading WORKTREE, secondary worktrees after design review.
 
 ```yaml
 ---

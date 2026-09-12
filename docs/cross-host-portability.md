@@ -170,10 +170,10 @@ nested subagents, and structured returns.
   than the script's own path is fine and sometimes required — the host a session
   is running on is knowable no other way, which is how
   `resolve-transcript.mjs` tells a Claude Code session from a Codex one.
-  `skills/nested-agents/SKILL.md:35` still interpolates the variable directly.
+  `skills/team/references/agent-dispatch.md` still interpolates the variable directly.
   That command is Claude-Code-specific, but the pipeline it serves is not:
   nested dispatch degrades to its documented inline fallback on every other
-  host (`skills/nested-agents/SKILL.md`, "Optimization, never a dependency").
+  host (`skills/team/references/agent-dispatch.md`, "Optimization, never a dependency").
 - **Hooks already isolate portable logic from host contract.** Each `.mjs` reads
   stdin, does Node-only work, then writes a host-shaped JSON result
   (`session-start-recover.mjs:236-244`, `post-write-validate.mjs:29-37`). The scan

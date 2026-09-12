@@ -148,8 +148,8 @@ function copyFile(source: string, destination: string): void {
 function seedNeutralRepository(workDir: string): void {
   cpSync(FIXTURE_REPOSITORY, workDir, { recursive: true });
   copyFile(
-    join(ROOT, "skills", "nested-agents", "references", "per-agent-dispatch.md"),
-    join(workDir, "skills", "nested-agents", "references", "per-agent-dispatch.md"),
+    join(ROOT, "skills", "team", "references", "agent-dispatch.md"),
+    join(workDir, "skills", "team", "references", "agent-dispatch.md"),
   );
   copyFile(
     join(ROOT, "skills", "team", "references", "dependencies.md"),
@@ -550,7 +550,7 @@ async function runResearchProducer(agentName: "file-finder" | "researcher"): Pro
           "skills/team/principles/focused-work.md",
           "skills/team/references/decisions.md",
           "skills/team/references/execution.md",
-          "skills/nested-agents/SKILL.md",
+          "skills/team/references/agent-dispatch.md",
           "skills/team/references/dependencies.md",
           "skills/team/playbooks/research.md",
         ];
@@ -771,7 +771,7 @@ async function runHelper(
       timeout: 240_000,
       testName: `non-vendor helper prose contract:${role}`,
       systemPromptAppend: instructionContext([
-        "skills/nested-agents/references/per-agent-dispatch.md",
+        "skills/team/references/agent-dispatch.md",
         "skills/team/principles/independent-review.md",
         "skills/team/principles/focused-work.md",
         "skills/team/principles/verified-results.md",
@@ -790,8 +790,8 @@ testUnslop(
   "non-vendor helper prose contract",
   async () => {
     requireImplementation();
-    const nested = readFileSync(join(ROOT, "skills", "nested-agents", "SKILL.md"), "utf8").replace(/\s+/g, " ");
-    const dispatch = readFileSync(join(ROOT, "skills", "nested-agents", "references", "per-agent-dispatch.md"), "utf8").replace(/\s+/g, " ");
+    const nested = readFileSync(join(ROOT, "skills", "team", "references", "agent-dispatch.md"), "utf8").replace(/\s+/g, " ");
+    const dispatch = readFileSync(join(ROOT, "skills", "team", "references", "agent-dispatch.md"), "utf8").replace(/\s+/g, " ");
     const templatePaths = PROSE_FILES.map((relativePath) => `\${CLAUDE_PLUGIN_ROOT}/${relativePath}`);
     const missingTemplatePaths = templatePaths.filter((path) => !nested.includes(path) || !dispatch.includes(path));
     expect(missingTemplatePaths).toEqual([]);
@@ -820,7 +820,7 @@ testUnslop(
         maxTurns: 2,
         timeout: 120_000,
         testName: "non-vendor helper prose contract:vendor-courier",
-        systemPromptAppend: instructionContext(["skills/nested-agents/references/per-agent-dispatch.md"]),
+        systemPromptAppend: instructionContext(["skills/team/references/agent-dispatch.md"]),
         disallowedTools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "Task", "Agent"],
       });
     } finally {
@@ -905,7 +905,7 @@ testUnslop(
           "skills/team/references/decisions.md",
 
           "skills/team/references/execution.md",
-          "skills/nested-agents/SKILL.md",
+          "skills/team/references/agent-dispatch.md",
           "skills/team/references/dependencies.md",
           "skills/team/playbooks/research.md",
           "skills/team/references/artifacts.md",

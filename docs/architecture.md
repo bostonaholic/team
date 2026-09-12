@@ -214,7 +214,7 @@ At that point the orchestrator writes a `## Worktrees` section to
 path. Any later `/team-*` invocation can thus rediscover all paths from
 one file. Only the home repo's worktree carries `docs/plans/<id>/`. Other
 repos' worktrees do not duplicate the artifacts. See
-`skills/worktree-isolation/SKILL.md` for full topology.
+`skills/team-worktree/playbooks/worktree.md` for full topology.
 
 **Fallback:** if home-worktree creation fails (shallow clone, certain CI
 systems, permissions), the orchestrator reports it and falls back to
@@ -380,7 +380,7 @@ the generator and the evaluator into one role. Read-only tool grants plus
 that ships with `Write` fails CI.
 
 One path steps outside that enforcement: the cross-model pass
-(`skills/cross-model-review/SKILL.md`) shells out to external vendor CLIs
+(`skills/team/references/cross-model-review.md`) shells out to external vendor CLIs
 — the `code-reviewer` on the code path, the orchestrator on the design
 path — and an external process is beyond the harness's tool grants. On
 that path the reviewer invariant is **trusted, not enforced**:
@@ -688,7 +688,6 @@ agent's frontmatter, one indented `- <name>` per line. For example,
 
 ```yaml
 skills:
-  - nested-agents
   - writing-prose
   - unslop
 ```
@@ -1110,7 +1109,7 @@ phase N finish?"
 
 Claude Code v2.1.172 lets sub-agents spawn their own sub-agents (up to
 5 levels deep). The plugin uses this capability in exactly three patterns,
-all governed by `skills/nested-agents/SKILL.md`:
+all governed by `skills/team/references/agent-dispatch.md`:
 
 - **Context-economy scouts** (`researcher`, `implementer`): read-only
   `Explore` / `team:file-finder` helpers that absorb bulk reading the
@@ -1142,7 +1141,7 @@ all governed by `skills/nested-agents/SKILL.md`:
   (`codex-review`, `agy-review`), so each external model's review is
   visible as its own agent while it runs. The courier's errand is fixed —
   run the pinned runner command, return its stdout verbatim — and the
-  vendor-courier block in `skills/cross-model-review/SKILL.md` carries
+  vendor-courier block in `skills/team/references/cross-model-review.md` carries
   the contract plus the inline fallback when nesting is unavailable.
 
 **Policy:**
@@ -1152,7 +1151,7 @@ all governed by `skills/nested-agents/SKILL.md`:
   pinned by `tests/nested-agents.test.ts`, so any other agent gaining the
   tool must be a deliberate decision that updates the tripwire.
 - Nested helpers are read-only, never write under `docs/plans/`, and
-  never pause for user input (see `skills/nested-agents/SKILL.md`).
+  never pause for user input (see `skills/team/references/agent-dispatch.md`).
 - Depth budget: pipeline agents sit at depth 2 of 5 and may spawn at
   most one more level.
 - **Version-gated.** Nesting requires Claude Code >= 2.1.172. The
@@ -1161,9 +1160,9 @@ all governed by `skills/nested-agents/SKILL.md`:
   works inline. So does any read-only agent like `researcher` that has no
   `Bash`. Agents that also hold `Bash` additionally run the bundled
   deterministic check
-  `skills/nested-agents/supports-nesting.mjs "$(claude --version)"`. Its
+  `skills/team/references/supports-nesting.mjs "$(claude --version)"`. Its
   pure comparison core is unit-tested at L1.
-  `tests/nested-agents.test.ts` pins the skill contract and the version
+  `tests/nested-agents.test.ts` pins the reference contract and the version
   floor. The check is fail-closed: an older release, unrecognizable
   version output, or an environment where it cannot run all resolve to
   "unsupported," which routes the agent to its inline path.

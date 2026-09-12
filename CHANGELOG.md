@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Consolidate delivery, worktree, and agent execution contracts into per-entry-point references, preserving signing, cleanup, tracking, watch-loop mechanics, cross-model review, and nested-dispatch authorization.
 - Consolidate reviewer briefs and finding contracts into per-entry-point references, preserving reviewer read-only independence, fresh-context inputs, verdict formats, and aggregation semantics.
 - Consolidate planning, implementation, and bug-fix procedures into playbooks, and test-quality policy into one reference, preserving acceptance-scope fences, Red gates, and bug-fix classification and commit rules.
 - Consolidate Question, Research, and Design procedures into three playbooks with shared templates and a dependency checklist, preserving artifact schemas, research isolation, return limits, and the design-review gate.

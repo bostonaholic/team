@@ -1,18 +1,12 @@
----
-name: pr-watch-mechanics
-description: 'Bounded watch-loop mechanics for the pr-watch skills: cycle timing, soft cap, handoff. Load when running or authoring a PR watch loop.'
-user-invocable: false
----
-
 # PR watch mechanics
 
-Before each consuming step, read its linked shared rules from this installed skill directory.
+Before each consuming step, read its linked shared rules from this installed reference directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 The cycle timing, bound, and handoff every PR watch loop runs. A consuming
-skill owns what each cycle *does*; this skill owns how the loop is paced,
+skill owns what each cycle *does*; this reference owns how the loop is paced,
 bounded, and ended. `pr-watch-as-author` and `pr-watch-as-reviewer` both
-load it.
+read it.
 
 A consumer binds three slots and nothing else:
 
@@ -54,7 +48,7 @@ A consumer binds three slots and nothing else:
 The cap convention is [execution rules](../team/references/execution.md): declare the
 bound with the loop; hitting it is a loud, terminal, reported outcome.
 
-## Stop conditions this skill owns
+## Stop conditions this reference owns
 
 Three stop conditions are loop mechanics rather than consumer actions, and
 each is reported by name:

@@ -23,13 +23,14 @@ const REPO_ROOT = process.cwd();
 // pr-cleanup is a RUNTIME skill — under skills/ (distributed), not .claude/.
 const SKILL = join(REPO_ROOT, "skills", "pr-cleanup", "SKILL.md");
 const REFERENCES = join(REPO_ROOT, "skills", "pr-cleanup", "references");
-// worktree-isolation's teardown hands off to pr-cleanup; the cross-reference
+// the worktree playbook's teardown hands off to pr-cleanup; the cross-reference
 // is pinned below so a rename of either side fails the build.
-const WORKTREE_ISOLATION = join(
+const WORKTREE_PLAYBOOK = join(
   REPO_ROOT,
   "skills",
-  "worktree-isolation",
-  "SKILL.md",
+  "team-worktree",
+  "playbooks",
+  "worktree.md",
 );
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
@@ -496,9 +497,9 @@ describe("pr-cleanup skill: dotfiles residue is absent", () => {
   });
 });
 
-describe("pr-cleanup skill: worktree-isolation teardown hands off to it", () => {
-  test("worktree-isolation references skills/pr-cleanup/SKILL.md", () => {
-    const t = existsSync(WORKTREE_ISOLATION) ? read(WORKTREE_ISOLATION) : "";
+describe("pr-cleanup skill: worktree playbook teardown hands off to it", () => {
+  test("worktree playbook references skills/pr-cleanup/SKILL.md", () => {
+    const t = existsSync(WORKTREE_PLAYBOOK) ? read(WORKTREE_PLAYBOOK) : "";
     expect(t).toContain("skills/pr-cleanup/SKILL.md");
   });
 

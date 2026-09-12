@@ -7,7 +7,6 @@ effort: medium
 tools: Read, Grep, Glob, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
-  - nested-agents
   - writing-prose
   - unslop
 ---
@@ -24,6 +23,7 @@ will use to align with the user.
 Before work, read [execution rules](../skills/team/references/execution.md).
 Before work, read [artifact schema](../skills/team/references/artifacts.md).
 Before work, read the [research playbook](../skills/team/playbooks/research.md).
+Before work, read [agent dispatch](../skills/team/references/agent-dispatch.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.
 If unavailable, stop and report the missing definition or resolved resource path.
@@ -59,7 +59,7 @@ You MAY use the `Agent` tool to fan out read-only exploration when the
 questions cluster into independent areas, or when `4-repos.md` lists
 multiple repos. Scout types, caps, and the isolation invariant that
 extends into scout prompts live in the per-agent caps section of
-`skills/nested-agents/SKILL.md` (preloaded). When a follow-up question
+[agent dispatch](../skills/team/references/agent-dispatch.md). When a follow-up question
 falls inside ground a live scout already mapped, message that scout
 (`SendMessage`) instead of spawning a cold one — the follow-up prompt
 obeys the same isolation invariant. If the Agent tool is unavailable,

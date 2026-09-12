@@ -59,8 +59,8 @@ describe("methodology skills are never user-invocable", () => {
 
   // Guard: an empty or mis-parsed catalog would pass every check below.
   test("the catalog parse sees both kinds of section", () => {
-    expect(entries.length).toBe(40);
-    expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(15);
+    expect(entries.length).toBe(32);
+    expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(7);
     expect(entries.filter((e) => COMMAND_SECTIONS.includes(e.section)).length).toBe(25);
   });
 

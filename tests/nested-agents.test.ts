@@ -7,13 +7,13 @@ import {
   MIN_VERSION,
   meetsMinimum,
   parseVersion,
-} from "../skills/nested-agents/supports-nesting.mjs";
+} from "../skills/team/references/supports-nesting.mjs";
 
 const REPO_ROOT = process.cwd();
 const AGENTS_DIR = join(REPO_ROOT, "agents");
-const NESTED_SKILL = join(REPO_ROOT, "skills", "nested-agents", "SKILL.md");
-const NESTED_VERSION_CHECK = join(REPO_ROOT, "skills", "nested-agents", "supports-nesting.mjs");
-const NESTED_DISPATCH = join(REPO_ROOT, "skills", "nested-agents", "references", "per-agent-dispatch.md");
+const NESTED_SKILL = join(REPO_ROOT, "skills", "team", "references", "agent-dispatch.md");
+const NESTED_VERSION_CHECK = join(REPO_ROOT, "skills", "team", "references", "supports-nesting.mjs");
+const NESTED_DISPATCH = join(REPO_ROOT, "skills", "team", "references", "agent-dispatch.md");
 const PROSE_PATHS = [
   "${CLAUDE_PLUGIN_ROOT}/skills/unslop/SKILL.md",
   "${CLAUDE_PLUGIN_ROOT}/skills/unslop/references/rules.md",
@@ -47,22 +47,9 @@ function toolsLineHasAgent(text: string): boolean {
   return /^tools:.*\bAgent\b/m.test(frontmatter(text));
 }
 
-// True if a file's frontmatter `skills:` array contains `nested-agents`.
-function skillsArrayHasNestedAgents(text: string): boolean {
-  const fm = frontmatter(text);
-  const lines = fm.split("\n");
-  let inSkills = false;
-  for (const line of lines) {
-    if (/^skills:\s*$/.test(line)) {
-      inSkills = true;
-      continue;
-    }
-    if (inSkills) {
-      if (/^\s*-\s+nested-agents\s*$/.test(line)) return true;
-      if (!/^\s*-\s+/.test(line) && line.trim() !== "") break;
-    }
-  }
-  return false;
+// True if a file's body references the agent-dispatch reference.
+function referencesAgentDispatch(text: string): boolean {
+  return text.includes("team/references/agent-dispatch.md");
 }
 
 describe("Agent-tool allowlist (exact, positive + negative)", () => {
@@ -90,14 +77,10 @@ describe("Agent-tool allowlist (exact, positive + negative)", () => {
   });
 });
 
-describe("granted agents preload + reference the nested-agents skill", () => {
+describe("granted agents read the agent-dispatch reference", () => {
   for (const name of GRANTED) {
-    test(`${name} skills: frontmatter contains nested-agents`, () => {
-      expect(skillsArrayHasNestedAgents(read(agent(name)))).toBe(true);
-    });
-
-    test(`${name} body references skills/nested-agents/SKILL.md`, () => {
-      expect(read(agent(name))).toContain("nested-agents/SKILL.md");
+    test(`${name} body references skills/team/references/agent-dispatch.md`, () => {
+      expect(read(agent(name))).toContain("team/references/agent-dispatch.md");
     });
 
     test(`${name} body has a nested-dispatch section (scout or skeptic)`, () => {
@@ -105,37 +88,21 @@ describe("granted agents preload + reference the nested-agents skill", () => {
     });
   }
 
-  test("no agent outside the allowlist preloads nested-agents", () => {
+  test("no agent outside the allowlist reads agent-dispatch", () => {
     const offenders = allAgentNames()
       .filter((name) => !GRANTED.includes(name))
-      .filter((name) => skillsArrayHasNestedAgents(read(agent(name))));
+      .filter((name) => referencesAgentDispatch(read(agent(name))));
     expect(offenders).toEqual([]);
   });
 });
 
-describe("nested-agents skill structure and load-bearing rules", () => {
-  test("skills/nested-agents/SKILL.md exists", () => {
+describe("agent-dispatch reference structure and load-bearing rules", () => {
+  test("skills/team/references/agent-dispatch.md exists", () => {
     expect(existsSync(NESTED_SKILL)).toBe(true);
   });
 
-  test("frontmatter declares name: nested-agents", () => {
-    const fm = frontmatter(readOrEmpty(NESTED_SKILL));
-    expect(/^name:\s*nested-agents\s*$/m.test(fm)).toBe(true);
-  });
-
-  test("frontmatter has a non-empty description", () => {
-    const fm = frontmatter(readOrEmpty(NESTED_SKILL));
-    expect(/^description:\s*\S/m.test(fm)).toBe(true);
-  });
-
-  test("frontmatter is exactly name + description + user-invocable: false (methodology convention)", () => {
-    const fm = frontmatter(readOrEmpty(NESTED_SKILL));
-    const keys = fm
-      .split("\n")
-      .filter((line) => /^[A-Za-z][\w-]*:/.test(line))
-      .map((line) => line.split(":")[0]);
-    expect(keys.sort()).toEqual(["description", "name", "user-invocable"]);
-    expect(/^user-invocable:\s*false\s*$/m.test(fm)).toBe(true);
+  test("reference is an ordinary file with no skill frontmatter", () => {
+    expect(readOrEmpty(NESTED_SKILL).startsWith("---\n")).toBe(false);
   });
 
   test("body states the depth budget", () => {
@@ -297,7 +264,7 @@ describe("non-vendor nested prose contract", () => {
   });
 
   test("vendor couriers bypass prose reads and preserve stdout bytes", () => {
-    const courier = flat(read(NESTED_DISPATCH).split("## `code-reviewer` — vendor couriers")[1] ?? "");
+    const courier = flat(read(NESTED_DISPATCH).split("### `code-reviewer` — vendor couriers")[1] ?? "");
     expect(courier.length).toBeGreaterThan(0);
     expect(courier).toMatch(/do not receive or Read the prose files/i);
     expect(courier).toMatch(/stdout verbatim/i);

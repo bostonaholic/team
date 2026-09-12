@@ -2,7 +2,7 @@
 agent: changelog
 tier: periodic
 deps:
-  - skills/changelog/**
+  - skills/team-pr/references/changelog.md
 ---
 
 # Self-contained task: generate Keep-a-Changelog entries from commit subjects

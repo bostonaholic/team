@@ -8,7 +8,7 @@
 3. **Move the ticket to in-progress.** If a `ticketId` or issue was
    resolved in steps 1–2, move that ticket to its tracker's in-progress
    state. This is the first action of the run, before any other work
-   begins. Call the Skill tool with `tracking-tickets` and follow its
+   begins. Read [tracking rules](../team-pr/references/tracking.md) and follow its
    ticket-lifecycle rules, best-effort — skip silently when no tracker
    mechanism exists. Never block the pipeline on a tracker update.
 4. **Derive `<id>`:**

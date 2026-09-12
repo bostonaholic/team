@@ -85,7 +85,7 @@ run.>
 ### Cross-model disposition
 
 <The cross-model pass's per-round record, built per
-`skills/cross-model-review/SKILL.md`. Exactly "Not run: <reason>." when
+`skills/team/references/cross-model-review.md`. Exactly "Not run: <reason>." when
 that pass did not run.>
 ```
 

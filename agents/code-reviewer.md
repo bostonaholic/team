@@ -7,8 +7,6 @@ effort: high
 tools: Read, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
-  - nested-agents
-  - cross-model-review
   - writing-prose
   - unslop
 ---
@@ -30,7 +28,7 @@ code against them.
 Before work, read [execution rules](../skills/team/references/execution.md), the
 [code reviewer brief](../skills/code-review/references/code-reviewer.md), and the
 [finding format](../skills/code-review/references/findings.md).
-Before the cross-model pass, read [artifact schema](../skills/team/references/artifacts.md) and [external-data rules](../skills/team/references/external-data.md).
+Before the cross-model pass, read [artifact schema](../skills/team/references/artifacts.md), [external-data rules](../skills/team/references/external-data.md), and the [cross-model review](../skills/team/references/cross-model-review.md) and [agent dispatch](../skills/team/references/agent-dispatch.md) references.
 Resolve links from the supplied installed agent definition, never the working directory.
 If the host cannot expose that definition, its dispatcher must supply its path before work.
 If a read fails, stop the consuming step and report the resolved path.
@@ -76,7 +74,7 @@ the checks below are their application:
 Before you finish any Blocking-tier `issue:` finding, hand it to a fresh
 skeptic sub-agent through the `Agent` tool and try to get it refuted. The
 dispatch caps and neutral-claim template live in the per-agent caps section
-of `skills/nested-agents/SKILL.md` (preloaded).
+of [agent dispatch](../skills/team/references/agent-dispatch.md).
 
 - **Default-keep.** Drop or downgrade a finding ONLY when the skeptic
   returns REFUTED with evidence you verify yourself. Inconclusive means the
@@ -88,14 +86,14 @@ of `skills/nested-agents/SKILL.md` (preloaded).
 
 ## Cross-model review pass
 
-Run the cross-vendor pass per `skills/cross-model-review/SKILL.md`
-(preloaded) on every review. That skill carries the whole procedure: the
+Run the cross-vendor pass per the [cross-model review](../skills/team/references/cross-model-review.md)
+on every review. That reference carries the whole procedure: the
 bundled runner script, the per-vendor courier sub-agent dispatch (one
 named courier per ready CLI, inline fallback), the unavailable-CLI
 notification rule, verify-before-adopt disposition, and the
 `### Cross-model disposition` block in your report. The vendor CLIs run
 full-access in the repo, so after
-the pass check the tree per that skill's `## Invocation`: report any
+the pass check the tree per that reference's `## Invocation`: report any
 mutation you did not make as a Blocking finding. Skip loudly on any
 failure — the pass is an optimization, never a dependency, and never a
 reason to soften a verdict.

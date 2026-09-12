@@ -8,7 +8,7 @@ deps:
   - skills/team/principles/human-control.md
   - skills/team/references/execution.md
   - skills/team-fix/**
-  - skills/tracking-tickets/**
+  - skills/team-pr/references/tracking.md
 ---
 
 # Self-contained task: plan a compressed bug fix, test-first

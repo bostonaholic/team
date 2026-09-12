@@ -6,7 +6,7 @@
 - Branch name = `<id>` (in every involved repo)
 - Worktree path per repo = `<repo-path>/.claude/worktrees/<id>` (the
   `.claude/worktrees/` convention. See
-  `skills/worktree-isolation/SKILL.md`)
+  `skills/team-worktree/playbooks/worktree.md`)
 
 **Branch names must never contain a slash (`/`).** Use `-` as the only
 delimiter. A `/` in a branch name creates a nested ref path in

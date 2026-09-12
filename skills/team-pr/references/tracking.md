@@ -1,10 +1,4 @@
----
-name: tracking-tickets
-description: 'Defines tracker status transitions and closing rules. Load when a pipeline run is linked to a ticket.'
-user-invocable: false
----
-
-# Tracking Tickets
+# Tracking tickets
 
 Canonical tracker rules for pipeline pickup, PR linking, review state, and
 merge. Entry points keep only tracker-specific calls.

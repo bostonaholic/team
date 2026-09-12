@@ -107,14 +107,14 @@ describe("thin agents: new skills carry the moved procedure content", () => {
 
 describe("thin agents: frontmatter skills preloads per agent", () => {
   const EXPECTED_PRELOADS: Record<string, string[]> = {
-    "code-reviewer": ["cross-model-review", "nested-agents", "unslop", "writing-prose"],
+    "code-reviewer": ["unslop", "writing-prose"],
     "design-author": ["unslop", "writing-prose"],
     "file-finder": ["unslop", "writing-prose"],
-    implementer: ["nested-agents", "unslop", "writing-prose"],
+    implementer: ["unslop", "writing-prose"],
     planner: ["unslop", "writing-prose"],
     questioner: ["unslop", "writing-prose"],
-    researcher: ["nested-agents", "unslop", "writing-prose"],
-    "security-reviewer": ["nested-agents", "unslop", "writing-prose"],
+    researcher: ["unslop", "writing-prose"],
+    "security-reviewer": ["unslop", "writing-prose"],
     "structure-planner": ["unslop", "writing-prose"],
     "technical-writer": ["unslop", "writing-prose"],
     "test-architect": ["unslop", "writing-prose"],
@@ -147,13 +147,7 @@ const PRELOAD_BUDGET = 3;
 
 type BudgetReason = { count: number; reason: string };
 
-const PRELOAD_BUDGET_REASONS: Record<string, BudgetReason> = {
-  "code-reviewer": {
-    count: 4,
-    reason:
-      "It keeps the vendor and nested-agent procedures plus the shared `writing-prose` and `unslop` owners.",
-  },
-};
+const PRELOAD_BUDGET_REASONS: Record<string, BudgetReason> = {};
 
 // The four offender rules, factored so the planted-positive test can run each
 // one against synthetic input instead of trusting that it fired on real data.
@@ -323,16 +317,16 @@ describe("thin agents: fold targets absorbed the moved methodology", () => {
     );
   });
 
-  test("nested-agents body carries the folded scout caps", () => {
-    expect(body(readOrEmpty(skillPath("nested-agents")))).toMatch(/scout/i);
+  test("agent-dispatch reference carries the folded scout caps", () => {
+    expect(readOrEmpty(join(REPO_ROOT, "skills", "team", "references", "agent-dispatch.md"))).toMatch(/scout/i);
   });
 
-  test("nested-agents body carries the folded skeptic-pass caps", () => {
-    expect(body(readOrEmpty(skillPath("nested-agents")))).toMatch(/skeptic/i);
+  test("agent-dispatch reference carries the folded skeptic-pass caps", () => {
+    expect(readOrEmpty(join(REPO_ROOT, "skills", "team", "references", "agent-dispatch.md"))).toMatch(/skeptic/i);
   });
 
-  test("nested-agents per-agent caps name all four Agent-tool holders in the body", () => {
-    const content = body(readOrEmpty(skillPath("nested-agents")));
+  test("agent-dispatch per-agent caps name all four Agent-tool holders", () => {
+    const content = readOrEmpty(join(REPO_ROOT, "skills", "team", "references", "agent-dispatch.md"));
     for (const holder of ["researcher", "implementer", "code-reviewer", "security-reviewer"]) {
       expect(content).toContain(holder);
     }

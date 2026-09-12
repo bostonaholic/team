@@ -29,7 +29,7 @@ in-session coordination uses TodoWrite.
 
 - Walk this phase table in order: `Worktree → Question → Research → Design → Structure → Plan → Implement → PR`.
 - There are **no mid-run human gates**. Continue until the draft PR exists.
-- For a picked-up ticket, call the Skill tool with `tracking-tickets` and move the ticket to in-progress. At PR creation, use the same skill for the in-review transition and the multi-repo home-only closing rule.
+- For a picked-up ticket, read [tracking rules](../team-pr/references/tracking.md) and move the ticket to in-progress. At PR creation, use the same reference for the in-review transition and the multi-repo home-only closing rule.
 - Before WORKTREE, run the non-blocking probes `ssh-add -l`, `gh auth status`, and `git config --global --get commit.gpgsign`; no result blocks the run.
 - Read [design reviewer brief](../eng-design-doc-review/references/design-reviewer.md) and dispatch its review brief with the artifact directory substituted.
 - Read `references/15-host-dispatch.md` before the first dispatch and resolve every agent through it.

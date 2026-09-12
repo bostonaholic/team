@@ -1,7 +1,7 @@
 ## Changelog Update
 
-Before creating the ship commit, call the Skill tool with `changelog` and
-update `CHANGELOG.md` per that skill:
+Before creating the ship commit, read [changelog rules](changelog.md) and
+update `CHANGELOG.md` per that reference:
 
 1. Scan commits since the last changelog entry using `git log`.
 2. Filter to user-facing commits: `feat:`, `fix:`, `perf:`, `security:`,

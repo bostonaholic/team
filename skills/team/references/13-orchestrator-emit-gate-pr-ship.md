@@ -2,7 +2,7 @@
 
 When the aggregate gate passes:
 
-1. Update `CHANGELOG.md`: call the Skill tool with `changelog` and apply it
+1. Update `CHANGELOG.md`: read [changelog rules](../team-pr/references/changelog.md) and apply it
    — bullets go under `## [Unreleased]`. In multi-repo mode, update each repo's
    `CHANGELOG.md` with the entries belonging to that repo's commits.
 2. **Never version here.** Do not touch a version string, cut a dated
@@ -19,7 +19,7 @@ When the aggregate gate passes:
    **one draft PR per repo with commits ahead**. The PR bodies cross-link
    to each other, so reviewers can see the full change set.
 5. **Ticket — link now, in-review when ready.** If `1-task.md` frontmatter
-   has `ticketId` set, call the Skill tool with `tracking-tickets` and apply
+   has `ticketId` set, read [tracking rules](../team-pr/references/tracking.md) and apply
    its ticket-lifecycle rules. Link the PR to the ticket through the
    conditional closing footer (in multi-repo mode the home repo's PR
    alone carries the closing keyword. Companions get a non-closing
@@ -33,8 +33,8 @@ When the aggregate gate passes:
 7. **Leave the worktree(s) in place.** Do not remove a worktree when a PR
    is opened. The user can need to iterate on the branch, to push follow-up
    commits or address review feedback. Clean up a worktree only after its
-   PR is merged or when the user explicitly asks. Call the Skill tool with
-   `worktree-isolation` and follow
+   PR is merged or when the user explicitly asks. Read the
+   [worktree playbook](../team-worktree/playbooks/worktree.md) and follow
    its "Ship (teardown)" procedure:
    commit preservation, worktree and branch removal, the rebase-only
    default-branch update, and deletion of the feature's untracked

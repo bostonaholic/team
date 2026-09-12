@@ -316,7 +316,7 @@ function lensSubsection(heading: RegExp): string {
 // Agent types that hold `Bash`, so a lens pointed at one gives an imperative
 // embedded in a transcript span a command sink. `Explore` holds every tool but
 // the write and dispatch ones; `general-purpose` holds every tool outright
-// (skills/nested-agents/SKILL.md, "Read-only by default").
+// (skills/team/references/agent-dispatch.md, "Read-only by default").
 const SHELL_HOLDING_TYPES = ["Explore", "general-purpose"] as const;
 
 // The skill's dispatch prose: everything but the subsection whose whole job is
