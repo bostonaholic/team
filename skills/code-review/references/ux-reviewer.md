@@ -1,18 +1,39 @@
-# Verifying UX Procedure
+# UX Reviewer Brief
 
-The ux-reviewer's procedure: boot the application, interact with it as a
-real user would, and evaluate if the experience works correctly.
+This brief is read by the `ux-reviewer` agent. Resolve links from the installed
+skill directory. If a required read fails, stop that step with the exact path.
+Never use checkout fallback or recursive loading.
 
-## Detection
+The ux-reviewer boots the application, interacts with it as a real user would,
+and judges whether the experience works. Format findings as Working / Broken /
+Could Improve. A Broken item is a REQUEST CHANGES verdict and counts as a
+*major*; the loop auto-fixes it and it never reaches the user. Only
+Could-Improve notes surface. Screenshot failure is Could Improve, never
+REQUEST CHANGES.
 
-First, determine the project type by inspecting configuration files:
+## Generator-Evaluator Separation
 
-- **UI project:** Has a frontend framework (React, Vue, Svelte, Next.js, etc.)
-  with pages, components, or routes that render HTML.
-- **API-only project:** Has HTTP endpoints but no user-facing UI (REST API,
-  GraphQL, CLI tool).
-- **Library:** No runnable server. Skip live testing and report that live
-  verification is not applicable.
+Reviews must be performed with fresh context. The generator (the agent that
+wrote the change) must never evaluate its own output. Read the
+[code reviewer brief](code-reviewer.md) for the shared canon; the severity and
+verdict-aggregation tier map lives in the [finding format](findings.md), which
+the orchestrator applies. Do not change code or test unrelated behavior.
+
+## Detection and surface
+
+Determine the project type by inspecting configuration files, then exercise the
+matching surface. No screenshot requirement applies to nonvisual work.
+
+| Project type | Exercise | Evidence |
+| --- | --- | --- |
+| UI | start the dev server, fetch changed routes, interact, capture screenshots | status codes, rendered HTML, interaction outcomes, PNGs |
+| API | start the server, send real requests | status codes, headers, bodies, error cases |
+| CLI | run the command, inspect filesystem and stdio | exit code, stdout/stderr, files created or changed |
+| Library | build a real consumer program that imports it | compile/run output, returned values, files written |
+
+Library and CLI cases receive this surface-appropriate verification and never a
+screenshot. A library has no runnable server; a consumer program is its
+verification surface.
 
 ## UI Project Verification
 
@@ -21,10 +42,9 @@ First, determine the project type by inspecting configuration files:
    background. Wait for the server to be ready (watch for "ready" or
    "listening" output, or poll the port).
 
-2. **Verify the home route.** Use `curl` to fetch the main page. Check that:
-   - The response status is 200
-   - The response body contains expected HTML structure
-   - No server-side error messages are present
+2. **Verify the home route.** Use `curl` to fetch the main page. Check that
+   the response status is 200, the body contains expected HTML structure, and
+   no server-side error messages are present.
 
 3. **Check relevant pages.** If the implementation changed specific routes or
    pages, verify those routes return successfully.
@@ -49,18 +69,28 @@ First, determine the project type by inspecting configuration files:
    - Verify response body structure matches expectations
    - Test error cases (invalid input, missing auth, not found)
 
-3. **Check edge cases:**
-   - Empty request bodies where a body is expected
-   - Malformed input
-   - Missing necessary parameters
+3. **Check edge cases:** empty request bodies where a body is expected,
+   malformed input, missing necessary parameters.
 
 4. **Stop the server** when verification is complete.
+
+## CLI Verification
+
+Run the command the change affects and observe the real outcome: exit code,
+stdout, stderr, and the files it creates or changes. Test the documented
+arguments and one invalid-input case. Capture no screenshots.
+
+## Library Verification
+
+Build and run a small consumer program that imports the library and exercises
+the changed API. Record the compile/run output, returned values, and any files
+written. Capture no screenshots.
 
 ## Screenshot Capture (UI projects)
 
 Runs as step 5 of UI Project Verification, inside the server lifecycle (the
-server is up. You have not stopped it yet). Skip this entire section for
-API-only and Library projects.
+server is up; you have not stopped it yet). Skip this entire section for API,
+CLI, and Library projects.
 
 **UI-impact gate.** Capture only when both conditions hold: the project type
 is UI **and** the branch's full diff touches components, templates, pages,
@@ -147,3 +177,7 @@ means every planned shot is present. `partial` means some were skipped.
 - Keep curl commands and output in the report so findings are reproducible.
 - Time-bound your verification. If the server has not started within 60
   seconds, report a startup failure.
+- Apply the adjacent-flow check from the
+  [system dependency lens](../team/references/dependencies.md) `## When reviewing`
+  section: verify flows that share the changed components, not only the
+  changed screen.

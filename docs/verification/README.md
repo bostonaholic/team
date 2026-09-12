@@ -8,6 +8,18 @@ Dependencies are Bun, Git, Node, Bash, and the packages in `bun.lock`.
 Install missing packages with `bun install --frozen-lockfile`.
 The supplied baseline used Bun 1.4.2. Free checks need no model credentials.
 
+## Capability index
+
+This page is Team's project-local capability index. Each entry records how to
+drive a capability and what proves it worked, per the
+[verify playbook](../skills/team/playbooks/verify.md). The command table below
+maps each capability to its **invocation** (the command), **expected behavior**
+(the result column), and **evidence** (where the output lands). Prerequisites
+are the dependencies above; cleanup is named per section, and evidence survives
+cleanup by being copied out of owned scratch before it is removed. Start with
+the affected capabilities; do not catalog the whole application before its
+first useful run.
+
 | Command | Expected result | Evidence |
 | --- | --- | --- |
 | `bun run scripts/migration-inventory.ts <checkout-root>` | JSON on stdout, exit 0 | [Initial inventory](baselines/m01.json) |

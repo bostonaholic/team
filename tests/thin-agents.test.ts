@@ -1,9 +1,9 @@
 // Acceptance fence for the thin-agents-over-skills refactor: every agent
-// file becomes an identity-only wrapper (60-90 lines) whose procedure lives
-// in a preloaded methodology skill — 9 new skills plus folds into existing
-// skills. L2 static-invariant tripwires per docs/testing.md: read source,
-// assert the contract, execute nothing. The suite passes only when the
-// whole refactor is complete.
+// file is an identity-only wrapper (60-90 lines) whose procedure lives in an
+// ordinary playbook or reference it reads by path — no methodology skills
+// remain preloaded. L2 static-invariant tripwires per docs/testing.md: read
+// source, assert the contract, execute nothing. The suite passes only when
+// the whole refactor is complete.
 
 import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
@@ -69,38 +69,29 @@ const ALL_AGENTS = [
   "verifier",
 ];
 
-// The 2 remaining methodology skills, the agent whose procedure each one carries,
-// and a marker string from the moved content that must survive the move.
-const NEW_SKILLS: { skill: string; agent: string; anchor: string }[] = [
-  { skill: "running-quality-checks", agent: "verifier", anchor: "speed order" },
-  { skill: "verifying-ux", agent: "ux-reviewer", anchor: "curl" },
+// The two former methodology skills, the reviewer whose procedure each one
+// carried, the ordinary resource that now holds the procedure, and a marker
+// string from the moved content that must survive the move.
+const MOVED_PROCEDURES: { retired: string; resource: string; anchor: string }[] = [
+  { retired: "running-quality-checks", resource: "skills/team/playbooks/verify.md", anchor: "speed order" },
+  { retired: "verifying-ux", resource: "skills/code-review/references/ux-reviewer.md", anchor: "curl" },
 ];
 
 
-describe("thin agents: new methodology skills exist with the methodology-skill frontmatter contract", () => {
-  for (const { skill } of NEW_SKILLS) {
-    test(`skills/${skill}/SKILL.md exists`, () => {
-      expect(existsSync(skillPath(skill))).toBe(true);
+describe("thin agents: former methodology skills live in ordinary resources", () => {
+  for (const { retired, resource, anchor } of MOVED_PROCEDURES) {
+    test(`${retired} is no longer a registered skill`, () => {
+      expect(existsSync(skillPath(retired))).toBe(false);
     });
 
-    test(`${skill} frontmatter: name, description, user-invocable false, no effort`, () => {
-      const fm = frontmatter(readOrEmpty(skillPath(skill)));
-      expect(fm).toMatch(new RegExp(`^name: ${skill}$`, "m"));
-      expect(fm).toMatch(/^description: .{20,}/m);
-      expect(fm).toMatch(/^user-invocable: false$/m);
-      expect(/^effort:/m.test(fm)).toBe(false);
+    test(`${resource} exists as an ordinary resource`, () => {
+      const text = readOrEmpty(join(REPO_ROOT, resource));
+      expect(text.length).toBeGreaterThan(0);
+      expect(text.startsWith("---\n")).toBe(false);
     });
 
-    test(`${skill} body is present`, () => {
-      expect(readOrEmpty(skillPath(skill)).length).toBeGreaterThan(0);
-    });
-  }
-});
-
-describe("thin agents: new skills carry the moved procedure content", () => {
-  for (const { skill, agent, anchor } of NEW_SKILLS) {
-    test(`${skill} carries ${agent} procedure content (mentions "${anchor}")`, () => {
-      expect(readOrEmpty(skillPath(skill))).toContain(anchor);
+    test(`${resource} carries the moved procedure content (mentions "${anchor}")`, () => {
+      expect(readOrEmpty(join(REPO_ROOT, resource))).toContain(anchor);
     });
   }
 });
@@ -118,8 +109,8 @@ describe("thin agents: frontmatter skills preloads per agent", () => {
     "structure-planner": [],
     "technical-writer": [],
     "test-architect": [],
-    "ux-reviewer": ["verifying-ux"],
-    verifier: ["running-quality-checks"],
+    "ux-reviewer": [],
+    verifier: [],
   };
 
   for (const [agent, expected] of Object.entries(EXPECTED_PRELOADS)) {
@@ -209,14 +200,12 @@ describe("every preloaded name counts against the budget", () => {
   );
 
   // Guard: a mis-parsed agents/ tree would empty every offender array below.
-  // It counts agents and parsed names, never entries — zero entries is a legal
-  // end state, so an entry-count guard would forbid the budget being met.
-  test("the agent parse covers every agent file and finds preloaded names", () => {
+  // It counts agents, never entries — zero preloads is the legal end state
+  // now that every methodology skill lives in an ordinary resource.
+  test("the agent parse covers every agent file", () => {
     const files = readdirSync(join(REPO_ROOT, "agents")).filter((name) => name.endsWith(".md"));
     expect(agentNames.length).toBe(files.length);
     expect(agentNames.length).toBeGreaterThanOrEqual(13);
-    const total = [...counted.values()].reduce((sum, names) => sum + names.length, 0);
-    expect(total).toBeGreaterThan(0);
   });
 
   test("every agent past the preload budget has a recorded reason", () => {
@@ -261,12 +250,17 @@ describe("every preloaded name counts against the budget", () => {
   });
 });
 
-describe("thin agents: wrapper bodies point at their procedure skills", () => {
-  // Convention: a wrapper keeps a one-line pointer (or a preload note
-  // naming the path) for each skill it runs on — the body must name it.
-  for (const { skill, agent } of NEW_SKILLS) {
-    test(`${agent} body names ${skill}`, () => {
-      expect(body(readOrEmpty(agentPath(agent)))).toContain(skill);
+describe("thin agents: wrapper bodies read their procedure resources by path", () => {
+  // Convention: a wrapper keeps a pointer naming the ordinary resource it
+  // reads. The body must name the resource path.
+  const WRAPPER_RESOURCES: { agent: string; resource: string }[] = [
+    { agent: "verifier", resource: "team/playbooks/verify.md" },
+    { agent: "ux-reviewer", resource: "code-review/references/ux-reviewer.md" },
+  ];
+
+  for (const { agent, resource } of WRAPPER_RESOURCES) {
+    test(`${agent} body names ${resource}`, () => {
+      expect(body(readOrEmpty(agentPath(agent)))).toContain(resource);
     });
   }
 });
@@ -364,38 +358,23 @@ describe("thin agents: duplicated summaries deleted from wrappers", () => {
   });
 });
 
-describe("thin agents: haiku skills are self-contained", () => {
-  // verifier and file-finder run on haiku, which cannot be trusted to chase
-  // cross-references — their skills must carry everything inline.
-  for (const skill of ["running-quality-checks"]) {
-    test(`${skill} has no skills/ cross-references`, () => {
-      const content = readOrEmpty(skillPath(skill));
-      expect(content.length).toBeGreaterThan(0);
-      expect(content).not.toContain("skills/");
-    });
-  }
+describe("thin agents: the verify playbook stays cross-reference-free for haiku", () => {
+  // verifier runs on haiku, which cannot be trusted to chase a `skills/`
+  // citation. The verify playbook it reads by path must carry its procedure
+  // inline, with relative principle links rather than skill paths.
+  test("verify.md has no skills/ cross-references", () => {
+    const content = readOrEmpty(join(REPO_ROOT, "skills", "team", "playbooks", "verify.md"));
+    expect(content.length).toBeGreaterThan(0);
+    expect(content).not.toContain("skills/");
+  });
 });
 
-describe("thin agents: skills catalog stays complete", () => {
+describe("thin agents: retired methodology names leave the catalog", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
 
-  for (const { skill } of NEW_SKILLS) {
-    test(`docs/skills.md documents ${skill}`, () => {
-      expect(read(SKILLS_MD)).toContain(`### [${skill}](`);
-    });
-  }
-});
-
-describe("thin agents: name-collision pairs documented", () => {
-  const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
-  const COLLISION_PAIRS: [string, string][] = [
-    ["verifying-ux", "ux-reviewer"],
-  ];
-
-  for (const [skill, agent] of COLLISION_PAIRS) {
-    test(`collision row ${skill} / ${agent} exists`, () => {
-      const row = new RegExp(`^\\|\\s*\`${skill}\`\\s*\\|\\s*\`${agent}\`\\s*\\|`, "m");
-      expect(read(SKILLS_MD)).toMatch(row);
+  for (const { retired } of MOVED_PROCEDURES) {
+    test(`docs/skills.md no longer catalogues ${retired}`, () => {
+      expect(read(SKILLS_MD)).not.toContain(`### [${retired}](`);
     });
   }
 });

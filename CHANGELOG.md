@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Consolidate Question, Research, and Design procedures into three playbooks with shared templates and a dependency checklist, preserving artifact schemas, research isolation, return limits, and the design-review gate.
 - Consolidate shared principles into ordinary installed resources while preserving command scope, review gates, and evaluation inputs.
 - Load artifact schemas and shell safety rules as explicit installed resources, with connected evaluation inputs.
+- Add reusable verification for actual acceptance claims: move `running-quality-checks` into the shared `skills/team/playbooks/verify.md` playbook and `verifying-ux` into the `skills/code-review/references/ux-reviewer.md` brief. Verification now matches the claim's surface — a library runs a real consumer, a CLI checks invocation and filesystem effects, a service checks requests and state, and UI interaction drives the app as a user — with a project-local capability index under `docs/verification/`, evidence records naming revision, environment, action, and expected/actual outcome, and unavailable tools reported UNKNOWN rather than passed. The catalog drops from 27 to 25 registrations.
 
 ## [0.104.0] - 2026-09-11
 

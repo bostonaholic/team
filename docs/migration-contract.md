@@ -157,7 +157,7 @@ Human-control rules preserve accepted pipeline intent and operation-specific app
 | `principle-plan-present-wait` | `skills/team/principles/human-control.md` | Concrete output and undo before unanswered consequential choices; partial answers and operation-specific approval conditions. | `skills/groom-backlog/SKILL.md`, `skills/pr-open-comments/SKILL.md`, `skills/pr-open-comments/references/02-hard-rules.md`, `skills/reflect/SKILL.md`, `skills/reflect/references/06-apply-the-approved-skill-edits.md` |
 | `principle-files-are-the-contract` | `skills/team/principles/durable-state.md` | Required artifacts before completion; path handoffs; durable recovery; append-only verdicts and logs. | `skills/qrspi-workflow/SKILL.md`, `skills/team/SKILL.md`, `skills/team/references/14-rules.md`, `skills/team/references/artifacts.md` |
 | `principle-idempotent-reruns` | `skills/team/principles/durable-state.md` | Match before create; already-done convergence; re-read and report drift; serial mutations and backoff. | `skills/groom-backlog/SKILL.md`, `skills/groom-backlog/references/12-step-9-execute-in-dependency-order.md`, `skills/pr-cleanup/SKILL.md`, `skills/pr-cleanup/references/10-mode-b-closed-abandoned.md`, `skills/pr-watch-as-author/SKILL.md`, `skills/pr-watch-as-author/references/03-1-arm.md`, `skills/team-design/SKILL.md`, `skills/team/SKILL.md`, `skills/team/references/02-setup.md` |
-| `principle-pre-image-first` | `skills/team/principles/durable-state.md` | Baseline and recovery anchor before destructive writes; cached bodies; UNKNOWN for unavailable baselines. | `skills/groom-backlog/SKILL.md`, `skills/groom-backlog/references/12-step-9-execute-in-dependency-order.md`, `skills/pr-rebase/SKILL.md`, `skills/pr-rebase/references/03-hard-rules.md`, `skills/reflect/SKILL.md`, `skills/reflect/references/06-apply-the-approved-skill-edits.md`, `skills/running-quality-checks/SKILL.md`, `skills/team-implement/references/03-execution.md`, `skills/team/references/11-mechanical-gate-test-confirmation.md` |
+| `principle-pre-image-first` | `skills/team/principles/durable-state.md` | Baseline and recovery anchor before destructive writes; cached bodies; UNKNOWN for unavailable baselines. | `skills/groom-backlog/SKILL.md`, `skills/groom-backlog/references/12-step-9-execute-in-dependency-order.md`, `skills/pr-rebase/SKILL.md`, `skills/pr-rebase/references/03-hard-rules.md`, `skills/reflect/SKILL.md`, `skills/reflect/references/06-apply-the-approved-skill-edits.md`, `skills/team/playbooks/verify.md`, `skills/team-implement/references/03-execution.md`, `skills/team/references/11-mechanical-gate-test-confirmation.md` |
 | `principle-single-source-of-truth` | `skills/team/principles/durable-state.md` | Named canonical schema/rule/constant; deterministic copy checks; authority beats summaries. | `skills/cross-model-review/SKILL.md`, `skills/cross-model-review/references/procedure.md`, `skills/qrspi-workflow/SKILL.md`, `skills/team/references/artifacts.md` |
 | `principle-evidence-over-assertion` | `skills/team/principles/verified-results.md` | Observed command/file evidence; re-query resulting state; verify claims and lowest admitted dependency API. | `skills/groom-backlog/SKILL.md`, `skills/groom-backlog/references/13-step-10-verify-by-re-querying-never-by-memory.md`, `skills/pr-open-comments/SKILL.md`, `skills/pr-open-comments/references/02-hard-rules.md`, `skills/pr-screenshots/SKILL.md`, `skills/pr-verify/SKILL.md`, `skills/pr-verify/references/02-hard-rules.md`, `skills/researching-codebases/SKILL.md`, `skills/why/SKILL.md`, `skills/why/references/02-confidence-tiers.md` |
 | `principle-mechanical-gates` | `skills/team/principles/verified-results.md` | Cheapest deterministic enforcement; early actionable failures; no model-dependent guarantee. | `skills/qrspi-workflow/SKILL.md`, `skills/test-first-development/SKILL.md`, `skills/test-first-development/references/procedure.md` |
@@ -374,5 +374,36 @@ The two replacements hold 3,301 words, a 1,607-word (33%) reduction across all m
 | `skills/team/references/agent-dispatch.md` | Helper prose audit | Read `writing.md` |
 
 Catalog description and catalog-line budgets ratchet again after the five registrations move.
+
+## M09: reusable verification
+
+The catalog retains 25 commands and 0 methodologies, totaling 25 registrations, with 13 unchanged agent roles.
+Two registrations move into the shared verify playbook and the ux reviewer brief. No compatibility stubs remain.
+Verification is now claim-specific: a library runs a real consumer, a CLI checks invocation and filesystem effects, a service checks requests and state, and UI interaction drives the app as a user. Evidence records name revision, environment, action, expected and observed outcome, and output location; unavailable tools are reported UNKNOWN, never passed.
+
+| Retired registration | Destination | Retained contract |
+| --- | --- | --- |
+| `running-quality-checks` | `skills/team/playbooks/verify.md` | Check detection, speed-order execution, PASS/FAIL/UNKNOWN verdicts, no-fix and no-retry-mask rules, baseline-under-same-isolation, coverage reported not gated. Extended with surface selection (library, CLI, service, UI), the capability index, evidence recording, and the three-failure separation (documentation drift, harness defect, product regression). |
+| `verifying-ux` | `skills/code-review/references/ux-reviewer.md` | Project-type detection (UI, API, CLI, library), boot-and-verify steps, screenshot capture and manifest, cleanup and caps. Library and CLI cases now receive consumer/invocation verification rather than a "not applicable" skip, with no screenshot requirement. |
+
+The capability index lives in `docs/verification/`: invocation, prerequisites, expected behavior, evidence, and cleanup per capability, starting with the affected capabilities rather than a full catalog.
+
+### Named runtime consumers
+
+| Consumer | Operation | Replacement |
+| --- | --- | --- |
+| `agents/verifier.md` | Detect and run configured checks | Read `skills/team/playbooks/verify.md`; drop `running-quality-checks` preload |
+| `agents/ux-reviewer.md` | Boot and verify the app live | Read `skills/code-review/references/ux-reviewer.md`; drop `verifying-ux` preload |
+| `skills/team-implement/references/03-execution.md` | Mechanical gate static checks | Read `team/playbooks/verify.md` |
+| `skills/team/references/11-mechanical-gate-test-confirmation.md` | Static-check gate | Read `playbooks/verify.md` |
+| `skills/pr-verify/references/04-execution.md` | Build/test strategy | Read `team/playbooks/verify.md` |
+| `skills/no-comments/SKILL.md` | Post-edit check run | Read `team/playbooks/verify.md` |
+| `skills/reflect/references/06-apply-the-approved-skill-edits.md` | Post-write check run | Read `team/playbooks/verify.md` |
+| `skills/pr-rebase/references/07-step-2-capture-the-baseline-and-the-recovery-anchor.md` | Baseline checks | Read `team/playbooks/verify.md` |
+| `skills/team-pr/references/02-execution.md` | Re-capture on UI-changing push | Read `code-review/references/ux-reviewer.md` |
+
+The verifier and ux-reviewer agents drop their `skills:` preloads and read the playbook and brief by installed path.
+Catalog description and catalog-line budgets ratchet again after the two registrations move.
+
 
 
