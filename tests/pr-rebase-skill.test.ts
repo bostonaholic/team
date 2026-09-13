@@ -25,7 +25,6 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
-import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 // pr-rebase is a RUNTIME skill — it lives under skills/ (distributed), not .claude/.
@@ -224,8 +223,8 @@ describe("pr-rebase skill: the baseline gate", () => {
     expect(anchor).toBeLessThan(fetch);
   });
 
-  test("runs the project's detected checks via running-quality-checks", () => {
-    expect(loadsSkill(body(), "running-quality-checks")).toBe(true);
+  test("runs the project's detected checks via the verify playbook", () => {
+    expect(body()).toContain("team/playbooks/verify.md");
   });
 
   test("offloads the baseline and resolutions to docs/plans/<id>/rebase-<n>.md", () => {

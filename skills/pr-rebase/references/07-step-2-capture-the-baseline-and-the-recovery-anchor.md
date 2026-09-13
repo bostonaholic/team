@@ -22,8 +22,8 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    The merge base is deliberately *not* captured here — it is computed
    after the fetch (step 3), against the base as it actually stands.
 
-2. Run the project's checks. Call the Skill tool with
-   `running-quality-checks`
+2. Run the project's checks. Read the
+   [verify playbook](../team/playbooks/verify.md)
    for detection and speed order — do not invent a check the project does
    not configure. Record, per check: the exact command, its exit status, and
    the individual failing test names where the runner reports them. Test

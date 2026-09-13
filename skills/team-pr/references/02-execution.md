@@ -61,7 +61,8 @@
    (`gh pr edit --body-file`, or a quoted heredoc per step 7) so the
    Summary, Changes, and How-to-Verify sections still match what the branch
    actually does. **Screenshots go stale the same way the prose does.**
-   When the push changed the UI, call the Skill tool with `verifying-ux` and
+   When the push changed the UI, read the
+   [ux reviewer brief](../code-review/references/ux-reviewer.md) and
    re-capture per its "Screenshot Capture (UI projects)" section. It wipes
    and recaptures. Then re-render the `## Screenshots` section and run the
    Screenshot Upload procedure again, so the embedded images show the UI the

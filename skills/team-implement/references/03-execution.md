@@ -20,8 +20,8 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    line, and run step 3 in its inverted form.
 3. **Mechanical gate** — confirm all tests fail with assertion errors
    (not crashes), **and** that every static check the project defines
-   passes (typecheck, lint, format, build — call the Skill tool with
-   `running-quality-checks` and
+   passes (typecheck, lint, format, build — read the
+   [verify playbook](../team/playbooks/verify.md) and
    detect them the way it does). On crash, fix
    test infrastructure before proceeding. On a failing static check, send it
    back to the `test-architect`: a runner that executes tests without

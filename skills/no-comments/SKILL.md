@@ -57,8 +57,8 @@ Read [execution rules](../team/references/execution.md), then track these steps.
    approval, implement only that set and delete the encoded comments. On
    refusal or when interactive approval is unavailable, keep them and report
    the constraints as unenforced.
-7. **Verify.** Inspect the final diff for scope escapes. Call the Skill tool
-   with `running-quality-checks` and run the narrowest project-native checks
+7. **Verify.** Inspect the final diff for scope escapes. Read the
+   [verify playbook](../team/playbooks/verify.md) and run the narrowest project-native checks
    that cover every code, type, test, lint, or CI edit.
 8. **Report.** Give counts for reviewed, removed, kept, encoded, and unenforced
    comments; list reviewer retries, checks run, and open out-of-scope work.

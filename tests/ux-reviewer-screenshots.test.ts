@@ -1,11 +1,12 @@
 // tests/ux-reviewer-screenshots.test.ts
 //
 // L2 tripwires (free, deterministic): fence the screenshot-capture contract in
-// the ux-reviewer's RUNTIME methodology skill (skills/verifying-ux/SKILL.md —
-// the thin agent wrapper preloads it), per
-// docs/plans/2026-07-20-pr-ui-screenshots. ux-reviewer captures one PNG per
-// affected page/state during its existing boot-verify window and writes a
-// manifest to docs/plans/<id>/screenshots/manifest.md that team-pr consumes.
+// the ux-reviewer's RUNTIME reviewer brief
+// (skills/code-review/references/ux-reviewer.md — the thin agent wrapper reads
+// it by path), per docs/plans/2026-07-20-pr-ui-screenshots. ux-reviewer
+// captures one PNG per affected page/state during its existing boot-verify
+// window and writes a manifest to docs/plans/<id>/screenshots/manifest.md
+// that team-pr consumes.
 //
 // Every assertion is guarded so a not-yet-existing prompt section yields a
 // failed expect(), never an uncaught ENOENT — the mechanical gate rejects
@@ -18,13 +19,13 @@ import { join } from "node:path";
 import { read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
-// The capture procedure lives in the RUNTIME methodology skill; the agent
-// file is a thin wrapper that preloads it (see tests/thin-agents.test.ts).
-const VERIFYING_UX = join(REPO_ROOT, "skills", "verifying-ux", "SKILL.md");
+// The capture procedure lives in the UX reviewer brief; the agent file is a
+// thin wrapper that reads it by path (see tests/thin-agents.test.ts).
+const UX_REVIEWER_BRIEF = join(REPO_ROOT, "skills", "code-review", "references", "ux-reviewer.md");
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
 function body(): string {
-  return existsSync(VERIFYING_UX) ? read(VERIFYING_UX) : "";
+  return existsSync(UX_REVIEWER_BRIEF) ? read(UX_REVIEWER_BRIEF) : "";
 }
 // Flatten newlines so multi-line prose can be matched in one regex.
 function flat(text: string): string {

@@ -42,7 +42,6 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
-import { loadsSkill } from "./helpers/skill-refs";
 import {
   MAX_RECORDS,
   MAX_TOTAL_BYTES,
@@ -1493,12 +1492,12 @@ describe("Slice 2 — L2: reflect's apply turn is fenced by a clean-and-tracked 
     // the user should learn that here rather than in CI. Reflect reports the
     // verdict and neither fixes nor reverts.
     //
-    // Asserted as a LOAD by bare name, not as a path substring: this step has
-    // to go execute that skill's detection procedure, and a citation is what a
-    // model reads past without ever issuing the call.
+    // Asserted as a read of the verify playbook, not as a bare-name load: the
+    // playbook is ordinary content, and this step has to go run its detection
+    // procedure rather than read past a citation.
     const apply = section(APPLY);
     expect(apply.length).toBeGreaterThan(0);
-    expect(loadsSkill(apply, "running-quality-checks")).toBe(true);
+    expect(apply).toContain("team/playbooks/verify.md");
   });
 });
 

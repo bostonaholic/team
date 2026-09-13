@@ -109,7 +109,7 @@ describe("skillNames", () => {
     // Positive control: proves the sweep in skill-tool-invocation.test.ts is
     // checking against a populated set, not an empty one.
     const names = skillNames(process.cwd());
-    expect(names.size).toBeGreaterThan(25);
+    expect(names.size).toBeGreaterThan(20);
     expect(names.has("team")).toBe(true);
     expect(names.has("no-such-skill")).toBe(false);
   });

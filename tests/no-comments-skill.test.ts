@@ -16,7 +16,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { frontmatter, read, squash } from "./helpers/text";
-import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 const FRONT_DOOR = join(REPO_ROOT, "skills", "no-comments", "SKILL.md");
@@ -63,7 +62,7 @@ describe("no-comments skill: reviewer separation", () => {
     expect(text).toContain("../team/references/execution.md");
     expect(text).toContain("../team-fix/playbooks/bug-fix.md");
     expect(text).toContain("references/reviewer.md");
-    expect(loadsSkill(text, "running-quality-checks")).toBe(true);
+    expect(text).toContain("../team/playbooks/verify.md");
   });
 
   test("reviewer brief reads the canonical comment rules", () => {

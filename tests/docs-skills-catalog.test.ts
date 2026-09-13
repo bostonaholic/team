@@ -405,8 +405,8 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     // Seven vacuity guards. Each names the property that vanished, because a
     // mis-scoped haystack makes every sweep below pass for the wrong reason
     // (docs/testing.md, "Prove a negative check can find a positive").
-    expect(SKILL_DIRECTORIES.length).toBeGreaterThan(25); // (1) skills/ tree parsed
-    expect(ENTRIES.length).toBeGreaterThan(25); // (2) page parsed
+    expect(SKILL_DIRECTORIES.length).toBeGreaterThan(20); // (1) skills/ tree parsed
+    expect(ENTRIES.length).toBeGreaterThan(20); // (2) page parsed
     expect(ENTRIES_WITH_USES).toBeGreaterThan(0); // (3)
     expect(ENTRIES_WITHOUT_USES).toBeGreaterThan(0); // (4)
     expect(EMPTY_ENTRY_BODIES).toEqual([]); // (5) every parsed body non-empty

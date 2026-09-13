@@ -79,9 +79,9 @@ describe("skill source budget", () => {
   const budgets = skillBudgets();
 
   test("discovers the fixed skill tiers", () => {
-    expect(skillNames(REPO_ROOT).size).toBe(27);
+    expect(skillNames(REPO_ROOT).size).toBe(25);
     expect(budgets.filter(({ tier }) => tier === "entry")).toHaveLength(25);
-    expect(budgets.filter(({ tier }) => tier === "methodology")).toHaveLength(2);
+    expect(budgets.filter(({ tier }) => tier === "methodology")).toHaveLength(0);
     expect(budgets.filter(({ tier }) => tier === "principle")).toHaveLength(0);
   });
 

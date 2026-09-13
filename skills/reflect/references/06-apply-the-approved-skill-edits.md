@@ -125,7 +125,7 @@ fallback is fixed here:
 
 ### After the writes
 
-Run the repo's own check — call the Skill tool with `running-quality-checks`
+Run the repo's own check — read the [verify playbook](../team/playbooks/verify.md)
 to detect it, never invent one — and report the verdict. A failure names the failing test and the file written. Reflect neither
 fixes the failure nor reverts the write: a revert hides which edit was wrong,
 and the recovery command per item is already in the report. Where the repo

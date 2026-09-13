@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands, standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect, why, how, no-comments), and methodology skills loaded by agents, each with the skills it loads."
+description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect, why, how, no-comments), each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -9,8 +9,9 @@ nav_label: skills
 # Team Skills
 
 > **The features you use.** Every entry-point skill is a slash command you can
-> run (`/team`, `/team-fix`, …). The methodology skills are the internal
-> building blocks the agents load to do their work.
+> run (`/team`, `/team-fix`, …). There are no methodology skills: what agents
+> used to preload now lives in ordinary playbooks and references they read by
+> path.
 >
 > **Source of truth:** the skill bodies themselves, `skills/*/SKILL.md`.
 > This page is a hand-maintained reference. When it disagrees with a
@@ -34,7 +35,7 @@ This page carries both directions of each skill-to-skill load edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 27 registered skills: 25 commands and 2 methodologies. Shared principles, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 25 registered skills, all commands. Shared principles, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 ## Entry-point skills
@@ -48,7 +49,7 @@ Runs the 8-phase QRSPI feature pipeline.
 
 **Used by:** None
 
-**Uses:** `running-quality-checks`, `team-pr`, `team-worktree`
+**Uses:** `team-pr`, `team-worktree`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -104,7 +105,7 @@ Executes and verifies implementation slices.
 
 **Used by:** None
 
-**Uses:** `running-quality-checks`, `team-pr`
+**Uses:** `team-pr`
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
@@ -112,7 +113,7 @@ Opens a pull request after verification.
 
 **Used by:** `team`, `team-implement`
 
-**Uses:** `pr-screenshots`, `verifying-ux`
+**Uses:** `pr-screenshots`
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
@@ -189,7 +190,7 @@ Verifies a PR test plan with evidence-rated verdicts.
 
 **Used by:** None
 
-**Uses:** `running-quality-checks`
+**Uses:** None
 
 ### [pr-screenshots](https://github.com/bostonaholic/team/blob/main/skills/pr-screenshots/SKILL.md)
 
@@ -205,7 +206,7 @@ Rebases a branch onto its base.
 
 **Used by:** None
 
-**Uses:** `running-quality-checks`
+**Uses:** None
 
 ### [reflect](https://github.com/bostonaholic/team/blob/main/skills/reflect/SKILL.md)
 
@@ -213,7 +214,7 @@ Mines a session for durable learnings.
 
 **Used by:** None
 
-**Uses:** `running-quality-checks`
+**Uses:** None
 
 ### [why](https://github.com/bostonaholic/team/blob/main/skills/why/SKILL.md)
 
@@ -245,27 +246,6 @@ Removes low-value source comments and encodes valid constraints.
 
 **Used by:** None
 
-**Uses:** `running-quality-checks`
-
-## Methodology skills
-
-These carry no `argument-hint`. They are never invoked directly; agents load
-them.
-
-### [running-quality-checks](https://github.com/bostonaholic/team/blob/main/skills/running-quality-checks/SKILL.md)
-
-Runs project-native tests, static checks, builds, and linters.
-
-**Used by:** `no-comments`, `pr-rebase`, `pr-verify`, `reflect`, `team`, `team-implement`
-
-**Uses:** None
-
-### [verifying-ux](https://github.com/bostonaholic/team/blob/main/skills/verifying-ux/SKILL.md)
-
-Defines live application and screenshot verification.
-
-**Used by:** `team-pr`
-
 **Uses:** None
 
 ## Prose composition and evaluation
@@ -292,7 +272,6 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 |---|---|---|
 | `team-research` | `researcher` | Skill dispatches the Research phase. The agent is the doer that runs the research. |
 | `team-question` | `questioner` | Skill drives the Question phase. The agent decomposes the intent. |
-| `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure. The agent is the tester that runs it. |
 | `team-design` | `design-author` | Skill drives the Design phase. The agent drafts the alignment doc. |
 | `eng-design-doc-review` | `design-author` | The review skill dispatches a read-only `Explore` subagent, **not** the `design-author` agent, which keeps the audit independent of the author. |
 
@@ -324,6 +303,7 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [structure playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/structure.md)
 - [plan playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/plan.md)
 - [implement playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/implement.md)
+- [verify playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/verify.md)
 - [decisions](https://github.com/bostonaholic/team/blob/main/skills/team/references/decisions.md)
 - [dependencies](https://github.com/bostonaholic/team/blob/main/skills/team/references/dependencies.md)
 - [code standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/code-standards.md)
@@ -337,6 +317,7 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [code reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/code-reviewer.md)
 - [security reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/security-reviewer.md)
 - [documentation reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/documentation-reviewer.md)
+- [ux reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/ux-reviewer.md)
 - [finding format](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/findings.md)
 - [design reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/references/design-reviewer.md)
 - [comment reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/no-comments/references/reviewer.md)
