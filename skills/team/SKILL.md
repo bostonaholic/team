@@ -1,8 +1,8 @@
 ---
 name: team
-description: 'Runs the 8-phase QRSPI feature pipeline. Trigger on "hey team", "build a feature", or "/team" only; never infer pipeline intent from a plain coding request.'
+description: 'Runs the 8-phase QRSPI feature pipeline, or a leading-argument route. Trigger on "hey team", "build a feature", or "/team" only; never infer pipeline intent from a plain coding request.'
 effort: high
-argument-hint: "<ticket id, issue URL, or feature description>"
+argument-hint: "<ticket id, issue URL, feature description, or leading-argument route (investigate|plan|prototype|feature|fix|refactor)>"
 ---
 
 # Team — Phase-Table Orchestrator
@@ -23,6 +23,16 @@ You hold no special state of your own. The durable record is the set of
 artifacts under `docs/plans/<id>/*.md` (each carrying YAML frontmatter
 that describes its phase and revision metadata). Live
 in-session coordination uses TodoWrite.
+
+## Routes
+
+First read [routing](references/routing.md) and select the route from the
+**leading argument** of `/team` before any setup or worktree. An unprefixed
+`/team <description>` keeps the full feature pipeline; a leading route selects a
+limited-scope outcome (`investigate`, `plan`, `prototype`) that stops at its
+deliverable, or a full outcome (`feature`, `fix`, `refactor`) that ends in a
+draft PR. A route with no task requests the task before any mutation. Never
+scan issue bodies or quoted text for route words.
 
 ## Core contracts
 
@@ -56,6 +66,7 @@ Persist `### Cross-model disposition` in `cross-model-notes.md` only when it doe
 
 Read each reference completely when reaching that stage. Follow them in order; later stages depend on state and gates established earlier.
 
+0. [Routing](references/routing.md)
 1. [Input](references/01-input.md)
 2. [Setup](references/02-setup.md)
 3. [The Phase Loop](references/03-the-phase-loop.md)

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Add leading-argument task routes to `/team`: `investigate`, `plan`, and `prototype` stop at their deliverable with no commit, push, or PR; `feature`, `fix`, and `refactor` run their full pipeline to a draft PR. An unprefixed `/team <description>` keeps the existing full feature behavior. Routes are selected only from the leading argument, never from issue bodies or quoted text, and a route with no task requests the task before any mutation. The selected route and a limited-scope completion marker persist on `1-task.md` (`route` and `routeStatus`), so the recovery hooks report a finished plan as complete rather than as permission to implement. No new skill registrations.
+
 ## [0.105.0] - 2026-09-12
 
 ### Changed
