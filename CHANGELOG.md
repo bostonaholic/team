@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.105.0] - 2026-09-12
+
 ### Changed
 
 - Add reusable verification for actual acceptance claims: move `running-quality-checks` into the shared `skills/team/playbooks/verify.md` playbook and `verifying-ux` into the `skills/code-review/references/ux-reviewer.md` brief. Verification now matches the claim's surface — a library runs a real consumer, a CLI checks invocation and filesystem effects, a service checks requests and state, and UI interaction drives the app as a user — with evidence records naming revision, environment, action, and expected/actual outcome, and unavailable tools reported UNKNOWN rather than passed. The catalog drops from 27 to 25 registrations.
@@ -966,7 +968,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.7...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.105.0...HEAD
+[0.105.0]: https://github.com/bostonaholic/team/compare/v0.104.7...v0.105.0
 [0.104.7]: https://github.com/bostonaholic/team/compare/v0.104.6...v0.104.7
 [0.104.6]: https://github.com/bostonaholic/team/compare/v0.104.5...v0.104.6
 [0.104.5]: https://github.com/bostonaholic/team/compare/v0.104.4...v0.104.5
