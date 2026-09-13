@@ -4,11 +4,10 @@ tier: periodic
 deps:
   - skills/team/principles/durable-state.md
   - skills/team/references/artifacts.md
-  - skills/slicing-work/SKILL.md
-  - skills/slicing-work/references/structure-template.md
+  - skills/team/playbooks/structure.md
+  - skills/team/references/structure-template.md
   - skills/team/references/dependencies.md
   - skills/team-structure/**
-  - skills/slicing-work/**
   - agents/structure-planner.md
 ---
 

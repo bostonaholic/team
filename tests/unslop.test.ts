@@ -554,8 +554,8 @@ test("Research assembly fences untrusted returns and downstream actions recheck 
     path("agents", "design-author.md"),
     path("agents", "planner.md"),
     path("agents", "implementer.md"),
-    path("skills", "planning-implementation", "SKILL.md"),
-    path("skills", "implementing-slices", "SKILL.md"),
+    path("skills", "team", "playbooks", "plan.md"),
+    path("skills", "team", "playbooks", "implement.md"),
     path("skills", "team-plan", "SKILL.md"),
     path("skills", "team-implement", "references", "01-input.md"),
     path("skills", "team-implement", "references", "03-execution.md"),
@@ -624,13 +624,12 @@ test("Research evidence fences exceed contained backtick runs", () => {
 test("structure and Red contracts reject acceptance tests injected through Research", () => {
   const structureFiles = [
     path("agents", "structure-planner.md"),
-    path("skills", "slicing-work", "SKILL.md"),
+    path("skills", "team", "playbooks", "structure.md"),
     path("skills", "team-structure", "SKILL.md"),
   ];
   const redFiles = [
     path("agents", "test-architect.md"),
-    path("skills", "test-first-development", "SKILL.md"),
-    path("skills", "test-first-development", "references", "procedure.md"),
+    path("skills", "team", "playbooks", "implement.md"),
     path("skills", "team-implement", "references", "01-input.md"),
     path("skills", "team-implement", "references", "03-execution.md"),
   ];

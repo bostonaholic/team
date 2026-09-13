@@ -34,7 +34,7 @@ This page carries both directions of each skill-to-skill load edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 55 registered skills: 25 commands and 30 methodologies. Shared principles, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 47 registered skills: 25 commands and 22 methodologies. Shared principles, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 ## Entry-point skills
@@ -48,7 +48,7 @@ Runs the 8-phase QRSPI feature pipeline.
 
 **Used by:** None
 
-**Uses:** `changelog`, `cross-model-review`, `review-severity-tiers`, `reviewing-designs`, `running-quality-checks`, `team-pr`, `team-worktree`, `tracking-tickets`, `unslop`, `worktree-isolation`, `writing-prose`
+**Uses:** `changelog`, `cross-model-review`, `git-commit`, `review-severity-tiers`, `reviewing-designs`, `running-quality-checks`, `team-pr`, `team-worktree`, `tracking-tickets`, `unslop`, `worktree-isolation`, `writing-prose`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -120,7 +120,7 @@ Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
-**Uses:** `systematic-debugging`, `team-worktree`, `test-driven-bug-fix`, `tracking-tickets`, `why`, `worktree-isolation`
+**Uses:** `team-worktree`, `tracking-tickets`, `why`, `worktree-isolation`
 
 ### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 
@@ -221,7 +221,7 @@ Investigates design rationale behind code.
 
 **Used by:** `how`, `reviewing-code`, `team-fix`
 
-**Uses:** `systematic-debugging`
+**Uses:** None
 
 ### [how](https://github.com/bostonaholic/team/blob/main/skills/how/SKILL.md)
 
@@ -252,37 +252,13 @@ Removes low-value source comments and encodes valid constraints.
 These carry no `argument-hint`. They are never invoked directly; agents load
 them.
 
-### [qrspi-workflow](https://github.com/bostonaholic/team/blob/main/skills/qrspi-workflow/SKILL.md)
-
-Defines QRSPI phases, artifacts, gates, and state transitions.
-
-**Used by:** None
-
-**Uses:** None
-
-### [slicing-work](https://github.com/bostonaholic/team/blob/main/skills/slicing-work/SKILL.md)
-
-Defines vertical slices and verification checkpoints.
-
-**Used by:** None
-
-**Uses:** None
-
-### [planning-implementation](https://github.com/bostonaholic/team/blob/main/skills/planning-implementation/SKILL.md)
-
-Defines the tactical plan schema.
-
-**Used by:** None
-
-**Uses:** None
-
 ### [reviewing-code](https://github.com/bostonaholic/team/blob/main/skills/reviewing-code/SKILL.md)
 
 Defines adversarial code review and evidence-based findings.
 
 **Used by:** `code-review`, `reviewing-designs`
 
-**Uses:** `engineering-standards`, `review-severity-tiers`, `test-style`, `why`, `writing-prose`
+**Uses:** `engineering-standards`, `review-severity-tiers`, `why`, `writing-prose`
 
 ### [reviewing-comments](https://github.com/bostonaholic/team/blob/main/skills/reviewing-comments/SKILL.md)
 
@@ -340,30 +316,6 @@ Defines code design, comment, and review standards.
 
 **Uses:** None
 
-### [test-first-development](https://github.com/bostonaholic/team/blob/main/skills/test-first-development/SKILL.md)
-
-Defines acceptance tests as the implementation scope contract.
-
-**Used by:** None
-
-**Uses:** None
-
-### [test-style](https://github.com/bostonaholic/team/blob/main/skills/test-style/SKILL.md)
-
-Defines deterministic behavioral tests and flaky-test red flags.
-
-**Used by:** `reviewing-code`
-
-**Uses:** None
-
-### [test-driven-bug-fix](https://github.com/bostonaholic/team/blob/main/skills/test-driven-bug-fix/SKILL.md)
-
-Defines reproduce-red-green-refactor bug fixes.
-
-**Used by:** `team-fix`
-
-**Uses:** `systematic-debugging`
-
 ### [solid](https://github.com/bostonaholic/team/blob/main/skills/solid/SKILL.md)
 
 Defines SOLID design and review rules.
@@ -377,22 +329,6 @@ Defines SOLID design and review rules.
 Maps code smells to behavior-preserving refactorings.
 
 **Used by:** None
-
-**Uses:** None
-
-### [implementing-slices](https://github.com/bostonaholic/team/blob/main/skills/implementing-slices/SKILL.md)
-
-Defines test-first slice execution, commits, and review fixes.
-
-**Used by:** None
-
-**Uses:** `git-commit`, `systematic-debugging`
-
-### [systematic-debugging](https://github.com/bostonaholic/team/blob/main/skills/systematic-debugging/SKILL.md)
-
-Defines reproduce, hypothesize, isolate, and fix workflow.
-
-**Used by:** `implementing-slices`, `team-fix`, `test-driven-bug-fix`, `why`
 
 **Uses:** None
 
@@ -448,7 +384,7 @@ Defines live application and screenshot verification.
 
 Defines Conventional Commit subjects and safe commit procedure.
 
-**Used by:** `implementing-slices`, `team-pr`
+**Used by:** `team`, `team-pr`
 
 **Uses:** `writing-prose`
 
@@ -519,9 +455,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | `reviewing-security` | `security-reviewer` | Skill is the security review methodology and severity ladder. The agent is the reviewer that applies it. |
 | `reviewing-documentation` | `technical-writer` | Skill is the doc-gap review methodology and classification. The agent is the reviewer that applies it. |
 | `team-question` | `questioner` | Skill drives the Question phase. The agent decomposes the intent. |
-| `implementing-slices` | `implementer` | Skill is the slice-execution procedure. The agent is the specialist that executes it. |
 | `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure. The agent is the tester that runs it. |
-| `planning-implementation` | `planner` | Skill is the plan template and tactical rules. The agent is the engineer that writes the plan. |
 | `team-design` | `design-author` | Skill drives the Design phase. The agent drafts the alignment doc. |
 | `eng-design-doc-review` | `design-author` | The review skill dispatches a read-only `Explore` subagent, **not** the `design-author` agent, which keeps the audit independent of the author. |
 
@@ -540,17 +474,24 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 Read these ordinary documents at their consuming step. They add no registrations or picker entries.
 
 - [bug fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/playbooks/bug-fix.md)
+- [bug diagnosis](https://github.com/bostonaholic/team/blob/main/skills/team-fix/references/diagnosis.md)
 - [durable state](https://github.com/bostonaholic/team/blob/main/skills/team/principles/durable-state.md)
 - [focused work](https://github.com/bostonaholic/team/blob/main/skills/team/principles/focused-work.md)
 - [human control](https://github.com/bostonaholic/team/blob/main/skills/team/principles/human-control.md)
 - [independent review](https://github.com/bostonaholic/team/blob/main/skills/team/principles/independent-review.md)
 - [verified results](https://github.com/bostonaholic/team/blob/main/skills/team/principles/verified-results.md)
+- [feature playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/feature.md)
 - [question playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/question.md)
 - [research playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/research.md)
 - [design playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/design.md)
+- [structure playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/structure.md)
+- [plan playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/plan.md)
+- [implement playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/implement.md)
 - [decisions](https://github.com/bostonaholic/team/blob/main/skills/team/references/decisions.md)
 - [dependencies](https://github.com/bostonaholic/team/blob/main/skills/team/references/dependencies.md)
 - [design template](https://github.com/bostonaholic/team/blob/main/skills/team/references/design-template.md)
+- [structure template](https://github.com/bostonaholic/team/blob/main/skills/team/references/structure-template.md)
+- [testing](https://github.com/bostonaholic/team/blob/main/skills/team/references/testing.md)
 - [PRD template](https://github.com/bostonaholic/team/blob/main/skills/team/references/prd-template.md)
 - [execution](https://github.com/bostonaholic/team/blob/main/skills/team/references/execution.md)
 - [external data](https://github.com/bostonaholic/team/blob/main/skills/team/references/external-data.md)

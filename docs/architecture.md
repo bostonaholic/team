@@ -689,14 +689,13 @@ agent's frontmatter, one indented `- <name>` per line. For example,
 ```yaml
 skills:
   - nested-agents
-  - implementing-slices
   - writing-prose
   - unslop
 ```
 
-That is four counted names against the load limit in the Design
-guidelines below, one over the threshold, so `implementer` carries one
-recorded reason naming that count. The block form is the contract: three
+That is three counted names, at the load limit in the Design
+guidelines below, so `implementer` carries no
+recorded reason. The block form is the contract: three
 test parsers read it, and the one-line inline flow form parses to zero
 names, so it is an offender rather than a second shape.
 The second is an inline prose load instruction in the agent body. For
@@ -744,7 +743,7 @@ means changing it there, deliberately.
 
 Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them
-out of the `/` slash-command menu, because a `/qrspi-workflow` command is
+out of the `/` slash-command menu, because a `/reviewing-code` command is
 meaningless to a user. They stay fully loadable by their two mechanisms
 above. Neither the `skills:` preload nor a by-path load is affected by
 the field, which governs only menu visibility. Setting
@@ -898,10 +897,10 @@ entry points. Descriptions are at most 200 characters, or 150 for methodology.
 
 3. **Shared principles:** five ordinary documents define human control, durable state, verified results, independent review, and focused work.
    Execution, external-data, decisions, and bug-fix resources own the remaining operational rules.
-   Question, Research, and Design procedures live in three playbooks with shared templates and a dependency checklist.
+   Question, Research, Design, Structure, Plan, and Implement procedures live in playbooks with shared templates and dependency, testing, and diagnosis references.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
    Twelve agent bodies read execution rules. File-finder retains its single-step contract.
-   Resources use no skill frontmatter or discovery metadata. Keep the 30 methodologies and 25 commands registered.
+   Resources use no skill frontmatter or discovery metadata. Keep the 22 methodologies and 25 commands registered.
    Do not add principle registrations, recursive loading, compatibility stubs, or a resource registry.
    `solid` remains a methodology skill and counts toward preload limits.
 

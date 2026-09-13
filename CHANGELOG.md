@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.4] - 2026-09-12
+
+### Changed
+
+- Consolidate planning, implementation, and bug-fix procedures into playbooks, and test-quality policy into one reference, preserving acceptance-scope fences, Red gates, and bug-fix classification and commit rules.
+
 ## [0.104.3] - 2026-09-12
 
 ### Changed
@@ -938,7 +944,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.3...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.4...HEAD
+[0.104.4]: https://github.com/bostonaholic/team/compare/v0.104.3...v0.104.4
 [0.104.3]: https://github.com/bostonaholic/team/compare/v0.104.2...v0.104.3
 [0.104.2]: https://github.com/bostonaholic/team/compare/v0.104.1...v0.104.2
 [0.104.1]: https://github.com/bostonaholic/team/compare/v0.104.0...v0.104.1

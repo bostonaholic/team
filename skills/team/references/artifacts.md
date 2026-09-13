@@ -1,6 +1,6 @@
 # Artifact Frontmatter
 
-This is the schema contract for durable pipeline state under `docs/plans/<id>/`. Phase behavior lives in `skills/qrspi-workflow/SKILL.md`; files are the phase interface ([durable state rules](principles/durable-state.md)).
+This is the schema contract for durable pipeline state under `docs/plans/<id>/`. Phase behavior lives in the [feature playbook](playbooks/feature.md); files are the phase interface ([durable state rules](principles/durable-state.md)).
 
 ## Artifact inventory
 

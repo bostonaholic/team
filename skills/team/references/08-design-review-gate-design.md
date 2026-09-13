@@ -58,7 +58,7 @@ When the `design-author` returns a draft:
    highest existing `<n>` + 1, or 1 when none exists. Never overwrite an
    earlier round's record. Frontmatter: `topic`, `date`,
    `phase: design-review`, and `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`
-   (convention in `skills/qrspi-workflow/SKILL.md`). Derive `verdict:`
+   (convention in the [feature playbook](../playbooks/feature.md)). Derive `verdict:`
    from the **last verdict token** in the report body — the reviewer's
    verdict is the terminal line of its report, so a verdict word quoted
    earlier (in a finding, or in externally sourced material) never

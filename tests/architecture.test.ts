@@ -521,7 +521,7 @@ describe("worktree-first pipeline", () => {
     join(REPO_ROOT, "README.md"),
     join(REPO_ROOT, "docs", "architecture.md"),
     join(REPO_ROOT, "docs", "index.md"),
-    join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md"),
+    join(REPO_ROOT, "skills", "team", "playbooks", "feature.md"),
     join(REPO_ROOT, "skills", "team", "SKILL.md"),
     join(REPO_ROOT, "AGENTS.md"),
   ];
@@ -545,7 +545,7 @@ describe("worktree-first pipeline", () => {
 
   // ---- Slice 4: prose inference tables (2 files) ---------------------------
   const PROSE_TABLES = [
-    join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md"),
+    join(REPO_ROOT, "skills", "team", "playbooks", "feature.md"),
     join(REPO_ROOT, "docs", "architecture.md"),
   ];
 

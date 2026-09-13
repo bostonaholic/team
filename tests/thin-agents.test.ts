@@ -69,14 +69,11 @@ const ALL_AGENTS = [
   "verifier",
 ];
 
-// The 9 new methodology skills, the agent whose procedure each one carries,
+// The 2 remaining methodology skills, the agent whose procedure each one carries,
 // and a marker string from the moved content that must survive the move.
 const NEW_SKILLS: { skill: string; agent: string; anchor: string }[] = [
-  { skill: "implementing-slices", agent: "implementer", anchor: "acceptance test" },
   { skill: "running-quality-checks", agent: "verifier", anchor: "speed order" },
   { skill: "verifying-ux", agent: "ux-reviewer", anchor: "curl" },
-  { skill: "slicing-work", agent: "structure-planner", anchor: "7-structure.md" },
-  { skill: "planning-implementation", agent: "planner", anchor: "8-plan.md" },
 ];
 
 
@@ -113,14 +110,14 @@ describe("thin agents: frontmatter skills preloads per agent", () => {
     "code-reviewer": ["conventional-comments", "cross-model-review", "nested-agents", "reviewing-code", "unslop", "writing-prose"],
     "design-author": ["unslop", "writing-prose"],
     "file-finder": ["unslop", "writing-prose"],
-    implementer: ["implementing-slices", "nested-agents", "unslop", "writing-prose"],
-    planner: ["planning-implementation", "unslop", "writing-prose"],
+    implementer: ["nested-agents", "unslop", "writing-prose"],
+    planner: ["unslop", "writing-prose"],
     questioner: ["unslop", "writing-prose"],
     researcher: ["nested-agents", "unslop", "writing-prose"],
     "security-reviewer": ["conventional-comments", "nested-agents", "reviewing-code", "reviewing-security", "unslop", "writing-prose"],
-    "structure-planner": ["slicing-work", "unslop", "writing-prose"],
+    "structure-planner": ["unslop", "writing-prose"],
     "technical-writer": ["conventional-comments", "reviewing-code", "reviewing-documentation", "unslop", "writing-prose"],
-    "test-architect": ["test-first-development", "unslop", "writing-prose"],
+    "test-architect": ["unslop", "writing-prose"],
     "ux-reviewer": ["reviewing-code", "unslop", "verifying-ux", "writing-prose"],
     verifier: ["running-quality-checks", "unslop", "writing-prose"],
   };
@@ -165,10 +162,6 @@ const PRELOAD_BUDGET_REASONS: Record<string, BudgetReason> = {
     count: 5,
     reason:
       "It keeps four documentation methods, including `writing-prose`, and adds the shared `unslop` owner.",
-  },
-  implementer: {
-    count: 4,
-    reason: "It keeps two implementation methods plus the shared `writing-prose` and `unslop` owners.",
   },
   "ux-reviewer": {
     count: 4,
@@ -304,11 +297,16 @@ describe("thin agents: fold targets absorbed the moved methodology", () => {
     expect(readOrEmpty(skillPath("engineering-standards"))).toContain("Construct with collaborators");
   });
 
-  test("test-style carries the test-architect audit bar; test-first-development points at it", () => {
+  test("testing rules carry the test-architect audit bar; the implement playbook points at it", () => {
     // The audit bar folded into test-first-development during the
-    // thin-agents refactor, then moved to the just-in-time test-style skill.
-    expect(readOrEmpty(skillPath("test-style"))).toContain("| Deterministic inputs |");
-    expect(readOrEmpty(skillPath("test-first-development"))).toContain("test-style/SKILL.md");
+    // thin-agents refactor, then moved to the just-in-time test-style skill,
+    // then into the shared testing reference in the playbook consolidation.
+    expect(readOrEmpty(join(REPO_ROOT, "skills", "team", "references", "testing.md"))).toContain(
+      "| Deterministic inputs |",
+    );
+    expect(readOrEmpty(join(REPO_ROOT, "skills", "team", "playbooks", "implement.md"))).toContain(
+      "references/testing.md",
+    );
   });
 
   test("reviewing-security carries the security methodology; code-review keeps the pointer", () => {
@@ -409,8 +407,6 @@ describe("thin agents: skills catalog stays complete", () => {
 describe("thin agents: name-collision pairs documented", () => {
   const SKILLS_MD = join(REPO_ROOT, "docs", "skills.md");
   const COLLISION_PAIRS: [string, string][] = [
-    ["implementing-slices", "implementer"],
-    ["planning-implementation", "planner"],
     ["verifying-ux", "ux-reviewer"],
   ];
 
@@ -427,8 +423,9 @@ describe("thin agents: eval diff-selection keeps firing on the new skills", () =
     "team-question-neutral-questions": ["skills/team/playbooks/question.md", "skills/team/references/question-templates.md"],
     "team-design-seeded-research-and-task": ["skills/team/playbooks/design.md", "skills/team/references/design-template.md"],
     "team-research-answers-seeded-questions": ["skills/team/playbooks/research.md"],
-    "team-structure-seeded-design": ["skills/team/references/dependencies.md"],
-    "team-plan-seeded-structure": ["skills/team/references/dependencies.md"],
+    "team-structure-seeded-design": ["skills/team/references/dependencies.md", "skills/team/playbooks/structure.md", "skills/team/references/structure-template.md"],
+    "team-plan-seeded-structure": ["skills/team/references/dependencies.md", "skills/team/playbooks/plan.md"],
+    "team-fix-test-first-ordering": ["skills/team-fix/references/diagnosis.md"],
     "eng-design-doc-review-planted-missing-alternatives": ["skills/team/references/design-template.md", "skills/team/references/decisions.md", "skills/reviewing-designs/**"],
   };
 
@@ -438,6 +435,7 @@ describe("thin agents: eval diff-selection keeps firing on the new skills", () =
     "team-research-answers-seeded-questions": "evals/fixtures/team-research/answers-seeded-questions/input.md",
     "team-structure-seeded-design": "evals/fixtures/team-structure/seeded-design/input.md",
     "team-plan-seeded-structure": "evals/fixtures/team-plan/seeded-structure/input.md",
+    "team-fix-test-first-ordering": "evals/fixtures/team-fix/test-first-ordering/input.md",
     "eng-design-doc-review-planted-missing-alternatives": "evals/fixtures/eng-design-doc-review/planted-missing-alternatives/input.md",
   };
 

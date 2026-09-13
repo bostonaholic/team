@@ -109,7 +109,7 @@ describe("skillNames", () => {
     // Positive control: proves the sweep in skill-tool-invocation.test.ts is
     // checking against a populated set, not an empty one.
     const names = skillNames(process.cwd());
-    expect(names.size).toBeGreaterThan(50);
+    expect(names.size).toBeGreaterThan(40);
     expect(names.has("git-commit")).toBe(true);
     expect(names.has("no-such-skill")).toBe(false);
   });
