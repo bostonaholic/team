@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.107.0] - 2026-09-12
+
 ### Changed
 
 - Ground the design review in caller examples and experiments: the design template gains `## Caller examples`, `## Interface`, and `## Experiments` sections; the design playbook starts shared interface changes from the caller and records disposable-prototype experiments as Question, Alternatives, Experiment, Observation, and Decision; and the design reviewer brief sorts findings into supported defects, plausible unresolved risks, and speculative requirements, retaining consequential unsupported-guarantee findings even when a small experiment cannot reproduce the hazard. No new skill registrations.
@@ -978,7 +980,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.106.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.107.0...HEAD
+[0.107.0]: https://github.com/bostonaholic/team/compare/v0.106.0...v0.107.0
 [0.106.0]: https://github.com/bostonaholic/team/compare/v0.105.0...v0.106.0
 [0.105.0]: https://github.com/bostonaholic/team/compare/v0.104.7...v0.105.0
 [0.104.7]: https://github.com/bostonaholic/team/compare/v0.104.6...v0.104.7
