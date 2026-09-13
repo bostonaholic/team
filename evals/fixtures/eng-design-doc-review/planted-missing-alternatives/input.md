@@ -11,7 +11,7 @@ deps:
   - skills/team/references/decisions.md
   - skills/code-review/references/findings.md
   - skills/code-review/references/code-reviewer.md
-  - skills/engineering-standards/SKILL.md
+  - skills/team/references/code-standards.md
   - skills/team/references/artifacts.md
   - skills/eng-design-doc-review/**
 ---

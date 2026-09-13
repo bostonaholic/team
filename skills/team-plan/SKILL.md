@@ -10,8 +10,7 @@ Before artifact work, read [artifact schema](../team/references/artifacts.md).
 
 # Team Plan — Tactical Implementation Plan
 
-Before finalizing prose you author, call the Skill tool with `unslop` and
-`writing-prose`, in that order.
+Before finalizing prose you author, read the [writing standards](../team/references/writing.md).
 
 Run the PLAN phase. There is no gate here. The plan is a tactical artifact
 for the implementer, mechanically derived from the structure.

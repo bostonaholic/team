@@ -24,8 +24,8 @@ The load form is
 citation, not an edge. Shared rules use explicit ordinary-resource reads instead of skill registration.
 
 The edges are therefore **directed**, and reading them transitively gives the
-graph. `team-implement` loads `team-pr`, which loads `git-commit`, which
-loads `writing-prose`. None of the three loads back. `**Uses:** None` marks a
+graph. `team-implement` loads `team-pr`, which loads `pr-screenshots`. None of
+the three loads back. `**Uses:** None` marks a
 leaf with no further Skill-tool loads.
 
 Loads are collected across every `.md` file in the skill's directory, so a
@@ -34,7 +34,7 @@ This page carries both directions of each skill-to-skill load edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 32 registered skills: 25 commands and 7 methodologies. Shared principles, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 27 registered skills: 25 commands and 2 methodologies. Shared principles, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 ## Entry-point skills
@@ -48,7 +48,7 @@ Runs the 8-phase QRSPI feature pipeline.
 
 **Used by:** None
 
-**Uses:** `running-quality-checks`, `team-pr`, `team-worktree`, `unslop`, `writing-prose`
+**Uses:** `running-quality-checks`, `team-pr`, `team-worktree`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -56,7 +56,7 @@ Decomposes a feature into task and question artifacts.
 
 **Used by:** None
 
-**Uses:** `unslop`, `writing-prose`
+**Uses:** None
 
 ### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
 
@@ -64,7 +64,7 @@ Researches a codebase area before changes.
 
 **Used by:** None
 
-**Uses:** `unslop`, `writing-prose`
+**Uses:** None
 
 ### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
 
@@ -72,7 +72,7 @@ Drafts and adversarially reviews a design.
 
 **Used by:** None
 
-**Uses:** `unslop`, `writing-prose`
+**Uses:** None
 
 ### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/SKILL.md)
 
@@ -80,7 +80,7 @@ Breaks a reviewed design into verified slices.
 
 **Used by:** None
 
-**Uses:** `unslop`, `writing-prose`
+**Uses:** None
 
 ### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/SKILL.md)
 
@@ -88,7 +88,7 @@ Produces the tactical implementation plan.
 
 **Used by:** None
 
-**Uses:** `unslop`, `writing-prose`
+**Uses:** None
 
 ### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/SKILL.md)
 
@@ -96,7 +96,7 @@ Prepares isolated git worktrees.
 
 **Used by:** `team`, `team-fix`
 
-**Uses:** `unslop`, `writing-prose`
+**Uses:** None
 
 ### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
 
@@ -104,7 +104,7 @@ Executes and verifies implementation slices.
 
 **Used by:** None
 
-**Uses:** `running-quality-checks`, `team-pr`, `unslop`, `writing-prose`
+**Uses:** `running-quality-checks`, `team-pr`
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
@@ -112,7 +112,7 @@ Opens a pull request after verification.
 
 **Used by:** `team`, `team-implement`
 
-**Uses:** `pr-screenshots`, `unslop`, `verifying-ux`, `writing-prose`
+**Uses:** `pr-screenshots`, `verifying-ux`
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
@@ -128,7 +128,7 @@ Reviews a technical design document with fresh context.
 
 **Used by:** None
 
-**Uses:** `engineering-standards`, `unslop`, `writing-prose`
+**Uses:** None
 
 ## Standalone utilities
 
@@ -237,7 +237,7 @@ Reviews a diff with fresh context.
 
 **Used by:** None
 
-**Uses:** `engineering-standards`, `why`, `writing-prose`
+**Uses:** `why`
 
 ### [no-comments](https://github.com/bostonaholic/team/blob/main/skills/no-comments/SKILL.md)
 
@@ -245,58 +245,18 @@ Removes low-value source comments and encodes valid constraints.
 
 **Used by:** None
 
-**Uses:** `engineering-standards`, `running-quality-checks`
+**Uses:** `running-quality-checks`
 
 ## Methodology skills
 
 These carry no `argument-hint`. They are never invoked directly; agents load
 them.
 
-### [engineering-standards](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md)
-
-Defines code design, comment, and review standards.
-
-**Used by:** `code-review`, `eng-design-doc-review`, `no-comments`
-
-**Uses:** None
-
-### [solid](https://github.com/bostonaholic/team/blob/main/skills/solid/SKILL.md)
-
-Defines SOLID design and review rules.
-
-**Used by:** None
-
-**Uses:** None
-
-### [refactoring-to-patterns](https://github.com/bostonaholic/team/blob/main/skills/refactoring-to-patterns/SKILL.md)
-
-Maps code smells to behavior-preserving refactorings.
-
-**Used by:** None
-
-**Uses:** None
-
 ### [running-quality-checks](https://github.com/bostonaholic/team/blob/main/skills/running-quality-checks/SKILL.md)
 
 Runs project-native tests, static checks, builds, and linters.
 
 **Used by:** `no-comments`, `pr-rebase`, `pr-verify`, `reflect`, `team`, `team-implement`
-
-**Uses:** None
-
-### [writing-prose](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md)
-
-Defines strict and STE-flavored prose rules.
-
-**Used by:** `code-review`, `eng-design-doc-review`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`
-
-**Uses:** None
-
-### [unslop](https://github.com/bostonaholic/team/blob/main/skills/unslop/SKILL.md)
-
-Use whenever writing or revising prose.
-
-**Used by:** `eng-design-doc-review`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`
 
 **Uses:** None
 
@@ -310,10 +270,10 @@ Defines live application and screenshot verification.
 
 ## Prose composition and evaluation
 
-When both prose skills are loaded, `unslop` protects exact text and semantic
-force, scans the untouched draft, and records the applicable checklist before
-`writing-prose` edits. It then resolves every recorded match, rescans, and
-self-audits meaning and protected text.
+The [writing standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/writing.md)
+reference protects exact text and semantic force, scans the untouched draft,
+and records the applicable checklist before style edits. It then resolves every
+recorded match, rescans, and self-audits meaning and protected text.
 
 The live-model suite covers zero, one, and many matches; exact code, user, and
 vendor text; pipeline authors; the technical-writer semantic veto; the fresh
@@ -366,6 +326,8 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [implement playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/implement.md)
 - [decisions](https://github.com/bostonaholic/team/blob/main/skills/team/references/decisions.md)
 - [dependencies](https://github.com/bostonaholic/team/blob/main/skills/team/references/dependencies.md)
+- [code standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/code-standards.md)
+- [writing standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/writing.md)
 - [design template](https://github.com/bostonaholic/team/blob/main/skills/team/references/design-template.md)
 - [structure template](https://github.com/bostonaholic/team/blob/main/skills/team/references/structure-template.md)
 - [testing](https://github.com/bostonaholic/team/blob/main/skills/team/references/testing.md)

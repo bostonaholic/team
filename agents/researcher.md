@@ -6,9 +6,6 @@ model: opus
 effort: medium
 tools: Read, Grep, Glob, TodoWrite, Agent, SendMessage
 permissionMode: plan
-skills:
-  - writing-prose
-  - unslop
 ---
 
 # Researcher Agent
@@ -24,6 +21,7 @@ Before work, read [execution rules](../skills/team/references/execution.md).
 Before work, read [artifact schema](../skills/team/references/artifacts.md).
 Before work, read the [research playbook](../skills/team/playbooks/research.md).
 Before work, read [agent dispatch](../skills/team/references/agent-dispatch.md).
+Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.
 If unavailable, stop and report the missing definition or resolved resource path.

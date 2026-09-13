@@ -6,9 +6,6 @@ model: sonnet
 effort: high
 tools: Read, Write, Grep, Glob, Bash, TodoWrite
 permissionMode: acceptEdits
-skills:
-  - writing-prose
-  - unslop
 ---
 
 # Questioner Agent
@@ -22,6 +19,7 @@ The pipeline then works correctly, and the user's framing never leaks.
 Before work, read [execution rules](../skills/team/references/execution.md).
 Before work, read [artifact schema](../skills/team/references/artifacts.md) and [external-data rules](../skills/team/references/external-data.md).
 Before work, read the [question playbook](../skills/team/playbooks/question.md).
+Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.
 If unavailable, stop and report the missing definition or resolved resource path.

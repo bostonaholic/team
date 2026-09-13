@@ -66,27 +66,29 @@ function grepA4(text: string, pattern: RegExp): string {
   return out.join("\n");
 }
 
-describe("engineering-standards methodology", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "engineering-standards", "SKILL.md");
+describe("code-standards reference", () => {
+  const REFERENCE = join(REPO_ROOT, "skills", "team", "references", "code-standards.md");
   const PLANNER = join(REPO_ROOT, "agents", "planner.md");
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
 
-  test("skill file exists with valid frontmatter", () => {
-    expect(existsSync(SKILL_FILE)).toBe(true);
-    const head10 = read(SKILL_FILE).split("\n").slice(0, 10).join("\n");
-    expect(head10).toContain("name: engineering-standards");
+  test("reference exists as an ordinary file, not a skill", () => {
+    expect(existsSync(REFERENCE)).toBe(true);
+    expect(read(REFERENCE).startsWith("---\n")).toBe(false);
+    expect(existsSync(join(REPO_ROOT, "skills", "engineering-standards", "SKILL.md"))).toBe(false);
+    expect(existsSync(join(REPO_ROOT, "skills", "solid", "SKILL.md"))).toBe(false);
+    expect(existsSync(join(REPO_ROOT, "skills", "refactoring-to-patterns", "SKILL.md"))).toBe(false);
   });
 
-  test("skill contains all 6 philosopher names", () => {
-    const text = read(SKILL_FILE);
+  test("reference contains all 6 philosopher names", () => {
+    const text = read(REFERENCE);
     for (const name of ["Hickey", "Carmack", "Armstrong", "Knuth", "Liskov", "Ousterhout"]) {
       expect(text).toContain(name);
     }
   });
 
   test("pins every quality checklist item name, count-free role sections", () => {
-    const text = read(SKILL_FILE);
+    const text = read(REFERENCE);
     for (const item of [
       "Single Responsibility",
       "Clear Naming",
@@ -110,46 +112,30 @@ describe("engineering-standards methodology", () => {
     expect(/\b9 items\b/.test(text)).toBe(false);
   });
 
-  test("skill contains role-specific sections", () => {
-    const text = read(SKILL_FILE);
+  test("reference contains role-specific sections", () => {
+    const text = read(REFERENCE);
     expect(text).toContain("When Implementing");
     expect(text).toContain("When Reviewing");
   });
 
-  test("planner.md loads engineering-standards", () => {
-    expect(loadsSkill(read(PLANNER), "engineering-standards")).toBe(true);
+  test("planner.md reads the code standards", () => {
+    expect(read(PLANNER)).toContain("code-standards.md");
   });
 
-  test("implementer.md loads engineering-standards", () => {
-    expect(loadsSkill(read(IMPLEMENTER), "engineering-standards")).toBe(true);
+  test("implementer.md reads the code standards", () => {
+    expect(read(IMPLEMENTER)).toContain("code-standards.md");
   });
 
-  test("code-reviewer.md loads engineering-standards", () => {
-    expect(loadsSkill(read(CODE_REVIEWER), "engineering-standards")).toBe(true);
-  });
-
-  test("skill defers to solid for LSP/SRP", () => {
-    expect(read(SKILL_FILE)).toContain("solid/SKILL.md");
-  });
-
-  test("implementer.md still loads solid", () => {
-    expect(loadsSkill(read(IMPLEMENTER), "solid")).toBe(true);
-  });
-
-  test("implementer.md still loads refactoring-to-patterns", () => {
-    expect(loadsSkill(read(IMPLEMENTER), "refactoring-to-patterns")).toBe(true);
-  });
-
-  test("code-reviewer.md still loads solid", () => {
-    expect(loadsSkill(read(CODE_REVIEWER), "solid")).toBe(true);
+  test("code-reviewer.md reads the code standards", () => {
+    expect(read(CODE_REVIEWER)).toContain("code-standards.md");
   });
 
   test("code-reviewer.md still references code-reviewer.md", () => {
     expect(read(CODE_REVIEWER)).toContain("code-review/references/code-reviewer.md");
   });
 
-  test("skill contains design-first workflow with all 5 steps", () => {
-    const text = read(SKILL_FILE);
+  test("reference contains design-first workflow with all 5 steps", () => {
+    const text = read(REFERENCE);
     expect(/Design.First|Design-First/i.test(text)).toBe(true);
     expect(/understand|requirements/i.test(text)).toBe(true);
     expect(/incrementally|incremental/i.test(text)).toBe(true);
@@ -355,16 +341,18 @@ describe("design template (L2 content tripwire)", () => {
   });
 });
 
-describe("writing-prose lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "writing-prose", "SKILL.md");
+describe("writing standards reference (L2 content tripwire)", () => {
+  const REFERENCE = join(REPO_ROOT, "skills", "team", "references", "writing.md");
 
-  test("skill file exists with name: writing-prose", () => {
-    expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*writing-prose\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  test("reference exists as an ordinary file, not a skill", () => {
+    expect(existsSync(REFERENCE)).toBe(true);
+    expect(read(REFERENCE).startsWith("---\n")).toBe(false);
+    expect(existsSync(join(REPO_ROOT, "skills", "writing-prose", "SKILL.md"))).toBe(false);
+    expect(existsSync(join(REPO_ROOT, "skills", "unslop", "SKILL.md"))).toBe(false);
   });
 
   test("pins the prose-quality directives (one idea per sentence, active voice)", () => {
-    const text = read(SKILL_FILE);
+    const text = read(REFERENCE);
     // Pin the directives, not their heading capitalization: the active-voice
     // rule folded into the STE mechanical-rule list, so a `## Active Voice`
     // heading is no longer the shape it takes.
@@ -375,19 +363,19 @@ describe("writing-prose lens (L2 content tripwire)", () => {
 
   // Mechanical ban rules.
   test("pins the delete-list section heading (Words and phrases to delete)", () => {
-    const text = read(SKILL_FILE);
+    const text = read(REFERENCE);
     expect(text).toContain("Words and phrases to delete");
   });
 
   // The strict / STE-flavored mode split.
   test("pins the Two modes section heading", () => {
-    const text = read(SKILL_FILE);
+    const text = read(REFERENCE);
     expect(text).toContain("Two modes");
   });
 
   // The document-level rule, which sits above the sentence-level rules.
   test("pins the one-busy-reader rule and its named source", () => {
-    const text = read(SKILL_FILE);
+    const text = read(REFERENCE);
     expect(text).toContain("One busy reader");
     expect(text).toContain("Writing That Works");
     expect(text).toContain("Kenneth Roman");
@@ -395,16 +383,9 @@ describe("writing-prose lens (L2 content tripwire)", () => {
     expect(text).toContain("Lead with the recommendation");
   });
 
-  test("frontmatter description names both modes (strict and STE-flavored)", () => {
-    const fm = frontmatter(read(SKILL_FILE));
-    const description = fm.split("\n").find((line) => line.startsWith("description:")) ?? "";
-    expect(description).toContain("strict");
-    expect(description).toContain("STE-flavored");
-  });
-
   // The pre-return self-lint checklist.
   test("pins the Self-lint section heading", () => {
-    const text = read(SKILL_FILE);
+    const text = read(REFERENCE);
     expect(text).toContain("Self-lint");
   });
 });
@@ -695,18 +676,18 @@ describe("time-bomb example pair (single copy in the testing reference)", () => 
 
 // ---------------------------------------------------------------------------
 // Code-comment rules — free L2 content tripwires (docs/testing.md §2).
-// engineering-standards is the single source of truth for the binding comment
+// The code standards are the single source of truth for the binding comment
 // rule set (why-only, rewrite-first, no ticket/pipeline references, no
 // commented-out code, no TODOs, and the in-body scope of the ban); the implementer's
-// `## Code quality` block defers to it with a one-line pointer.
+// `## Code quality` block defers to it with a pointer.
 // ---------------------------------------------------------------------------
 
 describe("code-comment rules (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "engineering-standards", "SKILL.md");
+  const REFERENCE = join(REPO_ROOT, "skills", "team", "references", "code-standards.md");
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
 
-  test("engineering-standards defines the Code Comments rule set", () => {
-    const section = sectionFrom(read(SKILL_FILE), "## Code Comments");
+  test("the code standards define the Code Comments rule set", () => {
+    const section = sectionFrom(read(REFERENCE), "## Code Comments");
     expect(section.length).toBeGreaterThan(0);
     // Why-only rule: comments never explain WHAT, only non-obvious WHY.
     expect(/non-obvious why/i.test(section)).toBe(true);
@@ -728,20 +709,20 @@ describe("code-comment rules (L2 content tripwire)", () => {
     expect(/exported\/public/i.test(section)).toBe(true);
     // Scope pointer: in-source comments here; review findings belong to the
     // finding format. A cross-reference, so a rename fails the build.
-    expect(section).toContain("skills/code-review/references/findings.md");
+    expect(section).toContain("../code-review/references/findings.md");
     // Whether the expanded rule set actually changes what a reviewer flags
     // is behavior, not wording — it lives in the planted-comment-*
     // code-reviewer evals, per docs/testing.md ("behavior that only prose
     // can carry belongs at L5 or L6").
   });
 
-  test("implementer defers comment discipline to engineering-standards via a one-line pointer", () => {
+  test("implementer defers comment discipline to the code standards via a pointer", () => {
     // The wrapper no longer mirrors the rule set (thin-agents refactor);
-    // it keeps a one-line pointer naming the canonical skill next to the
+    // it keeps a pointer naming the canonical reference next to the
     // comment-discipline mention.
     const directive = grepA4(read(IMPLEMENTER), /comment discipline/i);
     expect(directive.length).toBeGreaterThan(0);
-    expect(directive).toContain("`engineering-standards`");
+    expect(directive).toContain("code-standards.md");
   });
 });
 
@@ -804,7 +785,7 @@ describe("comment red flags (L2 content tripwire)", () => {
     // Citation contract: findings name the checklist item.
     expect(directive).toContain("Comment Discipline");
     // The pointer defers to canonical definitions.
-    expect(/code-review\/references\/code-reviewer\.md|engineering-standards/.test(directive)).toBe(true);
+    expect(/code-review\/references\/code-reviewer\.md|code-standards\.md/.test(directive)).toBe(true);
   });
 });
 
@@ -1173,17 +1154,12 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-subtract-before-you-add",
     "skills/team/principles/focused-work.md",
-    "skills/engineering-standards/SKILL.md"
+    "skills/team/references/code-standards.md"
   ],
   [
     "principle-subtract-before-you-add",
     "skills/team/principles/focused-work.md",
     "skills/team/playbooks/implement.md"
-  ],
-  [
-    "principle-subtract-before-you-add",
-    "skills/team/principles/focused-work.md",
-    "skills/refactoring-to-patterns/SKILL.md"
   ],
   [
     "principle-subtract-before-you-add",
@@ -1289,8 +1265,9 @@ describe("the principle set is derived, not counted", () => {
     .sort();
 
   // The multi-rule methodology sets. They carry no prefix on purpose: each is a
-  // set of rules, not a single invariant.
-  const BUNDLES = ["solid"];
+  // set of rules, not a single invariant. The last bundle was folded into the
+  // code-standards reference, so this list is now empty.
+  const BUNDLES: string[] = [];
 
   // Guard: an empty prefix set on either side would pass both directions.
   test("the principle registrations are absent on disk and in the catalog", () => {

@@ -7,8 +7,7 @@ argument-hint: "[docs/plans/<id>/]"
 
 # Team Worktree — Isolate the Implementation
 
-Before finalizing prose you author, call the Skill tool with `unslop` and
-`writing-prose`, in that order.
+Before finalizing prose you author, read the [writing standards](../team/references/writing.md).
 
 Create a git worktree per involved repository so implementation happens on
 isolated branches without affecting any main working tree. In single-repo

@@ -427,12 +427,12 @@ describe("static gate: planted-comment-violations fixture", () => {
     // Live-model fixture — it can be red for a non-bug reason, so it never
     // gates (docs/testing.md §4).
     expect(fixture.frontmatter.tier).toBe("periodic");
-    // The rule content now affects the outcome, so engineering-standards is
+    // The rule content now affects the outcome, so the code standards are
     // a dep alongside the reviewer agent and the brief.
     for (const dep of [
       "agents/code-reviewer.md",
       "skills/code-review/references/code-reviewer.md",
-      "skills/engineering-standards/SKILL.md",
+      "skills/team/references/code-standards.md",
     ]) {
       expect(fixture.frontmatter.deps).toContain(dep);
     }
@@ -483,7 +483,7 @@ describe("static gate: planted-comment-violations fixture", () => {
     for (const glob of [
       "agents/code-reviewer.md",
       "skills/code-review/**",
-      "skills/engineering-standards/**",
+      "skills/team/references/code-standards.md",
       "tests/code-reviewer.evals.ts",
       "evals/fixtures/code-reviewer/planted-comment-violations/**",
       "evals/rubrics/code-reviewer.md",

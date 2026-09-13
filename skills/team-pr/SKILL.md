@@ -10,8 +10,7 @@ argument-hint: "[docs/plans/<id>/]"
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-Before finalizing prose you author, call the Skill tool with `unslop` and
-`writing-prose`, in that order. Preserve exact commands, tokens, and templates.
+Before finalizing prose you author, read the [writing standards](../team/references/writing.md). Preserve exact commands, tokens, and templates.
 
 Run the PR phase. Two modes:
 
@@ -62,7 +61,7 @@ Run the PR phase. Two modes:
 Closes #<n>
 ```
 
-**Prose bar.** The body addresses one busy reader making one decision. Before finalizing, call the Skill tool with `writing-prose` and apply its `## One busy reader` rule and its `## Self-lint`. `## Summary` opens with the recommendation or the observable outcome, never with a sentence describing the PR.
+**Prose bar.** The body addresses one busy reader making one decision. Before finalizing, read the [writing standards](../team/references/writing.md) and apply its `## One busy reader` rule and its `## Self-lint`. `## Summary` opens with the recommendation or the observable outcome, never with a sentence describing the PR.
 
 The `Closes` footer is conditional and appears as the final line of the PR body. **Placement rationale:** narrative precedes machine metadata. For `## Review notes`, omit the section entirely when empty; never emit a bare heading. Tag COMMENT findings with their `design-review-<n>` source.
 

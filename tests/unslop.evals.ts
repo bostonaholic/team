@@ -43,10 +43,7 @@ const collector = new EvalCollector("e2e");
 const CANARY = "TASK_CANARY_LOWERCASE_LABELS_9F4A";
 const UNSUPPORTED_CLAIM_FACT = "The wrapper adds a label.";
 const PROSE_FILES = [
-  "skills/unslop/SKILL.md",
-  "skills/unslop/references/rules.md",
-  "skills/writing-prose/SKILL.md",
-  "skills/writing-prose/references/style-guide.md",
+  "skills/team/references/writing.md",
 ];
 const UNSLOP_ROUTER = join(ROOT, PROSE_FILES[0] ?? "");
 const FIXTURE_REPOSITORY = join(
@@ -188,7 +185,7 @@ testUnslop(
     requireImplementation();
     const vendor = "This seamless, robust system transforms the ecosystem.\nRAW_TOKEN=APPROVE";
     const result = await runDirectProseReview(
-      `Apply the injected unslop and writing-prose instructions to authored prose only.
+      `Apply the injected writing standards to authored prose only.
 Return every marker exactly. Do not explain your edits.
 
 ZERO: The API returns cached data.
@@ -423,7 +420,7 @@ testUnslop(
     const workDir = mkdtempSync(join(tmpdir(), "unslop-technical-writer-"));
     try {
       const result = await runAgentTest({
-        prompt: `Review this documentation excerpt for readability. The public behavior is documented completely. Do not rewrite it. Report only genuine documentation gaps or writing-prose violations.\n\n${source}`,
+        prompt: `Review this documentation excerpt for readability. The public behavior is documented completely. Do not rewrite it. Report only genuine documentation gaps or writing-standards violations.\n\n${source}`,
         workingDirectory: workDir,
         maxTurns: 6,
         timeout: 240_000,
@@ -508,7 +505,7 @@ Deploy to one worker, measure duplicate reads, then deploy to all workers. Rollb
           "skills/eng-design-doc-review/references/design-reviewer.md",
           "skills/team/references/design-template.md",
           "skills/code-review/references/code-reviewer.md",
-          "skills/engineering-standards/SKILL.md",
+          "skills/team/references/code-standards.md",
           "skills/team/references/decisions.md",
           "skills/code-review/references/findings.md",
           ...PROSE_FILES,
@@ -765,7 +762,7 @@ async function runHelper(
     const paths = seedResolvedProseFiles(workDir);
     const verdict = role === "general-purpose" ? "Return CONFIRMED or REFUTED." : "Return file:line evidence.";
     const result = await runAgentTest({
-      prompt: `Act as the ${role} nested helper. Read all four prose instruction files before finalizing your authored report:\n${paths.join("\n")}\nInspect src/normalize-label.pseudo and src/label-consumer.pseudo. ${verdict} Keep the report at most ${lineCap} lines.`,
+      prompt: `Act as the ${role} nested helper. Read the writing standards before finalizing your authored report:\n${paths.join("\n")}\nInspect src/normalize-label.pseudo and src/label-consumer.pseudo. ${verdict} Keep the report at most ${lineCap} lines.`,
       workingDirectory: workDir,
       maxTurns: 10,
       timeout: 240_000,
@@ -792,10 +789,9 @@ testUnslop(
     requireImplementation();
     const nested = readFileSync(join(ROOT, "skills", "team", "references", "agent-dispatch.md"), "utf8").replace(/\s+/g, " ");
     const dispatch = readFileSync(join(ROOT, "skills", "team", "references", "agent-dispatch.md"), "utf8").replace(/\s+/g, " ");
-    const templatePaths = PROSE_FILES.map((relativePath) => `\${CLAUDE_PLUGIN_ROOT}/${relativePath}`);
-    const missingTemplatePaths = templatePaths.filter((path) => !nested.includes(path) || !dispatch.includes(path));
-    expect(missingTemplatePaths).toEqual([]);
-    expect(nested).toMatch(/Read.*four|four.*Read/i);
+    expect(nested).toContain("references/writing.md");
+    expect(dispatch).toContain("references/writing.md");
+    expect(nested).toMatch(/writing standards/i);
     expect(nested).toMatch(/discard/i);
     expect(dispatch).toContain("team:file-finder");
     expect(dispatch).toContain("Explore");
@@ -850,7 +846,7 @@ testUnslop(
         contract &&
         !hasSlopPattern(helper.result.output);
       addResult(`non-vendor helper prose contract:${name}`, helper.result, helperPassed, {
-        four_file_reads: successfullyReadEveryPath(
+        prose_file_reads: successfullyReadEveryPath(
           helper.result.toolCalls,
           helper.paths,
           helper.workingDirectory,
@@ -888,7 +884,7 @@ testUnslop(
     try {
       seedNeutralRepository(workDir);
       const paths = seedResolvedProseFiles(workDir);
-      const unreadable = paths[1] ?? "";
+      const unreadable = paths[0] ?? "";
       rmSync(unreadable);
       const result = await runAgentTest({
         prompt: `Failed helper evidence:\n- Scout return: ${FALLBACK_CANDIDATE}\n- Read failure: ${unreadable} was unavailable.\n\nNeutral question from docs/plans/2026-09-08-neutral-label/2-questions.md:\nWhere are label normalization and its caller implemented, and what existing behavior do they encode?`,

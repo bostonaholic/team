@@ -2,7 +2,7 @@
 
 Before updating `CHANGELOG.md`, read this file and apply it. Maintain a curated user-facing `CHANGELOG.md` under [Keep a Changelog](https://keepachangelog.com). Every entry answers “How does this affect me?” Create the root file if missing.
 
-Write at seventh-grade, STE-flavored level. Before finalizing, call the Skill tool with `writing-prose` and apply its `## Self-lint`.
+Write at seventh-grade, STE-flavored level. Before finalizing, read the [writing standards](../team/references/writing.md) and apply its `## Self-lint`.
 
 ## Structure
 

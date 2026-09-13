@@ -11,7 +11,7 @@ deps:
   - agents/code-reviewer.md
   - skills/code-review/references/code-reviewer.md
   - skills/code-review/references/findings.md
-  - skills/engineering-standards/SKILL.md
+  - skills/team/references/code-standards.md
 ---
 
 # Synthetic implementer artifact: webhook delivery retry helper

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Unslop"
-  short_description: "Remove AI-writing patterns without changing meaning"
-  default_prompt: "Use $unslop to remove AI-writing patterns without changing meaning."

@@ -11,7 +11,7 @@
 // — ``Call the Skill tool with `<name>` `` — is an edge, because only it sends
 // the reader to go execute that skill. Every other way of naming a skill is a
 // citation, and a citation carries no direction: a skill that restates a rule
-// from `why` does not depend on `why`, and counting that as an edge invents a
+// from `code-review` does not depend on `code-review`, and counting that as an edge invents a
 // back-edge the graph does not have. `loadedSkills()` in
 // tests/helpers/skill-refs.ts owns the extraction, so the page and
 // tests/skill-tool-invocation.test.ts read the same edges.
@@ -215,7 +215,7 @@ function loadSet(values: string[], derived: Set<string>, names: Set<string>): st
 /**
  * Order offenders: the authored names compared to that same array under
  * `[...names].sort()` — codepoint order, so `pr-verify` precedes
- * `solid`. Names the first name out of place.
+ * `why`. Names the first name out of place.
  */
 function loadOrder(values: string[]): string[] {
   const sorted = [...values].sort();
@@ -405,8 +405,8 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     // Seven vacuity guards. Each names the property that vanished, because a
     // mis-scoped haystack makes every sweep below pass for the wrong reason
     // (docs/testing.md, "Prove a negative check can find a positive").
-    expect(SKILL_DIRECTORIES.length).toBeGreaterThan(30); // (1) skills/ tree parsed
-    expect(ENTRIES.length).toBeGreaterThan(30); // (2) page parsed
+    expect(SKILL_DIRECTORIES.length).toBeGreaterThan(25); // (1) skills/ tree parsed
+    expect(ENTRIES.length).toBeGreaterThan(25); // (2) page parsed
     expect(ENTRIES_WITH_USES).toBeGreaterThan(0); // (3)
     expect(ENTRIES_WITHOUT_USES).toBeGreaterThan(0); // (4)
     expect(EMPTY_ENTRY_BODIES).toEqual([]); // (5) every parsed body non-empty
@@ -458,7 +458,7 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     const clean = [
       "Lands a reviewed PR.",
       `${USED_BY_HEADER} None`,
-      `${USES_HEADER} \`pr-verify\`, \`solid\``,
+      `${USES_HEADER} \`pr-verify\`, \`why\``,
     ];
     expect(shape(clean)).toEqual([]);
 
@@ -538,10 +538,10 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     ).toEqual(["relationship heading remains", "relationship anchor link remains"]);
 
     // Phantom name: a field naming no skill on disk.
-    const derived = new Set(["pr-verify", "solid"]);
-    expect(loadSet(["pr-verify", "solid"], derived, NAMES)).toEqual([]);
+    const derived = new Set(["pr-verify", "why"]);
+    expect(loadSet(["pr-verify", "why"], derived, NAMES)).toEqual([]);
     expect(
-      loadSet(["pr-verify", "solid", "not-a-skill"], derived, NAMES),
+      loadSet(["pr-verify", "why", "not-a-skill"], derived, NAMES),
     ).not.toEqual([]);
 
     // Dropped name: a derived name the page omits.
@@ -549,14 +549,14 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
 
     // Invented edge: a name the skill only mentions, listed as if it loaded it.
     // This is the direction rule — `b` naming `a` is not `b -> a`.
-    expect(loadSet(["pr-verify", "solid", "shipit"], derived, NAMES)).not.toEqual(
+    expect(loadSet(["pr-verify", "why", "shipit"], derived, NAMES)).not.toEqual(
       [],
     );
 
     // Correct set, wrong order. Codepoint sort: `pr-verify` precedes
-    // `solid`, which a dictionary sort would reverse.
-    expect(loadOrder(["pr-verify", "solid"])).toEqual([]);
-    expect(loadOrder(["solid", "pr-verify"])).not.toEqual([]);
+    // `why`, which a dictionary sort would reverse.
+    expect(loadOrder(["pr-verify", "why"])).toEqual([]);
+    expect(loadOrder(["why", "pr-verify"])).not.toEqual([]);
   });
 
   test("the scanner takes loads and leaves every other reference behind", () => {
@@ -570,7 +570,7 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
       "# Fixture skill body",
       "",
       "Call the Skill tool with `pr-verify` before landing.",
-      "The fail-closed rule is restated at skills/solid/SKILL.md.",
+      "The fail-closed rule is restated at skills/why/SKILL.md.",
       "This is not a `team`, and `shipit` never runs `not-a-real-skill`.",
     ].join("\n");
 
@@ -580,8 +580,8 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     // two of them are references the graph must not turn into edges.
     expect([...namedSkills(fixture, "shipit", NAMES)].sort()).toEqual([
       "pr-verify",
-      "solid",
       "team",
+      "why",
     ]);
   });
 });

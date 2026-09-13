@@ -79,7 +79,7 @@ five frontmatter lines, the authority line, four fence lines, and one
 source-grounded synthesis line after the blocks. Add no blank or authored
 separator lines. The arithmetic is `40 + 60 + 11 = 111` for one repo and
 `60 + 100 + 11 = 171` for multiple repos.
-Audit every root-authored span with `unslop` and `writing-prose`. After both
+Audit every root-authored span against the [writing standards](references/writing.md). After both
 audits, trace every substantive claim only to the completed returns. Never add
 a task-derived claim.
 
