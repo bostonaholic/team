@@ -1,5 +1,13 @@
 ## Setup
 
+0. **Select the route first.** Read [routing](routing.md) and identify the
+   selected route from the leading argument, before any worktree or artifact
+   is authored. A limited-scope route (`investigate`, `plan`, `prototype`)
+   creates no production worktree: it writes its artifacts in place under the
+   home `docs/plans/<id>/` and stops at its deliverable. Only a full route
+   (`feature`, `fix`, `refactor`, or unprefixed) runs the leading WORKTREE
+   phase below. Record `route: <route>` on `1-task.md` before dispatching any
+   agent, and set `routeStatus: complete` when a limited-scope route finishes.
 1. **Resolve `$ARGUMENTS`** to a description (fetch issue through `gh` if a
    URL. Lookup tracker if a ticket-only ID. Otherwise use as-is).
 2. **Capture `ticketId`** — if `$ARGUMENTS` starts with a ticket-like
