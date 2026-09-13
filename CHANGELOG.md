@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Consolidate Question, Research, and Design procedures into three playbooks with shared templates and a dependency checklist, preserving artifact schemas, research isolation, return limits, and the design-review gate.
+
 ## [0.104.2] - 2026-09-12
 
 ### Changed

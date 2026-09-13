@@ -22,4 +22,4 @@ Keep the confidence separation intact — it is the product.
 When the question is a precursor to changing the code, close with a
 **Preserve / Change / Avoid / Risk** constraint set translating the
 lineage findings into inputs for the change — the shape a design's
-decision record wants (`skills/documenting-decisions/SKILL.md`).
+decision record wants ([decision-record rules](../../team/references/decisions.md)).

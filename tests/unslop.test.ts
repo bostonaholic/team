@@ -513,9 +513,9 @@ METAPHOR_PREPARATION: This prepares rollout.`;
 
 test("Research producer budgets preserve exact returns within the artifact limit", () => {
   const finderAgent = squash(readOrEmpty(path("agents", "file-finder.md")));
-  const finderProcedure = squash(readOrEmpty(path("skills", "finding-files", "SKILL.md")));
+  const finderProcedure = squash(readOrEmpty(path("skills", "team", "playbooks", "research.md")));
   const researcherAgent = squash(readOrEmpty(path("agents", "researcher.md")));
-  const researcherProcedure = squash(readOrEmpty(path("skills", "researching-codebases", "SKILL.md")));
+  const researcherProcedure = squash(readOrEmpty(path("skills", "team", "playbooks", "research.md")));
   const standalone = squash(readOrEmpty(path("skills", "team-research", "SKILL.md")));
   const pipeline = squash(readOrEmpty(path("skills", "team", "references", "03-the-phase-loop.md")));
   const nested = squash(readOrEmpty(path("skills", "nested-agents", "references", "per-agent-dispatch.md")));

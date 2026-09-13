@@ -56,7 +56,7 @@ For rule violations, name the rule but omit verdict and severity:
 
 > Read <file> around line <n>. Claim: "<what is there> violates <rule>, stated in `skills/<skill>/SKILL.md`". Read that rule, then attempt to REFUTE the claim: does the rule say what the claim says, and does this code fall outside it through an allowed case declared by the rule or because the rule does not reach this case? Reply REFUTED or CONFIRMED with file:line evidence, <= 10 lines. If your evidence is inconclusive, reply CONFIRMED. Do not write files or spawn agents.
 
-Written rules outrank observed precedent. Follow convention where no rule speaks; follow the rule where one does (`skills/systems-thinking/SKILL.md`). A conflict between convention and rule is a report finding, not a refutation.
+Written rules outrank observed precedent. Follow convention where no rule speaks; follow the rule where one does ([system dependency checks](../../team/references/dependencies.md)). A conflict between convention and rule is a report finding, not a refutation.
 
 Skip skepticism only when there are no hard-gate findings or `Agent` is unavailable. Report findings unchanged; never soften due to unavailable or inconclusive verification.
 

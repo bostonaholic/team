@@ -152,8 +152,8 @@ function seedNeutralRepository(workDir: string): void {
     join(workDir, "skills", "nested-agents", "references", "per-agent-dispatch.md"),
   );
   copyFile(
-    join(ROOT, "skills", "systems-thinking", "references", "lenses.md"),
-    join(workDir, "skills", "systems-thinking", "references", "lenses.md"),
+    join(ROOT, "skills", "team", "references", "dependencies.md"),
+    join(workDir, "skills", "team", "references", "dependencies.md"),
   );
 }
 
@@ -507,10 +507,10 @@ Deploy to one worker, measure duplicate reads, then deploy to all workers. Rollb
 
           "skills/reviewing-designs/SKILL.md",
           "skills/reviewing-designs/references/review-brief.md",
-          "skills/technical-design-doc/SKILL.md",
+          "skills/team/references/design-template.md",
           "skills/reviewing-code/SKILL.md",
           "skills/engineering-standards/SKILL.md",
-          "skills/documenting-decisions/SKILL.md",
+          "skills/team/references/decisions.md",
           "skills/conventional-comments/SKILL.md",
           ...PROSE_FILES,
         ]),
@@ -543,7 +543,7 @@ async function runResearchProducer(agentName: "file-finder" | "researcher"): Pro
   try {
     seedNeutralRepository(workDir);
     const procedureFiles = agentName === "file-finder"
-      ? ["skills/finding-files/SKILL.md", "skills/team/principles/durable-state.md"]
+      ? ["skills/team/playbooks/research.md", "skills/team/principles/durable-state.md"]
       : [
           "skills/team/principles/durable-state.md",
           "skills/team/principles/independent-review.md",
@@ -552,8 +552,8 @@ async function runResearchProducer(agentName: "file-finder" | "researcher"): Pro
           "skills/team/references/decisions.md",
           "skills/team/references/execution.md",
           "skills/nested-agents/SKILL.md",
-          "skills/systems-thinking/SKILL.md",
-          "skills/researching-codebases/SKILL.md",
+          "skills/team/references/dependencies.md",
+          "skills/team/playbooks/research.md",
         ];
     return await runAgentTest({
       prompt: "Read docs/plans/2026-09-08-neutral-label/2-questions.md and answer only those neutral questions with file:line evidence.",
@@ -907,8 +907,8 @@ testUnslop(
 
           "skills/team/references/execution.md",
           "skills/nested-agents/SKILL.md",
-          "skills/systems-thinking/SKILL.md",
-          "skills/researching-codebases/SKILL.md",
+          "skills/team/references/dependencies.md",
+          "skills/team/playbooks/research.md",
           "skills/team/references/artifacts.md",
           ...PROSE_FILES,
         ])}`,

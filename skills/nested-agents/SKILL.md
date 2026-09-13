@@ -57,7 +57,7 @@ task-derived Research content.
 
 ## Verification helpers get neutral claims
 
-Apply [independent review rules](../team/principles/independent-review.md): send a neutral, falsifiable claim with `file:line`, never your verdict, severity, or reasoning, and ask the helper to refute it. **A rule-violation claim carries the rule** cited at `skills/<skill>/SKILL.md`. **Stated rule outranks observed precedent**; only a mismatched rule or an allowed case declared by that rule refutes the claim. Follow `skills/systems-thinking/SKILL.md` only where no written rule speaks. Drop or downgrade only a REFUTED result whose evidence you verify. Inconclusive means CONFIRMED. List removals under `### Refuted by verification`.
+Apply [independent review rules](../team/principles/independent-review.md): send a neutral, falsifiable claim with `file:line`, never your verdict, severity, or reasoning, and ask the helper to refute it. **A rule-violation claim carries the rule** cited at `skills/<skill>/SKILL.md`. **Stated rule outranks observed precedent**; only a mismatched rule or an allowed case declared by that rule refutes the claim. Follow [system dependency checks](../team/references/dependencies.md) only where no written rule speaks. Drop or downgrade only a REFUTED result whose evidence you verify. Inconclusive means CONFIRMED. List removals under `### Refuted by verification`.
 
 Before `researcher`, `implementer`, `code-reviewer`, or `security-reviewer` dispatches helpers, read [references/per-agent-dispatch.md](references/per-agent-dispatch.md) for exact types, prompt contents, templates, caps, and fallback rules.
 

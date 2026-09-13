@@ -7,7 +7,6 @@ effort: high
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
-  - systems-thinking
   - planning-implementation
   - writing-prose
   - unslop
@@ -66,8 +65,9 @@ it.
 for the design-first workflow and quality checklist. Reference the
 checklist as verification criteria for steps.
 
-**Apply the systems-thinking lens** per `skills/systems-thinking/SKILL.md`
-(preloaded), `## When Planning`: enumerate every call site of a changed
+**Apply the system dependency checks** per
+[system dependency checks](../skills/team/references/dependencies.md),
+`## When planning`: enumerate every call site of a changed
 contract as explicit steps, and include co-changing doc and config surfaces
 in the slice.
 

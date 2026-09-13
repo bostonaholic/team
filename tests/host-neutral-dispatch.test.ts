@@ -93,8 +93,6 @@ describe("Installed resource delivery: explicit links", () => {
   }
 
   test.each([
-    ["skills/decomposing-intent/SKILL.md", "skills/team/references/artifacts.md"],
-    ["skills/decomposing-intent/SKILL.md", "skills/team/references/external-data.md"],
     ["skills/team-design/SKILL.md", "skills/team/references/artifacts.md"],
   ])("%s resolves its cross-skill link to %s within the installed copy", (caller, target) => {
     const root = installedCopy();

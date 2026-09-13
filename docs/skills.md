@@ -34,7 +34,7 @@ This page carries both directions of each skill-to-skill load edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 65 registered skills: 25 commands and 40 methodologies. Shared principles, artifact schemas, and operational rules are ordinary [installed resources](migration-contract.md#m03-shared-principles).
+The catalog has 55 registered skills: 25 commands and 30 methodologies. Shared principles, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 ## Entry-point skills
@@ -149,7 +149,7 @@ Triages unresolved PR review comments.
 
 **Used by:** `pr-watch-as-author`
 
-**Uses:** `decision-making`
+**Uses:** None
 
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
@@ -173,7 +173,7 @@ Grooms a project backlog and proposes tracker changes.
 
 **Used by:** None
 
-**Uses:** `decision-making`
+**Uses:** None
 
 ### [pr-cleanup](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
 
@@ -260,46 +260,13 @@ Defines QRSPI phases, artifacts, gates, and state transitions.
 
 **Uses:** None
 
-
-### [researching-codebases](https://github.com/bostonaholic/team/blob/main/skills/researching-codebases/SKILL.md)
-
-Defines evidence-only codebase research and `5-research.md`.
-
-**Used by:** None
-
-**Uses:** None
-
-### [finding-files](https://github.com/bostonaholic/team/blob/main/skills/finding-files/SKILL.md)
-
-Locates files by naming, structure, and imports.
-
-**Used by:** None
-
-**Uses:** None
-
-### [decomposing-intent](https://github.com/bostonaholic/team/blob/main/skills/decomposing-intent/SKILL.md)
-
-Defines task and question artifacts plus multi-repo detection.
-
-**Used by:** None
-
-**Uses:** `product-requirements-doc`
-
-### [authoring-designs](https://github.com/bostonaholic/team/blob/main/skills/authoring-designs/SKILL.md)
-
-Defines the design-document procedure.
-
-**Used by:** None
-
-**Uses:** `decision-making`, `systems-thinking`, `writing-prose`
-
 ### [slicing-work](https://github.com/bostonaholic/team/blob/main/skills/slicing-work/SKILL.md)
 
 Defines vertical slices and verification checkpoints.
 
 **Used by:** None
 
-**Uses:** `decision-making`
+**Uses:** None
 
 ### [planning-implementation](https://github.com/bostonaholic/team/blob/main/skills/planning-implementation/SKILL.md)
 
@@ -331,7 +298,7 @@ Defines adversarial design review and verdicts.
 
 **Used by:** `eng-design-doc-review`, `team`, `team-design`
 
-**Uses:** `conventional-comments`, `cross-model-review`, `documenting-decisions`, `engineering-standards`, `reviewing-code`, `technical-design-doc`, `unslop`, `writing-prose`
+**Uses:** `conventional-comments`, `cross-model-review`, `engineering-standards`, `reviewing-code`, `unslop`, `writing-prose`
 
 ### [conventional-comments](https://github.com/bostonaholic/team/blob/main/skills/conventional-comments/SKILL.md)
 
@@ -445,59 +412,11 @@ Defines safe nested-agent dispatch and fallback.
 
 **Uses:** None
 
-### [decision-making](https://github.com/bostonaholic/team/blob/main/skills/decision-making/SKILL.md)
-
-Defines a decision method based on reversibility and risk.
-
-**Used by:** `authoring-designs`, `documenting-decisions`, `groom-backlog`, `pr-open-comments`, `slicing-work`, `technical-design-doc`
-
-**Uses:** None
-
-### [documenting-decisions](https://github.com/bostonaholic/team/blob/main/skills/documenting-decisions/SKILL.md)
-
-Defines ADR structure and lifecycle.
-
-**Used by:** `reviewing-designs`
-
-**Uses:** `decision-making`, `writing-prose`
-
-### [technical-design-doc](https://github.com/bostonaholic/team/blob/main/skills/technical-design-doc/SKILL.md)
-
-Defines technical design sections and decision content.
-
-**Used by:** `reviewing-designs`
-
-**Uses:** `decision-making`, `writing-prose`
-
-### [product-requirements-doc](https://github.com/bostonaholic/team/blob/main/skills/product-requirements-doc/SKILL.md)
-
-Defines when and how to write `3-prd.md`.
-
-**Used by:** `decomposing-intent`
-
-**Uses:** `writing-prose`
-
-### [product-thinking](https://github.com/bostonaholic/team/blob/main/skills/product-thinking/SKILL.md)
-
-Defines product-need lenses.
-
-**Used by:** None
-
-**Uses:** None
-
-### [systems-thinking](https://github.com/bostonaholic/team/blob/main/skills/systems-thinking/SKILL.md)
-
-Defines system-boundary, feedback, and dependency analysis.
-
-**Used by:** `authoring-designs`
-
-**Uses:** None
-
 ### [writing-prose](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md)
 
 Defines strict and STE-flavored prose rules.
 
-**Used by:** `authoring-designs`, `changelog`, `documenting-decisions`, `eng-design-doc-review`, `git-commit`, `product-requirements-doc`, `reviewing-code`, `reviewing-designs`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`, `technical-design-doc`
+**Used by:** `changelog`, `eng-design-doc-review`, `git-commit`, `reviewing-code`, `reviewing-designs`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`
 
 **Uses:** None
 
@@ -602,11 +521,8 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | `team-question` | `questioner` | Skill drives the Question phase. The agent decomposes the intent. |
 | `implementing-slices` | `implementer` | Skill is the slice-execution procedure. The agent is the specialist that executes it. |
 | `verifying-ux` | `ux-reviewer` | Skill is the live-verification procedure. The agent is the tester that runs it. |
-| `authoring-designs` | `design-author` | Skill is the authoring procedure and template. The agent is the author that drafts the design. |
-| `finding-files` | `file-finder` | Skill is the search strategy. The agent is the locator that executes it. |
 | `planning-implementation` | `planner` | Skill is the plan template and tactical rules. The agent is the engineer that writes the plan. |
 | `team-design` | `design-author` | Skill drives the Design phase. The agent drafts the alignment doc. |
-| `technical-design-doc` | `technical-writer` | Both contain "technical" but differ: the skill is design-doc methodology. The agent writes documentation during verify. |
 | `eng-design-doc-review` | `design-author` | The review skill dispatches a read-only `Explore` subagent, **not** the `design-author` agent, which keeps the audit independent of the author. |
 
 ## See also
@@ -619,7 +535,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 - **`skills/team/registry.json`**: the phase-tagged inventory of the 13
   specialist agents, in the source tree.
 
-## Shared principle resources
+## Shared resources
 
 Read these ordinary documents at their consuming step. They add no registrations or picker entries.
 
@@ -629,6 +545,12 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [human control](https://github.com/bostonaholic/team/blob/main/skills/team/principles/human-control.md)
 - [independent review](https://github.com/bostonaholic/team/blob/main/skills/team/principles/independent-review.md)
 - [verified results](https://github.com/bostonaholic/team/blob/main/skills/team/principles/verified-results.md)
+- [question playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/question.md)
+- [research playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/research.md)
+- [design playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/design.md)
 - [decisions](https://github.com/bostonaholic/team/blob/main/skills/team/references/decisions.md)
+- [dependencies](https://github.com/bostonaholic/team/blob/main/skills/team/references/dependencies.md)
+- [design template](https://github.com/bostonaholic/team/blob/main/skills/team/references/design-template.md)
+- [PRD template](https://github.com/bostonaholic/team/blob/main/skills/team/references/prd-template.md)
 - [execution](https://github.com/bostonaholic/team/blob/main/skills/team/references/execution.md)
 - [external data](https://github.com/bostonaholic/team/blob/main/skills/team/references/external-data.md)

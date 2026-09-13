@@ -277,9 +277,9 @@ describe("dev uninstall: claude", () => {
 describe("Slice 2: installed resources: claude", () => {
   const samples = [
     "skills/team/SKILL.md",
-    "skills/authoring-designs/SKILL.md",
+    "skills/team/playbooks/design.md",
     "skills/team/principles/verified-results.md",
-    "skills/authoring-designs/references/design-template.md",
+    "skills/team/references/design-template.md",
     "skills/team/registry.json",
     "skills/team/discover-topic.sh",
   ];
@@ -358,7 +358,7 @@ describe("Slice 2: installed resources: claude", () => {
     revision = source.stdout.trim();
     rmSync(fixture.skills, { recursive: true });
     mkdirSync(join(fixture.root, "skills"), { recursive: true });
-    for (const name of ["team", "authoring-designs"]) {
+    for (const name of ["team"]) {
       cpSync(join(import.meta.dir, "..", "skills", name), join(fixture.root, "skills", name), { recursive: true });
     }
   });
@@ -469,7 +469,7 @@ describe("Slice 2: installed resources: claude", () => {
   test("Missing installed resources fail without checkout fallback", () => {
     const expected = sourceRecords();
     const installedRoot = install("Missing installed resources fail without checkout fallback");
-    const missing = join(installedRoot, "skills", "authoring-designs", "references", "design-template.md");
+    const missing = join(installedRoot, "skills", "team", "references", "design-template.md");
     expect(installedRecords(installedRoot, "before resource removal", expected)).toEqual(expected);
     rmSync(missing);
 
@@ -481,7 +481,7 @@ describe("Slice 2: installed resources: claude", () => {
     expect(result.stdout).toBe("");
     expect(result.stderr).toContain("ENOENT");
     expect(result.stderr).toContain(missing);
-    expect(existsSync(join(fixture.root, "skills", "authoring-designs", "references", "design-template.md"))).toBe(true);
+    expect(existsSync(join(fixture.root, "skills", "team", "references", "design-template.md"))).toBe(true);
   }, 60_000);
 
   describe("Installed resource delivery", () => {

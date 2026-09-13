@@ -1,6 +1,6 @@
 # Design document template
 
-Use this body for `6-design.md`.
+Use this body for `6-design.md`. Read [design playbook](playbooks/design.md) for the authoring procedure.
 
 ```markdown
 # Design: <topic>
@@ -22,16 +22,16 @@ Put intentional deferrals in Out of scope.>
 <Existing good patterns with file:line references.>
 
 ## Decisions made
-<Numbered decisions: decision, alternative, reason, and surfaces that must change together. Derive every closed set by enumeration and record its command. Mark self-resolved choices “Assumption — chosen without user review”.>
+<Numbered decisions: decision, each serious alternative and why it lost, the chosen approach's risk and mitigation, and the surfaces that must change together. Derive every closed set by enumeration and record its command. Mark self-resolved choices "Assumption — chosen without user review".>
 
 ## Out of scope
-<Specific exclusions.>
+<Specific exclusions: non-goals, excluded stories, and work a reader might otherwise assume is included.>
 
 ## Surfaces
 <Include ONLY for multiple entry modes, self-contained paths, turn splits, or procedures reachable without the rest. List surfaces, then map each safeguard:>
 
 | Safeguard | Mode A | Mode B | ... |
-|---|---|---|---|
+|---|---|---|
 | <rule> | yes | yes | |
 | <rule> | yes | no — <why not> | |
 
@@ -41,5 +41,5 @@ Put intentional deferrals in Out of scope.>
 <Low-priority items for structure or implementation.>
 
 ## Risks
-<One bullet each for compatibility, performance, migration, and operations.>
+<One bullet each for compatibility, performance, migration/rollout, and operations, plus each metric or log that confirms the change works in production.>
 ```
