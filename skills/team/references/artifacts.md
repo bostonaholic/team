@@ -21,6 +21,21 @@ This is the schema contract for durable pipeline state under `docs/plans/<id>/`.
 
 Every artifact starts with `topic: <kebab-case>`, `date: <YYYY-MM-DD>`, and `phase: task | questions | prd | repos | research | design | structure | plan`. Task alone adds `ticketId: <id>` or `null`; design adds `revision: 0`. PRD and structure are not gated; plan derives mechanically from structure.
 
+`1-task.md` also carries the selected route when one was chosen ([routing](routing.md)):
+
+- `route: investigate | plan | prototype | feature | fix | refactor` — the
+  leading-argument route, recorded before dispatch. Optional; absent means the
+  legacy unprefixed full feature workflow.
+- `routeStatus: complete` — present only when a limited-scope route
+  (`investigate`, `plan`, `prototype`) has finished its deliverable. The
+  recovery hooks read it so a finished plan is not mistaken for permission to
+  implement.
+
+`route` and `routeStatus` are task state, never neutral research input: neither
+appears on `2-questions.md`. Limited-scope routes write their deliverable under
+the home `docs/plans/<id>/` (`5-research.md` for investigate, `8-plan.md` for
+plan, `prototype-report.md` for prototype); they create no production worktree.
+
 ## Review records
 
 - Never restore the retired `^approved:` frontmatter gate; review records alone determine passage.
