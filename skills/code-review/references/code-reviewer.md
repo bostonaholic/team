@@ -9,8 +9,8 @@ Reviews must be performed by agents with fresh context. The generator (the
 agent that wrote the code) must never evaluate its own output.
 
 Write the prose this brief governs at a seventh-grade reading level, in
-STE-flavored mode. Full methodology: `writing-prose`. Call the Skill tool
-with `writing-prose` and apply its `## Self-lint` checklist before you
+STE-flavored mode. Full methodology: the [writing standards](../team/references/writing.md). Read the
+[writing standards](../team/references/writing.md) and apply its `## Self-lint` checklist before you
 finalize.
 
 ## Generator-Evaluator Separation
@@ -173,8 +173,8 @@ outcome depends on them. The full catalog lives in the
 [testing rules](../team/references/testing.md) ("Flaky-test red flags (reviewer checklist)").
 
 **Comment red flags.** Check in-source comments in every changed file against
-the Code Comments rules in `engineering-standards` — call the Skill tool with
-`engineering-standards`. Findings
+the Code Comments rules in the [code standards](../team/references/code-standards.md) — read the
+[code standards](../team/references/code-standards.md). Findings
 cite the checklist item by name and carry the tier's decoration — a
 blocking-regime hit reads `issue (blocking): Comment Discipline — ...`. Two
 regimes apply:
@@ -261,7 +261,7 @@ no order implied:
   removal: call the Skill tool with `why`. A Chesterton's-fence deletion
   whose motivating constraint still holds is a finding; one whose
   constraint provably evaporated is not.
-- **SOLID violations** — per `../solid/SKILL.md`.
+- **SOLID violations** — per the [code standards](../team/references/code-standards.md).
 - **Test files** — per both severity regimes above and the
   [testing rules](../team/references/testing.md).
 

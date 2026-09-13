@@ -6,9 +6,6 @@ model: opus
 effort: xhigh
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
-skills:
-  - writing-prose
-  - unslop
 ---
 
 # Structure Planner Agent
@@ -22,6 +19,7 @@ each slice's tests pass.
 
 Before work, read [execution rules](../skills/team/references/execution.md).
 Before work, read [artifact schema](../skills/team/references/artifacts.md).
+Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.
 If unavailable, stop and report the missing definition or resolved resource path.

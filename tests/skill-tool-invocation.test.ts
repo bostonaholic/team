@@ -23,21 +23,11 @@ const REPO_ROOT = process.cwd();
 const REQUIRED_LOADS_BY_COMPONENT: Record<string, readonly string[]> = {
   "skills/team-fix": ["team-worktree", "why"],
   "skills/pr-verify": ["running-quality-checks"],
-  "skills/team": ["unslop", "writing-prose", "team-worktree", "running-quality-checks", "team-pr"],
-  "skills/team-pr": ["unslop", "verifying-ux", "writing-prose", "pr-screenshots"],
+  "skills/team": ["team-worktree", "running-quality-checks", "team-pr"],
+  "skills/team-pr": ["verifying-ux", "pr-screenshots"],
   "skills/pr-rebase": ["running-quality-checks"],
   "skills/pr-watch-as-author": ["pr-open-comments"],
-  "skills/eng-design-doc-review": ["writing-prose"],
-  "skills/team-worktree": ["unslop", "writing-prose"],
-  "skills/team-question": ["unslop", "writing-prose"],
-  "skills/team-research": ["unslop", "writing-prose"],
-  "skills/team-structure": ["unslop", "writing-prose"],
-  "skills/team-plan": ["unslop", "writing-prose"],
-  "skills/team-implement": ["unslop", "writing-prose", "running-quality-checks", "team-pr"],
-  "skills/team-design": ["unslop", "writing-prose"],
-  "agents/code-reviewer.md": ["engineering-standards", "solid"],
-  "agents/planner.md": ["engineering-standards"],
-  "agents/implementer.md": ["engineering-standards", "solid", "refactoring-to-patterns"],
+  "skills/team-implement": ["running-quality-checks", "team-pr"],
 };
 
 // Every distributed prose surface that can carry a load: the 13 agent bodies
@@ -75,9 +65,9 @@ describe("Skill-tool loads resolve to real skills", () => {
     // positive"). Floors, not exact counts: adding an agent or skill is
     // ordinary work and must not fail this.
     expect(bodies.length).toBeGreaterThan(60);
-    expect(valid.size).toBeGreaterThan(30);
+    expect(valid.size).toBeGreaterThan(25);
     const loading = bodies.filter((b) => loadedSkills(b.text).length > 0);
-    expect(loading.length).toBeGreaterThan(20);
+    expect(loading.length).toBeGreaterThan(15);
   });
 
   test("every loaded name is a skill that exists", () => {

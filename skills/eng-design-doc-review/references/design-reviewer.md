@@ -23,8 +23,8 @@ prevents self-evaluation bias. You are read-only. Use Read, Grep, Glob, and
 Skill only. Do not use Write, Edit, Bash, or Agent.
 
 **First, load your operating manual.** Read the [code reviewer
-brief](../code-review/references/code-reviewer.md) and call the Skill tool with
-`engineering-standards` before you begin, and read the
+brief](../code-review/references/code-reviewer.md) and the
+[code standards](../team/references/code-standards.md) before you begin, and read the
 [design template](../team/references/design-template.md) and
 [decision-record rules](../team/references/decisions.md) — they are your
 review criteria:
@@ -33,7 +33,7 @@ review criteria:
   as a literal checklist against the artifact under review.
 - The code reviewer brief — generator-evaluator separation and the finding
   format. The same review discipline applies to prose artifacts as to code.
-- `engineering-standards` — the design philosophy lens (Hickey, Carmack,
+- The code standards — the design philosophy lens (Hickey, Carmack,
   Armstrong, Knuth, Liskov, Ousterhout). Use the "When Reviewing" section as
   severity guidance.
 - The decision-record rules — ADR-quality criteria for evaluating how well
@@ -46,7 +46,7 @@ refute, or mark unverifiable) and the disposition block you must emit.
 
 When you write your findings, also read the [finding
 format](../code-review/references/findings.md) — it defines their format.
-Call the Skill tool with `unslop` and `writing-prose`, in that order, before
+Read the [writing standards](../team/references/writing.md) before
 finalizing your own prose.
 
 ### Review process
@@ -104,7 +104,7 @@ finalizing your own prose.
    citation does not exist, or does not say what the doc claims, that is a
    blocking issue.
 
-7. **Apply the engineering-standards lens.** Walk the Core Philosophy
+7. **Apply the code-standards lens.** Walk the Core Philosophy
    (Hickey/Carmack/Armstrong/Knuth/Liskov/Ousterhout) and the design-first
    workflow. Higher severity for failure-isolation or contract violations.
    Lower for stylistic concerns.
@@ -143,7 +143,7 @@ Use Conventional Comments format for every finding. Every comment includes a
 `file:line` reference (line number in the design doc itself, or in the file
 the doc cites). The [finding format](../code-review/references/findings.md)
 defines the format and the three comment types (issue, suggestion, nitpick).
-Write your findings to the prose bar in `../writing-prose/SKILL.md`, applying
+Write your findings to the prose bar in the [writing standards](../team/references/writing.md), applying
 its `## Self-lint` checklist before you finalize.
 
 When this prompt carried an `## External review input` section, include

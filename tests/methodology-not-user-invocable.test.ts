@@ -59,8 +59,8 @@ describe("methodology skills are never user-invocable", () => {
 
   // Guard: an empty or mis-parsed catalog would pass every check below.
   test("the catalog parse sees both kinds of section", () => {
-    expect(entries.length).toBe(32);
-    expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(7);
+    expect(entries.length).toBe(27);
+    expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(2);
     expect(entries.filter((e) => COMMAND_SECTIONS.includes(e.section)).length).toBe(25);
   });
 
@@ -83,11 +83,11 @@ describe("methodology skills are never user-invocable", () => {
   // Prove the sweep can find a positive: the check must fail on a planted
   // violation, not pass because the predicate never fires.
   test("the sweep can see a violation", () => {
-    const planted: Entry[] = [{ name: "engineering-standards", section: METHODOLOGY_SECTION }];
+    const planted: Entry[] = [{ name: "running-quality-checks", section: METHODOLOGY_SECTION }];
     expect(planted.filter((e) => !isModelOnly(e.name))).toEqual([]);
-    const inverted: Entry[] = [{ name: "engineering-standards", section: "## Standalone utilities" }];
+    const inverted: Entry[] = [{ name: "running-quality-checks", section: "## Standalone utilities" }];
     expect(inverted.filter((e) => isModelOnly(e.name)).map((e) => e.name)).toEqual([
-      "engineering-standards",
+      "running-quality-checks",
     ]);
   });
 
@@ -190,8 +190,8 @@ describe("skill flavor and catalog completeness", () => {
   // Guard: a mis-parsed catalog or an unreadable skills/ tree would pass every
   // offender check below vacuously.
   test("the catalog and the skills directory both parse non-empty", () => {
-    expect(directories.length).toBeGreaterThan(30);
-    expect(entries.length).toBeGreaterThan(30);
+    expect(directories.length).toBeGreaterThan(25);
+    expect(entries.length).toBeGreaterThan(25);
   });
 
   test("the three flavor classifiers agree for every catalogued skill", () => {
@@ -225,24 +225,24 @@ describe("skill flavor and catalog completeness", () => {
   // Prove each rule can find a positive: four planted violations, one per way
   // the catalog can lie about what a skill is.
   test("the flavor and completeness checks can see planted violations", () => {
-    const miscatalogued: Entry[] = [{ name: "engineering-standards", section: "## Standalone utilities" }];
+    const miscatalogued: Entry[] = [{ name: "running-quality-checks", section: "## Standalone utilities" }];
     expect(classifierDisagreements(miscatalogued)).toEqual([
-      "engineering-standards: section=## Standalone utilities user-invocable-false=true argument-hint=false",
+      "running-quality-checks: section=## Standalone utilities user-invocable-false=true argument-hint=false",
     ]);
 
     const phantom: Entry[] = [{ name: "no-such-skill", section: METHODOLOGY_SECTION }];
     expect(phantomEntries(phantom, directories)).toEqual(["no-such-skill"]);
 
-    expect(uncataloguedDirectories([], ["engineering-standards"])).toEqual(["engineering-standards"]);
+    expect(uncataloguedDirectories([], ["running-quality-checks"])).toEqual(["running-quality-checks"]);
 
     const twice: Entry[] = [
-      { name: "engineering-standards", section: METHODOLOGY_SECTION },
-      { name: "engineering-standards", section: METHODOLOGY_SECTION },
+      { name: "running-quality-checks", section: METHODOLOGY_SECTION },
+      { name: "running-quality-checks", section: METHODOLOGY_SECTION },
     ];
-    expect(duplicateEntries(twice)).toEqual(["engineering-standards"]);
+    expect(duplicateEntries(twice)).toEqual(["running-quality-checks"]);
 
-    const misfiled: Entry[] = [{ name: "engineering-standards", section: "## Something else" }];
-    expect(unknownSectionEntries(misfiled)).toEqual(["engineering-standards (## Something else)"]);
+    const misfiled: Entry[] = [{ name: "running-quality-checks", section: "## Something else" }];
+    expect(unknownSectionEntries(misfiled)).toEqual(["running-quality-checks (## Something else)"]);
   });
 
   // The design reviewer brief moved off the methodology list into an ordinary

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Consolidate coding and writing policy into two references — `skills/team/references/code-standards.md` and `skills/team/references/writing.md` — removing the `engineering-standards`, `solid`, `refactoring-to-patterns`, `unslop`, and `writing-prose` skills. Comment, scope, error-handling, and SOLID rules are stated once; the prose linter moves to `skills/team/references/ste-lint.mjs`; exact-text and normative-meaning protection precede prose style. The catalog drops from 32 to 27 registrations.
+
 ## [0.104.6] - 2026-09-12
 
 ### Changed

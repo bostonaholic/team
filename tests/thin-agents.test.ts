@@ -107,19 +107,19 @@ describe("thin agents: new skills carry the moved procedure content", () => {
 
 describe("thin agents: frontmatter skills preloads per agent", () => {
   const EXPECTED_PRELOADS: Record<string, string[]> = {
-    "code-reviewer": ["unslop", "writing-prose"],
-    "design-author": ["unslop", "writing-prose"],
-    "file-finder": ["unslop", "writing-prose"],
-    implementer: ["unslop", "writing-prose"],
-    planner: ["unslop", "writing-prose"],
-    questioner: ["unslop", "writing-prose"],
-    researcher: ["unslop", "writing-prose"],
-    "security-reviewer": ["unslop", "writing-prose"],
-    "structure-planner": ["unslop", "writing-prose"],
-    "technical-writer": ["unslop", "writing-prose"],
-    "test-architect": ["unslop", "writing-prose"],
-    "ux-reviewer": ["unslop", "verifying-ux", "writing-prose"],
-    verifier: ["running-quality-checks", "unslop", "writing-prose"],
+    "code-reviewer": [],
+    "design-author": [],
+    "file-finder": [],
+    implementer: [],
+    planner: [],
+    questioner: [],
+    researcher: [],
+    "security-reviewer": [],
+    "structure-planner": [],
+    "technical-writer": [],
+    "test-architect": [],
+    "ux-reviewer": ["verifying-ux"],
+    verifier: ["running-quality-checks"],
   };
 
   for (const [agent, expected] of Object.entries(EXPECTED_PRELOADS)) {
@@ -272,8 +272,8 @@ describe("thin agents: wrapper bodies point at their procedure skills", () => {
 });
 
 describe("thin agents: fold targets absorbed the moved methodology", () => {
-  test("engineering-standards absorbs the implementer quality bullets (Construct with collaborators)", () => {
-    expect(readOrEmpty(skillPath("engineering-standards"))).toContain("Construct with collaborators");
+  test("the code standards absorb the implementer quality bullets (Construct with collaborators)", () => {
+    expect(readOrEmpty(join(REPO_ROOT, "skills", "team", "references", "code-standards.md"))).toContain("Construct with collaborators");
   });
 
   test("testing rules carry the test-architect audit bar; the implement playbook points at it", () => {
@@ -303,16 +303,17 @@ describe("thin agents: fold targets absorbed the moved methodology", () => {
     expect(readOrEmpty(join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md"))).toContain("off-by-one");
   });
 
-  test("documentation-reviewer brief carries the technical-writer doc-change classification; writing-prose keeps the pointer", () => {
+  test("documentation-reviewer brief carries the technical-writer doc-change classification; writing standards keep the pointer", () => {
     // The doc-change classification folded into writing-prose during the
     // thin-agents refactor, then moved to the just-in-time
     // reviewing-documentation skill (preloaded by technical-writer), then
-    // into a reference owned by code-review.
+    // into a reference owned by code-review, and finally into the shared
+    // writing standards.
     const documentationBrief = readOrEmpty(join(REPO_ROOT, "skills", "code-review", "references", "documentation-reviewer.md"));
     expect(documentationBrief).toContain("REQUIRED");
     expect(documentationBrief).toContain("RECOMMENDED");
     expect(documentationBrief).toContain("Documentation-Gap Review Process");
-    expect(readOrEmpty(skillPath("writing-prose"))).toContain(
+    expect(readOrEmpty(join(REPO_ROOT, "skills", "team", "references", "writing.md"))).toContain(
       "code-review/references/documentation-reviewer.md",
     );
   });

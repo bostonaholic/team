@@ -26,21 +26,16 @@ Supply the installed root, definition, and applicable resource paths in every in
 These paths are operational context. Research task-derived inputs stay restricted to neutral questions and repository context.
 Keep the helper restrictions and inline fallback below.
 
-Before dispatching a non-vendor helper, the parent resolves and Reads these
-four installed, read-only files. Pass the resolved absolute paths in every
-initial or follow-up prompt:
+Before dispatching a non-vendor helper, the parent resolves and Reads the
+installed [writing standards](references/writing.md). Pass the resolved absolute
+path in every initial or follow-up prompt.
 
-- `${CLAUDE_PLUGIN_ROOT}/skills/unslop/SKILL.md`
-- `${CLAUDE_PLUGIN_ROOT}/skills/unslop/references/rules.md`
-- `${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/SKILL.md`
-- `${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/references/style-guide.md`
-
-The helper Reads all four before finalizing prose. If the parent or helper
-cannot Read one, discard that helper return. A scout parent does the reading
-inline. A reviewer keeps the unverified finding under the skeptic default-keep
-rule. Vendor couriers do not Read prose files and relay stdout byte-for-byte.
-These fixed paths and audit instructions are operational method text, not
-task-derived Research content.
+The helper Reads the writing standards before finalizing prose. If the parent
+or helper cannot Read it, discard that helper return. A scout parent does the
+reading inline. A reviewer keeps the unverified finding under the skeptic
+default-keep rule. Vendor couriers do not Read the prose file and relay stdout
+byte-for-byte. These fixed paths and audit instructions are operational method
+text, not task-derived Research content.
 
 - Helpers are read-only: built-in `Explore`, `team:file-finder`, or `general-purpose` with an explicitly read-only prompt. They NEVER write files, commit, or write under `docs/plans/`; the parent or orchestrator writes artifacts.
 - Every call passes `model:`: `haiku` for location, grep, and bulk reading; `sonnet` for subsystem traces or claim checks; `opus` only after a `sonnet` helper was inconclusive, with that failure named. Effort: `low` for lookups, `medium` for tracing, never `xhigh`.
@@ -59,18 +54,14 @@ Read the shared invariants above first. This section is mandatory before the rel
 
 ### Prose procedure for non-vendor helpers
 
-Before dispatch, the parent resolves and Reads these installed files, then puts
-all four resolved absolute paths in the initial or follow-up prompt:
-
-- `${CLAUDE_PLUGIN_ROOT}/skills/unslop/SKILL.md`
-- `${CLAUDE_PLUGIN_ROOT}/skills/unslop/references/rules.md`
-- `${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/SKILL.md`
-- `${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/references/style-guide.md`
+Before dispatch, the parent resolves and Reads the installed
+[writing standards](references/writing.md), then puts the resolved absolute path
+in the initial or follow-up prompt.
 
 Every `team:file-finder`, `Explore`, and `general-purpose` prompt tells the
-helper to Read all four before finalizing its authored report. The helper saves
-its untouched authored draft, records the `unslop` checklist, applies
-`writing-prose`, resolves the checklist, rescans, and self-audits. Source text
+helper to Read the writing standards before finalizing its authored report. The
+helper saves its untouched authored draft, records the checklist, applies the
+style rules, resolves the checklist, rescans, and self-audits. Source text
 and exact contracts remain unchanged. If any Read fails, the parent discards
 the return. A scout parent works inline. A skeptic parent applies default-keep.
 
@@ -79,12 +70,12 @@ the return. A scout parent works inline. A skeptic parent applies default-keep.
 Fan out read-only exploration when questions cluster into independent areas or `4-repos.md` lists multiple repos.
 
 - Scout types: `team:file-finder` or built-in `Explore`; nothing else.
-- Include the four prose paths and ordered audit in every initial and follow-up
+- Include the writing standards path and ordered audit in every initial and follow-up
   prompt. Preserve `file:line` evidence and the <= 40 lines cap.
 - The isolation invariant extends downward. Restrict task-derived content in
   prompts and follow-ups to question text copied verbatim from
   `2-questions.md`, its `Codebase context`, and repo slugs/paths from
-  `4-repos.md`. The fixed prose paths, ordered audit, read-only tool rules,
+  `4-repos.md`. The fixed writing standards path, ordered audit, read-only tool rules,
   caps, and output contract above are allowed operational method text. Never
   add task framing, mention `1-task.md`, or speculate about intent.
 - Spawn only when a cluster requires more reading than the report will quote. Handle one or two pointed questions directly.
@@ -97,7 +88,7 @@ Fan out read-only exploration when questions cluster into independent areas or `
 
 A hard gate is Blocking-tier `issue:` for code review or CRITICAL/HIGH for security. Before reporting one, send it to a fresh `general-purpose` skeptic: one per finding, at most 4 in flight; batch overflow into one dispatch.
 
-- Include the four prose paths and ordered audit in every skeptic prompt.
+- Include the writing standards path and ordered audit in every skeptic prompt.
   Preserve `REFUTED` or `CONFIRMED`, `file:line` evidence, and the <= 10 lines
   cap.
 
@@ -119,7 +110,7 @@ Each vendor `run` uses one read-only `Explore` courier named `codex-review` or `
 
 The exact errand prompt, verbatim return contract, and inline fallback live in the vendor-courier block of [cross-model review](references/cross-model-review.md). Each vendor `run` gets one `Explore` courier named for its CLI (`codex-review`, `agy-review`). The courier runs the pinned command and returns stdout; it writes and spawns nothing. Vendor processes follow the cross-model reference's bounds. Couriers count toward the 4-helper cap.
 
-Vendor couriers do not receive or Read the prose files. Return vendor stdout
+Vendor couriers do not receive or Read the prose file. Return vendor stdout
 verbatim without applying either prose method.
 
 ### `implementer` — read-only scouts
@@ -127,7 +118,7 @@ verbatim without applying either prose method.
 Spawn a built-in `Explore` or `team:file-finder` scout when a slice touches a subsystem the plan does not explain and direct mapping would require reading more than ~3 files you will not edit.
 
 - At most 2 scouts in flight. Each returns <= 40 lines of `file:line` findings and spawns nothing.
-- Include the four prose paths and ordered audit in every initial and follow-up
+- Include the writing standards path and ordered audit in every initial and follow-up
   prompt.
 - Run scouts in the background: dispatch for the next unfamiliar slice while completing the current slice, then collect it when that slice starts.
 - Scouts never write, edit, commit, implement a slice, or run the fix loop.

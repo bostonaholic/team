@@ -207,7 +207,7 @@
       ]
     },
     {
-      "path": "skills/engineering-standards/SKILL.md",
+      "path": "skills/team/references/code-standards.md",
       "destinations": [
         "skills/team/principles/focused-work.md"
       ]
@@ -433,12 +433,6 @@
       "path": "skills/pr-watch-as-author/references/watch-loop.md",
       "destinations": [
         "skills/team/references/execution.md"
-      ]
-    },
-    {
-      "path": "skills/refactoring-to-patterns/SKILL.md",
-      "destinations": [
-        "skills/team/principles/focused-work.md"
       ]
     },
     {
@@ -701,7 +695,6 @@
   "registrations": [
     "code-review",
     "eng-design-doc-review",
-    "engineering-standards",
     "groom-backlog",
     "how",
     "no-comments",
@@ -712,11 +705,9 @@
     "pr-verify",
     "pr-watch-as-author",
     "pr-watch-as-reviewer",
-    "refactoring-to-patterns",
     "reflect",
     "running-quality-checks",
     "shipit",
-    "solid",
     "team",
     "team-design",
     "team-fix",
@@ -727,9 +718,7 @@
     "team-research",
     "team-structure",
     "team-worktree",
-    "unslop",
     "verifying-ux",
-    "why",
-    "writing-prose"
+    "why"
   ]
 }

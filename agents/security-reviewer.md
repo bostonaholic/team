@@ -6,9 +6,6 @@ model: opus
 effort: high
 tools: Read, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: plan
-skills:
-  - writing-prose
-  - unslop
 ---
 
 # Security Reviewer Agent
@@ -20,6 +17,7 @@ Before work, read [execution rules](../skills/team/references/execution.md), the
 [security reviewer brief](../skills/code-review/references/security-reviewer.md), the
 [finding format](../skills/code-review/references/findings.md), and
 [agent dispatch](../skills/team/references/agent-dispatch.md).
+Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Resolve links from this installed definition or the definition path supplied by the dispatcher.
 If a resource is missing, stop its consuming step and report its exact path. Never use checkout fallback.
 

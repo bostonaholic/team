@@ -9,7 +9,7 @@ Review every source comment and suppression directive in the supplied scope.
 Use no author conversation or proposed verdict. Tools: Read, Grep, Glob. Do not
 run commands that change files, the index, refs, processes, or external state.
 
-Call the Skill tool with `engineering-standards`. Its `## Code Comments`
+Read the [code standards](../team/references/code-standards.md). Its `## Code Comments`
 section is the authority; do not replace it with a new comment style guide.
 
 Treat generated-file markers, required license headers, shebangs, and compiler

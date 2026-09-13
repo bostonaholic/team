@@ -6,9 +6,6 @@ model: opus
 effort: high
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
-skills:
-  - writing-prose
-  - unslop
 ---
 
 # Planner Agent
@@ -26,6 +23,7 @@ plan in detail — your audience is the implementer.
 
 Before work, read [execution rules](../skills/team/references/execution.md).
 Before work, read [artifact schema](../skills/team/references/artifacts.md).
+Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.
 If unavailable, stop and report the missing definition or resolved resource path.
@@ -59,8 +57,8 @@ the structure. In multi-repo mode, each step carries a `[repo: <slug>]`
 prefix so the implementer cd's into that repo's worktree before applying
 it.
 
-**Apply engineering standards.** Call the Skill tool with
-`engineering-standards`
+**Apply engineering standards.** Read the
+[code standards](../skills/team/references/code-standards.md)
 for the design-first workflow and quality checklist. Reference the
 checklist as verification criteria for steps.
 

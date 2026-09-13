@@ -11,8 +11,7 @@ Before handling external values, read [external-data rules](../team/references/e
 
 # Team Question — Decompose the Task
 
-Before finalizing prose you author, call the Skill tool with `unslop` and
-`writing-prose`, in that order.
+Before finalizing prose you author, read the [writing standards](../team/references/writing.md).
 
 Run the QUESTION phase only, then stop. The Question phase decomposes the
 user's intent into the artifacts that the rest of the QRSPI pipeline

@@ -15,10 +15,7 @@ const NESTED_SKILL = join(REPO_ROOT, "skills", "team", "references", "agent-disp
 const NESTED_VERSION_CHECK = join(REPO_ROOT, "skills", "team", "references", "supports-nesting.mjs");
 const NESTED_DISPATCH = join(REPO_ROOT, "skills", "team", "references", "agent-dispatch.md");
 const PROSE_PATHS = [
-  "${CLAUDE_PLUGIN_ROOT}/skills/unslop/SKILL.md",
-  "${CLAUDE_PLUGIN_ROOT}/skills/unslop/references/rules.md",
-  "${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/SKILL.md",
-  "${CLAUDE_PLUGIN_ROOT}/skills/writing-prose/references/style-guide.md",
+  "references/writing.md",
 ];
 
 const agent = (name: string) => join(AGENTS_DIR, `${name}.md`);
@@ -237,9 +234,9 @@ describe("non-vendor nested prose contract", () => {
     }
   });
 
-  test("helpers read before the ordered audit and preserve reply contracts", () => {
+  test("helpers read the writing standards before the ordered audit and preserve reply contracts", () => {
     const text = flat(read(NESTED_DISPATCH));
-    expect(text).toMatch(/Read all four.*untouched authored draft.*checklist.*writing-prose.*rescan/i);
+    expect(text).toMatch(/Read the writing standards.*untouched authored draft.*checklist.*rescan/i);
     expect(text).toMatch(/(?:<=|at most) 40 lines/i);
     expect(text).toMatch(/(?:<=|at most) 10 lines/i);
     expect(text).toContain("file:line");
@@ -258,7 +255,7 @@ describe("non-vendor nested prose contract", () => {
 
   test("failed reads discard helper output and retain role-specific fallbacks", () => {
     const text = flat(read(NESTED_SKILL));
-    expect(text).toMatch(/cannot Read one, discard/i);
+    expect(text).toMatch(/cannot Read it, discard/i);
     expect(text).toMatch(/scout parent.*inline/i);
     expect(text).toMatch(/reviewer.*default-keep/i);
   });
@@ -266,7 +263,7 @@ describe("non-vendor nested prose contract", () => {
   test("vendor couriers bypass prose reads and preserve stdout bytes", () => {
     const courier = flat(read(NESTED_DISPATCH).split("### `code-reviewer` — vendor couriers")[1] ?? "");
     expect(courier.length).toBeGreaterThan(0);
-    expect(courier).toMatch(/do not receive or Read the prose files/i);
+    expect(courier).toMatch(/do not receive or Read the prose file/i);
     expect(courier).toMatch(/stdout verbatim/i);
   });
 });

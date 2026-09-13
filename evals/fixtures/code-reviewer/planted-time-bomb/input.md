@@ -8,7 +8,7 @@ deps:
   - skills/team/principles/verified-results.md
   - skills/team/references/artifacts.md
   - skills/team/references/external-data.md
-  - skills/engineering-standards/SKILL.md
+  - skills/team/references/code-standards.md
   - agents/code-reviewer.md
   - skills/code-review/references/code-reviewer.md
   - skills/code-review/references/findings.md

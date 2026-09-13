@@ -4,7 +4,6 @@ import { existsSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
-import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 
@@ -79,12 +78,12 @@ describe("skill architecture", () => {
     expect(text).not.toContain("indirection without reuse");
   });
 
-  test("implementer.md still loads solid", () => {
-    expect(loadsSkill(read(IMPLEMENTER), "solid")).toBe(true);
+  test("implementer.md reads the code standards", () => {
+    expect(read(IMPLEMENTER)).toContain("code-standards.md");
   });
 
-  test("technical-writer.md still references writing-prose/SKILL.md", () => {
-    expect(read(TECHNICAL_WRITER)).toContain("writing-prose/SKILL.md");
+  test("technical-writer.md still references the writing standards", () => {
+    expect(read(TECHNICAL_WRITER)).toContain("references/writing.md");
   });
 
   test("registry sync hook reports no mismatches", () => {
