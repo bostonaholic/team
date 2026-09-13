@@ -571,7 +571,7 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
       "",
       "Call the Skill tool with `pr-verify` before landing.",
       "The fail-closed rule is restated at skills/solid/SKILL.md.",
-      "This is not a `git-commit`, and `shipit` never runs `not-a-real-skill`.",
+      "This is not a `team`, and `shipit` never runs `not-a-real-skill`.",
     ].join("\n");
 
     expect([...deriveLoads(fixture, "shipit", NAMES)].sort()).toEqual(["pr-verify"]);
@@ -579,9 +579,9 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     // The wider relation over the same text, for contrast: three names, and
     // two of them are references the graph must not turn into edges.
     expect([...namedSkills(fixture, "shipit", NAMES)].sort()).toEqual([
-      "git-commit",
       "pr-verify",
       "solid",
+      "team",
     ]);
   });
 });

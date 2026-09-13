@@ -34,7 +34,7 @@ This page carries both directions of each skill-to-skill load edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 40 registered skills: 25 commands and 15 methodologies. Shared principles, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 32 registered skills: 25 commands and 7 methodologies. Shared principles, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 ## Entry-point skills
@@ -48,7 +48,7 @@ Runs the 8-phase QRSPI feature pipeline.
 
 **Used by:** None
 
-**Uses:** `changelog`, `cross-model-review`, `git-commit`, `running-quality-checks`, `team-pr`, `team-worktree`, `tracking-tickets`, `unslop`, `worktree-isolation`, `writing-prose`
+**Uses:** `running-quality-checks`, `team-pr`, `team-worktree`, `unslop`, `writing-prose`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -72,7 +72,7 @@ Drafts and adversarially reviews a design.
 
 **Used by:** None
 
-**Uses:** `cross-model-review`, `unslop`, `writing-prose`
+**Uses:** `unslop`, `writing-prose`
 
 ### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/SKILL.md)
 
@@ -94,7 +94,7 @@ Produces the tactical implementation plan.
 
 Prepares isolated git worktrees.
 
-**Used by:** `team`, `team-fix`, `worktree-isolation`
+**Used by:** `team`, `team-fix`
 
 **Uses:** `unslop`, `writing-prose`
 
@@ -112,7 +112,7 @@ Opens a pull request after verification.
 
 **Used by:** `team`, `team-implement`
 
-**Uses:** `changelog`, `git-commit`, `pr-screenshots`, `tracking-tickets`, `unslop`, `verifying-ux`, `worktree-isolation`, `writing-prose`
+**Uses:** `pr-screenshots`, `unslop`, `verifying-ux`, `writing-prose`
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
@@ -120,7 +120,7 @@ Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
-**Uses:** `team-worktree`, `tracking-tickets`, `why`, `worktree-isolation`
+**Uses:** `team-worktree`, `why`
 
 ### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 
@@ -128,7 +128,7 @@ Reviews a technical design document with fresh context.
 
 **Used by:** None
 
-**Uses:** `cross-model-review`, `engineering-standards`, `unslop`, `writing-prose`
+**Uses:** `engineering-standards`, `unslop`, `writing-prose`
 
 ## Standalone utilities
 
@@ -157,7 +157,7 @@ Watches an authored PR for feedback.
 
 **Used by:** None
 
-**Uses:** `pr-open-comments`, `pr-watch-mechanics`, `tracking-tickets`
+**Uses:** `pr-open-comments`
 
 ### [pr-watch-as-reviewer](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
 
@@ -165,7 +165,7 @@ Watches a reviewed PR and approves settled feedback.
 
 **Used by:** None
 
-**Uses:** `pr-watch-mechanics`
+**Uses:** None
 
 ### [groom-backlog](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
 
@@ -252,14 +252,6 @@ Removes low-value source comments and encodes valid constraints.
 These carry no `argument-hint`. They are never invoked directly; agents load
 them.
 
-### [cross-model-review](https://github.com/bostonaholic/team/blob/main/skills/cross-model-review/SKILL.md)
-
-Runs second-vendor reviews through machine-only CLI adapters.
-
-**Used by:** `eng-design-doc-review`, `team`, `team-design`
-
-**Uses:** None
-
 ### [engineering-standards](https://github.com/bostonaholic/team/blob/main/skills/engineering-standards/SKILL.md)
 
 Defines code design, comment, and review standards.
@@ -292,19 +284,11 @@ Runs project-native tests, static checks, builds, and linters.
 
 **Uses:** None
 
-### [nested-agents](https://github.com/bostonaholic/team/blob/main/skills/nested-agents/SKILL.md)
-
-Defines safe nested-agent dispatch and fallback.
-
-**Used by:** None
-
-**Uses:** None
-
 ### [writing-prose](https://github.com/bostonaholic/team/blob/main/skills/writing-prose/SKILL.md)
 
 Defines strict and STE-flavored prose rules.
 
-**Used by:** `changelog`, `code-review`, `eng-design-doc-review`, `git-commit`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`
+**Used by:** `code-review`, `eng-design-doc-review`, `team`, `team-design`, `team-implement`, `team-plan`, `team-pr`, `team-question`, `team-research`, `team-structure`, `team-worktree`
 
 **Uses:** None
 
@@ -321,54 +305,6 @@ Use whenever writing or revising prose.
 Defines live application and screenshot verification.
 
 **Used by:** `team-pr`
-
-**Uses:** None
-
-### [git-commit](https://github.com/bostonaholic/team/blob/main/skills/git-commit/SKILL.md)
-
-Defines Conventional Commit subjects and safe commit procedure.
-
-**Used by:** `team`, `team-pr`
-
-**Uses:** `writing-prose`
-
-### [changelog](https://github.com/bostonaholic/team/blob/main/skills/changelog/SKILL.md)
-
-Defines Keep a Changelog updates.
-
-**Used by:** `team`, `team-pr`
-
-**Uses:** `writing-prose`
-
-### [tracking-tickets](https://github.com/bostonaholic/team/blob/main/skills/tracking-tickets/SKILL.md)
-
-Defines tracker status transitions and closing rules.
-
-**Used by:** `pr-watch-as-author`, `team`, `team-fix`, `team-pr`
-
-**Uses:** None
-
-### [worktree-isolation](https://github.com/bostonaholic/team/blob/main/skills/worktree-isolation/SKILL.md)
-
-Defines Team worktree creation, validation, and teardown.
-
-**Used by:** `team`, `team-fix`, `team-pr`
-
-**Uses:** `team-worktree`
-
-### [sweeping-local-state](https://github.com/bostonaholic/team/blob/main/skills/sweeping-local-state/SKILL.md)
-
-Defines machine-local teardown.
-
-**Used by:** None
-
-**Uses:** None
-
-### [pr-watch-mechanics](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-mechanics/SKILL.md)
-
-Bounded watch-loop mechanics for the pr-watch skills: cycle timing, soft cap, handoff.
-
-**Used by:** `pr-watch-as-author`, `pr-watch-as-reviewer`
 
 **Uses:** None
 
@@ -442,3 +378,11 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [finding format](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/findings.md)
 - [design reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/references/design-reviewer.md)
 - [comment reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/no-comments/references/reviewer.md)
+- [cross-model review](https://github.com/bostonaholic/team/blob/main/skills/team/references/cross-model-review.md)
+- [agent dispatch](https://github.com/bostonaholic/team/blob/main/skills/team/references/agent-dispatch.md)
+- [commit discipline](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/commit.md)
+- [changelog rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/changelog.md)
+- [tracking rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/tracking.md)
+- [watch loop](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/references/watch-loop.md)
+- [worktree playbook](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/playbooks/worktree.md)
+- [cleanup playbook](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/playbooks/cleanup.md)

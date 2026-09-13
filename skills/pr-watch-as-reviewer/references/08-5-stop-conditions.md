@@ -1,7 +1,7 @@
 ### 5. Stop conditions
 
 The loop stops on exactly one of seven conditions, each reported by name.
-`pr-watch-mechanics` owns three of them: user interrupt, the 3-cycle soft
+The [watch loop](../../pr-watch-as-author/references/watch-loop.md) owns three of them: user interrupt, the 3-cycle soft
 cap, and 3 consecutive poll failures. This skill adds four:
 
 - **Approval cast** — the gate cleared, every re-review verdict passed,

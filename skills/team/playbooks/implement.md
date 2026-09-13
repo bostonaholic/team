@@ -69,7 +69,7 @@ Then run the full suite, resolve every failure type from the round, and report e
 
 - Follow plan order. `[sequential]` steps depend on prior steps; `[parallel]` steps may reorder. Switch repo worktrees for `[repo: <slug>]` steps and `<repo>:` tests.
 - A slice finishes only when its acceptance tests and all prior-slice tests pass.
-- Call the Skill tool with `git-commit`: Conventional Commits, 50/72, one logical change. Single repo: one commit using the slice `Commit:` subject and citing design/structure paths. Multi-repo slice: one commit per named repo using its `Commit:` subject; each body cites the same paths and says `part of slice <N>: <name>`.
+- Read [commit discipline](../team-pr/references/commit.md): Conventional Commits, 50/72, one logical change. Single repo: one commit using the slice `Commit:` subject and citing design/structure paths. Multi-repo slice: one commit per named repo using its `Commit:` subject; each body cites the same paths and says `part of slice <N>: <name>`.
 - Report `{slice: <name>, testsPassing: [list], commits: [{repo: <slug>, sha: <sha>}, ...]}`; single-repo has one commit entry. After all slices, return paths, slice list, and final test status.
 
 ### TDD and scope invariants

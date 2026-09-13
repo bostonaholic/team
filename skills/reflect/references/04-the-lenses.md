@@ -75,7 +75,7 @@ because prose is all a same-session pass can be given:
   the session, never an action taken during the pass.
 
 Fan-out is an optimization here, never a dependency
-(`skills/nested-agents/SKILL.md`; the general rule is
+(`skills/team/references/agent-dispatch.md`; the general rule is
 [focused work rules](../team/principles/focused-work.md)).
 
 The lenses **report**. A lens never decides what happens to a finding, never
@@ -104,7 +104,7 @@ reported **unrun**, never counted as a zero.
 override, since it carries the same `2-questions.md` binding — so the
 differentiator is the toolset, not the fit. It holds `Agent` and `SendMessage`
 and `team:file-finder` holds neither, and its preloaded
-`skills/nested-agents/SKILL.md` authorizes it to dispatch `Explore`, which holds
+`skills/team/references/agent-dispatch.md` authorizes it to dispatch `Explore`, which holds
 `Bash`, or `general-purpose`, which holds every tool. Aiming a lens at the
 researcher would restore by delegation the command sink the toolset guarantee
 above exists to starve.

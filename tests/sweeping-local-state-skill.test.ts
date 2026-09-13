@@ -1,7 +1,7 @@
 // tests/sweeping-local-state-skill.test.ts
 //
 // L2 tripwire (free, deterministic): fences the `sweeping-local-state` RUNTIME
-// methodology skill (skills/sweeping-local-state/SKILL.md), the teardown for
+// teardown procedure (skills/pr-cleanup/playbooks/cleanup.md), the teardown for
 // machine-local state a finished PR or a finished review leaves behind —
 // provisioned databases, containers, and temp-directory scratch that no git
 // command touches.
@@ -18,7 +18,7 @@
 //     `/`, so the unstripped prefix pattern matches nothing and every recorded
 //     path is refused as "outside the temp root" — a sweep that deletes nothing
 //     and reports success.
-//   - Both cross-references (pr-cleanup, worktree-isolation) resolve, so a
+//   - Both cross-references (pr-cleanup, the worktree playbook) resolve, so a
 //     rename of either side fails the build.
 //
 // Every assertion is guarded so a not-yet-existing file yields a failed
@@ -29,11 +29,11 @@ import { describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
-// A RUNTIME skill — under skills/ (distributed), not .claude/.
-const SKILL = join(REPO_ROOT, "skills", "sweeping-local-state", "SKILL.md");
+// A RUNTIME playbook — under skills/ (distributed), not .claude/.
+const PLAYBOOK = join(REPO_ROOT, "skills", "pr-cleanup", "playbooks", "cleanup.md");
 const PR_CLEANUP = join(REPO_ROOT, "skills", "pr-cleanup", "SKILL.md");
 const PR_CLEANUP_MODE_B = join(
   REPO_ROOT,
@@ -42,11 +42,12 @@ const PR_CLEANUP_MODE_B = join(
   "references",
   "10-mode-b-closed-abandoned.md",
 );
-const WORKTREE_ISOLATION = join(
+const WORKTREE_PLAYBOOK = join(
   REPO_ROOT,
   "skills",
-  "worktree-isolation",
-  "SKILL.md",
+  "team-worktree",
+  "playbooks",
+  "worktree.md",
 );
 
 // Defensive read: missing file → "" so content assertions FAIL (not throw).
@@ -54,35 +55,20 @@ function readOrEmpty(path: string): string {
   return existsSync(path) ? read(path) : "";
 }
 function body(): string {
-  return readOrEmpty(SKILL);
-}
-function fm(): string {
-  return existsSync(SKILL) ? frontmatter(read(SKILL)) : "";
+  return readOrEmpty(PLAYBOOK);
 }
 
-describe("sweeping-local-state: methodology-skill frontmatter contract", () => {
-  test("skill file lives under runtime skills/ (distributed)", () => {
-    expect(existsSync(SKILL)).toBe(true);
+describe("cleanup playbook: ordinary-resource contract", () => {
+  test("playbook file lives under runtime skills/ (distributed)", () => {
+    expect(existsSync(PLAYBOOK)).toBe(true);
   });
 
-  test("frontmatter declares name: sweeping-local-state", () => {
-    expect(/^name:\s*sweeping-local-state\s*$/m.test(fm())).toBe(true);
-  });
-
-  test("frontmatter sets user-invocable: false (building block, not a command)", () => {
-    expect(/^user-invocable:\s*false\s*$/m.test(fm())).toBe(true);
-  });
-
-  test("frontmatter carries no effort (methodology skills inherit the loader's)", () => {
-    expect(/^effort:/m.test(fm())).toBe(false);
-  });
-
-  test("frontmatter carries no argument-hint (that marker means entry point)", () => {
-    expect(/^argument-hint:/m.test(fm())).toBe(false);
+  test("playbook is an ordinary file with no skill frontmatter", () => {
+    expect(body().startsWith("---\n")).toBe(false);
   });
 });
 
-describe("sweeping-local-state: the .teamteardown declaration", () => {
+describe("cleanup playbook: the .teamteardown declaration", () => {
   test("names the declaration file at the repo root", () => {
     expect(body()).toContain(".teamteardown");
   });
@@ -140,7 +126,7 @@ describe("sweeping-local-state: the .teamteardown declaration", () => {
   });
 });
 
-describe("sweeping-local-state: temp-path sweep guards", () => {
+describe("cleanup playbook: temp-path sweep guards", () => {
   test("strips trailing slashes off the temp root before the prefix test", () => {
     // macOS TMPDIR ends in "/", so the unstripped pattern matches nothing.
     expect(body()).toContain('while [ "${TMPROOT%/}" != "$TMPROOT" ]');
@@ -162,7 +148,7 @@ describe("sweeping-local-state: temp-path sweep guards", () => {
   });
 });
 
-describe("sweeping-local-state: ownership boundary and cross-references", () => {
+describe("cleanup playbook: ownership boundary and cross-references", () => {
   test("disclaims the state its callers already own", () => {
     const text = body();
     expect(text).toContain("## Ownership boundary");
@@ -175,7 +161,7 @@ describe("sweeping-local-state: ownership boundary and cross-references", () => 
 
   test("pr-cleanup loads it, and names the section to skip", () => {
     const text = readOrEmpty(PR_CLEANUP_MODE_B);
-    expect(text).toContain("skills/sweeping-local-state/SKILL.md");
+    expect(text).toContain("skills/pr-cleanup/playbooks/cleanup.md");
     expect(text).toContain("Finishing a review rather than a merge");
   });
 
@@ -183,9 +169,9 @@ describe("sweeping-local-state: ownership boundary and cross-references", () => 
     expect(readOrEmpty(PR_CLEANUP)).not.toContain("External-state ask");
   });
 
-  test("worktree-isolation teardown loads it as its final step", () => {
-    const text = readOrEmpty(WORKTREE_ISOLATION);
-    expect(text).toContain("skills/sweeping-local-state/SKILL.md");
+  test("worktree playbook teardown loads it as its final step", () => {
+    const text = readOrEmpty(WORKTREE_PLAYBOOK);
+    expect(text).toContain("skills/pr-cleanup/playbooks/cleanup.md");
     expect(text).toContain(".teamteardown");
   });
 });

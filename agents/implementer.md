@@ -7,7 +7,6 @@ effort: high
 tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: acceptEdits
 skills:
-  - nested-agents
   - writing-prose
   - unslop
 ---
@@ -16,7 +15,8 @@ skills:
 
 ## Installed resources
 
-Before work, read [execution rules](../skills/team/references/execution.md).
+Before work, read [execution rules](../skills/team/references/execution.md) and
+[agent dispatch](../skills/team/references/agent-dispatch.md).
 Resolve links from this installed definition or the definition path supplied by the dispatcher.
 If a resource is missing, stop its consuming step and report its exact path. Never use checkout fallback.
 
@@ -66,7 +66,7 @@ blocker handling, and the scope fence.
 
 You MAY spawn a read-only scout through the `Agent` tool when a slice
 touches a subsystem the plan does not explain. Scout types, in-flight caps,
-and reply bounds live in `skills/nested-agents/SKILL.md` (preloaded).
+and reply bounds live in [agent dispatch](../skills/team/references/agent-dispatch.md).
 Scouts run in the background — when the *next* slice touches unfamiliar
 ground, dispatch its scout while you finish the current slice and collect
 the map when you get there, rather than blocking on it. A follow-up

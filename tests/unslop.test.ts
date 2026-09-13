@@ -181,8 +181,8 @@ test("registry-derived producer coverage", () => {
     .filter((file) => !existsSync(file) || orderedLoads(file).join(",") !== "unslop,writing-prose")
     .map((file) => file.slice(ROOT.length + 1));
   const teamLoads = new Set(orderedLoads(path("skills", "team", "SKILL.md")));
-  const gitCommitLoads = orderedLoads(path("skills", "git-commit", "SKILL.md"));
-  const changelogLoads = orderedLoads(path("skills", "changelog", "SKILL.md"));
+  const gitCommitLoads = orderedLoads(path("skills", "team-pr", "references", "commit.md"));
+  const changelogLoads = orderedLoads(path("skills", "team-pr", "references", "changelog.md"));
   const architecture = squash(readOrEmpty(path("docs", "architecture.md")));
 
   expect(inventory.agents.length).toBeGreaterThan(0);
@@ -518,7 +518,7 @@ test("Research producer budgets preserve exact returns within the artifact limit
   const researcherProcedure = squash(readOrEmpty(path("skills", "team", "playbooks", "research.md")));
   const standalone = squash(readOrEmpty(path("skills", "team-research", "SKILL.md")));
   const pipeline = squash(readOrEmpty(path("skills", "team", "references", "03-the-phase-loop.md")));
-  const nested = squash(readOrEmpty(path("skills", "nested-agents", "references", "per-agent-dispatch.md")));
+  const nested = squash(readOrEmpty(path("skills", "team", "references", "agent-dispatch.md")));
   const evals = readOrEmpty(EVALS);
 
   expect(finderAgent).toMatch(/40 physical lines.*60.*multi-repo/i);

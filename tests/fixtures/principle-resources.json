@@ -183,18 +183,7 @@
       ]
     },
     {
-      "path": "skills/cross-model-review/SKILL.md",
-      "destinations": [
-        "skills/team/principles/durable-state.md",
-        "skills/team/principles/focused-work.md",
-        "skills/team/principles/independent-review.md",
-        "skills/team/principles/verified-results.md",
-        "skills/team/references/execution.md",
-        "skills/team/references/external-data.md"
-      ]
-    },
-    {
-      "path": "skills/cross-model-review/references/procedure.md",
+      "path": "skills/team/references/cross-model-review.md",
       "destinations": [
         "skills/team/principles/durable-state.md",
         "skills/team/principles/focused-work.md",
@@ -282,7 +271,7 @@
       ]
     },
     {
-      "path": "skills/nested-agents/SKILL.md",
+      "path": "skills/team/references/agent-dispatch.md",
       "destinations": [
         "skills/team/principles/focused-work.md",
         "skills/team/principles/independent-review.md",
@@ -441,7 +430,7 @@
       ]
     },
     {
-      "path": "skills/pr-watch-mechanics/SKILL.md",
+      "path": "skills/pr-watch-as-author/references/watch-loop.md",
       "destinations": [
         "skills/team/references/execution.md"
       ]
@@ -528,13 +517,7 @@
       ]
     },
     {
-      "path": "skills/sweeping-local-state/SKILL.md",
-      "destinations": [
-        "skills/team/principles/verified-results.md"
-      ]
-    },
-    {
-      "path": "skills/sweeping-local-state/references/procedure.md",
+      "path": "skills/pr-cleanup/playbooks/cleanup.md",
       "destinations": [
         "skills/team/principles/verified-results.md"
       ]
@@ -716,15 +699,11 @@
     }
   ],
   "registrations": [
-    "changelog",
     "code-review",
-    "cross-model-review",
     "eng-design-doc-review",
     "engineering-standards",
-    "git-commit",
     "groom-backlog",
     "how",
-    "nested-agents",
     "no-comments",
     "pr-cleanup",
     "pr-open-comments",
@@ -733,13 +712,11 @@
     "pr-verify",
     "pr-watch-as-author",
     "pr-watch-as-reviewer",
-    "pr-watch-mechanics",
     "refactoring-to-patterns",
     "reflect",
     "running-quality-checks",
     "shipit",
     "solid",
-    "sweeping-local-state",
     "team",
     "team-design",
     "team-fix",
@@ -750,11 +727,9 @@
     "team-research",
     "team-structure",
     "team-worktree",
-    "tracking-tickets",
     "unslop",
     "verifying-ux",
     "why",
-    "worktree-isolation",
     "writing-prose"
   ]
 }

@@ -1,6 +1,6 @@
 // L3 subprocess-snapshot tests (see docs/testing.md §2) for the residue sweep
-// documented in skills/worktree-isolation/SKILL.md → "Ship (teardown)". The
-// snippet under test is EXTRACTED from the SKILL.md code block — the docs are
+// documented in skills/team-worktree/playbooks/worktree.md → "Ship (teardown)". The
+// snippet under test is EXTRACTED from the playbook code block — the docs are
 // the single source of truth, so the documented command and the tested command
 // cannot drift. Real `git` runs against hermetic temp repos; free and
 // deterministic.
@@ -20,7 +20,7 @@ import { dirname, join } from "node:path";
 import { read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
-const ISOLATION = join(REPO_ROOT, "skills", "worktree-isolation", "SKILL.md");
+const ISOLATION = join(REPO_ROOT, "skills", "team-worktree", "playbooks", "worktree.md");
 
 // Pull the sweep snippet out of the teardown section's sh code block (the one
 // iterating .claude/worktrees/ against `git worktree list`).
@@ -90,7 +90,7 @@ afterEach(() => {
   rmSync(root, { recursive: true, force: true });
 });
 
-describe("residue sweep (snippet from worktree-isolation SKILL.md)", () => {
+describe("residue sweep (snippet from the worktree playbook)", () => {
   test("`git worktree remove` deletes gitignored files and exits 0 — git is not the culprit", () => {
     git(repo, "worktree", "remove", staleWt);
     expect(existsSync(staleWt)).toBe(false);

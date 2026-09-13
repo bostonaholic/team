@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Consolidate delivery, worktree, and agent execution contracts into per-entry-point references, preserving signing, cleanup, tracking, watch-loop mechanics, cross-model review, and nested-dispatch authorization.
+
 ## [0.104.5] - 2026-09-12
 
 ### Changed

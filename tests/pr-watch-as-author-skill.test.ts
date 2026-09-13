@@ -89,16 +89,16 @@ describe("pr-watch-as-author skill: arm sequence — loud undraft + best-effort 
 
   test("applies the best-effort in-review ticket transition (never blocks)", () => {
     const t = flat(body());
-    expect(t).toContain("tracking-tickets");
+    expect(t).toContain("team-pr/references/tracking.md");
   });
 });
 
 describe("pr-watch-as-author skill: bounded cycle mechanics", () => {
-  test("cycle timing and the bound are delegated to pr-watch-mechanics, not restated", () => {
+  test("cycle timing and the bound are delegated to the watch loop, not restated", () => {
     // The interval, the soft cap, and the handoff are shared with
-    // pr-watch-as-reviewer and live in pr-watch-mechanics, which owns their
-    // assertions. Restating them here would let the two copies drift.
-    expect(loadsSkill(body(), "pr-watch-mechanics")).toBe(true);
+    // pr-watch-as-reviewer and live in the watch-loop reference, which owns
+    // their assertions. Restating them here would let the two copies drift.
+    expect(body()).toContain("watch-loop.md");
   });
 
   test("binds its own handoff state for the shared soft cap", () => {

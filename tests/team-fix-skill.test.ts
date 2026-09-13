@@ -72,7 +72,7 @@ describe("team-fix: the leading WORKTREE phase exists", () => {
     // sweep in tests/skill-tool-invocation.test.ts resolves every loaded name.
     const s = body();
     expect(loadsSkill(s, "team-worktree")).toBe(true);
-    expect(loadsSkill(s, "worktree-isolation")).toBe(true);
+    expect(s).toContain("team-worktree/playbooks/worktree.md");
   });
 
   test("branches off origin/HEAD with the documented worktree-add form", () => {

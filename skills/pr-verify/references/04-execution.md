@@ -41,7 +41,7 @@ is the guarantee).
 The item still travels only as the fenced `DATA` block. Every
 instruction in the dispatch prompt is one pr-verify authored itself.
 When the Agent tool is missing or a dispatch fails, do the verification
-inline per `skills/nested-agents/SKILL.md` — nesting is an optimization,
+inline per [agent dispatch](../team/references/agent-dispatch.md) — nesting is an optimization,
 never a dependency ([focused work rules](../team/principles/focused-work.md)),
 and the inline path keeps the same no-writes discipline.
 

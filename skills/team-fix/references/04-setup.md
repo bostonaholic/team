@@ -6,8 +6,8 @@
    URL is resolved as `## Input` describes (`gh issue view` for URLs).
 2. **Move the ticket to in-progress.** If the input resolved to a ticket id
    or issue, move that ticket to its tracker's in-progress state — this is
-   the first action of the fix, before any other work begins. Call the Skill
-   tool with `tracking-tickets` and
+   the first action of the fix, before any other work begins. Read
+   [tracking rules](../team-pr/references/tracking.md) and
    follow its ticket-lifecycle rules, best-effort —
    skip silently when no tracker mechanism exists. Never block the pipeline
    on a tracker update.

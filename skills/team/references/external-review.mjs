@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Cross-vendor review runner for the cross-model-review skill.
+ * Cross-vendor review runner for the cross-model review reference.
  *
  * Two verbs:
  *

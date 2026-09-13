@@ -101,14 +101,14 @@ The `Closes` line is a standalone footer, with no heading, rendered as the
 final line of the PR body. Three things are canonical elsewhere: if it
 renders at all (conditional on `ticketId`), how `ticketId` is interpreted,
 and the multi-repo home-only closing rule. They live in
-`skills/tracking-tickets/SKILL.md`. When that skill says to omit the line,
+`tracking.md` (this skill's tracking reference). When that reference says to omit the line,
 drop its preceding blank line with it, so the body ends at the last
 `## References` bullet with no trailing blank line.
 
 **Placement rationale:** reviewers open a PR to read `## Summary`. The
 closing line is machine-facing metadata, so the narrative comes first and
 the footer comes last. This mirrors the commit-footer convention in
-`skills/git-commit/SKILL.md`. GitHub parses closing keywords anywhere in
+`commit.md` (this skill's commit reference). GitHub parses closing keywords anywhere in
 the body, so the footer position costs nothing. "Last authored line" is
 deterministic to emit and trivial to verify.
 

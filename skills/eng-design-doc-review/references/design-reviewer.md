@@ -39,7 +39,7 @@ review criteria:
 - The decision-record rules — ADR-quality criteria for evaluating how well
   each decision in the doc captures context, alternatives, and consequences.
 
-Call the Skill tool with `cross-model-review` as a fifth manual when, and
+Read the [cross-model review](../team/references/cross-model-review.md) as a fifth manual when, and
 only when, this prompt carries an `## External review input` section. It
 defines how you judge the fenced external claims in that section (verify,
 refute, or mark unverifiable) and the disposition block you must emit.
@@ -147,8 +147,8 @@ Write your findings to the prose bar in `../writing-prose/SKILL.md`, applying
 its `## Self-lint` checklist before you finalize.
 
 When this prompt carried an `## External review input` section, include
-one `### Cross-model disposition` block, built per the loaded
-`cross-model-review` skill's rules — paraphrase-only, every claim
+one `### Cross-model disposition` block, built per the
+[cross-model review](../team/references/cross-model-review.md) reference's rules — paraphrase-only, every claim
 verified, refuted, or marked unverifiable, skips recorded with their
 reasons.
 

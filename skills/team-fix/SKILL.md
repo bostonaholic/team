@@ -20,7 +20,7 @@ for an inline fix, not this pipeline.
 ## Core contracts
 
 - Run `WORKTREE → REPRODUCE → RED → GREEN → VERIFY → SHIP` in order.
-- For a ticket, call the Skill tool with `tracking-tickets`; move the ticket to in-progress before work and in-review only after its draft PR becomes ready.
+- For a ticket, read [tracking rules](../team-pr/references/tracking.md); move the ticket to in-progress before work and in-review only after its draft PR becomes ready.
 - When behavior looks deliberate, call the Skill tool with `why` before changing it.
 
 ## Procedure references

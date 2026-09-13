@@ -4,9 +4,14 @@
 // of the right kind). Encodes the 7-structure.md triage as the immutable scope
 // fence. Free, deterministic, no model calls.
 //
-// L5 skills (self-contained or light-prior-state — 9 total):
-//   git-commit, changelog, team-question, eng-design-doc-review, team-fix,
-//   team-research, team-design, team-structure, team-plan
+// L5 skills (self-contained or light-prior-state — 7 total):
+//   team-question, eng-design-doc-review, team-fix, team-research,
+//   team-design, team-structure, team-plan
+//
+// Reference-methodology evals (content moved off skill registrations):
+//   git-commit (commit.md) and changelog (changelog.md) keep their eval
+//   fixtures, rubrics, and evals files, but their touchfile deps name the
+//   new reference paths instead of a skills/<name>/ directory.
 //
 // L2-demoted skills (heavy-prior-state — 4 total):
 //   team, team-worktree, team-pr, team-implement
@@ -45,10 +50,8 @@ const FIXTURE_ROOT = join(REPO_ROOT, "evals", "fixtures");
 const RUBRIC_ROOT = join(REPO_ROOT, "evals", "rubrics");
 const TESTS_ROOT = join(REPO_ROOT, "tests");
 
-// The nine skills whose behavior an end-to-end eval can exercise: tier L5.
+// The seven skills whose behavior an end-to-end eval can exercise: tier L5.
 const L5_SKILLS = [
-  "git-commit",
-  "changelog",
   "team-question",
   "eng-design-doc-review",
   "team-fix",

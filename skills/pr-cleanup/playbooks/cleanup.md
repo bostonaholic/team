@@ -1,7 +1,7 @@
-Before this operation, read [external-data rules](../team/references/external-data.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+# Sweeping Local State
 
-# Sweeping Local State Procedure
+Before each consuming step, read its linked shared rules from this installed playbook directory. If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+Read [external-data rules](../team/references/external-data.md) from the installed playbook directory before teardown; stop with the resolved path on failure.
 
 Git teardown removes refs and checkouts. It does not touch what grew alongside
 them: a database provisioned for the branch, a container still running, a
@@ -13,6 +13,9 @@ merged, closed, or reviewed — reads this file and follows it.
 `skills/pr-cleanup/SKILL.md` is the standing caller: it loads this after the
 worktree is removed and before it reports.
 
+Remove only provisioned resources and recorded temp paths.
+`skills/pr-cleanup/SKILL.md` and the worktree playbook own git state.
+
 ## Ownership boundary
 
 Run only the rows marked **this skill**. The others already ran, or will run,
@@ -22,7 +25,7 @@ in the caller.
 |---|---|
 | Worktrees, local and remote branches, stale tracking refs | the caller (`pr-cleanup` Modes A/B) |
 | `docs/plans/<id>/` planning scratch | the caller (`pr-cleanup` Mode B step 6) |
-| Leftover directories under `.claude/worktrees/` | `worktree-isolation` teardown step 7 |
+| Leftover directories under `.claude/worktrees/` | the worktree playbook teardown step 7 |
 | Databases, containers, queues, buckets, caches | **this skill** |
 | Temp-directory scratch the run recorded | **this skill** |
 
@@ -30,6 +33,12 @@ Duplicating a caller's step is not harmless. `pr-cleanup` gates its deletions
 on a merged-PR verification and on protected-name refusals; a second,
 ungated pass at the same target is the ungated path those rules exist to
 prevent.
+
+Never re-run a step the caller owns: worktrees, branches, refs,
+`docs/plans/<id>/`, or stale worktree directories.
+
+Inputs: validated absolute `PRIMARY_ROOT`, `DEFAULT`, `BRANCH`, and optional
+`WORKTREE`. Derive missing repo/default values through `pr-cleanup` steps 0/1.
 
 ## Inputs the caller supplies
 
@@ -135,6 +144,11 @@ continues: one broken teardown command must not strand the rest, and it must
 never stop the caller's git teardown. If a line has not returned after roughly
 120 seconds, kill it and report `TIMEOUT` rather than waiting it out.
 
+Run lines verbatim in file order. Report failures and continue. Kill and report
+`TIMEOUT` after roughly 120 seconds. **Never invent a teardown command.**
+**Never edit, re-quote, or interpolate a declared line**
+([external-data rules](../team/references/external-data.md)). Never guess credentials.
+
 ### Step 2 — sweep recorded temp paths
 
 Remove a temp path only when the run wrote it down. A caller that made scratch
@@ -167,6 +181,8 @@ wrong one kills a run in progress, and the failure surfaces later as a missing
 file with no cause attached. An unrecorded temp path is left on disk and named
 in the report instead.
 
+Never wildcard-sweep the temp directory. Never delete an unrecorded path.
+
 ### Step 3 — report
 
 Report per [Report](#report) below, then hand back to the caller.
@@ -185,6 +201,10 @@ unchanged, with one boundary that does not apply to your own merged work:
   branch deletion on origin.
 - The default-branch read rule matters most here. The branch under review is
   unlanded code, so its `.teamteardown` is exactly the copy that must not run.
+
+If the review created no local state, report that and stop. Otherwise run the
+same two steps, but remove only local checkout state you created. Never delete
+the author's remote branch, close the PR, or run unlanded `.teamteardown`.
 
 ## Hard rules
 
@@ -219,4 +239,4 @@ One line per thing that happened, and nothing else:
 - `No recorded temp paths.` when the caller recorded none.
 
 Anything left on disk is named.
-The general rule: [verified results rules](../team/principles/verified-results.md).
+Never block caller teardown ([verified results rules](../team/principles/verified-results.md)).

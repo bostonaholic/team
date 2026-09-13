@@ -256,7 +256,7 @@ describe("Canonical discovery preserves host configuration and rejects invalid c
     expect(config).toEqual(before);
   });
 
-  test.each([["git-commit", ""], ["git-commit", "literal arguments"], ["team-design", ""], ["team-design", "literal arguments"]])("canonical %s body stays byte-for-byte unchanged with arguments %j", async (name, args) => {
+  test.each([["team-design", ""], ["team-design", "literal arguments"], ["team-question", ""], ["team-question", "literal arguments"]])("canonical %s body stays byte-for-byte unchanged with arguments %j", async (name, args) => {
     const f = make("real bodies", "empty");
     cpSync(join(REPO, "skills", name!), join(f.checkout, "skills", name!), { recursive: true });
     const file = join(f.checkout, "skills", name!, "SKILL.md");
@@ -268,7 +268,7 @@ describe("Canonical discovery preserves host configuration and rejects invalid c
     expect(expanded.files).toEqual([]);
     expect(readFileSync(file, "utf8")).toBe(before);
     expect(config.command![name!]!.template).not.toContain(before);
-    expect(before).toContain(name === "git-commit" ? "!`" : "$ARGUMENTS");
+    expect(before).toContain("$ARGUMENTS");
   });
 
   test("native argument markers remain detectable without processing canonical content", async () => {
