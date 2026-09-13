@@ -51,16 +51,17 @@ Inspection Contract" section: done-criteria checks, the per-file coverage
 checklist, both test-file severity regimes, and the test run. Format every
 finding per `skills/conventional-comments/SKILL.md` (preloaded).
 
-Call the Skill tool with `engineering-standards`, `solid`,
-and `test-style`. None of the three is preloaded, and
+Call the Skill tool with `engineering-standards` and `solid`.
+Read the [testing rules](../skills/team/references/testing.md) for the test-file
+severity regimes. None of the three is preloaded, and
 the checks below are their application:
 
 - Check in-source comments per the skill's Comment red flags. Cite the
   `Comment Discipline` checklist item. Its canonical rule set is
   `engineering-standards`' Code Comments section.
 - Check design-principle violations with `solid`.
-- Walk changed test files against `test-style`'s style rules. Flaky-test
-  red flags are blocking on **first** occurrence.
+- Walk changed test files against the testing rules' style rules and
+  flaky-test red flags, which are blocking on **first** occurrence.
 - Apply `engineering-standards`' "When Reviewing" section as more review
   criteria, and cite checklist item names in findings.
 - Apply the `System Fit` item from

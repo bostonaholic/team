@@ -66,8 +66,8 @@ testIfSelected(
         systemPromptAppend: loadInstructionContext([
           "skills/team/principles/durable-state.md",
           "skills/team/references/artifacts.md",
-          "skills/slicing-work/SKILL.md",
-          "skills/slicing-work/references/structure-template.md",
+          "skills/team/playbooks/structure.md",
+          "skills/team/references/structure-template.md",
           "skills/team/references/dependencies.md",
         ]),
         workingDirectory: workDir,

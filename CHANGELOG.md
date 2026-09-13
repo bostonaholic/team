@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Consolidate planning, implementation, and bug-fix procedures into playbooks, and test-quality policy into one reference, preserving acceptance-scope fences, Red gates, and bug-fix classification and commit rules.
+
 ## [0.104.3] - 2026-09-12
 
 ### Changed

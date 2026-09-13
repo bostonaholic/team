@@ -26,14 +26,12 @@ const REQUIRED_LOADS_BY_COMPONENT: Record<string, readonly string[]> = {
     "tracking-tickets",
     "team-worktree",
     "worktree-isolation",
-    "test-driven-bug-fix",
-    "systematic-debugging",
+    "why",
   ],
   "skills/changelog": ["writing-prose"],
   "skills/code-review": ["reviewing-code"],
-  "skills/reviewing-code": ["writing-prose", "review-severity-tiers", "test-style", "engineering-standards"],
+  "skills/reviewing-code": ["writing-prose", "review-severity-tiers", "engineering-standards"],
   "skills/pr-verify": ["running-quality-checks"],
-  "skills/implementing-slices": ["systematic-debugging", "git-commit"],
   "skills/team": [
     "unslop",
     "writing-prose",
@@ -59,7 +57,6 @@ const REQUIRED_LOADS_BY_COMPONENT: Record<string, readonly string[]> = {
   ],
   "skills/pr-rebase": ["running-quality-checks"],
   "skills/pr-watch-as-author": ["tracking-tickets", "pr-open-comments"],
-  "skills/test-driven-bug-fix": ["systematic-debugging"],
   "skills/eng-design-doc-review": ["writing-prose", "cross-model-review", "reviewing-designs"],
   "skills/reviewing-designs": [
     "unslop",
@@ -77,8 +74,7 @@ const REQUIRED_LOADS_BY_COMPONENT: Record<string, readonly string[]> = {
   "skills/team-implement": ["unslop", "writing-prose", "running-quality-checks", "review-severity-tiers", "team-pr"],
   "skills/team-design": ["unslop", "writing-prose", "cross-model-review", "reviewing-designs"],
   "skills/worktree-isolation": ["team-worktree"],
-  "agents/code-reviewer.md": ["engineering-standards", "solid", "test-style"],
-  "agents/test-architect.md": ["test-style"],
+  "agents/code-reviewer.md": ["engineering-standards", "solid"],
   "agents/planner.md": ["engineering-standards"],
   "agents/implementer.md": ["engineering-standards", "solid", "refactoring-to-patterns"],
 };
@@ -118,7 +114,7 @@ describe("Skill-tool loads resolve to real skills", () => {
     // positive"). Floors, not exact counts: adding an agent or skill is
     // ordinary work and must not fail this.
     expect(bodies.length).toBeGreaterThan(60);
-    expect(valid.size).toBeGreaterThan(50);
+    expect(valid.size).toBeGreaterThan(40);
     const loading = bodies.filter((b) => loadedSkills(b.text).length > 0);
     expect(loading.length).toBeGreaterThan(20);
   });

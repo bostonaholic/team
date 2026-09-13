@@ -409,16 +409,17 @@ describe("writing-prose lens (L2 content tripwire)", () => {
   });
 });
 
-describe("systematic-debugging lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "systematic-debugging", "SKILL.md");
+describe("bug diagnosis reference (L2 content tripwire)", () => {
+  const REFERENCE = join(REPO_ROOT, "skills", "team-fix", "references", "diagnosis.md");
 
-  test("skill file exists with name: systematic-debugging", () => {
-    expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*systematic-debugging\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  test("reference exists as an ordinary file with the diagnosis content", () => {
+    expect(existsSync(REFERENCE)).toBe(true);
+    expect(read(REFERENCE).startsWith("---\n")).toBe(false);
+    expect(read(REFERENCE)).toContain("Root Cause Analysis (5 Whys)");
   });
 
   test("pins reproduce-first / hypothesize ordering (OBSERVE before HYPOTHESIZE)", () => {
-    const text = read(SKILL_FILE);
+    const text = read(REFERENCE);
     expect(text).toContain("Reproduce the failure");
     const observeIdx = text.indexOf("Phase 1: OBSERVE");
     const hypothesizeIdx = text.indexOf("Phase 2: HYPOTHESIZE");
@@ -428,24 +429,34 @@ describe("systematic-debugging lens (L2 content tripwire)", () => {
   });
 });
 
-describe("test-driven-bug-fix lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "test-driven-bug-fix", "SKILL.md");
+describe("bug-fix playbook (L2 content tripwire)", () => {
+  const PLAYBOOK = join(REPO_ROOT, "skills", "team-fix", "playbooks", "bug-fix.md");
 
-  test("skill file exists with name: test-driven-bug-fix", () => {
-    expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*test-driven-bug-fix\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  test("playbook exists as an ordinary file with the classification buckets", () => {
+    expect(existsSync(PLAYBOOK)).toBe(true);
+    expect(read(PLAYBOOK).startsWith("---\n")).toBe(false);
+    for (const bucket of ["Product", "Test impl", "Infra", "Tooling"]) {
+      expect(read(PLAYBOOK)).toContain(bucket);
+    }
   });
 
   test("pins write-a-failing-test-that-reproduces-the-bug-first ordering", () => {
-    const text = read(SKILL_FILE);
-    expect(text).toContain("Write a Failing Test");
+    const text = read(PLAYBOOK);
+    expect(text).toContain("Write a failing test");
     expect(text).toContain("Reproduces the bug");
     // Reproduce step precedes the failing-test step.
     const reproduceIdx = text.indexOf("Step 1: Reproduce");
-    const failingTestIdx = text.indexOf("Step 2: Write a Failing Test");
+    const failingTestIdx = text.indexOf("Step 2: Write a failing test");
     expect(reproduceIdx).toBeGreaterThan(-1);
     expect(failingTestIdx).toBeGreaterThan(-1);
     expect(reproduceIdx).toBeLessThan(failingTestIdx);
+  });
+
+  test("pins the mutation check and the two atomic commits", () => {
+    const text = read(PLAYBOOK);
+    expect(text).toContain("Mutation-check the regression test");
+    expect(text).toContain("test: reproduce");
+    expect(text).toContain("fix:");
   });
 });
 
@@ -466,31 +477,32 @@ describe("git-commit lens (L2 content tripwire)", () => {
   });
 });
 
-describe("test-first-development lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "test-first-development", "SKILL.md");
+describe("implement playbook test-author contract (L2 content tripwire)", () => {
+  const IMPLEMENT_PLAYBOOK = join(REPO_ROOT, "skills", "team", "playbooks", "implement.md");
 
-  test("skill file exists with name: test-first-development", () => {
-    expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*test-first-development\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  test("implement playbook carries the test-author contract without skill registration", () => {
+    expect(existsSync(IMPLEMENT_PLAYBOOK)).toBe(true);
+    expect(read(IMPLEMENT_PLAYBOOK).startsWith("---\n")).toBe(false);
+    expect(read(IMPLEMENT_PLAYBOOK)).toContain("## Test-author contract");
   });
 
   test("pins write-the-test-before-the-code core rule and red-state contract", () => {
-    const text = read(SKILL_FILE);
+    const text = read(IMPLEMENT_PLAYBOOK);
     expect(text).toContain("BEFORE any implementation code");
     // STE substitutes the verb "confirm" with "make sure that".
-    expect(text).toContain("Make Sure That Tests Fail Correctly");
+    expect(text).toContain("Make sure that tests fail correctly");
   });
 
-  // The Test Style Rules moved to their own just-in-time skill; TFD keeps a
-  // pointer. The content pins follow the moved content.
-  const TEST_STYLE_FILE = join(REPO_ROOT, "skills", "test-style", "SKILL.md");
+  // The test-quality policy lives in one shared reference; the implement
+  // playbook keeps a pointer. The content pins follow the moved content.
+  const TESTING_REFERENCE = join(REPO_ROOT, "skills", "team", "references", "testing.md");
 
-  test("test-first-development points at test-style for the style rules", () => {
-    expect(read(SKILL_FILE)).toContain("test-style/SKILL.md");
+  test("implement playbook points at the testing reference for the style rules", () => {
+    expect(read(IMPLEMENT_PLAYBOOK)).toContain("references/testing.md");
   });
 
-  test("Test Style Rules (in test-style) contains the six deterministic-input subsections", () => {
-    const text = read(TEST_STYLE_FILE);
+  test("testing reference contains the six deterministic-input subsections", () => {
+    const text = read(TESTING_REFERENCE);
     expect(/^## Control the clock$/m.test(text)).toBe(true);
     expect(/^## Seed all randomness$/m.test(text)).toBe(true);
     expect(/^## Tests own their state — any order, any host$/m.test(text)).toBe(true);
@@ -499,8 +511,8 @@ describe("test-first-development lens (L2 content tripwire)", () => {
     expect(/^## Impose order before asserting it$/m.test(text)).toBe(true);
   });
 
-  test("audit table (in test-style) has a Deterministic inputs row (moved from test-architect)", () => {
-    expect(read(TEST_STYLE_FILE)).toContain("| Deterministic inputs |");
+  test("audit table (in the testing reference) has a Deterministic inputs row (moved from test-architect)", () => {
+    expect(read(TESTING_REFERENCE)).toContain("| Deterministic inputs |");
   });
 
   // A green suite does not imply a green type checker: many runners transpile
@@ -525,8 +537,8 @@ describe("test-first-development lens (L2 content tripwire)", () => {
     });
   }
 
-  test("test-first-development requires static checks before handoff", () => {
-    const text = squash(read(SKILL_FILE));
+  test("implement playbook requires static checks before handoff", () => {
+    const text = squash(read(IMPLEMENT_PLAYBOOK));
     expect(text.length).toBeGreaterThan(0);
     expect(/static check/i.test(text)).toBe(true);
   });
@@ -608,13 +620,13 @@ describe("reviewing-code flaky-test red flags (L2 content tripwire)", () => {
     // Severity rule keyed to outcome-dependence — pin the phrase, not just
     // the heading (design decision 2).
     expect(/outcome depends on/i.test(flaky)).toBe(true);
-    // The red-flag catalog itself moved to test-style; the severity rule
-    // stays here with a pointer at the single catalog copy.
-    expect(flaky).toContain("test-style/SKILL.md");
+    // The red-flag catalog itself moved to the testing reference; the severity
+    // rule stays here with a pointer at the single catalog copy.
+    expect(flaky).toContain("team/references/testing.md");
   });
 
-  test("the flaky red-flag catalog lives in test-style only, not duplicated in reviewing-code", () => {
-    const TEST_STYLE = join(REPO_ROOT, "skills", "test-style", "SKILL.md");
+  test("the flaky red-flag catalog lives in the testing reference only, not duplicated in reviewing-code", () => {
+    const TESTING = join(REPO_ROOT, "skills", "team", "references", "testing.md");
     const codeReview = read(SKILL_FILE);
     const styleFlags = between(codeReview, "Test-quality flags.", "Flaky-test red flags");
     const flaky = between(codeReview, "Flaky-test red flags", "### UX Reviewer");
@@ -626,11 +638,11 @@ describe("reviewing-code flaky-test red flags (L2 content tripwire)", () => {
     expect(styleFlags).not.toContain("sleep()");
     // ...and the catalog bullets no longer live in reviewing-code at all.
     expect(flaky).not.toContain("sleep()");
-    // The single catalog copy sits in test-style's reviewer checklist.
-    const testStyle = read(TEST_STYLE);
-    const checklistStart = testStyle.indexOf("## Flaky-test red flags (reviewer checklist)");
+    // The single catalog copy sits in the testing reference's reviewer checklist.
+    const testing = read(TESTING);
+    const checklistStart = testing.indexOf("## Flaky-test red flags (reviewer checklist)");
     expect(checklistStart).toBeGreaterThan(-1);
-    expect(testStyle.slice(checklistStart)).toContain("sleep()");
+    expect(testing.slice(checklistStart)).toContain("sleep()");
   });
 
   test("code-reviewer defers the first-occurrence always-blocking rule to the skill", () => {
@@ -655,10 +667,10 @@ describe("reviewing-code flaky-test red flags (L2 content tripwire)", () => {
 // pointers the former hosts keep.
 // ---------------------------------------------------------------------------
 
-describe("time-bomb example pair (single copy in test-style)", () => {
+describe("time-bomb example pair (single copy in the testing reference)", () => {
   const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
-  const TFD_SKILL = join(REPO_ROOT, "skills", "test-first-development", "SKILL.md");
-  const TEST_STYLE_SKILL = join(REPO_ROOT, "skills", "test-style", "SKILL.md");
+  const IMPLEMENT_PLAYBOOK = join(REPO_ROOT, "skills", "team", "playbooks", "implement.md");
+  const TESTING_REFERENCE = join(REPO_ROOT, "skills", "team", "references", "testing.md");
 
   // All ```js fences belonging to the time-bomb example: the bad block
   // carries the future-expiry literal, the good block the issueToken call.
@@ -669,15 +681,15 @@ describe("time-bomb example pair (single copy in test-style)", () => {
     );
   }
 
-  test("exactly one bad/good pair exists, in test-style", () => {
-    expect(timeBombFences(read(TEST_STYLE_SKILL)).length).toBe(2);
+  test("exactly one bad/good pair exists, in the testing reference", () => {
+    expect(timeBombFences(read(TESTING_REFERENCE)).length).toBe(2);
     expect(timeBombFences(read(CODE_REVIEW_SKILL)).length).toBe(0);
-    expect(timeBombFences(read(TFD_SKILL)).length).toBe(0);
+    expect(timeBombFences(read(IMPLEMENT_PLAYBOOK)).length).toBe(0);
   });
 
-  test("the former hosts point at test-style instead of carrying copies", () => {
-    expect(read(CODE_REVIEW_SKILL)).toContain("test-style/SKILL.md");
-    expect(read(TFD_SKILL)).toContain("test-style/SKILL.md");
+  test("the former hosts point at the testing reference instead of carrying copies", () => {
+    expect(read(CODE_REVIEW_SKILL)).toContain("team/references/testing.md");
+    expect(read(IMPLEMENT_PLAYBOOK)).toContain("references/testing.md");
   });
 });
 
@@ -871,7 +883,7 @@ describe("cross-surface parity is checked (L2 tripwire)", () => {
 // the first irreversible mutation earns rounds of adversarial review, and
 // anything bundled with it waits through every one of them.
 describe("slicing asks whether a slice deserves its own PR (L2 tripwire)", () => {
-  const SLICING = read(join(REPO_ROOT, "skills", "slicing-work", "SKILL.md"));
+  const SLICING = read(join(REPO_ROOT, "skills", "team", "playbooks", "structure.md"));
 
   test("the heuristic names the irreversible-mutation case", () => {
     // Guard: a missing file must fail, not vacuously pass the checks below.
@@ -1091,7 +1103,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-scope-fence",
     "skills/team/principles/human-control.md",
-    "skills/implementing-slices/SKILL.md"
+    "skills/team/playbooks/implement.md"
   ],
   [
     "principle-plan-present-wait",
@@ -1116,7 +1128,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-single-source-of-truth",
     "skills/team/principles/durable-state.md",
-    "skills/qrspi-workflow/SKILL.md"
+    "skills/team/playbooks/feature.md"
   ],
   [
     "principle-evidence-over-assertion",
@@ -1126,7 +1138,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-mechanical-gates",
     "skills/team/principles/verified-results.md",
-    "skills/qrspi-workflow/SKILL.md"
+    "skills/team/playbooks/feature.md"
   ],
   [
     "principle-fail-closed",
@@ -1146,7 +1158,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-blind-the-investigator",
     "skills/team/principles/independent-review.md",
-    "skills/qrspi-workflow/SKILL.md"
+    "skills/team/playbooks/feature.md"
   ],
   [
     "principle-least-privilege",
@@ -1166,7 +1178,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-subtract-before-you-add",
     "skills/team/principles/focused-work.md",
-    "skills/implementing-slices/SKILL.md"
+    "skills/team/playbooks/implement.md"
   ],
   [
     "principle-subtract-before-you-add",
@@ -1196,7 +1208,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-fix-root-causes",
     "skills/team-fix/playbooks/bug-fix.md",
-    "skills/systematic-debugging/SKILL.md"
+    "skills/team/playbooks/implement.md"
   ],
   [
     "principle-record-assumptions",

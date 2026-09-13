@@ -140,8 +140,8 @@ verdict-aggregation rules.
 - **💬 COMMENT:** Non-blocking suggestions only. Implementation is correct.
 
 **Test-quality flags.** Test files are part of the diff. Walk every changed
-`*test*` / `*spec*` / `__tests__/*` file against the rules in `test-style` —
-call the Skill tool with `test-style`.
+`*test*` / `*spec*` / `__tests__/*` file against the rules in the
+[testing rules](../../team/references/testing.md).
 These are `suggestion:` individually and `issue:` when they appear across
 multiple tests:
 
@@ -164,8 +164,8 @@ future CI failure, and flakiness erodes the "green means safe" signal. The
 rule keys to outcome-dependence, not token presence: a `Date.now()` in a log
 line does not flag; one feeding an assertion does. Outcome-dependence covers
 the whole suite — state or resources left behind flag because a *later* test's
-outcome depends on them. The full catalog lives in
-`skills/test-style/SKILL.md` ("Flaky-test red flags (reviewer checklist)").
+outcome depends on them. The full catalog lives in the
+[testing rules](../../team/references/testing.md) ("Flaky-test red flags (reviewer checklist)").
 
 **Comment red flags.** Check in-source comments in every changed file against
 the Code Comments rules in `engineering-standards` — call the Skill tool with
@@ -257,8 +257,8 @@ no order implied:
   whose motivating constraint still holds is a finding; one whose
   constraint provably evaporated is not.
 - **SOLID violations** — per `skills/solid/SKILL.md`.
-- **Test files** — per both severity regimes above and
-  `skills/test-style/SKILL.md`.
+- **Test files** — per both severity regimes above and the
+  [testing rules](../../team/references/testing.md).
 
 ## Security Review
 

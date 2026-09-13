@@ -1,10 +1,4 @@
----
-name: planning-implementation
-description: 'Defines the tactical plan schema. Load when converting `7-structure.md` into executable `8-plan.md` steps.'
-user-invocable: false
----
-
-# Planning Implementation
+# Plan playbook
 
 Expand each vertical slice from `7-structure.md` into precise file-level steps and acceptance-test mappings.
 

@@ -33,7 +33,7 @@ consumes:
   repository**. Lists each involved repo's slug, absolute path, and
   role. Its presence switches the rest of the pipeline into multi-repo
   mode (one worktree per repo, slice/step `[repo: <slug>]` annotations,
-  one PR per repo). See `skills/qrspi-workflow/SKILL.md` for the schema
+  one PR per repo). See the [feature playbook](../team/playbooks/feature.md) for the schema
   and `skills/team/references/multi-repo.md` for the detection rules.
 
 These files live in `docs/plans/<id>/` where `<id>` is either a

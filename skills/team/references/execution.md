@@ -28,4 +28,4 @@ Without a todo tool, state the ledger once inline and name each completed step.
 Track numbered steps. For unnumbered work, track natural units such as slices or findings, never individual guidance sentences.
 Use `in_progress` at start and `completed` when done.
 The orchestrator owns one phase ledger. Agents own their local sub-step ledgers. Never merge or read across those ledgers.
-Standalone skills own their ledgers. The retained `qrspi-workflow` procedure owns the orchestrator's phase-specific seed rules.
+Standalone skills own their ledgers. The [feature playbook](playbooks/feature.md) owns the orchestrator's phase-specific seed rules.

@@ -1,10 +1,9 @@
 ## Execution
 
-Call the Skill tool with `test-driven-bug-fix` before proceeding, and follow that
-methodology.
+Read [bug-fix playbook](playbooks/bug-fix.md) before proceeding, and follow its
+reproduce-red-green-verify discipline.
 
-When the failure is non-obvious, call the Skill tool with
-`systematic-debugging` and drill its
+When the failure is non-obvious, read the [diagnosis reference](references/diagnosis.md) and drill its
 **Root Cause Analysis (5 Whys)** causal chain to the root before proposing a
 fix. The fix lands at the root, never at the symptom, per
 [bug fix rules](playbooks/bug-fix.md).
