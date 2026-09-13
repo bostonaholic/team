@@ -39,11 +39,11 @@ Read [execution rules](../team/references/execution.md), then track these steps.
 
 1. **Resolve scope.** Record the exact files and the pre-review working-tree
    state. Do not widen the scope when a finding points elsewhere.
-2. **Load the contract.** Call the Skill tool with `reviewing-comments` and read
-   its review brief and report format completely.
+2. **Load the contract.** Read the [comment reviewer brief](references/reviewer.md)
+   review brief and report format completely.
 3. **Dispatch.** Use the `Agent` tool with `subagent_type: Explore` and
    `model: opus`. Pass only the resolved scope and instruct it to read
-   `skills/reviewing-comments/SKILL.md`; do not pass author discussion or a
+   `skills/no-comments/references/reviewer.md`; do not pass author discussion or a
    proposed verdict. If read-only `Explore` is unavailable, report and stop.
 4. **Validate the report.** Reject scope escapes, unsupported classifications,
    findings without `file:line` evidence, and any reviewer mutation. **Retry

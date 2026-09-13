@@ -198,11 +198,11 @@ test("registry-derived producer coverage", () => {
 });
 
 test("fresh reviewer and technical-writer boundaries", () => {
-  const reviewer = readOrEmpty(path("skills", "reviewing-designs", "SKILL.md"));
-  const brief = readOrEmpty(path("skills", "reviewing-designs", "references", "review-brief.md"));
+  const reviewer = readOrEmpty(path("skills", "eng-design-doc-review", "references", "design-reviewer.md"));
+  const brief = reviewer;
   const technicalWriter = squash(readOrEmpty(path("agents", "technical-writer.md")));
 
-  expect(orderedLoads(path("skills", "reviewing-designs", "SKILL.md"))).toEqual([
+  expect(orderedLoads(path("skills", "eng-design-doc-review", "references", "design-reviewer.md"))).toEqual([
     "unslop",
     "writing-prose",
   ]);

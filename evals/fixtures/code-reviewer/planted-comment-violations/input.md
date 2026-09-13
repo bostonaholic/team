@@ -9,8 +9,8 @@ deps:
   - skills/team/references/artifacts.md
   - skills/team/references/external-data.md
   - agents/code-reviewer.md
-  - skills/reviewing-code/SKILL.md
-  - skills/conventional-comments/SKILL.md
+  - skills/code-review/references/code-reviewer.md
+  - skills/code-review/references/findings.md
   - skills/engineering-standards/SKILL.md
 ---
 

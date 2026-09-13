@@ -9,7 +9,7 @@ returned:
 1. Collect all verdicts from the most recent round. Sort every finding into
    a severity tier: **Blocking**, **Major**, or **Minor and below**. Use
    the authoritative table under "Severity Tiers and the Auto-Fix
-   Boundary": call the Skill tool with `review-severity-tiers`. Consult that
+   Boundary": read the [finding format](../../code-review/references/findings.md). Consult that
    table rather than restating it here.
 2. Persist the cross-model record. Every code-reviewer report carries a
    `### Cross-model disposition` section, so read what it says rather than

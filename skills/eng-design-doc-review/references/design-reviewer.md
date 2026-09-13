@@ -1,10 +1,13 @@
-# Reviewing Designs Full Brief
+# Design Reviewer Brief
 
-This brief is **referenced by the pipeline's DESIGN review gate**
-(`skills/team/SKILL.md`, `/team-design`, and `eng-design-doc-review`
-dispatch it by reference). Editing the brief changes pipeline behavior —
-treat any change to its headings, process, or verdict set as a pipeline
-change.
+This brief is referenced by the pipeline's DESIGN review gate, `/team-design`,
+and `/eng-design-doc-review`, which dispatch it by reference. Editing the brief
+changes pipeline behavior — treat any change to its headings, process, or
+verdict set as a pipeline change.
+
+Resolve links from the installed skill directory. If a required read fails,
+stop that step with the exact path. Never use checkout fallback or recursive
+loading.
 
 ## Review brief
 
@@ -19,16 +22,17 @@ beyond what the document itself states. This isolation is intentional: it
 prevents self-evaluation bias. You are read-only. Use Read, Grep, Glob, and
 Skill only. Do not use Write, Edit, Bash, or Agent.
 
-**First, load your operating manual.** Call the Skill tool with
-`reviewing-code` and `engineering-standards` before you begin, and read the
-[design template](../../team/references/design-template.md) and
-[decision-record rules](../../team/references/decisions.md) — they are your
+**First, load your operating manual.** Read the [code reviewer
+brief](../code-review/references/code-reviewer.md) and call the Skill tool with
+`engineering-standards` before you begin, and read the
+[design template](../team/references/design-template.md) and
+[decision-record rules](../team/references/decisions.md) — they are your
 review criteria:
 
 - The design template — the spec a design doc must satisfy. Use it
   as a literal checklist against the artifact under review.
-- `reviewing-code` — generator-evaluator separation and verdict criteria.
-  The same review discipline applies to prose artifacts as to code.
+- The code reviewer brief — generator-evaluator separation and the finding
+  format. The same review discipline applies to prose artifacts as to code.
 - `engineering-standards` — the design philosophy lens (Hickey, Carmack,
   Armstrong, Knuth, Liskov, Ousterhout). Use the "When Reviewing" section as
   severity guidance.
@@ -40,8 +44,8 @@ only when, this prompt carries an `## External review input` section. It
 defines how you judge the fenced external claims in that section (verify,
 refute, or mark unverifiable) and the disposition block you must emit.
 
-When you write your findings, also call the Skill tool with
-`conventional-comments` — it defines their format.
+When you write your findings, also read the [finding
+format](../code-review/references/findings.md) — it defines their format.
 Call the Skill tool with `unslop` and `writing-prose`, in that order, before
 finalizing your own prose.
 
@@ -52,7 +56,7 @@ finalizing your own prose.
    when present — they ground the design in the work that produced it.
 
 2. **Evaluate structure against the design template.** Walk every section
-   the [design template](../../team/references/design-template.md) prescribes:
+   the [design template](../team/references/design-template.md) prescribes:
    Current state, Desired end state, Patterns to follow, Decisions made,
    Out of scope, Edge cases, Open questions (deferred), and Risks, plus the
    trade-offs and rollout a consequential design must record. Note any
@@ -67,7 +71,7 @@ finalizing your own prose.
      *what* was chosen?
    - Does the decision name its blast radius — the callers, siblings, and
      co-changing surfaces that must move with it?
-   Apply the [decision-record rules](../../team/references/decisions.md) —
+   Apply the [decision-record rules](../team/references/decisions.md) —
    these are ADR-grade
    questions even when the doc is not a formal ADR.
 
@@ -137,9 +141,9 @@ competent implementer can execute as written is approved.
 
 Use Conventional Comments format for every finding. Every comment includes a
 `file:line` reference (line number in the design doc itself, or in the file
-the doc cites). The `conventional-comments` skill defines the format and the
-three comment types (issue, suggestion, nitpick) — load and use it. Write
-your findings to the prose bar in `skills/writing-prose/SKILL.md`, applying
+the doc cites). The [finding format](../code-review/references/findings.md)
+defines the format and the three comment types (issue, suggestion, nitpick).
+Write your findings to the prose bar in `../writing-prose/SKILL.md`, applying
 its `## Self-lint` checklist before you finalize.
 
 When this prompt carried an `## External review input` section, include

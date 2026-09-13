@@ -325,7 +325,7 @@ describe("implement-to-pr continuation", () => {
 });
 
 // Regression guard for issue #68: the feature playbook's SOFT-gate examples must not
-// contradict the severity model in review-severity-tiers/SKILL.md. PR #23 made
+// contradict the severity model in the findings reference. PR #23 made
 // code-reviewer REQUEST CHANGES Blocking (auto-fix) and ux-reviewer REQUEST
 // CHANGES Major (auto-fix), so neither can be a SOFT example. The severity
 // model lives in exactly one place — the feature playbook must cross-reference it,
@@ -357,19 +357,19 @@ describe("feature playbook SOFT gate aligns with severity tiers (issue #68)", ()
     expect(/UX review feedback/i.test(soft)).toBe(false);
   });
 
-  test("SOFT section cross-references the review-severity-tiers table", () => {
+  test("SOFT section cross-references the finding-format table", () => {
     const soft = softSection(read(QRSPI));
     expect(soft.length).toBeGreaterThan(0);
-    expect(soft).toContain("review-severity-tiers/SKILL.md");
+    expect(soft).toContain("findings.md");
     expect(squash(soft)).toContain("Severity Tiers and the Auto-Fix Boundary");
   });
 
   // Drift guard: the SOFT section points at a heading by name. If that heading
-  // is renamed in review-severity-tiers/SKILL.md, the cross-reference silently
+  // is renamed in findings.md, the cross-reference silently
   // rots — fail the build here so the rename and the reference stay in sync.
-  test("the cross-referenced heading still exists in review-severity-tiers/SKILL.md", () => {
+  test("the cross-referenced heading still exists in findings.md", () => {
     const severityTiers = read(
-      join(REPO_ROOT, "skills", "review-severity-tiers", "SKILL.md"),
+      join(REPO_ROOT, "skills", "code-review", "references", "findings.md"),
     );
     expect(
       /^#{1,4} Severity Tiers and the Auto-Fix Boundary$/m.test(severityTiers),
@@ -716,18 +716,18 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
 });
 
 // ---------------------------------------------------------------------------
-// The design-review brief lives in the `reviewing-designs` methodology skill
-// rather than in the `eng-design-doc-review` entry point, so no skill is both
-// a methodology and a slash command. Three callers load the same brief:
-// skills/team/SKILL.md, skills/team-design/SKILL.md, and the entry point
+// The design-review brief lives in an ordinary reference file owned by the
+// `eng-design-doc-review` entry point, rather than a methodology skill, so no
+// skill is both a methodology and a slash command. Three callers read the same
+// brief: skills/team/SKILL.md, skills/team-design/SKILL.md, and the entry point
 // itself. Each dispatches it with the artifact directory substituted for
 // `$ARGUMENTS`, which is the contract a subagent depends on.
 // ---------------------------------------------------------------------------
 
-describe("the design-review brief lives in reviewing-designs", () => {
-  const REVIEWING_DESIGNS = join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md");
+describe("the design-review brief lives in design-reviewer.md", () => {
+  const DESIGN_REVIEWER = join(REPO_ROOT, "skills", "eng-design-doc-review", "references", "design-reviewer.md");
 
-  // Missing-file reads return "" so a not-yet-created skill fails as an
+  // Missing-file reads return "" so a not-yet-created reference fails as an
   // assertion, never as an ENOENT crash.
   const readOrMissing = (path: string): string => (existsSync(path) ? read(path) : "");
 
@@ -737,22 +737,20 @@ describe("the design-review brief lives in reviewing-designs", () => {
     ["eng-design-doc-review", join(REPO_ROOT, "skills", "eng-design-doc-review", "SKILL.md")],
   ];
 
-  test("reviewing-designs carries the ## Review brief heading verbatim", () => {
-    expect(existsSync(REVIEWING_DESIGNS)).toBe(true);
-    expect(/^## Review brief$/m.test(readOrMissing(REVIEWING_DESIGNS))).toBe(true);
+  test("design-reviewer.md carries the ## Review brief heading verbatim", () => {
+    expect(existsSync(DESIGN_REVIEWER)).toBe(true);
+    expect(/^## Review brief$/m.test(readOrMissing(DESIGN_REVIEWER))).toBe(true);
   });
 
-  test("reviewing-designs pins the APPROVE / REQUEST CHANGES / COMMENT verdict set", () => {
-    const text = readOrMissing(REVIEWING_DESIGNS);
+  test("design-reviewer.md pins the APPROVE / REQUEST CHANGES / COMMENT verdict set", () => {
+    const text = readOrMissing(DESIGN_REVIEWER);
     expect(/^- \*\*APPROVE\*\*/m.test(text)).toBe(true);
     expect(/^- \*\*REQUEST CHANGES\*\*/m.test(text)).toBe(true);
     expect(/^- \*\*COMMENT\*\*/m.test(text)).toBe(true);
   });
 
-  test("every caller of the design review loads the reviewing-designs brief", () => {
-    // The load form (`call the Skill tool with \`<name>\``) is the machine-read
-    // half of the reference; PHRASE in tests/helpers/skill-refs.ts owns it.
-    const offenders = CALLERS.filter(([, path]) => !loadsSkill(readOrMissing(path), "reviewing-designs")).map(
+  test("every caller of the design review reads the design-reviewer brief", () => {
+    const offenders = CALLERS.filter(([, path]) => !readOrMissing(path).includes("design-reviewer.md")).map(
       ([name]) => name,
     );
     expect(offenders).toEqual([]);
@@ -773,14 +771,19 @@ describe("the design-review brief lives in reviewing-designs", () => {
 // The no-consult rule — free L2 content tripwire (docs/testing.md §2). While a
 // Blocking or Major finding is open the review loop runs automatically: it
 // never stops mid-run to hand the finding to the user. The rule is owned by
-// skills/review-severity-tiers/SKILL.md and restated by both copies of the
+// skills/code-review/references/findings.md and restated by both copies of the
 // aggregate loop, so all three files must stay clear of escalation wording.
 // ---------------------------------------------------------------------------
 
 describe("the no-consult rule (L2 tripwire)", () => {
-  for (const name of ["team", "team-implement", "review-severity-tiers"]) {
-    test(`${name} SKILL never escalates an open finding to the user mid-run`, () => {
-      const text = read(join(REPO_ROOT, "skills", name, "SKILL.md"));
+  const surfaces: [string, string][] = [
+    ["team", join(REPO_ROOT, "skills", "team", "SKILL.md")],
+    ["team-implement", join(REPO_ROOT, "skills", "team-implement", "SKILL.md")],
+    ["findings", join(REPO_ROOT, "skills", "code-review", "references", "findings.md")],
+  ];
+  for (const [name, path] of surfaces) {
+    test(`${name} never escalates an open finding to the user mid-run`, () => {
+      const text = read(path);
       // Guard: an empty or moved file must fail, not vacuously pass the
       // absence check below.
       expect(text.length).toBeGreaterThan(0);
@@ -1131,23 +1134,21 @@ describe("checks and balances", () => {
     });
   }
 
-  test("both copies of the aggregate loop load the severity-tier authority", () => {
+  test("both copies of the aggregate loop read the severity-tier authority", () => {
     // Nothing bounds the review loop by a count, so its exit condition is the
-    // aggregate — and one skill owns it. Both loop copies must instruct a load
-    // of that skill, or a reader of either one alone learns no exit condition.
-    // A load is the bare name through the Skill tool, never a path
-    // (tests/helpers/skill-refs.ts).
+    // aggregate — and one reference owns it. Both loop copies must read
+    // that reference, or a reader of either one alone learns no exit condition.
     const team = read(join(REPO_ROOT, "skills", "team", "SKILL.md"));
     const implement = read(join(REPO_ROOT, "skills", "team-implement", "SKILL.md"));
-    expect(loadsSkill(team, "review-severity-tiers")).toBe(true);
-    expect(loadsSkill(implement, "review-severity-tiers")).toBe(true);
+    expect(team).toContain("findings.md");
+    expect(implement).toContain("findings.md");
   });
 
   test("the severity-tier authority still carries the ## Aggregating Verdicts section", () => {
-    // The load above is only worth having while its target section exists: a
-    // load of a skill whose aggregate section was deleted is a dangling
-    // reference that the two `loadsSkill` checks above cannot see.
-    const tiers = read(join(REPO_ROOT, "skills", "review-severity-tiers", "SKILL.md"));
+    // The read above is only worth having while its target section exists: a
+    // read of a reference whose aggregate section was deleted is a dangling
+    // reference that the two checks above cannot see.
+    const tiers = read(join(REPO_ROOT, "skills", "code-review", "references", "findings.md"));
     expect(/^## Aggregating Verdicts$/m.test(tiers)).toBe(true);
   });
 
@@ -1173,7 +1174,7 @@ describe("checks and balances", () => {
   // carry that price, or the loop only ends when five reviewers return zero
   // non-blocking findings — not a reachable state on prose.
   const TIER_ROW = (tier: string): string => {
-    const tiers = read(join(REPO_ROOT, "skills", "review-severity-tiers", "SKILL.md"));
+    const tiers = read(join(REPO_ROOT, "skills", "code-review", "references", "findings.md"));
     return (
       tiers.split("\n").find((line) => line.startsWith(`| **${tier}**`)) ?? ""
     );
@@ -1191,12 +1192,12 @@ describe("checks and balances", () => {
     });
   }
 
-  test("security-reviewer and reviewing-code agree MEDIUM does not block", () => {
+  test("security-reviewer and code-reviewer brief agree MEDIUM does not block", () => {
     // Three files describe this one boundary. When the tier table auto-fixed
     // MEDIUM while these two called it non-blocking, the reviewer reported
     // MEDIUMs candidly and each one silently bought a round.
     const agent = read(join(REPO_ROOT, "agents", "security-reviewer.md"));
-    const review = read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"));
+    const review = read(join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md"));
     expect(agent.length).toBeGreaterThan(0);
     expect(review.length).toBeGreaterThan(0);
     expect(/MEDIUM and LOW do not block/.test(agent)).toBe(true);
@@ -1207,8 +1208,8 @@ describe("checks and balances", () => {
 });
 
 describe("code-review direct invocation preserves separation", () => {
-  // `code-review` is the front door over the `reviewing-code` methodology.
-  // The main session holds the history that methodology forbids, so the
+  // `code-review` is the front door over the code reviewer brief.
+  // The main session holds the history that brief forbids, so the
   // standalone path must hand off rather than review in place. Without this,
   // the separation that the frontmatter enforces for the pipeline has no
   // counterpart on the path a natural-language phrase reaches.

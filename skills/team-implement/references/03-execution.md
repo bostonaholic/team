@@ -44,8 +44,8 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
 6. **Aggregate gate** — sort every finding into a severity tier —
    **Blocking**, **Major**, or **Minor and below** — per the authoritative
-   table under "Severity Tiers and the Auto-Fix Boundary": call the Skill
-   tool with `review-severity-tiers`. Consult that table rather
+   table under "Severity Tiers and the Auto-Fix Boundary": read the
+   [finding format](../code-review/references/findings.md). Consult that table rather
    than restating it here.
 7. **Persist the cross-model record.** Every code-reviewer report carries
    a `### Cross-model disposition` section, so read what it says rather

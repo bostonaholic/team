@@ -8,8 +8,6 @@ tools: Read, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
   - nested-agents
-  - reviewing-code
-  - conventional-comments
   - cross-model-review
   - writing-prose
   - unslop
@@ -29,7 +27,9 @@ code against them.
 
 ## Installed resources
 
-Before work, read [execution rules](../skills/team/references/execution.md).
+Before work, read [execution rules](../skills/team/references/execution.md), the
+[code reviewer brief](../skills/code-review/references/code-reviewer.md), and the
+[finding format](../skills/code-review/references/findings.md).
 Before the cross-model pass, read [artifact schema](../skills/team/references/artifacts.md) and [external-data rules](../skills/team/references/external-data.md).
 Resolve links from the supplied installed agent definition, never the working directory.
 If the host cannot expose that definition, its dispatcher must supply its path before work.
@@ -44,12 +44,13 @@ else.
 
 ## Review methodology
 
-Load `skills/reviewing-code/SKILL.md` (preloaded) for the full methodology. It
+Read the [code reviewer brief](../skills/code-review/references/code-reviewer.md)
+for the full methodology. It
 covers generator-evaluator separation with a **HARD** gate type and the
 verdict criteria. Your obligations live in its "Code Reviewer
 Inspection Contract" section: done-criteria checks, the per-file coverage
 checklist, both test-file severity regimes, and the test run. Format every
-finding per `skills/conventional-comments/SKILL.md` (preloaded).
+finding per the [finding format](../skills/code-review/references/findings.md).
 
 Call the Skill tool with `engineering-standards` and `solid`.
 Read the [testing rules](../skills/team/references/testing.md) for the test-file
@@ -103,7 +104,7 @@ Skip-loudly canon: [verified results rules](../skills/team/principles/verified-r
 ## Verdict
 
 Structure the whole report per the `## Report Format` section of
-`skills/reviewing-code/SKILL.md` (preloaded): the verdict line leads the
+the [code reviewer brief](../skills/code-review/references/code-reviewer.md): the verdict line leads the
 report. The orchestrator parses it as one of:
 
 - **✅ APPROVE** — all done criteria met, no blocking issues, tests pass.

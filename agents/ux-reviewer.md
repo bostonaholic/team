@@ -7,7 +7,6 @@ effort: medium
 tools: Read, Grep, Glob, Bash, TodoWrite, SendMessage
 permissionMode: plan
 skills:
-  - reviewing-code
   - verifying-ux
   - writing-prose
   - unslop
@@ -17,7 +16,8 @@ skills:
 
 ## Installed resources
 
-Before work, read [execution rules](../skills/team/references/execution.md).
+Before work, read [execution rules](../skills/team/references/execution.md) and the
+[code reviewer brief](../skills/code-review/references/code-reviewer.md).
 Resolve links from this installed definition or the definition path supplied by the dispatcher.
 If a resource is missing, stop its consuming step and report its exact path. Never use checkout fallback.
 
@@ -31,11 +31,13 @@ notes can surface.
 
 ## Review methodology
 
-Load `skills/reviewing-code/SKILL.md` (preloaded) for generator-evaluator
+Read the [code reviewer brief](../skills/code-review/references/code-reviewer.md)
+for generator-evaluator
 separation (fresh context, no shared history). This agent's REQUEST CHANGES
 findings auto-fix in the loop as a *major*. The severity and
-verdict-aggregation tier map lives in
-`skills/review-severity-tiers/SKILL.md`, which the orchestrator applies. Use
+verdict-aggregation tier map lives in the
+[finding format](../skills/code-review/references/findings.md),
+which the orchestrator applies. Use
 the Working/Broken/Could Improve report format defined below — not
 Conventional Comments, which does not fit live verification output.
 

@@ -55,7 +55,7 @@ describe("loadedSkills — the load form", () => {
 
 describe("loadedSkills — what it must NOT collect", () => {
   test("a path-form citation is not a load", () => {
-    const text = "The verdict-aggregation rules live in `skills/review-severity-tiers/SKILL.md`.";
+    const text = "The verdict-aggregation rules live in `skills/code-review/references/findings.md`.";
     expect(loadedSkills(text)).toEqual([]);
   });
 
@@ -109,7 +109,7 @@ describe("skillNames", () => {
     // Positive control: proves the sweep in skill-tool-invocation.test.ts is
     // checking against a populated set, not an empty one.
     const names = skillNames(process.cwd());
-    expect(names.size).toBeGreaterThan(40);
+    expect(names.size).toBeGreaterThan(30);
     expect(names.has("git-commit")).toBe(true);
     expect(names.has("no-such-skill")).toBe(false);
   });

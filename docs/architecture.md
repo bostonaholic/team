@@ -248,7 +248,7 @@ research artifact with the necessary frontmatter.
 each as an auditable assumption) **Predecessor:** `5-research.md`
 **Artifact:** `docs/plans/<id>/6-design.md` **Gate:** REVIEW. The
 orchestrator dispatches a fresh-context, read-only `Explore` subagent
-with the `## Review brief` from `skills/reviewing-designs/SKILL.md`.
+with the `## Review brief` from `skills/eng-design-doc-review/references/design-reviewer.md`.
 The subagent holds no Write or Edit tools, so the reviewer cannot touch
 the artifacts it judges. The orchestrator records the verdict to
 `design-review-<n>.md`. APPROVE and COMMENT advance. On REQUEST CHANGES
@@ -288,7 +288,7 @@ No gate. The plan is mechanically derived from the structure.
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
 5. **Aggregate gate.** The orchestrator sorts every finding into a
    severity tier: **Blocking, Major, or Minor-and-below**. See
-   `skills/review-severity-tiers/SKILL.md`. Each round in which the
+   `skills/code-review/references/findings.md`. Each round in which the
    code-reviewer's report carries a `### Cross-model disposition` block,
    the orchestrator appends that block — altered only by the blockquote
    wrap (every line prefixed with `>`) — to
@@ -406,7 +406,7 @@ Three more balances bound the checks themselves:
 - **The veto ends on agreement, not on a count.** The review loop runs until no
   Blocking or Major finding is left. A check that can never be satisfied grinds
   until a person stops the run. See
-  `skills/review-severity-tiers/SKILL.md`.
+  `skills/code-review/references/findings.md`.
 - **The check has a check.** The optional skeptic pass is default-keep. An
   inconclusive refutation leaves the finding standing, so the pass removes false
   positives only.
@@ -743,7 +743,7 @@ means changing it there, deliberately.
 
 Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them
-out of the `/` slash-command menu, because a `/reviewing-code` command is
+out of the `/` slash-command menu, because a `/writing-prose` command is
 meaningless to a user. They stay fully loadable by their two mechanisms
 above. Neither the `skills:` preload nor a by-path load is affected by
 the field, which governs only menu visibility. Setting
@@ -827,36 +827,45 @@ its absence on a side-effecting skill is a review-blocking defect.
 No methodology skill is user-invocable. When a methodology also wants a
 user-facing command, the answer is a **front door**, not an exception:
 the methodology keeps `user-invocable: false` and a separate entry-point
-skill carries the slash command. Three pairs hold that shape.
-`reviewing-code` and `code-review` are the first: the methodology lives
-in `reviewing-code`, which the `code-reviewer`, `security-reviewer`,
-`ux-reviewer`, and `technical-writer` agents preload; `code-review`
-carries `argument-hint` and `effort` like any other entry point and is
-catalogued under Standalone utilities. What stays on the front door is
-the one thing a user runs: "review this diff". `reviewing-designs` and
-`eng-design-doc-review` are the second: the design-review brief lives in
-the methodology, and `team`, `team-design`, and the front door all load
-it through the Skill tool. `reviewing-comments` and `no-comments` are the
-third: a read-only `Explore` reviewer classifies comments, then the invoking
-producer applies accepted findings and gates constraint encodings on approval.
+skill carries the slash command. The review procedures moved off the
+methodology list entirely: each reviewer brief is now an ordinary
+reference file owned by its entry point, so the front-door pair collapsed
+to one skill carrying a `references/` file beside it.
+
+`code-review` owns the code reviewer brief
+(`skills/code-review/references/code-reviewer.md`), the separate security
+and documentation briefs (`security-reviewer.md`,
+`documentation-reviewer.md`), and the shared finding format
+(`findings.md`). The `code-reviewer`, `security-reviewer`, `ux-reviewer`,
+and `technical-writer` agents read those briefs from the installed
+plugin; `code-review` carries `argument-hint` and `effort` like any other
+entry point and is catalogued under Standalone utilities. What stays on
+the front door is the one thing a user runs: "review this diff".
+`eng-design-doc-review` owns the design reviewer brief
+(`skills/eng-design-doc-review/references/design-reviewer.md`), and
+`team`, `team-design`, and the front door all read it by path.
+`no-comments` owns the comment reviewer brief
+(`skills/no-comments/references/reviewer.md`): a read-only `Explore`
+reviewer classifies comments, then the invoking producer applies accepted
+findings and gates constraint encodings on approval.
 
 A front door is a second kind of entry point, and both kinds are
-ordinary. One runs its own procedure; a front door owes the methodology's
+ordinary. One runs its own procedure; a front door owes the reviewer's
 own rules and routes the work to whoever may do it. The main session
 shares conversation history with whatever wrote the code, so it is not a
 valid reviewer. `code-review` therefore dispatches the `code-reviewer`
-agent and relays the verdict rather than reviewing inline, then loads
-`reviewing-code` for the methodology that reviewer applies.
+agent and relays the verdict rather than reviewing inline, then reads
+`code-reviewer.md` for the methodology that reviewer applies.
 `eng-design-doc-review` does the same with a read-only `Explore`
-subagent and the `reviewing-designs` brief. `no-comments` uses that dispatch
+subagent and the `design-reviewer.md` brief. `no-comments` uses that dispatch
 pattern but returns accepted findings to the invoking producer for edits.
 
 (This is separate from the entry-point skills, which are user-invocable by
 definition. Some of those, e.g. `team-worktree` and `team-pr`, are also
 *referenced by path* from `team/SKILL.md`, but those are procedural
 cross-links in the orchestrator's prose, not a parent loading the skill as
-a building block. The three front-door pairs are how a composed methodology
-keeps a user-facing entry point without becoming one.)
+a building block. The reviewer briefs are how a composed review keeps a
+user-facing entry point without becoming a methodology skill of its own.)
 
 For the full per-skill reference (all skills, each with the skills it
 loads, which is the skill-to-skill dependency graph), see

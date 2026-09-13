@@ -24,7 +24,7 @@ Weigh benefit against maintenance, runtime, false-positive, and cognitive costs.
 
 ## Code Comments
 
-These rules govern source comments; review findings use `skills/conventional-comments/SKILL.md`. Comments never explain WHAT code does. Permit only non-obvious WHY—constraints, workarounds, surprising requirements—when names, structure, and tests cannot carry it.
+These rules govern source comments; review findings use `skills/code-review/references/findings.md`. Comments never explain WHAT code does. Permit only non-obvious WHY—constraints, workarounds, surprising requirements—when names, structure, and tests cannot carry it.
 
 - **Rewrite first.** Before adding a comment, try a named function or variable.
 - **No ticket/issue IDs, plan/slice/phase markers, or doc-section references.** A public upstream-issue URL that is itself the why is allowed; internal trackers and pipeline artifacts are not.
