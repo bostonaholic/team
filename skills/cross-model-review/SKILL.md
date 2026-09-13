@@ -45,7 +45,7 @@ disposition details.
 - Emit one paraphrase-only `### Cross-model disposition` block per round.
   Never reproduce vendor sentences or verdict tokens. The block is Minor-tier
   and never auto-fixed. Its position follows `## Report Format` in
-  `skills/reviewing-code/SKILL.md` ([durable state rules](../team/principles/durable-state.md)).
+  `skills/code-review/references/code-reviewer.md` ([durable state rules](../team/principles/durable-state.md)).
 
 ## When a vendor CLI is unavailable
 

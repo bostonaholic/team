@@ -31,9 +31,9 @@ in-session coordination uses TodoWrite.
 - There are **no mid-run human gates**. Continue until the draft PR exists.
 - For a picked-up ticket, call the Skill tool with `tracking-tickets` and move the ticket to in-progress. At PR creation, use the same skill for the in-review transition and the multi-repo home-only closing rule.
 - Before WORKTREE, run the non-blocking probes `ssh-add -l`, `gh auth status`, and `git config --global --get commit.gpgsign`; no result blocks the run.
-- Call the Skill tool with `reviewing-designs` and dispatch its review brief with the artifact directory substituted.
+- Read [design reviewer brief](../eng-design-doc-review/references/design-reviewer.md) and dispatch its review brief with the artifact directory substituted.
 - Read `references/15-host-dispatch.md` before the first dispatch and resolve every agent through it.
-- Call the Skill tool with `review-severity-tiers` before aggregating IMPLEMENT findings.
+- Read [finding format](../code-review/references/findings.md) before aggregating IMPLEMENT findings.
 - In multi-repo mode, use `4-repos.md`; see **Multi-repo topics** in the Rules reference.
 - PR changelog bullets accumulate under `## [Unreleased]`.
 
@@ -51,7 +51,7 @@ Advance directly after the design review passes.
 
 ### Aggregate Gate (review collection)
 
-Persist `### Cross-model disposition` in `cross-model-notes.md` only when it does not begin `Not run:`. Retry with `Review round <n+1> (<b> Blocking, <m> Major open)` until `review-severity-tiers` permits exit.
+Persist `### Cross-model disposition` in `cross-model-notes.md` only when it does not begin `Not run:`. Retry with `Review round <n+1> (<b> Blocking, <m> Major open)` until the finding format permits exit.
 
 ## Procedure references
 

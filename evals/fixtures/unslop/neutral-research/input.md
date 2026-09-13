@@ -13,16 +13,16 @@ deps:
   - agents/questioner.md
   - agents/researcher.md
   - agents/technical-writer.md
-  - skills/conventional-comments/**
+  - skills/code-review/**
   - skills/cross-model-review/**
   - skills/engineering-standards/**
   - skills/team-research/**
   - skills/team/**
   - skills/nested-agents/**
   - skills/team/references/execution.md
-  - skills/reviewing-code/**
-  - skills/reviewing-designs/**
-  - skills/reviewing-documentation/**
+  - skills/code-review/**
+  - skills/eng-design-doc-review/**
+  - skills/code-review/**
   - skills/unslop/**
   - skills/writing-prose/**
   - evals/fixtures/unslop/neutral-research/**

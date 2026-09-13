@@ -16,8 +16,9 @@
 //   - no skill catalogued under a command section sets it
 //
 // The escape hatch a methodology skill needs is not this flag — it is a
-// separate front-door entry-point skill beside it (`reviewing-code` and
-// `code-review` are the worked pair). That shape passes both directions.
+// separate front-door entry-point skill beside it. The reviewer procedures
+// moved off the methodology list into ordinary references owned by their
+// entry points, so no skill needs that escape hatch for them.
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -58,8 +59,8 @@ describe("methodology skills are never user-invocable", () => {
 
   // Guard: an empty or mis-parsed catalog would pass every check below.
   test("the catalog parse sees both kinds of section", () => {
-    expect(entries.length).toBe(47);
-    expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(22);
+    expect(entries.length).toBe(40);
+    expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(15);
     expect(entries.filter((e) => COMMAND_SECTIONS.includes(e.section)).length).toBe(25);
   });
 
@@ -82,28 +83,29 @@ describe("methodology skills are never user-invocable", () => {
   // Prove the sweep can find a positive: the check must fail on a planted
   // violation, not pass because the predicate never fires.
   test("the sweep can see a violation", () => {
-    const planted: Entry[] = [{ name: "reviewing-code", section: METHODOLOGY_SECTION }];
+    const planted: Entry[] = [{ name: "engineering-standards", section: METHODOLOGY_SECTION }];
     expect(planted.filter((e) => !isModelOnly(e.name))).toEqual([]);
-    const inverted: Entry[] = [{ name: "reviewing-code", section: "## Standalone utilities" }];
+    const inverted: Entry[] = [{ name: "engineering-standards", section: "## Standalone utilities" }];
     expect(inverted.filter((e) => isModelOnly(e.name)).map((e) => e.name)).toEqual([
-      "reviewing-code",
+      "engineering-standards",
     ]);
   });
 
-  // The front door is the sanctioned way a methodology gets a command. Pin the
-  // worked pair so the guide's example cannot rot into a violation.
-  test("the code-review / reviewing-code pair models the front-door shape", () => {
-    expect(isModelOnly("reviewing-code")).toBe(true);
+  // The reviewer briefs moved off the methodology list into ordinary reference
+  // files owned by their entry points. The command stays; the brief is no
+  // longer a skill.
+  test("code-review owns the reviewer brief as an ordinary reference", () => {
     expect(isModelOnly("code-review")).toBe(false);
+    expect(existsSync(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"))).toBe(false);
+    expect(existsSync(join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md"))).toBe(true);
     const sectionOf = (n: string) => entries.find((e) => e.name === n)?.section;
-    expect(sectionOf("reviewing-code")).toBe(METHODOLOGY_SECTION);
     expect(COMMAND_SECTIONS).toContain(sectionOf("code-review") as string);
   });
 });
 
 // ---------------------------------------------------------------------------
-// The design-review brief lives in a `reviewing-designs` methodology skill so
-// no skill is both a methodology and a slash command. Three classifiers have to
+// The reviewer briefs are ordinary reference files owned by their entry points,
+// so no skill is both a methodology and a slash command. Three classifiers have to
 // agree for every skill, and the catalog has to be a total, duplicate-free map
 // of what is on disk: a bare count comparison of entries against directories
 // passes whenever a duplicate entry offsets a missing one.
@@ -188,8 +190,8 @@ describe("skill flavor and catalog completeness", () => {
   // Guard: a mis-parsed catalog or an unreadable skills/ tree would pass every
   // offender check below vacuously.
   test("the catalog and the skills directory both parse non-empty", () => {
-    expect(directories.length).toBeGreaterThan(40);
-    expect(entries.length).toBeGreaterThan(40);
+    expect(directories.length).toBeGreaterThan(30);
+    expect(entries.length).toBeGreaterThan(30);
   });
 
   test("the three flavor classifiers agree for every catalogued skill", () => {
@@ -223,35 +225,34 @@ describe("skill flavor and catalog completeness", () => {
   // Prove each rule can find a positive: four planted violations, one per way
   // the catalog can lie about what a skill is.
   test("the flavor and completeness checks can see planted violations", () => {
-    const miscatalogued: Entry[] = [{ name: "reviewing-code", section: "## Standalone utilities" }];
+    const miscatalogued: Entry[] = [{ name: "engineering-standards", section: "## Standalone utilities" }];
     expect(classifierDisagreements(miscatalogued)).toEqual([
-      "reviewing-code: section=## Standalone utilities user-invocable-false=true argument-hint=false",
+      "engineering-standards: section=## Standalone utilities user-invocable-false=true argument-hint=false",
     ]);
 
     const phantom: Entry[] = [{ name: "no-such-skill", section: METHODOLOGY_SECTION }];
     expect(phantomEntries(phantom, directories)).toEqual(["no-such-skill"]);
 
-    expect(uncataloguedDirectories([], ["reviewing-code"])).toEqual(["reviewing-code"]);
+    expect(uncataloguedDirectories([], ["engineering-standards"])).toEqual(["engineering-standards"]);
 
     const twice: Entry[] = [
-      { name: "reviewing-code", section: METHODOLOGY_SECTION },
-      { name: "reviewing-code", section: METHODOLOGY_SECTION },
+      { name: "engineering-standards", section: METHODOLOGY_SECTION },
+      { name: "engineering-standards", section: METHODOLOGY_SECTION },
     ];
-    expect(duplicateEntries(twice)).toEqual(["reviewing-code"]);
+    expect(duplicateEntries(twice)).toEqual(["engineering-standards"]);
 
-    const misfiled: Entry[] = [{ name: "reviewing-code", section: "## Something else" }];
-    expect(unknownSectionEntries(misfiled)).toEqual(["reviewing-code (## Something else)"]);
+    const misfiled: Entry[] = [{ name: "engineering-standards", section: "## Something else" }];
+    expect(unknownSectionEntries(misfiled)).toEqual(["engineering-standards (## Something else)"]);
   });
 
-  // The second front-door pair, pinned the way the code-review / reviewing-code
-  // pair is: the brief is the methodology, the slash command is its front door.
-  test("the reviewing-designs / eng-design-doc-review pair models the front-door shape", () => {
-    // existsSync first so a missing skill fails as an assertion, never ENOENT.
-    expect(existsSync(join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md"))).toBe(true);
-    expect(isModelOnly("reviewing-designs")).toBe(true);
+  // The design reviewer brief moved off the methodology list into an ordinary
+  // reference file owned by the eng-design-doc-review entry point.
+  test("eng-design-doc-review owns the design reviewer brief as an ordinary reference", () => {
+    // existsSync first so a missing file fails as an assertion, never ENOENT.
+    expect(existsSync(join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md"))).toBe(false);
+    expect(existsSync(join(REPO_ROOT, "skills", "eng-design-doc-review", "references", "design-reviewer.md"))).toBe(true);
     expect(isModelOnly("eng-design-doc-review")).toBe(false);
     const sectionOf = (name: string) => entries.find((entry) => entry.name === name)?.section;
-    expect(sectionOf("reviewing-designs")).toBe(METHODOLOGY_SECTION);
     expect(COMMAND_SECTIONS).toContain(sectionOf("eng-design-doc-review") as string);
   });
 });

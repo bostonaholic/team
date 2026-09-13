@@ -1,10 +1,8 @@
----
-name: reviewing-security
-description: 'Defines threat and OWASP review with evidence-rated findings. Load when reviewing a diff for security defects.'
-user-invocable: false
----
+# Security Reviewer Brief
 
-# Reviewing Security
+Format findings per [finding format](findings.md). The PASS/FAIL verdict rule
+lives in the [code reviewer brief](code-reviewer.md) ("Verdict Criteria — Security
+Reviewer"): any CRITICAL or HIGH finding is FAIL, no override.
 
 ## Security Reviewer Process
 

@@ -256,7 +256,7 @@ one action, taken in the same cycle it is rendered:
   query string. A rebuttal says three things and nothing else: which
   claim in the reply the branch does not bear out, the specific evidence
   (file, line, symbol) that shows it, and what would settle it. Format
-  it per `skills/conventional-comments/SKILL.md` — a rejected verdict is
+  it per `skills/code-review/references/findings.md` — a rejected verdict is
   an `issue`, and the decoration matches what the original comment
   carried. Carry whatever automated-attribution marker the user or
   project convention prescribes, the same one the approval body uses.

@@ -8,10 +8,10 @@ deps:
   - skills/team/principles/verified-results.md
   - skills/team/references/artifacts.md
   - skills/team/references/external-data.md
-  - skills/reviewing-code/SKILL.md
+  - skills/code-review/references/code-reviewer.md
   - skills/engineering-standards/SKILL.md
   - agents/code-reviewer.md
-  - skills/conventional-comments/SKILL.md
+  - skills/code-review/references/findings.md
 ---
 
 # Synthetic implementer artifact: user-profile renderer

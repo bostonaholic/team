@@ -5,15 +5,15 @@ effort: high
 argument-hint: "[docs/plans/<id>/]"
 ---
 
-Before review dispatch, supply the installed plugin root and resolved `skills/reviewing-designs/SKILL.md` path.
-Resolve its brief beside that installed skill. Pass the applicable resource paths and require reads before work.
+Before review dispatch, supply the installed plugin root and resolved `skills/eng-design-doc-review/references/design-reviewer.md` path.
+Pass the applicable resource paths and require reads before work.
 If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
 
 # Engineering Design Doc Review — Independent Fresh-Context Audit
 Before dispatch, resolve [independent review](../team/principles/independent-review.md), [verified results](../team/principles/verified-results.md), [focused work](../team/principles/focused-work.md). Pass their absolute installed paths with the retained brief. The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
 Before each consuming step, read its linked shared rules from this installed skill directory. If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 Adversarially review a design document with fresh context. The brief this
-skill dispatches lives in `skills/reviewing-designs/SKILL.md`, and the
+skill dispatches lives in `skills/eng-design-doc-review/references/design-reviewer.md`, and the
 orchestrator loads the same brief for the DESIGN phase's adversarial
 review gate. Invoking this skill standalone remains supported whenever
 you want an independent, fresh-context audit of a design document.
@@ -25,7 +25,7 @@ you finalize prose this skill governs, call the Skill tool with
 `writing-prose` and apply its `## Self-lint` checklist.
 
 There is **no custom review agent**. This skill loads the review brief
-from `reviewing-designs` and dispatches the built-in read-only
+from `references/design-reviewer.md` and dispatches the built-in read-only
 `Explore` subagent through the `Agent` tool. That subagent boots with a
 **clean context** and no shared conversation history with the design-author
 — that isolation is the whole point. It prevents self-evaluation bias.
@@ -86,8 +86,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    any unavailable CLI to the user per that skill's `## When a vendor
    CLI is unavailable`. Edge cases ride the shared section: an
    unauthenticated CLI exits non-zero and reads as an ordinary skip.
-3. **Dispatch the review.** Call the Skill tool with `reviewing-designs`
-   to read its `## Review brief`. Then call the `Agent` tool with
+3. **Dispatch the review.** Read the [design reviewer brief](references/design-reviewer.md)
+   `## Review brief`. Then call the `Agent` tool with
    `subagent_type: Explore` and `model: opus` — pinning the model keeps a
    cheaper machine-wide subagent default from silently weakening this
    gate — and pass that brief to the `Explore` subagent as the prompt,
@@ -109,7 +109,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 
 ## Rules
 
-- The brief lives in `skills/reviewing-designs/SKILL.md`, and changing it
+- The brief lives in `skills/eng-design-doc-review/references/design-reviewer.md`, and changing it
   is a pipeline change — that file states the rule.
 - This skill is **read-only, structurally for writes**. The `Explore`
   subagent holds no Write/Edit tools, so it cannot change `6-design.md`, the

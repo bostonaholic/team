@@ -392,11 +392,11 @@ describe("the sweep can see a positive (L2 tripwire)", () => {
   // pointed at a known positive.
 
   test("the enumeration sees every skill", () => {
-    // Floors, not exact counts: adding a skill is ordinary work. The `> 40`
+    // Floors, not exact counts: adding a skill is ordinary work. The `> 30`
     // floor is the one tests/skill-tool-invocation.test.ts puts on skill
     // names alone. Without this, a moved directory or a broken enumerator
     // turns every check below into a permanently green no-op.
-    expect(MANIFESTS.length).toBeGreaterThan(40);
+    expect(MANIFESTS.length).toBeGreaterThan(30);
   });
 
   test("the three raw-text matchers report nothing on a well-formed manifest", () => {

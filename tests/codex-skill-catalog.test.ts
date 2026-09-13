@@ -41,8 +41,8 @@ const MAX_SKILL_NAME_CHARS = 64;
 // Team's declared footprint ceilings, in characters. Not derived from Codex's
 // budget — Team's share of a pool it cannot see is a judgement, not a
 // calculation. They record what Team spends today and only ever come down.
-const FLEET_DESCRIPTION_BUDGET_CHARS = 6_050;
-const FLEET_CATALOG_BUDGET_CHARS = 8_550;
+const FLEET_DESCRIPTION_BUDGET_CHARS = 5_225;
+const FLEET_CATALOG_BUDGET_CHARS = 7_267;
 const RATCHET_SLACK_CHARS = 100;
 
 // Codex aliases a plugin's shared skill root to `r<index>` and renders each

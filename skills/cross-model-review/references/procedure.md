@@ -248,7 +248,7 @@ Emit the whole per-round record under one literal heading in your report:
 
 Where that heading sits is the report format's call, not this skill's. In a
 code review it is the last section, after `### Refuted by verification`, per
-`## Report Format` in `skills/reviewing-code/SKILL.md`.
+`## Report Format` in `skills/code-review/references/code-reviewer.md`.
 
 One block per round, one subsection per CLI, covering: adopted claims (with
 their tiers), refuted claims (with the `file:line` you checked),
@@ -267,7 +267,7 @@ verdict. Adopted findings
 elsewhere in your report stay tagged bare `[code-reviewer]` per convention,
 with `via <cli>` in the finding text. The block itself is Minor-tier by
 construction — a record, not a verdict — so it can never cross the auto-fix
-boundary in `skills/review-severity-tiers/SKILL.md` ("Severity Tiers and
+boundary in `skills/code-review/references/findings.md` ("Severity Tiers and
 the Auto-Fix Boundary").
 One severity map, owned elsewhere and consulted here
 ([durable state rules](../team/principles/durable-state.md)).

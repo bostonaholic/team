@@ -29,8 +29,6 @@ const REQUIRED_LOADS_BY_COMPONENT: Record<string, readonly string[]> = {
     "why",
   ],
   "skills/changelog": ["writing-prose"],
-  "skills/code-review": ["reviewing-code"],
-  "skills/reviewing-code": ["writing-prose", "review-severity-tiers", "engineering-standards"],
   "skills/pr-verify": ["running-quality-checks"],
   "skills/team": [
     "unslop",
@@ -38,10 +36,8 @@ const REQUIRED_LOADS_BY_COMPONENT: Record<string, readonly string[]> = {
     "tracking-tickets",
     "team-worktree",
     "cross-model-review",
-    "reviewing-designs",
     "worktree-isolation",
     "running-quality-checks",
-    "review-severity-tiers",
     "changelog",
     "team-pr",
   ],
@@ -57,22 +53,14 @@ const REQUIRED_LOADS_BY_COMPONENT: Record<string, readonly string[]> = {
   ],
   "skills/pr-rebase": ["running-quality-checks"],
   "skills/pr-watch-as-author": ["tracking-tickets", "pr-open-comments"],
-  "skills/eng-design-doc-review": ["writing-prose", "cross-model-review", "reviewing-designs"],
-  "skills/reviewing-designs": [
-    "unslop",
-    "reviewing-code",
-    "engineering-standards",
-    "cross-model-review",
-    "conventional-comments",
-    "writing-prose",
-  ],
+  "skills/eng-design-doc-review": ["writing-prose", "cross-model-review"],
   "skills/team-worktree": ["unslop", "writing-prose"],
   "skills/team-question": ["unslop", "writing-prose"],
   "skills/team-research": ["unslop", "writing-prose"],
   "skills/team-structure": ["unslop", "writing-prose"],
   "skills/team-plan": ["unslop", "writing-prose"],
-  "skills/team-implement": ["unslop", "writing-prose", "running-quality-checks", "review-severity-tiers", "team-pr"],
-  "skills/team-design": ["unslop", "writing-prose", "cross-model-review", "reviewing-designs"],
+  "skills/team-implement": ["unslop", "writing-prose", "running-quality-checks", "team-pr"],
+  "skills/team-design": ["unslop", "writing-prose", "cross-model-review"],
   "skills/worktree-isolation": ["team-worktree"],
   "agents/code-reviewer.md": ["engineering-standards", "solid"],
   "agents/planner.md": ["engineering-standards"],
@@ -114,7 +102,7 @@ describe("Skill-tool loads resolve to real skills", () => {
     // positive"). Floors, not exact counts: adding an agent or skill is
     // ordinary work and must not fail this.
     expect(bodies.length).toBeGreaterThan(60);
-    expect(valid.size).toBeGreaterThan(40);
+    expect(valid.size).toBeGreaterThan(30);
     const loading = bodies.filter((b) => loadedSkills(b.text).length > 0);
     expect(loading.length).toBeGreaterThan(20);
   });

@@ -8,9 +8,6 @@ tools: Read, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
   - nested-agents
-  - reviewing-code
-  - conventional-comments
-  - reviewing-security
   - writing-prose
   - unslop
 ---
@@ -19,7 +16,10 @@ skills:
 
 ## Installed resources
 
-Before work, read [execution rules](../skills/team/references/execution.md).
+Before work, read [execution rules](../skills/team/references/execution.md), the
+[code reviewer brief](../skills/code-review/references/code-reviewer.md), the
+[security reviewer brief](../skills/code-review/references/security-reviewer.md), and the
+[finding format](../skills/code-review/references/findings.md).
 Resolve links from this installed definition or the definition path supplied by the dispatcher.
 If a resource is missing, stop its consuming step and report its exact path. Never use checkout fallback.
 
@@ -37,13 +37,14 @@ a pattern that could be vulnerable elsewhere.
 
 ## Review methodology
 
-Your step-by-step procedure lives in `skills/reviewing-security/SKILL.md`
-(preloaded). It covers attack-surface identification, OWASP Top 10 checks,
+Your step-by-step procedure lives in the
+[security reviewer brief](../skills/code-review/references/security-reviewer.md).
+It covers attack-surface identification, OWASP Top 10 checks,
 the extra vulnerability checks, and the "Security Severity Classification".
-CRITICAL and HIGH are hard gates. MEDIUM and LOW do not block. Load
-`skills/reviewing-code/SKILL.md` (preloaded) for generator-evaluator
+CRITICAL and HIGH are hard gates. MEDIUM and LOW do not block. Read the
+[code reviewer brief](../skills/code-review/references/code-reviewer.md) for generator-evaluator
 separation with a **HARD** gate type and the PASS/FAIL verdict rule. Format
-findings per `skills/conventional-comments/SKILL.md` (preloaded).
+findings per the [finding format](../skills/code-review/references/findings.md).
 
 ## Skeptic pass — verify CRITICAL/HIGH findings before reporting (optional)
 

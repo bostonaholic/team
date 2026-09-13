@@ -6,22 +6,20 @@ deps:
   - skills/team/principles/focused-work.md
   - skills/team/principles/independent-review.md
   - skills/team/principles/verified-results.md
-  - skills/reviewing-designs/SKILL.md
-  - skills/reviewing-designs/references/review-brief.md
+  - skills/eng-design-doc-review/references/design-reviewer.md
   - skills/team/references/design-template.md
   - skills/team/references/decisions.md
-  - skills/conventional-comments/SKILL.md
-  - skills/reviewing-code/SKILL.md
+  - skills/code-review/references/findings.md
+  - skills/code-review/references/code-reviewer.md
   - skills/engineering-standards/SKILL.md
   - skills/team/references/artifacts.md
   - skills/eng-design-doc-review/**
-  - skills/reviewing-designs/**
 ---
 
 # Adversarial design-doc review with a planted gap
 
 You are adversarially reviewing the design-doc excerpt below with fresh
-context. Apply the `reviewing-designs` brief: walk the design against the
+context. Apply the design reviewer brief: walk the design against the
 design template, audit each decision for a named alternative
 and an honest trade-off, and verify edge-case enumeration. Use Conventional
 Comments (`issue (blocking):`, `suggestion (non-blocking):`, `nitpick`) with a

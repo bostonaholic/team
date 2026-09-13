@@ -11,8 +11,8 @@ If a required read fails, stop that step and report its resolved path. Never use
 
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 
-Before review dispatch, supply the installed plugin root and resolved `skills/reviewing-designs/SKILL.md` path.
-Resolve its brief beside that installed skill. Pass the applicable resource paths and require reads before work.
+Before review dispatch, supply the installed plugin root and resolved `skills/eng-design-doc-review/references/design-reviewer.md` path.
+Pass the applicable resource paths and require reads before work.
 
 
 # Team Design — Where Are We Going?
@@ -89,9 +89,10 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    section pins (created on first use; a zero-call round appends
    nothing). Any skip continues with the
    reviewer alone — the pass never blocks the gate. Then dispatch the
-   adversarial design review (the
-   `## Review brief` — call the Skill tool with `reviewing-designs` to
-   read it, with the artifact directory substituted — run by a
+    adversarial design review (the
+    `## Review brief` — read the
+    [design reviewer brief](../eng-design-doc-review/references/design-reviewer.md) to
+    read it, with the artifact directory substituted — run by a
    fresh-context read-only `Explore` subagent each round) and write
    the findings + verdict to `$ARGUMENTS/design-review-<n>.md`, where
    `<n>` is the highest existing `<n>` + 1 (1 when none exists) — never

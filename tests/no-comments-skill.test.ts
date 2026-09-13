@@ -1,5 +1,5 @@
 // L2 tripwire for the distributed no-comments front door and its
-// reviewing-comments methodology. The front door may edit source only after
+// comment reviewer brief. The front door may edit source only after
 // a fresh, read-only reviewer classifies the scoped comments.
 
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
@@ -20,7 +20,7 @@ import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
 const FRONT_DOOR = join(REPO_ROOT, "skills", "no-comments", "SKILL.md");
-const METHODOLOGY = join(REPO_ROOT, "skills", "reviewing-comments", "SKILL.md");
+const METHODOLOGY = join(REPO_ROOT, "skills", "no-comments", "references", "reviewer.md");
 const OPENAI_MANIFEST = join(REPO_ROOT, "skills", "no-comments", "agents", "openai.yaml");
 const CHANGED_FILES = join(REPO_ROOT, "skills", "no-comments", "scripts", "changed-files.sh");
 
@@ -29,7 +29,7 @@ function source(path: string): string {
 }
 
 describe("no-comments skill: invocation surface", () => {
-  test("front door and methodology are distributed runtime skills", () => {
+  test("front door and reviewer brief are distributed runtime files", () => {
     expect(existsSync(FRONT_DOOR)).toBe(true);
     expect(existsSync(METHODOLOGY)).toBe(true);
   });
@@ -49,29 +49,24 @@ describe("no-comments skill: invocation surface", () => {
     expect(manifest).toContain("allow_implicit_invocation: false");
   });
 
-  test("reviewing-comments is methodology, not a second command", () => {
-    const metadata = frontmatter(source(METHODOLOGY));
-    expect(metadata.length).toBeGreaterThan(0);
-    expect(/^name:\s*reviewing-comments\s*$/m.test(metadata)).toBe(true);
-    expect(/^user-invocable:\s*false\s*$/m.test(metadata)).toBe(true);
-    expect(/^argument-hint:/m.test(metadata)).toBe(false);
+  test("reviewer brief is an ordinary reference, not a second command", () => {
+    const text = source(METHODOLOGY);
+    expect(text.length).toBeGreaterThan(0);
+    expect(text.startsWith("---\n")).toBe(false);
+    expect(/^name:\s*reviewing-comments\s*$/m.test(text)).toBe(false);
   });
 });
 
 describe("no-comments skill: reviewer separation", () => {
-  test("front door loads the shared methodology and execution rules", () => {
+  test("front door reads the reviewer brief and execution rules", () => {
     const text = source(FRONT_DOOR);
     expect(text).toContain("../team/references/execution.md");
     expect(text).toContain("../team-fix/playbooks/bug-fix.md");
-    for (const dependency of [
-      "reviewing-comments",
-      "running-quality-checks",
-    ]) {
-      expect(loadsSkill(text, dependency)).toBe(true);
-    }
+    expect(text).toContain("references/reviewer.md");
+    expect(loadsSkill(text, "running-quality-checks")).toBe(true);
   });
 
-  test("methodology loads the canonical comment rules", () => {
+  test("reviewer brief loads the canonical comment rules", () => {
     expect(loadsSkill(source(METHODOLOGY), "engineering-standards")).toBe(true);
   });
 

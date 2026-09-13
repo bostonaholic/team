@@ -107,18 +107,18 @@ describe("thin agents: new skills carry the moved procedure content", () => {
 
 describe("thin agents: frontmatter skills preloads per agent", () => {
   const EXPECTED_PRELOADS: Record<string, string[]> = {
-    "code-reviewer": ["conventional-comments", "cross-model-review", "nested-agents", "reviewing-code", "unslop", "writing-prose"],
+    "code-reviewer": ["cross-model-review", "nested-agents", "unslop", "writing-prose"],
     "design-author": ["unslop", "writing-prose"],
     "file-finder": ["unslop", "writing-prose"],
     implementer: ["nested-agents", "unslop", "writing-prose"],
     planner: ["unslop", "writing-prose"],
     questioner: ["unslop", "writing-prose"],
     researcher: ["nested-agents", "unslop", "writing-prose"],
-    "security-reviewer": ["conventional-comments", "nested-agents", "reviewing-code", "reviewing-security", "unslop", "writing-prose"],
+    "security-reviewer": ["nested-agents", "unslop", "writing-prose"],
     "structure-planner": ["unslop", "writing-prose"],
-    "technical-writer": ["conventional-comments", "reviewing-code", "reviewing-documentation", "unslop", "writing-prose"],
+    "technical-writer": ["unslop", "writing-prose"],
     "test-architect": ["unslop", "writing-prose"],
-    "ux-reviewer": ["reviewing-code", "unslop", "verifying-ux", "writing-prose"],
+    "ux-reviewer": ["unslop", "verifying-ux", "writing-prose"],
     verifier: ["running-quality-checks", "unslop", "writing-prose"],
   };
 
@@ -149,25 +149,10 @@ type BudgetReason = { count: number; reason: string };
 
 const PRELOAD_BUDGET_REASONS: Record<string, BudgetReason> = {
   "code-reviewer": {
-    count: 6,
-    reason:
-      "It keeps four review methods, including vendor and nested-agent procedures, plus the shared `writing-prose` and `unslop` owners.",
-  },
-  "security-reviewer": {
-    count: 6,
-    reason:
-      "It keeps four security-review methods plus the shared `writing-prose` and `unslop` owners.",
-  },
-  "technical-writer": {
-    count: 5,
-    reason:
-      "It keeps four documentation methods, including `writing-prose`, and adds the shared `unslop` owner.",
-  },
-  "ux-reviewer": {
     count: 4,
-    reason: "It keeps two user-experience methods plus the shared `writing-prose` and `unslop` owners.",
+    reason:
+      "It keeps the vendor and nested-agent procedures plus the shared `writing-prose` and `unslop` owners.",
   },
-
 };
 
 // The four offender rules, factored so the planted-positive test can run each
@@ -309,30 +294,32 @@ describe("thin agents: fold targets absorbed the moved methodology", () => {
     );
   });
 
-  test("reviewing-security carries the security methodology; code-review keeps the pointer", () => {
+  test("security-reviewer brief carries the security methodology; code-reviewer brief keeps the pointer", () => {
     // The security-reviewer methodology folded into code-review during the
-    // thin-agents refactor, then moved to its own just-in-time skill.
-    const reviewingSecurity = readOrEmpty(skillPath("reviewing-security"));
-    expect(reviewingSecurity).toContain("OWASP");
-    expect(reviewingSecurity).toContain("CRITICAL — Hard Gate");
-    const codeReview = readOrEmpty(skillPath("reviewing-code"));
-    expect(codeReview).toContain("reviewing-security/SKILL.md");
+    // thin-agents refactor, then moved to its own just-in-time skill, then
+    // into a reference owned by code-review.
+    const securityBrief = readOrEmpty(join(REPO_ROOT, "skills", "code-review", "references", "security-reviewer.md"));
+    expect(securityBrief).toContain("OWASP");
+    expect(securityBrief).toContain("CRITICAL — Hard Gate");
+    const codeReviewer = readOrEmpty(join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md"));
+    expect(codeReviewer).toContain("security reviewer brief");
   });
 
-  test("reviewing-code absorbs the code-reviewer inspection checklist (off-by-one)", () => {
-    expect(readOrEmpty(skillPath("reviewing-code"))).toContain("off-by-one");
+  test("code-reviewer brief absorbs the code-reviewer inspection checklist (off-by-one)", () => {
+    expect(readOrEmpty(join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md"))).toContain("off-by-one");
   });
 
-  test("reviewing-documentation carries the technical-writer doc-change classification; writing-prose keeps the pointer", () => {
+  test("documentation-reviewer brief carries the technical-writer doc-change classification; writing-prose keeps the pointer", () => {
     // The doc-change classification folded into writing-prose during the
     // thin-agents refactor, then moved to the just-in-time
-    // reviewing-documentation skill (preloaded by technical-writer).
-    const reviewingDocumentation = readOrEmpty(skillPath("reviewing-documentation"));
-    expect(reviewingDocumentation).toContain("REQUIRED");
-    expect(reviewingDocumentation).toContain("RECOMMENDED");
-    expect(reviewingDocumentation).toContain("Documentation-Gap Review Process");
+    // reviewing-documentation skill (preloaded by technical-writer), then
+    // into a reference owned by code-review.
+    const documentationBrief = readOrEmpty(join(REPO_ROOT, "skills", "code-review", "references", "documentation-reviewer.md"));
+    expect(documentationBrief).toContain("REQUIRED");
+    expect(documentationBrief).toContain("RECOMMENDED");
+    expect(documentationBrief).toContain("Documentation-Gap Review Process");
     expect(readOrEmpty(skillPath("writing-prose"))).toContain(
-      "reviewing-documentation/SKILL.md",
+      "code-review/references/documentation-reviewer.md",
     );
   });
 
@@ -426,7 +413,7 @@ describe("thin agents: eval diff-selection keeps firing on the new skills", () =
     "team-structure-seeded-design": ["skills/team/references/dependencies.md", "skills/team/playbooks/structure.md", "skills/team/references/structure-template.md"],
     "team-plan-seeded-structure": ["skills/team/references/dependencies.md", "skills/team/playbooks/plan.md"],
     "team-fix-test-first-ordering": ["skills/team-fix/references/diagnosis.md"],
-    "eng-design-doc-review-planted-missing-alternatives": ["skills/team/references/design-template.md", "skills/team/references/decisions.md", "skills/reviewing-designs/**"],
+    "eng-design-doc-review-planted-missing-alternatives": ["skills/team/references/design-template.md", "skills/team/references/decisions.md", "skills/eng-design-doc-review/references/design-reviewer.md"],
   };
 
   const FIXTURE_INPUTS: Record<string, string> = {
@@ -441,12 +428,12 @@ describe("thin agents: eval diff-selection keeps firing on the new skills", () =
 
   // Locks the expectation the binder below consumes. The binder only checks the
   // globs it is handed against the selection map (tests/helpers/touchfiles.ts),
-  // so deleting the reviewing-designs glob from TOUCHFILE_ADDITIONS would
+  // so deleting the design-reviewer brief path from TOUCHFILE_ADDITIONS would
   // silence the binder instead of failing it. This assertion makes that
   // deletion red here.
-  test("TOUCHFILE_ADDITIONS declares the reviewing-designs glob", () => {
+  test("TOUCHFILE_ADDITIONS declares the design-reviewer brief path", () => {
     expect(TOUCHFILE_ADDITIONS["eng-design-doc-review-planted-missing-alternatives"]).toContain(
-      "skills/reviewing-designs/**",
+      "skills/eng-design-doc-review/references/design-reviewer.md",
     );
   });
 

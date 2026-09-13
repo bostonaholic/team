@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Consolidate reviewer briefs and finding contracts into per-entry-point references, preserving reviewer read-only independence, fresh-context inputs, verdict formats, and aggregation semantics.
+
 ## [0.104.4] - 2026-09-12
 
 ### Changed

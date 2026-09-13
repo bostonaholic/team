@@ -144,8 +144,8 @@ describe("engineering-standards methodology", () => {
     expect(loadsSkill(read(CODE_REVIEWER), "solid")).toBe(true);
   });
 
-  test("code-reviewer.md still references reviewing-code/SKILL.md", () => {
-    expect(read(CODE_REVIEWER)).toContain("reviewing-code/SKILL.md");
+  test("code-reviewer.md still references code-reviewer.md", () => {
+    expect(read(CODE_REVIEWER)).toContain("code-review/references/code-reviewer.md");
   });
 
   test("skill contains design-first workflow with all 5 steps", () => {
@@ -265,8 +265,8 @@ describe("system dependency checks (L2 content tripwire)", () => {
     expect(/complete answer/i.test(closer)).toBe(true);
   });
 
-  test("reviewing-code step 4 carries the System fit item", () => {
-    const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
+  test("code-reviewer brief step 4 carries the System fit item", () => {
+    const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md");
     const window = grepA4(read(CODE_REVIEW_SKILL), /\*\*System fit\*\*/);
     expect(window.length).toBeGreaterThan(0);
     expect(/sibling/i.test(window)).toBe(true);
@@ -583,17 +583,17 @@ describe("design-review gate replaces approval frontmatter (L2 tripwire)", () =>
 
 // ---------------------------------------------------------------------------
 // Flaky-test red flags — free L2 content tripwires (docs/testing.md §2).
-// The reviewing-code skill carries an always-blocking checklist for tests whose
+// The code-reviewer brief carries an always-blocking checklist for tests whose
 // outcome depends on a nondeterministic input (time, randomness, ordering,
-// network...). Two severity regimes coexist in the skill: style flags escalate
+// network...). Two severity regimes coexist in the brief: style flags escalate
 // suggestion→issue across multiple tests; flaky red flags are blocking on
-// FIRST occurrence. These tripwires pin that contract and the skill↔agent
+// FIRST occurrence. These tripwires pin that contract and the brief↔agent
 // mirror agreement (design decision 8,
 // docs/plans/2026-07-15-flaky-test-red-flags/6-design.md).
 // ---------------------------------------------------------------------------
 
-describe("reviewing-code flaky-test red flags (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
+describe("code-reviewer brief flaky-test red flags (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
 
   // Text between two markers; "" when either marker is missing. Callers guard
@@ -607,7 +607,7 @@ describe("reviewing-code flaky-test red flags (L2 content tripwire)", () => {
     return text.slice(start, end);
   }
 
-  test("reviewing-code skill keeps the always-blocking flaky-test severity rule keyed to outcome-dependence", () => {
+  test("code-reviewer brief keeps the always-blocking flaky-test severity rule keyed to outcome-dependence", () => {
     const text = read(SKILL_FILE);
     expect(text).toContain("**Flaky-test red flags (always blocking).**");
     // Scope severity assertions to the checklist region so the `issue
@@ -625,7 +625,7 @@ describe("reviewing-code flaky-test red flags (L2 content tripwire)", () => {
     expect(flaky).toContain("team/references/testing.md");
   });
 
-  test("the flaky red-flag catalog lives in the testing reference only, not duplicated in reviewing-code", () => {
+  test("the flaky red-flag catalog lives in the testing reference only, not duplicated in the brief", () => {
     const TESTING = join(REPO_ROOT, "skills", "team", "references", "testing.md");
     const codeReview = read(SKILL_FILE);
     const styleFlags = between(codeReview, "Test-quality flags.", "Flaky-test red flags");
@@ -636,7 +636,7 @@ describe("reviewing-code flaky-test red flags (L2 content tripwire)", () => {
     expect(flaky.length).toBeGreaterThan(0);
     // The six-flag style list never carries sleep() (design decision 3)...
     expect(styleFlags).not.toContain("sleep()");
-    // ...and the catalog bullets no longer live in reviewing-code at all.
+    // ...and the catalog bullets no longer live in the brief at all.
     expect(flaky).not.toContain("sleep()");
     // The single catalog copy sits in the testing reference's reviewer checklist.
     const testing = read(TESTING);
@@ -645,16 +645,16 @@ describe("reviewing-code flaky-test red flags (L2 content tripwire)", () => {
     expect(testing.slice(checklistStart)).toContain("sleep()");
   });
 
-  test("code-reviewer defers the first-occurrence always-blocking rule to the skill", () => {
+  test("code-reviewer defers the first-occurrence always-blocking rule to the brief", () => {
     // The wrapper no longer mirrors the checklist body (thin-agents
     // refactor); it keeps the first-occurrence rule wording and the pointer
-    // to the canonical skill. Plain wording only — the decorated
+    // to the canonical brief. Plain wording only — the decorated
     // `issue (blocking)` literal stays forbidden in the agent by
     // tests/architecture.test.ts.
     const text = read(CODE_REVIEWER);
     expect(/first\*{0,2} occurrence/i.test(text)).toBe(true);
     expect(/blocking/i.test(text)).toBe(true);
-    expect(text).toContain("skills/reviewing-code/SKILL.md");
+    expect(text).toContain("code-review/references/code-reviewer.md");
   });
 });
 
@@ -668,7 +668,7 @@ describe("reviewing-code flaky-test red flags (L2 content tripwire)", () => {
 // ---------------------------------------------------------------------------
 
 describe("time-bomb example pair (single copy in the testing reference)", () => {
-  const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
+  const CODE_REVIEW_BRIEF = join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md");
   const IMPLEMENT_PLAYBOOK = join(REPO_ROOT, "skills", "team", "playbooks", "implement.md");
   const TESTING_REFERENCE = join(REPO_ROOT, "skills", "team", "references", "testing.md");
 
@@ -683,12 +683,12 @@ describe("time-bomb example pair (single copy in the testing reference)", () => 
 
   test("exactly one bad/good pair exists, in the testing reference", () => {
     expect(timeBombFences(read(TESTING_REFERENCE)).length).toBe(2);
-    expect(timeBombFences(read(CODE_REVIEW_SKILL)).length).toBe(0);
+    expect(timeBombFences(read(CODE_REVIEW_BRIEF)).length).toBe(0);
     expect(timeBombFences(read(IMPLEMENT_PLAYBOOK)).length).toBe(0);
   });
 
   test("the former hosts point at the testing reference instead of carrying copies", () => {
-    expect(read(CODE_REVIEW_SKILL)).toContain("team/references/testing.md");
+    expect(read(CODE_REVIEW_BRIEF)).toContain("team/references/testing.md");
     expect(read(IMPLEMENT_PLAYBOOK)).toContain("references/testing.md");
   });
 });
@@ -726,9 +726,9 @@ describe("code-comment rules (L2 content tripwire)", () => {
     // signature does not carry, so it satisfies the rule.
     expect(/doc comments/i.test(section)).toBe(true);
     expect(/exported\/public/i.test(section)).toBe(true);
-    // Scope pointer: in-source comments here; review findings belong to
-    // conventional-comments. A cross-reference, so a rename fails the build.
-    expect(section).toContain("skills/conventional-comments/SKILL.md");
+    // Scope pointer: in-source comments here; review findings belong to the
+    // finding format. A cross-reference, so a rename fails the build.
+    expect(section).toContain("skills/code-review/references/findings.md");
     // Whether the expanded rule set actually changes what a reviewer flags
     // is behavior, not wording — it lives in the planted-comment-*
     // code-reviewer evals, per docs/testing.md ("behavior that only prose
@@ -747,20 +747,20 @@ describe("code-comment rules (L2 content tripwire)", () => {
 
 // ---------------------------------------------------------------------------
 // Comment red flags — free L2 content tripwires (docs/testing.md §2). The
-// reviewing-code skill owns the split severity regime for comment violations:
+// code-reviewer brief owns the split severity regime for comment violations:
 // ticket/issue IDs and plan/slice/phase markers in comments are mechanical,
 // judgment-free, and rot — blocking on FIRST occurrence (flaky-test
 // precedent); what-restating, wordiness, and commented-out code follow the
 // existing style-escalation regime. The code-reviewer agent mirrors the
-// check and defers severity definitions to the skill; pins on both sides
+// check and defers severity definitions to the brief; pins on both sides
 // mean a one-sided edit fails CI.
 // ---------------------------------------------------------------------------
 
 describe("comment red flags (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
+  const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
 
-  test("reviewing-code skill defines the Comment red flags split regime", () => {
+  test("code-reviewer brief defines the Comment red flags split regime", () => {
     const flags = sliceBetween(read(SKILL_FILE), "Comment red flags", "### UX Reviewer");
     expect(flags.length).toBeGreaterThan(0);
     // Mechanical references block on first occurrence; tolerate bold
@@ -794,17 +794,17 @@ describe("comment red flags (L2 content tripwire)", () => {
     // planted-comment-violations pins the blocking label onto b1.
   });
 
-  test("code-reviewer defers the comment-discipline check to the skill", () => {
+  test("code-reviewer defers the comment-discipline check to the brief", () => {
     // The wrapper no longer mirrors the split regime (thin-agents
     // refactor); it keeps a one-line pointer that cites the checklist item
-    // and names the canonical skills. The phrase-level regime assertions
-    // live against the skill windows above.
+    // and names the canonical rules. The phrase-level regime assertions
+    // live against the brief windows above.
     const directive = grepA4(read(CODE_REVIEWER), /Comment red flags|Comment Discipline/);
     expect(directive.length).toBeGreaterThan(0);
     // Citation contract: findings name the checklist item.
     expect(directive).toContain("Comment Discipline");
-    // The pointer defers to skill-canonical definitions.
-    expect(/skills\/code-review\/SKILL\.md|engineering-standards/.test(directive)).toBe(true);
+    // The pointer defers to canonical definitions.
+    expect(/code-review\/references\/code-reviewer\.md|engineering-standards/.test(directive)).toBe(true);
   });
 });
 
@@ -846,8 +846,8 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
 // rounds each found one more asymmetry, one instance at a time.
 describe("cross-surface parity is checked (L2 tripwire)", () => {
   const AUTHORING = read(join(REPO_ROOT, "skills", "team", "references", "design-template.md"));
-  const REVIEW = read(join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md"));
-  const CODE_REVIEW = read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"));
+  const REVIEW = read(join(REPO_ROOT, "skills", "eng-design-doc-review", "references", "design-reviewer.md"));
+  const CODE_REVIEW = read(join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md"));
 
   test("the design template asks for a surfaces section", () => {
     // Guard: a missing file must fail, not vacuously pass the checks below.
@@ -872,7 +872,7 @@ describe("cross-surface parity is checked (L2 tripwire)", () => {
     expect(new Set(numbers).size).toBe(numbers.length);
   });
 
-  test("reviewing-code applies the same check to a diff", () => {
+  test("code-reviewer brief applies the same check to a diff", () => {
     expect(CODE_REVIEW.length).toBeGreaterThan(0);
     expect(/reaches every surface/i.test(squash(CODE_REVIEW))).toBe(true);
   });
@@ -909,9 +909,9 @@ describe("slicing asks whether a slice deserves its own PR (L2 tripwire)", () =>
 // ---------------------------------------------------------------------------
 describe("code-review report format (L2 content tripwire)", () => {
   // Two files, because the report template and the direct-invocation relay
-  // that binds to it now live on opposite sides of the front-door/methodology
+  // that binds to it now live on opposite sides of the front-door/brief
   // split.
-  const SKILL_FILE = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
+  const SKILL_FILE = join(REPO_ROOT, "skills", "code-review", "references", "code-reviewer.md");
   const FRONT_DOOR = join(REPO_ROOT, "skills", "code-review", "SKILL.md");
   const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
   const CROSS_MODEL = join(REPO_ROOT, "skills", "cross-model-review", "SKILL.md");
@@ -1022,7 +1022,7 @@ describe("code-review report format (L2 content tripwire)", () => {
     expect(text).toContain("### Cross-model disposition");
     // The position is the report template's to state; this skill points at it
     // rather than describing a placement of its own.
-    expect(text).toContain("skills/reviewing-code/SKILL.md");
+    expect(text).toContain("skills/code-review/references/code-reviewer.md");
     expect(text).toContain("Report Format");
   });
 
@@ -1067,7 +1067,7 @@ describe("code-review report format (L2 content tripwire)", () => {
   });
 
   test("the front door defers the template instead of restating it", () => {
-    // Single-source-of-truth sweep. The template lives in `reviewing-code`.
+    // Single-source-of-truth sweep. The template lives in `code-reviewer.md`.
     // A copy on the front door is a second place the shape can drift, and the
     // front door is deliberately thin: it binds to the section by name (the
     // tests above) and names no heading of its own.
@@ -1082,10 +1082,10 @@ describe("code-review report format (L2 content tripwire)", () => {
     expect(`${text}\n${REPORT_SECTIONS[1]}\n`).toContain(REPORT_SECTIONS[1] as string);
   });
 
-  test("code-reviewer defers its report structure to the skill's report format", () => {
+  test("code-reviewer defers its report structure to the brief's report format", () => {
     const text = read(CODE_REVIEWER);
     expect(text).toContain("Report Format");
-    expect(text).toContain("skills/reviewing-code/SKILL.md");
+    expect(text).toContain("code-review/references/code-reviewer.md");
   });
 });
 
@@ -1093,7 +1093,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-human-owns-the-ends",
     "skills/team/principles/human-control.md",
-    "skills/review-severity-tiers/SKILL.md"
+    "skills/code-review/references/findings.md"
   ],
   [
     "principle-explicit-intent",
@@ -1148,12 +1148,12 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-skip-loudly",
     "skills/team/principles/verified-results.md",
-    "skills/reviewing-code/SKILL.md"
+    "skills/code-review/references/code-reviewer.md"
   ],
   [
     "principle-generator-evaluator",
     "skills/team/principles/independent-review.md",
-    "skills/reviewing-code/SKILL.md"
+    "skills/code-review/references/code-reviewer.md"
   ],
   [
     "principle-blind-the-investigator",

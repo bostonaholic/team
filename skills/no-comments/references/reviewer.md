@@ -1,10 +1,4 @@
----
-name: reviewing-comments
-description: 'Defines fresh-context source-comment review and findings. Load when auditing comments for removal or enforceable constraint encoding.'
-user-invocable: false
----
-
-# Reviewing Comments
+# Comment Reviewer Brief
 
 Judge comments independently. Report findings; never edit the files under
 review. The invoking producer owns every accepted change.

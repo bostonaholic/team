@@ -70,11 +70,11 @@ Before returning text, fix every:
 7. disallowed conditional mood;
 8. closer with no measurable fact.
 
-Do not self-lint style-guide counter-examples. Review disagreements use `conventional-comments`.
+Do not self-lint style-guide counter-examples. Review disagreements use the [finding format](../code-review/references/findings.md).
 
 ## Documentation review
 
 Assess accuracy, completeness, and readability. Verify commands, APIs, flags, versions,
 failure cases, prerequisites, and links. A reader must locate a specific answer within 30 seconds.
 For documentation-gap review and `REQUIRED`/`RECOMMENDED` classification, read
-`skills/reviewing-documentation/SKILL.md`.
+`skills/code-review/references/documentation-reviewer.md`.

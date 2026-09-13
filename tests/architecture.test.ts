@@ -32,20 +32,20 @@ describe("skill architecture", () => {
   const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
   const ARCHITECTURE_MD = join(REPO_ROOT, "docs", "architecture.md");
 
-  test("code-reviewer references reviewing-code/SKILL.md", () => {
-    expect(read(CODE_REVIEWER)).toContain("reviewing-code/SKILL.md");
+  test("code-reviewer references the code reviewer brief", () => {
+    expect(read(CODE_REVIEWER)).toContain("code-review/references/code-reviewer.md");
   });
 
-  test("security-reviewer references reviewing-code/SKILL.md", () => {
-    expect(read(SECURITY_REVIEWER)).toContain("reviewing-code/SKILL.md");
+  test("security-reviewer references the code reviewer brief", () => {
+    expect(read(SECURITY_REVIEWER)).toContain("code-review/references/code-reviewer.md");
   });
 
-  test("ux-reviewer references reviewing-code/SKILL.md", () => {
-    expect(read(UX_REVIEWER)).toContain("reviewing-code/SKILL.md");
+  test("ux-reviewer references the code reviewer brief", () => {
+    expect(read(UX_REVIEWER)).toContain("code-review/references/code-reviewer.md");
   });
 
-  test("technical-writer references reviewing-code/SKILL.md", () => {
-    expect(read(TECHNICAL_WRITER)).toContain("reviewing-code/SKILL.md");
+  test("technical-writer references the code reviewer brief", () => {
+    expect(read(TECHNICAL_WRITER)).toContain("code-review/references/code-reviewer.md");
   });
 
   test("inline Conventional Comments format definition removed from code-reviewer.md", () => {
@@ -54,11 +54,11 @@ describe("skill architecture", () => {
     expect(count).toBe(0);
   });
 
-  test("verifier references neither the review front door nor its methodology", () => {
+  test("verifier references neither the review front door nor its brief", () => {
     // Both paths, because the checks runner must stay clear of the review
-    // methodology wherever it lives and must not dispatch a reviewer either.
+    // brief wherever it lives and must not dispatch a reviewer either.
     expect(read(VERIFIER)).not.toContain("code-review/SKILL.md");
-    expect(read(VERIFIER)).not.toContain("reviewing-code/SKILL.md");
+    expect(read(VERIFIER)).not.toContain("code-reviewer.md");
   });
 
   test("extraction threshold documented in docs/architecture.md", () => {

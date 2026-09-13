@@ -1,13 +1,8 @@
----
-name: reviewing-documentation
-description: 'Defines documentation-gap review and REQUIRED/RECOMMENDED findings. Load when assessing whether a diff needs user-facing docs.'
-user-invocable: false
----
+# Documentation Reviewer Brief
 
-# Reviewing Documentation
-
-Apply `skills/writing-prose/SKILL.md`, compare the diff with existing docs, and
-classify each gap.
+The gate is ADVISORY: findings are recorded, never block. Format findings per
+[finding format](findings.md) and apply the prose principles below. Compare the
+diff with existing docs and classify each gap.
 
 ## Applying Prose Principles to Reviews
 

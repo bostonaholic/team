@@ -1,4 +1,0 @@
-interface:
-  display_name: "Reviewing Comments"
-  short_description: "Review source comments with fresh context"
-  default_prompt: "Use $reviewing-comments to review source comments with fresh context."

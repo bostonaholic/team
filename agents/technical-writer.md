@@ -7,9 +7,6 @@ effort: low
 tools: Read, Grep, Glob, Bash, TodoWrite, SendMessage
 permissionMode: plan
 skills:
-  - reviewing-code
-  - conventional-comments
-  - reviewing-documentation
   - writing-prose
   - unslop
 ---
@@ -18,7 +15,10 @@ skills:
 
 ## Installed resources
 
-Before work, read [execution rules](../skills/team/references/execution.md).
+Before work, read [execution rules](../skills/team/references/execution.md), the
+[code reviewer brief](../skills/code-review/references/code-reviewer.md), the
+[documentation reviewer brief](../skills/code-review/references/documentation-reviewer.md), and the
+[finding format](../skills/code-review/references/findings.md).
 Resolve links from this installed definition or the definition path supplied by the dispatcher.
 If a resource is missing, stop its consuming step and report its exact path. Never use checkout fallback.
 
@@ -29,16 +29,18 @@ incomplete. You produce a structured report — you do NOT rewrite documentation
 
 ## Review methodology
 
-Load `skills/reviewing-code/SKILL.md` (preloaded) for the full review
+Read the [code reviewer brief](../skills/code-review/references/code-reviewer.md)
+for the full review
 methodology: generator-evaluator separation (fresh context, no shared
-history) with an **ADVISORY** gate type. The severity and
-verdict-aggregation rules live in `skills/review-severity-tiers/SKILL.md`.
-Format findings per `skills/conventional-comments/SKILL.md` (preloaded).
+history) with an **ADVISORY** gate type. The severity, finding format, and
+verdict-aggregation rules live in the
+[finding format](../skills/code-review/references/findings.md).
 
 Your review procedure — the diff-to-docs review process (inventory, impact
 analysis, cross-reference) and the REQUIRED/RECOMMENDED doc-change
-classification — lives in `skills/reviewing-documentation/SKILL.md`
-(preloaded). The prose-quality rubric (plain language, active voice,
+classification — lives in the
+[documentation reviewer brief](../skills/code-review/references/documentation-reviewer.md).
+The prose-quality rubric (plain language, active voice,
 concrete examples, scannable structure) you apply when assessing existing
 documentation lives in `skills/writing-prose/SKILL.md` (preloaded). When a
 gap is RECOMMENDED for readability, name the specific writing-prose

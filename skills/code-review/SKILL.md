@@ -16,15 +16,15 @@ ask the user to restate it.
 
 ## When Invoked Directly
 
-The main session holds the conversation history `reviewing-code` forbids, so
+The main session holds the conversation history `code-reviewer.md` forbids, so
 it is not a valid reviewer. Do not review inline. Run these in order:
 
-1. **Load the format.** Call the Skill tool with `reviewing-code` and read
+1. **Load the format.** Read [code reviewer brief](references/code-reviewer.md) and
    its `## Report Format`. Order matters: a relay cannot hold a shape it has
    not read, and loading it after the dispatch is the defect this sequence
    fixes.
-2. **Dispatch.** Dispatch the `code-reviewer` agent, which preloads
-   `reviewing-code`, against the resolved target. Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md).
+2. **Dispatch.** Dispatch the `code-reviewer` agent, which reads
+   `code-reviewer.md`, against the resolved target. Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md).
    Supply its installed root, definition, and applicable resource paths for named and body-loaded calls, including the fallback below.
    When the named agent is unavailable,
    dispatch the built-in read-only `Explore` subagent and write the same
