@@ -2,6 +2,14 @@
 agent: eng-design-doc-review
 tier: periodic
 deps:
+  - skills/reviewing-designs/SKILL.md
+  - skills/reviewing-designs/references/review-brief.md
+  - skills/technical-design-doc/SKILL.md
+  - skills/documenting-decisions/SKILL.md
+  - skills/conventional-comments/SKILL.md
+  - skills/reviewing-code/SKILL.md
+  - skills/engineering-standards/SKILL.md
+  - skills/team/references/artifacts.md
   - skills/eng-design-doc-review/**
   - skills/reviewing-designs/**
   - skills/technical-design-doc/**

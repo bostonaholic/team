@@ -7,6 +7,24 @@ definition through the host's subagent facility. Read this reference before the
 first dispatch of a run.
 
 Dispatch needs only that the host can read a file and spawn a subagent.
+Before every named or body-loaded dispatch, resolve the installed plugin root
+and `agents/<name>.md`. Claude uses `${CLAUDE_PLUGIN_ROOT}`. Codex and
+Antigravity derive the root from the loaded skill's absolute path. OpenCode
+uses its canonical realpath base. Never resolve from the consumer checkout.
+
+Read the definition and resolve its applicable resource links before work.
+Pass the absolute root, definition path, resource paths, and predecessor paths
+in both dispatch forms. The receiver reads those resources before acting.
+Resolve skill links from the loaded `SKILL.md` directory and agent links from
+the installed definition's directory. A resource's explicitly local template
+link resolves beside that resource. Read conditional templates only when needed.
+Keep remaining skill preloads. Do not crawl links or preload the resource tree.
+If any required read fails, stop its consuming step and report the resolved path.
+Never substitute a source-checkout file for a missing installed resource.
+
+Standalone agents use their own installed definition path and the same reads.
+If the host does not expose that path, its dispatcher must supply it before work.
+
 Resolve every dispatch in this order:
 
 1. **Named agent.** If the host resolves Team agents by name (Claude Code

@@ -1,3 +1,6 @@
+Before this operation, read [external-data rules](../team/references/external-data.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 ## Input and result
 
 ### Resolve the PR once
@@ -142,7 +145,7 @@ Ask only when the basename is empty after normalization.
 
 Write the file with `jq`, never by pasting the paths into a JSON string: a path
 is caller text, and a quote or a backslash in one rewrites the document rather
-than filling a slot in it (`principle-never-interpolate`). This is the whole
+than filling a slot in it ([external-data rules](../team/references/external-data.md)). This is the whole
 step, and its captions are the basename defaults the example above carries —
 each entry's caption is that entry's own path, basename-only and
 extension-stripped, and nothing else:

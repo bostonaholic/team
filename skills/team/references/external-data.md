@@ -1,9 +1,3 @@
----
-name: principle-never-interpolate
-description: 'Keeps external text out of shell syntax. Apply when untrusted values approach a command or script.'
-user-invocable: false
----
-
 # Never Interpolate
 
 Never place untrusted prose in shell command text; pass it by file (`--body-file`, `-F body=@-`), stdin, or environment into an unchanged declared command.

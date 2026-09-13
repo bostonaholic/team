@@ -24,6 +24,11 @@ Only `supported` with exit `0` permits nesting for the turn. Any non-zero, older
 
 ## Dispatch invariants
 
+For Team helpers, read [host dispatch](../team/references/15-host-dispatch.md) before named or body-loaded dispatch.
+Supply the installed root, definition, and applicable resource paths in every initial and follow-up prompt.
+These paths are operational context. Research task-derived inputs stay restricted to neutral questions and repository context.
+Keep the helper restrictions and inline fallback below.
+
 Before dispatching a non-vendor helper, the parent resolves and Reads these
 four installed, read-only files. Pass the resolved absolute paths in every
 initial or follow-up prompt:

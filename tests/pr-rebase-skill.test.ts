@@ -232,7 +232,7 @@ describe("pr-rebase skill: the baseline gate", () => {
     const t = body();
     expect(t).toContain("docs/plans/");
     expect(t).toContain("rebase-<n>.md");
-    expect(t).toContain("skills/artifact-frontmatter/SKILL.md");
+    expect(t).toContain("team/references/artifacts.md");
   });
 });
 

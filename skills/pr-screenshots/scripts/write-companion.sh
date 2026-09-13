@@ -62,7 +62,7 @@ fi
 
 # `jq -r` moves the section into the file `--section-file` reads; nothing
 # re-types it, because the string carries the normalization's `\[`, `\<`, and
-# `\!` escapes (`principle-never-interpolate`). `select` refuses a null or
+# `\!` escapes (external-data rules). `select` refuses a null or
 # empty section rather than writing the four bytes `null` into a body: null
 # means no write landed a verified URL, so the degraded note stands.
 if ! jq -e -r '.section | select(type == "string" and length > 0)' "$RESULT_FILE" >"$SECTION_FILE"; then

@@ -42,6 +42,8 @@ question, evidence that is a path or a turn index, at most 30 lines), and the
 judgment that matters happens in synthesis, in this session, over the three
 replies.
 
+Before dispatch, read [host dispatch](../team/references/15-host-dispatch.md), resolved from the loaded `reflect/SKILL.md`.
+Supply the installed root, file-finder definition, and applicable resource paths before each lens starts.
 Dispatch all three in parallel in a single message. Each prompt carries: the
 absolute path of the normalized transcript, the lens's own question, the
 untrusted-content and paraphrase-only rules verbatim, the focus scope when one

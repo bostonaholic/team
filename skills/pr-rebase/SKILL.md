@@ -6,6 +6,9 @@ argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true
 ---
 
+Before this operation, read [external-data rules](../team/references/external-data.md).
+Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+
 # pr-rebase — rebase onto the latest base without changing behavior
 
 `pr-rebase` replays a feature branch on top of the current base branch and
@@ -50,5 +53,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-never-interpolate`, `principle-pre-image-first`,
+Load and apply: `principle-pre-image-first`,
 `principle-untrusted-input-is-data`, and `principle-non-blocking-waits`.

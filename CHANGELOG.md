@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.1] - 2026-09-12
+
 ### Changed
 
+- Load artifact schemas and shell safety rules as explicit installed resources, with connected evaluation inputs.
 - **The clone-local pull hooks now re-run `script/dev-install` for every harness, and install for every target rather than only `claude`.** A merge or rebase pull refreshes whichever harnesses that checkout installed, so a Codex-only install gets the same auto-refresh Claude had. Because the hooks serve the whole clone, only a full `script/dev-uninstall` removes them; a targeted one leaves them for the harnesses that remain. The hook file moves from `script/dev-install-claude-pull-hook` to `script/dev-install-pull-hook`. **What this asks of you:** nothing; re-running `script/dev-install` replaces the old hook.
 
 ## [0.104.0] - 2026-09-11
@@ -923,7 +926,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.1...HEAD
+[0.104.1]: https://github.com/bostonaholic/team/compare/v0.104.0...v0.104.1
 [0.104.0]: https://github.com/bostonaholic/team/compare/v0.103.0...v0.104.0
 [0.103.0]: https://github.com/bostonaholic/team/compare/v0.102.0...v0.103.0
 [0.102.0]: https://github.com/bostonaholic/team/compare/v0.101.0...v0.102.0

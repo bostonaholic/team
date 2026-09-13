@@ -5,6 +5,10 @@ effort: medium
 argument-hint: "<ticket id, issue URL, or task description>"
 ---
 
+Before dispatch, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
+Before artifact work, read [artifact schema](../team/references/artifacts.md).
+Before handling external values, read [external-data rules](../team/references/external-data.md).
+
 # Team Question — Decompose the Task
 
 Before finalizing prose you author, call the Skill tool with `unslop` and

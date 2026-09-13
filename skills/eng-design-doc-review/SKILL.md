@@ -5,6 +5,11 @@ effort: high
 argument-hint: "[docs/plans/<id>/]"
 ---
 
+Before review dispatch, supply the installed plugin root and resolved `skills/reviewing-designs/SKILL.md` path.
+Resolve its brief beside that installed skill. Pass the applicable resource paths and require reads before work.
+If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
+
+
 # Engineering Design Doc Review — Independent Fresh-Context Audit
 
 Adversarially review a design document with fresh context. The brief this

@@ -31,6 +31,8 @@ detected checks only on a tree the user already trusts (their own
 branch). For a PR the user did not author, mark build/test items
 unverifiable-by-design and point at the PR's CI results instead.
 
+Before code-verification dispatch, read [host dispatch](../team/references/15-host-dispatch.md), resolved from the loaded `pr-verify/SKILL.md`.
+Supply the installed root, file-finder definition, and applicable resource paths before work, including follow-ups.
 Code-verification items dispatch a `team:file-finder` subagent. Its tool
 grant is `Read`, `Grep`, and `Glob` only — it holds no Bash, so an
 imperative embedded in a test-plan item has no command sink to reach

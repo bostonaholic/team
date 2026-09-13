@@ -2,6 +2,8 @@
 agent: code-reviewer
 tier: periodic
 deps:
+  - skills/team/references/artifacts.md
+  - skills/team/references/external-data.md
   - agents/code-reviewer.md
   - skills/reviewing-code/SKILL.md
   - skills/conventional-comments/SKILL.md

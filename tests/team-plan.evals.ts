@@ -22,7 +22,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 import { EvalCollector, assertNoBudgetRegressions } from "./helpers/eval-store";
-import { loadFixture } from "./helpers/fixtures";
+import { loadFixture, loadInstructionContext } from "./helpers/fixtures";
 import { judgeQuality, outcomeJudge } from "./helpers/llm-judge";
 import { extractSeed } from "./helpers/seed";
 import { runAgentTest } from "./helpers/session-runner";
@@ -45,23 +45,30 @@ testIfSelected(
     const workDir = mkdtempSync(join(tmpdir(), "team-plan-e2e-"));
 
     try {
-      const seed = extractSeed(fixture.body, "7-structure.md");
-      expect(seed).not.toBeNull();
-      // Drift guard: the working-dir TOPIC_SLUG must match the seed's topic.
-      expect(seed).toContain(`topic: ${TOPIC_SLUG}`);
-      const seedPath = join(workDir, "docs", "plans", TOPIC_ID, "7-structure.md");
-      mkdirSync(dirname(seedPath), { recursive: true });
-      writeFileSync(seedPath, `${seed}\n`, "utf8");
+      for (const name of ["1-task.md", "5-research.md", "7-structure.md"]) {
+        const seed = extractSeed(fixture.body, name);
+        expect(seed).not.toBeNull();
+        expect(seed).toContain(`topic: ${TOPIC_SLUG}`);
+        const seedPath = join(workDir, "docs", "plans", TOPIC_ID, name);
+        mkdirSync(dirname(seedPath), { recursive: true });
+        writeFileSync(seedPath, `${seed}\n`, "utf8");
+      }
 
       const prompt =
         "You are running the PLAN phase against the seeded " +
         `docs/plans/${TOPIC_ID}/7-structure.md in your working directory. Read ` +
-        "it, expand each slice into file-level steps with acceptance tests, " +
+        "it, 1-task.md, and 5-research.md, expand each slice into file-level steps with acceptance tests, " +
         "and reuse the topic slug.\n\n" +
         fixture.body;
 
       const result = await runAgentTest({
         prompt,
+        systemPromptAppend: loadInstructionContext([
+          "skills/team/references/artifacts.md",
+          "skills/planning-implementation/SKILL.md",
+          "skills/engineering-standards/SKILL.md",
+          "skills/systems-thinking/SKILL.md",
+        ]),
         workingDirectory: workDir,
         maxTurns: 8,
         timeout: 180_000,

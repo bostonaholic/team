@@ -2,6 +2,12 @@
 agent: team-design
 tier: periodic
 deps:
+  - skills/team/references/artifacts.md
+  - skills/authoring-designs/SKILL.md
+  - skills/authoring-designs/references/design-template.md
+  - skills/decision-making/SKILL.md
+  - skills/systems-thinking/SKILL.md
+  - skills/team/references/external-data.md
   - skills/team-design/**
   - skills/authoring-designs/**
   - agents/design-author.md

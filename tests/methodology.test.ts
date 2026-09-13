@@ -1462,8 +1462,8 @@ describe("principle-files-are-the-contract (L2 content tripwire)", () => {
     expect(text).toContain("Pass a path, not a paraphrase");
   });
 
-  test("citation site: artifact-frontmatter cites the principle by name", () => {
-    expect(read(join(REPO_ROOT, "skills", "artifact-frontmatter", "SKILL.md"))).toContain("principle-files-are-the-contract");
+  test("citation site: artifact schema cites the principle by name", () => {
+    expect(read(join(REPO_ROOT, "skills", "team", "references", "artifacts.md"))).toContain("principle-files-are-the-contract");
   });
 });
 
@@ -1605,16 +1605,16 @@ describe("principle-mechanical-gates (L2 content tripwire)", () => {
   });
 });
 
-describe("principle-never-interpolate (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "principle-never-interpolate", "SKILL.md");
+describe("external-data rules (L2 content tripwire)", () => {
+  const SKILL_FILE = join(REPO_ROOT, "skills", "team", "references", "external-data.md");
 
-  test("skill file exists with name: principle-never-interpolate", () => {
+  test("external-data resource exists without skill registration", () => {
     expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*principle-never-interpolate\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+    expect(existsSync(join(REPO_ROOT, "skills", "principle-never-interpolate", "SKILL.md"))).toBe(false);
   });
 
-  test("frontmatter sets user-invocable: false (methodology convention)", () => {
-    expect(/^user-invocable:\s*false\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
+  test("ordinary resource has no skill frontmatter", () => {
+    expect(read(SKILL_FILE).startsWith("---\n")).toBe(false);
   });
 
   test("pins the shell contract (byte-exact allowlist, ${VAR:?} guarded expansion)", () => {
@@ -1625,7 +1625,7 @@ describe("principle-never-interpolate (L2 content tripwire)", () => {
   });
 
   test("citation site: groom-backlog cites the principle by name", () => {
-    expect(read(join(REPO_ROOT, "skills", "groom-backlog", "SKILL.md"))).toContain("principle-never-interpolate");
+    expect(read(join(REPO_ROOT, "skills", "groom-backlog", "SKILL.md"))).toContain("team/references/external-data.md");
   });
 });
 

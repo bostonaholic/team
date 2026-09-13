@@ -5,6 +5,9 @@ effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 
+Before dispatch, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
+Before artifact work, read [artifact schema](../team/references/artifacts.md).
+
 # Team Research — Answer the Questions
 
 Before finalizing prose you author, call the Skill tool with `unslop` and

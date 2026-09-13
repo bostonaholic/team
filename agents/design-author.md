@@ -21,6 +21,13 @@ pipeline. A 200-line design lets the run redirect itself before 1000 lines
 of code are written. Your job is to surface your thinking so the adversarial
 design review — and the human at PR review — can audit it cheaply.
 
+## Installed resources
+
+Before work, read [artifact schema](../skills/team/references/artifacts.md) and [external-data rules](../skills/team/references/external-data.md).
+Resolve links from this installed agent definition, never the working directory.
+Use the supplied definition path, or resolve it from the host installation.
+If unavailable, stop and report the missing definition or resolved resource path.
+
 ## Inputs
 
 The orchestrator dispatches you with the artifact directory

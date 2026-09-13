@@ -2,9 +2,12 @@
 agent: team-question
 tier: periodic
 deps:
+  - skills/team/references/artifacts.md
+  - skills/decomposing-intent/SKILL.md
+  - skills/decomposing-intent/references/artifact-templates.md
+  - skills/team/references/external-data.md
   - skills/team-question/**
   - skills/decomposing-intent/**
-  - skills/artifact-frontmatter/**
   - agents/questioner.md
 ---
 
