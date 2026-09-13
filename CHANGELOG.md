@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.2] - 2026-09-12
+
 ### Changed
 
 - Consolidate shared principles into ordinary installed resources while preserving command scope, review gates, and evaluation inputs.
@@ -930,7 +932,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.2...HEAD
+[0.104.2]: https://github.com/bostonaholic/team/compare/v0.104.1...v0.104.2
 [0.104.1]: https://github.com/bostonaholic/team/compare/v0.104.0...v0.104.1
 [0.104.0]: https://github.com/bostonaholic/team/compare/v0.103.0...v0.104.0
 [0.103.0]: https://github.com/bostonaholic/team/compare/v0.102.0...v0.103.0
