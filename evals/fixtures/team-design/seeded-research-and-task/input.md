@@ -6,13 +6,11 @@ deps:
   - skills/team/principles/focused-work.md
   - skills/team/references/decisions.md
   - skills/team/references/artifacts.md
-  - skills/authoring-designs/SKILL.md
-  - skills/authoring-designs/references/design-template.md
-  - skills/decision-making/SKILL.md
-  - skills/systems-thinking/SKILL.md
+  - skills/team/playbooks/design.md
+  - skills/team/references/design-template.md
+  - skills/team/references/dependencies.md
   - skills/team/references/external-data.md
   - skills/team-design/**
-  - skills/authoring-designs/**
   - agents/design-author.md
 ---
 

@@ -59,9 +59,9 @@ blocker handling, and the scope fence.
   `refactoring-to-patterns` and
   apply that methodology. Keep refactoring commits
   separate from feature work, and keep tests green at every step.
-- Call the Skill tool with `systems-thinking` and follow its
-  `## When Implementing` section: search for an existing implementation
-  first. Update every affected caller.
+- Apply [system dependency checks](../skills/team/references/dependencies.md)
+  and follow its `## When implementing` section: search for an existing
+  implementation first. Update every affected caller in the same slice.
 
 ## Read-only scouts for unfamiliar code (optional)
 

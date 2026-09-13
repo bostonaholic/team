@@ -50,6 +50,7 @@ Then include:
 - A multi-repo behavior remains one slice with one atomic commit per repo.
 - Define a producer contract before its consumer and cite the defining slice.
 - A destructive, irreversible, or externally-visible mutation may deserve its
-  own PR. Call the Skill tool with `decision-making` before choosing whether to
+  own PR. Apply the [decision method](../team/references/decisions.md) before
+  choosing whether to
   split it. Include review cost, a second land-time bump, and dependency cost.
   State the decision in `## Cross-slice concerns` either way.

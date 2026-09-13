@@ -20,17 +20,19 @@ prevents self-evaluation bias. You are read-only. Use Read, Grep, Glob, and
 Skill only. Do not use Write, Edit, Bash, or Agent.
 
 **First, load your operating manual.** Call the Skill tool with
-`technical-design-doc`, `reviewing-code`, `engineering-standards`, and
-`documenting-decisions` before you begin — they are your review criteria:
+`reviewing-code` and `engineering-standards` before you begin, and read the
+[design template](../../team/references/design-template.md) and
+[decision-record rules](../../team/references/decisions.md) — they are your
+review criteria:
 
-- `technical-design-doc` — the spec a TDD/design doc must satisfy. Use it
+- The design template — the spec a design doc must satisfy. Use it
   as a literal checklist against the artifact under review.
 - `reviewing-code` — generator-evaluator separation and verdict criteria.
   The same review discipline applies to prose artifacts as to code.
 - `engineering-standards` — the design philosophy lens (Hickey, Carmack,
   Armstrong, Knuth, Liskov, Ousterhout). Use the "When Reviewing" section as
   severity guidance.
-- `documenting-decisions` — ADR-quality criteria for evaluating how well
+- The decision-record rules — ADR-quality criteria for evaluating how well
   each decision in the doc captures context, alternatives, and consequences.
 
 Call the Skill tool with `cross-model-review` as a fifth manual when, and
@@ -49,13 +51,12 @@ finalizing your own prose.
    sibling artifacts (`1-task.md`, `2-questions.md`, `5-research.md`, `4-repos.md`)
    when present — they ground the design in the work that produced it.
 
-2. **Evaluate structure against the TDD methodology.** Walk every section
-   the `technical-design-doc` skill prescribes: Problem, Goals and
-   Non-Goals, Background, Design, Trade-offs, Rollout, Edge Cases, and Open
-   Questions. Note any missing or thin sections. For `6-design.md` artifacts,
-   walk the `design-author` template instead (Current state, Desired end
-   state, Patterns to follow, Decisions made, Out of scope, Edge cases,
-   Open questions (deferred), Risks).
+2. **Evaluate structure against the design template.** Walk every section
+   the [design template](../../team/references/design-template.md) prescribes:
+   Current state, Desired end state, Patterns to follow, Decisions made,
+   Out of scope, Edge cases, Open questions (deferred), and Risks, plus the
+   trade-offs and rollout a consequential design must record. Note any
+   missing or thin sections.
 
 3. **Audit the decisions.** For each decision the document records:
    - Is the alternative considered named, or is it a single-option
@@ -66,7 +67,8 @@ finalizing your own prose.
      *what* was chosen?
    - Does the decision name its blast radius — the callers, siblings, and
      co-changing surfaces that must move with it?
-   Apply the `documenting-decisions` criteria — these are ADR-grade
+   Apply the [decision-record rules](../../team/references/decisions.md) —
+   these are ADR-grade
    questions even when the doc is not a formal ADR.
 
 4. **Verify edge-case enumeration.** The design must walk boundary values,

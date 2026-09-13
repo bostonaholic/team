@@ -201,9 +201,9 @@ describe("why skill: consumer wiring", () => {
     expect(t).toContain("skills/why/SKILL.md");
   });
 
-  test("authoring-designs cites why as the rationale-constraint archaeology", () => {
+  test("design playbook cites why as the rationale-constraint archaeology", () => {
     const t = readOrEmpty(
-      join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md"),
+      join(REPO_ROOT, "skills", "team", "playbooks", "design.md"),
     );
     expect(t).toContain("skills/why/SKILL.md");
   });

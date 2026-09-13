@@ -109,6 +109,6 @@ and `team:file-finder` holds neither, and its preloaded
 researcher would restore by delegation the command sink the toolset guarantee
 above exists to starve.
 
-`agents/file-finder.md` grants no `Agent` tool and preloads only
-`skills/finding-files/SKILL.md`, so it has no delegation path to restore it
+`agents/file-finder.md` grants no `Agent` tool and preloads only the prose
+skills, so it has no delegation path to restore it
 through. That, and not the quality of the fit, is what picks the target.

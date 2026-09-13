@@ -25,15 +25,16 @@ consumes:
   only file `researcher` and `file-finder` ever read.
 - `3-prd.md` — written
   **only when the request is vague, multi-story, cross-cutting, or replaces existing behavior**
-  (criteria in `skills/product-requirements-doc/SKILL.md`, loaded
-  conditionally through `skills/decomposing-intent/SKILL.md`). Referenced
+  (criteria in the `## Conditional PRD` section of
+  `skills/team/playbooks/question.md`, with the template in
+  `skills/team/references/prd-template.md`). Referenced
   from `1-task.md`. read downstream by `design-author`.
 - `4-repos.md` — written **only when the topic spans more than one
   repository**. Lists each involved repo's slug, absolute path, and
   role. Its presence switches the rest of the pipeline into multi-repo
   mode (one worktree per repo, slice/step `[repo: <slug>]` annotations,
   one PR per repo). See `skills/qrspi-workflow/SKILL.md` for the schema
-  and `skills/decomposing-intent/SKILL.md` for the detection rules.
+  and `skills/team/references/multi-repo.md` for the detection rules.
 
 These files live in `docs/plans/<id>/` where `<id>` is either a
 ticket-derived slug (`ENG-1234-add-rate-limiting`) or a date-derived slug

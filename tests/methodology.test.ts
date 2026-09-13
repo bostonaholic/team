@@ -162,99 +162,48 @@ describe("engineering-standards methodology", () => {
 
 });
 
-describe("product-thinking methodology", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "product-thinking", "SKILL.md");
+describe("product-need lens (L2 content tripwire)", () => {
+  const QUESTION = join(REPO_ROOT, "skills", "team", "playbooks", "question.md");
+  const DESIGN = join(REPO_ROOT, "skills", "team", "playbooks", "design.md");
   const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
   const DESIGN_AUTHOR = join(REPO_ROOT, "agents", "design-author.md");
   const STRUCTURE_PLANNER = join(REPO_ROOT, "agents", "structure-planner.md");
 
-  test("skill file exists and first line is ---", () => {
-    expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(read(SKILL_FILE).split("\n")[0]).toBe("---");
-  });
-
-  test("frontmatter declares name: product-thinking", () => {
-    const head10 = read(SKILL_FILE).split("\n").slice(0, 10).join("\n");
-    expect(/^name: product-thinking$/m.test(head10)).toBe(true);
-  });
-
-  test("description names all three loaders (questioner, design-author, structure-planner)", () => {
-    const descBlock = read(SKILL_FILE)
-      .split("\n")
-      .slice(0, 10)
-      .filter((line) => /^description:/.test(line))
-      .join("\n");
-    for (const loader of ["questioner", "design-author", "structure-planner"]) {
-      expect(descBlock).toContain(loader);
-    }
-  });
-
-  test("frontmatter is exactly name + description (no argument-hint/model/tools/permissionMode)", () => {
-    const fm = frontmatter(read(SKILL_FILE));
-    expect(/^argument-hint:|^model:|^tools:|^permissionMode:/m.test(fm)).toBe(false);
-    expect(/^name:/m.test(fm)).toBe(true);
-    expect(/^description:/m.test(fm)).toBe(true);
-  });
-
-  test("the five H2 headings exist verbatim and in order", () => {
-    const expectedH2 = [
-      "## Core Lenses",
-      "## When Framing the Task",
-      "## When Designing",
-      "## When Slicing",
-      "## Lens, Not Dogma",
-    ].join("\n");
-    const actualH2 = (read(SKILL_FILE).match(/^## .*$/gm) ?? []).join("\n");
-    expect(actualH2).toBe(expectedH2);
-  });
-
-  test("H1 title is # Product Thinking", () => {
-    expect(/^# Product Thinking$/m.test(read(SKILL_FILE))).toBe(true);
-  });
-
-  test("all four named lenses are present", () => {
-    const text = read(SKILL_FILE);
-    expect(/Demand evidence/i.test(text)).toBe(true);
-    expect(/Smallest thing/i.test(text)).toBe(true);
-    expect(/someone specific/i.test(text)).toBe(true);
-    expect(/Talk-to-users|talk to users/i.test(text)).toBe(true);
-  });
-
-  test("## When Framing the Task carries the demand-signal / smallest-version framing questions", () => {
-    const text = read(SKILL_FILE);
+  test("question playbook carries the demand-signal / smallest-version framing lens", () => {
+    const text = read(QUESTION);
+    expect(text).toContain("## Product-need lens");
     expect(/specifically/i.test(text)).toBe(true);
     expect(/signal/i.test(text)).toBe(true);
     expect(/smallest version/i.test(text)).toBe(true);
+    // Goal isolation: the lens sharpens 1-task.md framing only.
+    expect(/2-questions\.md|never/i.test(text)).toBe(true);
   });
 
-  test("Lens, Not Dogma closer is present", () => {
-    expect(/^## Lens, Not Dogma$/m.test(read(SKILL_FILE))).toBe(true);
+  test("design playbook carries the product-need lens and adds no gate", () => {
+    const text = read(DESIGN);
+    expect(text).toContain("## Product-need lens");
+    expect(/thinnest design/i.test(text)).toBe(true);
+    expect(/no gate/i.test(text)).toBe(true);
   });
 
-  test("pure-lens shape — no ## Overview / ## Summary heading", () => {
-    expect(/^## (Overview|Summary)$/im.test(read(SKILL_FILE))).toBe(false);
+  test("structure-planner applies the product-need lens at slicing without preloading it", () => {
+    const b = body(read(STRUCTURE_PLANNER));
+    expect(/product-need lens/i.test(b)).toBe(true);
+    expect(/slice 1|smallest/i.test(b)).toBe(true);
+    expect(/no new gate|no gate|adds no/i.test(b)).toBe(true);
+    expect(loadsSkill(b, "product-thinking")).toBe(false);
   });
 
-  test("pure-lens shape — no checklist / gate / self-check heading", () => {
-    expect(/^## .*(Checklist|Gate|Self-check|Self check)/im.test(read(SKILL_FILE))).toBe(false);
-  });
-
-  test("questioner frontmatter has a skills: block listing product-thinking", () => {
-    const fm = frontmatter(read(QUESTIONER));
-    expect(/^skills:/m.test(fm)).toBe(true);
-    expect(/product-thinking|team:product-thinking/.test(fm)).toBe(true);
-  });
-
-  test("questioner body directive cites ## When Framing the Task", () => {
-    const b = body(read(QUESTIONER));
-    expect(b).toContain("## When Framing the Task");
-    expect(/product-thinking|product-need lens/i.test(b)).toBe(true);
-  });
-
-  test("questioner directive restates goal isolation and scopes to 1-task.md framing", () => {
-    const directive = grepA4(body(read(QUESTIONER)), /Apply the product-need lens|product-thinking/i);
-    expect(/2-questions\.md|never/i.test(directive)).toBe(true);
-    expect(/1-task\.md|framing/i.test(directive)).toBe(true);
+  test("questioner and design-author apply the lens from the playbook, not a preload", () => {
+    for (const agent of [QUESTIONER, DESIGN_AUTHOR]) {
+      const b = body(read(agent));
+      expect(/product-need lens/i.test(b)).toBe(true);
+      expect(loadsSkill(b, "product-thinking")).toBe(false);
+    }
+    for (const agent of ["questioner", "design-author", "structure-planner"]) {
+      const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+      expect(/product-thinking|team:product-thinking/.test(fm)).toBe(false);
+    }
   });
 
   test("questioner description frontmatter is unchanged", () => {
@@ -263,238 +212,88 @@ describe("product-thinking methodology", () => {
     expect(read(QUESTIONER)).toContain(expected);
   });
 
-  test("design-author frontmatter has a skills: block listing product-thinking", () => {
-    const fm = frontmatter(read(DESIGN_AUTHOR));
-    expect(/^skills:/m.test(fm)).toBe(true);
-    expect(/product-thinking|team:product-thinking/.test(fm)).toBe(true);
-  });
-
-  test("design-author body directive cites ## When Designing", () => {
-    const b = body(read(DESIGN_AUTHOR));
-    expect(b).toContain("## When Designing");
-    expect(/product-thinking|product-need lens/i.test(b)).toBe(true);
-  });
-
-  test("design-author directive states it adds no gate / no extra research", () => {
-    const directive = grepA4(body(read(DESIGN_AUTHOR)), /Apply the product-need lens|product-thinking/i);
-    expect(/no gate|adds no gate|no extra research|requires no/i.test(directive)).toBe(true);
-  });
-
   test("design-author description frontmatter matches the self-answering wording", () => {
-    // The open-questions-for-the-user and
-    // MUST-present-interactively clauses are gone — the design author
-    // resolves its own open questions and records each as an assumption.
     const expected =
       "description: Use after research is complete to draft the approach before any code is written. Drafts a ~200-line design document covering current state, desired end state, patterns to follow, and decisions made. Resolves its own open questions autonomously, recording each as an explicit, auditable assumption in the design.";
     expect(read(DESIGN_AUTHOR)).toContain(expected);
   });
 
-  test("structure-planner frontmatter has a skills: block listing product-thinking", () => {
-    const fm = frontmatter(read(STRUCTURE_PLANNER));
-    expect(/^skills:/m.test(fm)).toBe(true);
-    expect(/product-thinking|team:product-thinking/.test(fm)).toBe(true);
-  });
-
-  test("structure-planner body directive cites ## When Slicing", () => {
-    const b = body(read(STRUCTURE_PLANNER));
-    expect(b).toContain("## When Slicing");
-    expect(/product-thinking|product-need lens/i.test(b)).toBe(true);
-  });
-
-  test("structure-planner directive nudges slice-1-value / smallest scope and adds no gate", () => {
-    const directive = grepA4(body(read(STRUCTURE_PLANNER)), /Apply the product-need lens|product-thinking/i);
-    expect(/slice 1|smallest/i.test(directive)).toBe(true);
-    expect(/no new gate|no gate|adds no/i.test(directive)).toBe(true);
-  });
-
   test("structure-planner description frontmatter matches the design-review wording", () => {
-    // The design is gated by an adversarial
-    // design review, not human approval.
     const expected =
       "description: Use after the design review passes to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no approval gate.";
     expect(read(STRUCTURE_PLANNER)).toContain(expected);
   });
-
-  test("every ## When ... heading cited by the agents resolves to a real skill heading", () => {
-    const skillText = read(SKILL_FILE);
-    const agentTexts = [read(QUESTIONER), read(DESIGN_AUTHOR), read(STRUCTURE_PLANNER)];
-    for (const heading of ["## When Framing the Task", "## When Designing", "## When Slicing"]) {
-      const cited = agentTexts.some((t) => t.includes(heading));
-      expect(cited).toBe(true);
-      expect(skillText).toContain(heading);
-    }
-  });
 });
 
 // ---------------------------------------------------------------------------
-// systems-thinking lens — free L2 content tripwires (docs/testing.md §2).
-// The 49th methodology skill carries the system-fit reasoning lens once;
-// eight judgment surfaces cite it. Four cited heading names collide with
-// existing skills (## When Designing / ## When Slicing in product-thinking,
-// ## When Implementing / ## When Reviewing in engineering-standards), so
-// bare heading resolution would pass a broken citation. Every citation
-// tripwire thus asserts PATH-adjacency: the grepA4 window around each
-// `systems-thinking` mention must carry BOTH a reference to the skill — bare
-// name at a load site, path at a citation site — AND the cited ## When ...
-// heading, and the heading must resolve in the skill itself.
+// system dependency checks — free L2 content tripwires (docs/testing.md §2).
+// The co-changing-caller lens moved from systems-thinking into one shared
+// reference. Research and Design apply it in their playbooks; Structure, Plan,
+// Implement, and Review surfaces read the shared reference directly instead of
+// preloading a skill.
 // ---------------------------------------------------------------------------
 
-describe("systems-thinking lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "systems-thinking", "SKILL.md");
-  // Two reference forms, and which one a site uses is itself the contract
-  // (docs/architecture.md, "Methodology skills"). A site that must go load the
-  // skill names it bare, because that is the Skill tool's argument; a site
-  // whose frontmatter already preloaded it cites the path. Either form
-  // disambiguates the `## When ...` heading below, which is the point of the
-  // adjacency window: product-thinking carries a same-named heading.
-  const SKILL_PATH = "skills/systems-thinking/SKILL.md";
-  const SKILL_NAME = "`systems-thinking`";
+describe("system dependency checks (L2 content tripwire)", () => {
+  const DEPENDENCIES = join(REPO_ROOT, "skills", "team", "references", "dependencies.md");
 
-  // Missing-file reads return "" so pre-implementation checks fail as
-  // assertions (expected "" to contain ...), never as ENOENT crashes
-  // (pattern: tests/thin-agents.test.ts readOrEmpty).
   function readOrEmpty(path: string): string {
     return existsSync(path) ? read(path) : "";
   }
 
-  // The path-adjacency window: every line mentioning systems-thinking in an
-  // agent body (frontmatter stripped — the skills: preload line must not
-  // satisfy a body-citation check) plus the next 4 lines.
-  function citationWindow(agentFile: string): string {
-    return grepA4(body(readOrEmpty(agentFile)), /systems-thinking/);
-  }
+  test("the shared reference carries the four lenses, the six When sections, and Lens Not Dogma", () => {
+    const text = readOrEmpty(DEPENDENCIES);
+    expect(text.length).toBeGreaterThan(0);
+    const expectedH2 = [
+      "## Core lenses",
+      "## When researching",
+      "## When designing",
+      "## When slicing",
+      "## When planning",
+      "## When implementing",
+      "## When reviewing",
+      "## Lens, not dogma",
+    ].join("\n");
+    const actualH2 = (text.match(/^## .*$/gm) ?? []).join("\n");
+    expect(actualH2).toBe(expectedH2);
+    expect(text).toContain("**Blast radius over diff radius**");
+    expect(text).toContain("**Callers and siblings first**");
+    expect(text).toContain("**Conventions are contracts**");
+    expect(text).toContain("**Leave the system consistent**");
+    const closer = sectionFrom(text, "## Lens, not dogma");
+    expect(closer.length).toBeGreaterThan(0);
+    expect(/none found/i.test(closer)).toBe(true);
+    expect(/complete answer/i.test(closer)).toBe(true);
+  });
 
-  describe("slice 1: the lens exists and reviewers enforce System Fit", () => {
+  test("reviewing-code step 4 carries the System fit item", () => {
     const CODE_REVIEW_SKILL = join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md");
-    const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
-    const UX_REVIEWER = join(REPO_ROOT, "agents", "ux-reviewer.md");
-
-    test("systems-thinking skeleton carries the four lenses, the six When sections, and Lens Not Dogma", () => {
-      const text = readOrEmpty(SKILL_FILE);
-      expect(text.length).toBeGreaterThan(0);
-      // The eight H2 headings, verbatim and in order — the only H2s.
-      const expectedH2 = [
-        "## Core Lenses",
-        "## When Researching",
-        "## When Designing",
-        "## When Slicing",
-        "## When Planning",
-        "## When Implementing",
-        "## When Reviewing",
-        "## Lens, Not Dogma",
-      ].join("\n");
-      const actualH2 = (text.match(/^## .*$/gm) ?? []).join("\n");
-      expect(actualH2).toBe(expectedH2);
-      // The four named lenses, bold.
-      expect(text).toContain("**Blast radius over diff radius**");
-      expect(text).toContain("**Callers and siblings first**");
-      expect(text).toContain("**Conventions are contracts**");
-      expect(text).toContain("**Leave the system consistent**");
-      // Greenfield/single-file edge case: "none found" is a complete
-      // answer; manufactured findings are forbidden.
-      const closer = sectionFrom(text, "## Lens, Not Dogma");
-      expect(closer.length).toBeGreaterThan(0);
-      expect(/none found/i.test(closer)).toBe(true);
-      expect(/complete answer/i.test(closer)).toBe(true);
-    });
-
-    test("reviewing-code step 4 carries the System fit item", () => {
-      // The bold checklist item asks the three system-fit questions:
-      // sibling divergence, callers/consumers outside the diff, and the
-      // conventions established elsewhere.
-      const window = grepA4(read(CODE_REVIEW_SKILL), /\*\*System fit\*\*/);
-      expect(window.length).toBeGreaterThan(0);
-      expect(/sibling/i.test(window)).toBe(true);
-      expect(/caller|consumer/i.test(window)).toBe(true);
-      expect(/convention/i.test(window)).toBe(true);
-    });
-
-    test("code-reviewer and ux-reviewer directives load systems-thinking adjacent to their ## When Reviewing cite", () => {
-      const codeReviewerWindow = citationWindow(CODE_REVIEWER);
-      expect(codeReviewerWindow).toContain(SKILL_NAME);
-      expect(codeReviewerWindow).toContain("## When Reviewing");
-      // code-reviewer's bullet cites the checklist item by name.
-      expect(codeReviewerWindow).toContain("System Fit");
-      const uxReviewerWindow = citationWindow(UX_REVIEWER);
-      expect(uxReviewerWindow).toContain(SKILL_NAME);
-      expect(uxReviewerWindow).toContain("## When Reviewing");
-      // The cited heading resolves in the skill itself.
-      expect(readOrEmpty(SKILL_FILE)).toContain("## When Reviewing");
-    });
+    const window = grepA4(read(CODE_REVIEW_SKILL), /\*\*System fit\*\*/);
+    expect(window.length).toBeGreaterThan(0);
+    expect(/sibling/i.test(window)).toBe(true);
+    expect(/caller|consumer/i.test(window)).toBe(true);
+    expect(/convention/i.test(window)).toBe(true);
   });
 
-  describe("slice 2: designs name their blast radius and the gate audits it", () => {
-    const AUTHORING_DESIGNS = join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md");
-    const ENG_DESIGN_REVIEW = join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md");
-
-    test("authoring-designs rules bullet loads systems-thinking adjacent to its ## When Designing cite", () => {
-      // design-author.md already cites product-thinking's same-named
-      // ## When Designing — the skill name is what disambiguates.
-      const window = grepA4(read(AUTHORING_DESIGNS), /systems-thinking/);
-      expect(window).toContain(SKILL_NAME);
-      expect(window).toContain("## When Designing");
-      expect(readOrEmpty(SKILL_FILE)).toContain("## When Designing");
-    });
-
-    test("authoring-designs template requires adjacent components in Current state and co-changing surfaces in Decisions made", () => {
-      const text = read(AUTHORING_DESIGNS);
-      expect(/adjacent components/i.test(text)).toBe(true);
-      expect(/change together/i.test(text)).toBe(true);
-    });
-
-    test("the reviewing-designs brief's step 3 carries the blast-radius question", () => {
-      const step3 = sliceBetween(
-        read(ENG_DESIGN_REVIEW),
-        "**Audit the decisions.**",
-        "**Verify edge-case enumeration.**",
-      );
-      expect(step3.length).toBeGreaterThan(0);
-      expect(/blast radius/i.test(step3)).toBe(true);
-    });
+  test("the research and design playbooks apply the dependency checks", () => {
+    const research = read(join(REPO_ROOT, "skills", "team", "playbooks", "research.md"));
+    expect(research).toContain("## System dependency checks");
+    expect(research).toContain("dependencies.md");
+    const design = read(join(REPO_ROOT, "skills", "team", "playbooks", "design.md"));
+    expect(design).toContain("## System dependency checks");
+    expect(design).toContain("dependencies.md");
   });
 
-  describe("slice 3: implementer execution discipline", () => {
-    const IMPLEMENTER = join(REPO_ROOT, "agents", "implementer.md");
-
-    test("implementer directive loads systems-thinking adjacent to its ## When Implementing cite", () => {
-      const window = citationWindow(IMPLEMENTER);
-      expect(window).toContain(SKILL_NAME);
-      expect(window).toContain("## When Implementing");
-      expect(readOrEmpty(SKILL_FILE)).toContain("## When Implementing");
-    });
-
-    test("implementer directive requires searching for an existing implementation and updating affected callers", () => {
-      const window = citationWindow(IMPLEMENTER);
-      expect(/existing implementation/i.test(window)).toBe(true);
-      expect(/affected caller/i.test(window)).toBe(true);
-    });
-  });
-
-  describe("slice 4: upstream preloads — researcher, structure-planner, planner", () => {
-    // `reference` is the form each body uses. researcher and planner cite the
-    // path — their bodies read the preloaded skill and never call the tool.
-    // structure-planner loads on demand ("if it is not already in context"),
-    // so it names the skill bare.
-    const UPSTREAM_AGENTS: { agent: string; heading: string; reference: string }[] = [
-      { agent: "researcher", heading: "## When Researching", reference: SKILL_PATH },
-      { agent: "structure-planner", heading: "## When Slicing", reference: SKILL_NAME },
-      { agent: "planner", heading: "## When Planning", reference: SKILL_PATH },
-    ];
-
-    for (const { agent, heading, reference } of UPSTREAM_AGENTS) {
-      test(`${agent} frontmatter has a skills: block listing systems-thinking`, () => {
-        const fm = frontmatter(read(join(REPO_ROOT, "agents", `${agent}.md`)));
-        expect(/^skills:/m.test(fm)).toBe(true);
-        expect(/systems-thinking|team:systems-thinking/.test(fm)).toBe(true);
-      });
-
-      test(`${agent} directive references systems-thinking adjacent to its ${heading} cite`, () => {
-        const window = citationWindow(join(REPO_ROOT, "agents", `${agent}.md`));
-        expect(window).toContain(reference);
-        expect(window).toContain(heading);
-        expect(readOrEmpty(SKILL_FILE)).toContain(heading);
-      });
+  test("structure-planner, planner, implementer, ux-reviewer, and code-reviewer read the shared reference instead of loading systems-thinking", () => {
+    for (const agent of ["structure-planner", "planner", "implementer", "ux-reviewer", "code-reviewer"]) {
+      const b = body(read(join(REPO_ROOT, "agents", `${agent}.md`)));
+      expect(b).toContain("dependencies.md");
+      expect(loadsSkill(b, "systems-thinking")).toBe(false);
     }
+  });
+
+  test("researcher reads the research playbook instead of preloading systems-thinking", () => {
+    const fm = frontmatter(read(join(REPO_ROOT, "agents", "researcher.md")));
+    expect(/systems-thinking|team:systems-thinking/.test(fm)).toBe(false);
   });
 });
 
@@ -508,54 +307,51 @@ describe("systems-thinking lens (L2 content tripwire)", () => {
 // (phrases verified against the source before pinning).
 // ---------------------------------------------------------------------------
 
-describe("documenting-decisions lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "documenting-decisions", "SKILL.md");
+describe("decision-record reference (L2 content tripwire)", () => {
+  const DECISIONS = join(REPO_ROOT, "skills", "team", "references", "decisions.md");
 
-  test("skill file exists with name: documenting-decisions", () => {
-    expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*documenting-decisions\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
-  });
-
-  test("pins the ADR section contract (Context / Decision / Consequences)", () => {
-    const text = read(SKILL_FILE);
-    expect(text).toContain("Architecture Decision Record");
+  test("the reference carries the ADR section contract and the decision method", () => {
+    const text = read(DECISIONS);
+    expect(text.length).toBeGreaterThan(0);
+    expect(text).toContain("## Architecture decision records");
     expect(/^## Context$/m.test(text)).toBe(true);
     expect(/^## Decision$/m.test(text)).toBe(true);
     expect(/^## Consequences$/m.test(text)).toBe(true);
+    expect(text).toContain("## Decision method");
   });
 });
 
-describe("product-requirements-doc lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "product-requirements-doc", "SKILL.md");
+describe("PRD template and question playbook (L2 content tripwire)", () => {
+  const PRD = join(REPO_ROOT, "skills", "team", "references", "prd-template.md");
+  const QUESTION = join(REPO_ROOT, "skills", "team", "playbooks", "question.md");
 
-  test("skill file exists with name: product-requirements-doc", () => {
-    expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*product-requirements-doc\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
-  });
-
-  test("pins the PRD section contract (problem, user stories, acceptance criteria, scope)", () => {
-    const text = read(SKILL_FILE);
+  test("the PRD template carries the section contract", () => {
+    const text = read(PRD);
     expect(text).toContain("Problem Statement");
     expect(text).toContain("User Stories");
     expect(text).toContain("Acceptance Criteria");
     expect(text).toContain("Scope Boundaries");
   });
+
+  test("the question playbook states the conditional PRD criteria", () => {
+    const text = read(QUESTION);
+    expect(text).toContain("## Conditional PRD");
+    expect(text).toContain("3-prd.md");
+    expect(text).toContain("phase: prd");
+  });
 });
 
-describe("technical-design-doc lens (L2 content tripwire)", () => {
-  const SKILL_FILE = join(REPO_ROOT, "skills", "technical-design-doc", "SKILL.md");
+describe("design template (L2 content tripwire)", () => {
+  const TEMPLATE = join(REPO_ROOT, "skills", "team", "references", "design-template.md");
 
-  test("skill file exists with name: technical-design-doc", () => {
-    expect(existsSync(SKILL_FILE)).toBe(true);
-    expect(/^name:\s*technical-design-doc\s*$/m.test(frontmatter(read(SKILL_FILE)))).toBe(true);
-  });
-
-  test("pins the TDD section contract (goals/non-goals, trade-offs, edge cases, open questions)", () => {
-    const text = read(SKILL_FILE);
-    expect(text).toContain("Goals and Non-Goals");
-    expect(text).toContain("Trade-offs Considered");
-    expect(text).toContain("Edge Cases and Failure Modes");
-    expect(text).toContain("Open Questions");
+  test("the design template carries the design section contract", () => {
+    const text = read(TEMPLATE);
+    expect(text).toContain("## Current state");
+    expect(text).toContain("## Desired end state");
+    expect(text).toContain("## Decisions made");
+    expect(text).toContain("## Out of scope");
+    expect(text).toContain("## Open questions (deferred)");
+    expect(text).toContain("## Risks");
   });
 });
 
@@ -1007,7 +803,7 @@ describe("comment red flags (L2 content tripwire)", () => {
 // and precedent does not outrank one.
 describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () => {
   const NESTED = read(join(REPO_ROOT, "skills", "nested-agents", "SKILL.md"));
-  const SYSTEMS = read(join(REPO_ROOT, "skills", "systems-thinking", "SKILL.md"));
+  const DEPENDENCIES = read(join(REPO_ROOT, "skills", "team", "references", "dependencies.md"));
 
   test("a rule-violation claim carries the rule it cites", () => {
     // Guard: a missing file must fail, not vacuously pass the checks below.
@@ -1021,12 +817,12 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
   test("nested-agents states that a rule outranks precedent", () => {
     const text = squash(NESTED);
     expect(/stated rule outranks observed precedent/i.test(text)).toBe(true);
-    expect(text).toContain("systems-thinking/SKILL.md");
+    expect(text).toContain("dependencies.md");
   });
 
-  test("systems-thinking defers to a written rule where one speaks", () => {
-    expect(SYSTEMS.length).toBeGreaterThan(0);
-    const text = squash(SYSTEMS);
+  test("dependencies.md defers to a written rule where one speaks", () => {
+    expect(DEPENDENCIES.length).toBeGreaterThan(0);
+    const text = squash(DEPENDENCIES);
     expect(/conventions established elsewhere/i.test(text)).toBe(true);
     expect(/where no written\s+rule speaks|no written rule speaks/i.test(text)).toBe(true);
   });
@@ -1037,7 +833,7 @@ describe("skeptic passes weigh a stated rule above precedent (L2 tripwire)", () 
 // asked for the surface x safeguard matrix, so three consecutive review
 // rounds each found one more asymmetry, one instance at a time.
 describe("cross-surface parity is checked (L2 tripwire)", () => {
-  const AUTHORING = read(join(REPO_ROOT, "skills", "authoring-designs", "SKILL.md"));
+  const AUTHORING = read(join(REPO_ROOT, "skills", "team", "references", "design-template.md"));
   const REVIEW = read(join(REPO_ROOT, "skills", "reviewing-designs", "SKILL.md"));
   const CODE_REVIEW = read(join(REPO_ROOT, "skills", "reviewing-code", "SKILL.md"));
 
@@ -1325,7 +1121,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-evidence-over-assertion",
     "skills/team/principles/verified-results.md",
-    "skills/researching-codebases/SKILL.md"
+    "skills/team/playbooks/research.md"
   ],
   [
     "principle-mechanical-gates",
@@ -1380,7 +1176,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-subtract-before-you-add",
     "skills/team/principles/focused-work.md",
-    "skills/authoring-designs/SKILL.md"
+    "skills/team/playbooks/design.md"
   ],
   [
     "principle-optimization-never-dependency",
@@ -1405,7 +1201,7 @@ const SHARED_RULE_CALLERS = [
   [
     "principle-record-assumptions",
     "skills/team/references/decisions.md",
-    "skills/authoring-designs/SKILL.md"
+    "skills/team/playbooks/design.md"
   ]
 ] as const;
 
@@ -1482,7 +1278,7 @@ describe("the principle set is derived, not counted", () => {
 
   // The multi-rule methodology sets. They carry no prefix on purpose: each is a
   // set of rules, not a single invariant.
-  const BUNDLES = ["solid", "product-thinking", "systems-thinking"];
+  const BUNDLES = ["solid"];
 
   // Guard: an empty prefix set on either side would pass both directions.
   test("the principle registrations are absent on disk and in the catalog", () => {

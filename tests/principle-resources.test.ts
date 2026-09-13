@@ -53,13 +53,13 @@ function installation(): Fixture & { installed: string } {
 }
 
 describe("Principle disposition", () => {
-  test("installed fixture catalog discovery retains exactly 65 registrations", async () => {
+  test("installed fixture catalog discovery retains exactly 55 registrations", async () => {
     const item = installation();
     const config = await load(item, {}, join(item.installed, "opencode/team.js"));
 
-    expect([...skillNames(item.installed)]).toHaveLength(65);
+    expect([...skillNames(item.installed)]).toHaveLength(55);
     expect([...skillNames(item.installed)].sort()).toEqual(contract.registrations);
-    expect(Object.keys(config.command ?? {})).toHaveLength(65);
+    expect(Object.keys(config.command ?? {})).toHaveLength(55);
     expect(config.command?.team).toBeDefined();
   });
 

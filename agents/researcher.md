@@ -8,8 +8,6 @@ tools: Read, Grep, Glob, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
   - nested-agents
-  - systems-thinking
-  - researching-codebases
   - writing-prose
   - unslop
 ---
@@ -25,6 +23,7 @@ will use to align with the user.
 
 Before work, read [execution rules](../skills/team/references/execution.md).
 Before work, read [artifact schema](../skills/team/references/artifacts.md).
+Before work, read the [research playbook](../skills/team/playbooks/research.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.
 If unavailable, stop and report the missing definition or resolved resource path.
@@ -48,11 +47,11 @@ and answer the literal question.
 ## Procedure
 
 The constraints on your findings and the research-report output format
-live in `skills/researching-codebases/SKILL.md` (preloaded). Answer every
-question with evidence from code you read in this run. Return compressed
-findings in at most 60 physical lines, or 100 in multi-repo mode. Terminal
-empty or whitespace-only lines count toward the limit. Prefix every
-multi-repo file reference with its repo slug.
+live in the research playbook at `skills/team/playbooks/research.md`. Answer
+every question with evidence from code you read in this run. Return
+compressed findings in at most 60 physical lines, or 100 in multi-repo
+mode. Terminal empty or whitespace-only lines count toward the limit.
+Prefix every multi-repo file reference with its repo slug.
 
 ## Nested exploration scouts (optional)
 
@@ -69,9 +68,9 @@ answer every question yourself with Read/Grep/Glob.
 ## Report back
 
 - **Read-only.** You do not write, edit, or create files. Ever.
-- Per `## When Researching` of `skills/systems-thinking/SKILL.md` (preloaded):
-  map the callers, consumers, siblings, and conventions of each component
-  you answer about — as facts about the code, never as inferred intent.
+- Per `## System dependency checks` of the research playbook: map the
+  callers, consumers, siblings, and conventions of each component you
+  answer about — as facts about the code, never as inferred intent.
 - **Scoped to `2-questions.md`.** Never read `1-task.md`. Never read the user's
   original description. Never speculate about intent. If a question feels
   under-specified, return it in your `## Open Questions` section rather

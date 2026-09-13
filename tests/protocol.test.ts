@@ -278,7 +278,7 @@ describe("multi-repo support", () => {
 
 describe("conditional PRD artifact", () => {
   const QRSPI = join(REPO_ROOT, "skills", "qrspi-workflow", "SKILL.md");
-  const DECOMPOSING_INTENT = join(REPO_ROOT, "skills", "decomposing-intent", "SKILL.md");
+  const QUESTION_PLAYBOOK = join(REPO_ROOT, "skills", "team", "playbooks", "question.md");
   const QUESTIONER = join(REPO_ROOT, "agents", "questioner.md");
 
   test("artifact schema carries the 3-prd.md schema; qrspi-workflow keeps the pointer", () => {
@@ -290,8 +290,8 @@ describe("conditional PRD artifact", () => {
     expect(text).toContain("team/references/artifacts.md");
   });
 
-  test("decomposing-intent carries the 3-prd.md frontmatter contract", () => {
-    const text = read(DECOMPOSING_INTENT);
+  test("question playbook carries the 3-prd.md frontmatter contract", () => {
+    const text = read(QUESTION_PLAYBOOK);
     expect(text).toContain("3-prd.md");
     expect(text).toContain("phase: prd");
   });

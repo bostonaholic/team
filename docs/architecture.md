@@ -684,18 +684,18 @@ review filter accepts only APPROVE or COMMENT from the highest-numbered
 Methodology skills carry no `argument-hint`. Agents load them through one
 of two mechanisms. The first is a `skills:` YAML **block** list in the
 agent's frontmatter, one indented `- <name>` per line. For example,
-`agents/design-author.md` declares:
+`agents/implementer.md` declares:
 
 ```yaml
 skills:
-  - product-thinking
-  - authoring-designs
+  - nested-agents
+  - implementing-slices
   - writing-prose
   - unslop
 ```
 
 That is four counted names against the load limit in the Design
-guidelines below, one over the threshold, so `design-author` carries one
+guidelines below, one over the threshold, so `implementer` carries one
 recorded reason naming that count. The block form is the contract: three
 test parsers read it, and the one-line inline flow form parses to zero
 names, so it is an offender rather than a second shape.
@@ -898,11 +898,12 @@ entry points. Descriptions are at most 200 characters, or 150 for methodology.
 
 3. **Shared principles:** five ordinary documents define human control, durable state, verified results, independent review, and focused work.
    Execution, external-data, decisions, and bug-fix resources own the remaining operational rules.
+   Question, Research, and Design procedures live in three playbooks with shared templates and a dependency checklist.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
    Twelve agent bodies read execution rules. File-finder retains its single-step contract.
-   Resources use no skill frontmatter or discovery metadata. Keep the 40 methodologies and 25 commands registered.
+   Resources use no skill frontmatter or discovery metadata. Keep the 30 methodologies and 25 commands registered.
    Do not add principle registrations, recursive loading, compatibility stubs, or a resource registry.
-   `solid`, `product-thinking`, and `systems-thinking` remain methodology skills and count toward preload limits.
+   `solid` remains a methodology skill and counts toward preload limits.
 
 ### Codex host manifests
 
