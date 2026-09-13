@@ -137,9 +137,9 @@ describe("team-pr Screenshots refresh on every push", () => {
   // sections that must track the branch, and the footer + `## Companion PRs`
   // as sections that survive the rewrite. Screenshots need both halves:
   // preserved when the push left the UI alone, re-rendered when it did not.
-  test("a UI-changing push defers re-capture to the ux-reviewer procedure", () => {
-    // Re-capture is ux-reviewer's procedure — loaded, not restated.
-    expect(loadsSkill(body(), "verifying-ux")).toBe(true);
+  test("a UI-changing push defers re-capture to the ux-reviewer brief", () => {
+    // Re-capture is ux-reviewer's procedure — read, not restated.
+    expect(body()).toContain("code-review/references/ux-reviewer.md");
   });
 });
 

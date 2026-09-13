@@ -59,8 +59,8 @@ describe("methodology skills are never user-invocable", () => {
 
   // Guard: an empty or mis-parsed catalog would pass every check below.
   test("the catalog parse sees both kinds of section", () => {
-    expect(entries.length).toBe(27);
-    expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(2);
+    expect(entries.length).toBe(25);
+    expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(0);
     expect(entries.filter((e) => COMMAND_SECTIONS.includes(e.section)).length).toBe(25);
   });
 
@@ -81,14 +81,14 @@ describe("methodology skills are never user-invocable", () => {
   });
 
   // Prove the sweep can find a positive: the check must fail on a planted
-  // violation, not pass because the predicate never fires.
+  // violation, not pass because the predicate never fires. A command filed
+  // under Methodology is the violation the rule exists to catch — a command
+  // is not model-only.
   test("the sweep can see a violation", () => {
-    const planted: Entry[] = [{ name: "running-quality-checks", section: METHODOLOGY_SECTION }];
-    expect(planted.filter((e) => !isModelOnly(e.name))).toEqual([]);
-    const inverted: Entry[] = [{ name: "running-quality-checks", section: "## Standalone utilities" }];
-    expect(inverted.filter((e) => isModelOnly(e.name)).map((e) => e.name)).toEqual([
-      "running-quality-checks",
-    ]);
+    const planted: Entry[] = [{ name: "team", section: METHODOLOGY_SECTION }];
+    expect(planted.filter((e) => !isModelOnly(e.name)).map((e) => e.name)).toEqual(["team"]);
+    const inverted: Entry[] = [{ name: "team", section: "## Standalone utilities" }];
+    expect(inverted.filter((e) => isModelOnly(e.name)).map((e) => e.name)).toEqual([]);
   });
 
   // The reviewer briefs moved off the methodology list into ordinary reference
@@ -190,8 +190,8 @@ describe("skill flavor and catalog completeness", () => {
   // Guard: a mis-parsed catalog or an unreadable skills/ tree would pass every
   // offender check below vacuously.
   test("the catalog and the skills directory both parse non-empty", () => {
-    expect(directories.length).toBeGreaterThan(25);
-    expect(entries.length).toBeGreaterThan(25);
+    expect(directories.length).toBeGreaterThan(20);
+    expect(entries.length).toBeGreaterThan(20);
   });
 
   test("the three flavor classifiers agree for every catalogued skill", () => {
@@ -225,9 +225,9 @@ describe("skill flavor and catalog completeness", () => {
   // Prove each rule can find a positive: four planted violations, one per way
   // the catalog can lie about what a skill is.
   test("the flavor and completeness checks can see planted violations", () => {
-    const miscatalogued: Entry[] = [{ name: "running-quality-checks", section: "## Standalone utilities" }];
+    const miscatalogued: Entry[] = [{ name: "team", section: METHODOLOGY_SECTION }];
     expect(classifierDisagreements(miscatalogued)).toEqual([
-      "running-quality-checks: section=## Standalone utilities user-invocable-false=true argument-hint=false",
+      "team: section=## Methodology skills user-invocable-false=false argument-hint=true",
     ]);
 
     const phantom: Entry[] = [{ name: "no-such-skill", section: METHODOLOGY_SECTION }];
