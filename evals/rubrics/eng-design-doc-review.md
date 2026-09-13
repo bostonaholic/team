@@ -10,7 +10,9 @@ to the code-reviewer eval, so it reuses the same deterministic-first cascade.
 
 1. Planted-gap detection (kind: deterministic). Score = fraction of seeded
    `bugs[]` whose `detection_hint` regex matches the review output. The planted
-   gap is Decision 1's missing alternative / unstated trade-off. Computed by
+   gap is Decision 1's missing alternative / unstated trade-off in
+   `planted-missing-alternatives`, and an unsupported thread-safety guarantee
+   in `planted-unsupported-guarantee`. Computed by
    `outcomeJudge` — no model call. Pass = detection_rate ≥ `minimum_detection`.
 2. Review substance (kind: llm). 1-5 scale, scored only when a Conventional
    Comment label is present (gated by `judgeReviewerOutput`). Judges whether

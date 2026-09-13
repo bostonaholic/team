@@ -29,96 +29,111 @@ const collector = new EvalCollector("e2e");
 
 const MIN_REASON_SUBSTANCE = 3;
 
+async function runPlantedReviewCase(
+  fixtureCase: string,
+  artifactSlug: string,
+  testName: string,
+): Promise<void> {
+  const fixture = loadFixture("eng-design-doc-review", fixtureCase);
+  const workDir = mkdtempSync(join(tmpdir(), "eng-design-doc-review-e2e-"));
+
+  try {
+    const artifactDir = join(workDir, "docs", "plans", artifactSlug);
+    const design = /```markdown\r?\n([\s\S]*?)\r?\n```/.exec(fixture.body)?.[1];
+    expect(design).toBeDefined();
+    mkdirSync(artifactDir, { recursive: true });
+    writeFileSync(join(artifactDir, "6-design.md"), `${design}\n`, "utf8");
+    const prompt =
+      "You are adversarially reviewing a design document with fresh " +
+      `context. Read ${join(artifactDir, "6-design.md")}. ` +
+      "Use Conventional Comments and end with a verdict.\n\n" +
+      fixture.body;
+
+    const result = await runAgentTest({
+      prompt,
+      systemPromptAppend: loadInstructionContext([
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md",
+        "skills/team/principles/focused-work.md",
+        "skills/eng-design-doc-review/references/design-reviewer.md",
+        "skills/team/references/design-template.md",
+        "skills/team/references/decisions.md",
+        "skills/code-review/references/findings.md",
+        "skills/code-review/references/code-reviewer.md",
+        "skills/team/references/code-standards.md",
+        "skills/team/references/artifacts.md",
+      ]).replaceAll("$ARGUMENTS", artifactDir),
+      workingDirectory: workDir,
+      maxTurns: 6,
+      timeout: 180_000,
+      testName,
+    });
+
+    // Tier 1 — outcome judge (deterministic): did the review surface the
+    // planted gap? Computed from ground-truth.json, no model call.
+    const outcome = outcomeJudge(fixture.groundTruth, result.output);
+
+    // Tier 2 — LLM judge: only invoked when the deterministic planted-gap
+    // check passed, matching the outer-guard cascade in the other skill evals.
+    let reasonSubstance = 1;
+    if (outcome.passes_minimum) {
+      const review = await judgeReviewerOutput(result.output);
+      reasonSubstance = review.reason_substance;
+    }
+
+    const passed =
+      result.exitReason === "success" &&
+      outcome.passes_minimum &&
+      reasonSubstance >= MIN_REASON_SUBSTANCE;
+
+    collector.addTest({
+      name: testName,
+      suite: "eng-design-doc-review-e2e",
+      tier: "e2e",
+      passed,
+      duration_ms: result.duration,
+      cost_usd: result.costEstimate.estimatedCost,
+      transcript: result.transcript,
+      judge_scores: {
+        detection_rate: outcome.detection_rate,
+        reason_substance: reasonSubstance,
+      },
+      exit_reason: result.exitReason,
+      model: result.model,
+      first_response_ms: result.firstResponseMs,
+      max_inter_turn_ms: result.maxInterTurnMs,
+    });
+
+    expect(result.exitReason).toBe("success");
+    expect(outcome.detection_rate).toBeGreaterThanOrEqual(
+      fixture.groundTruth.minimum_detection,
+    );
+    expect(reasonSubstance).toBeGreaterThanOrEqual(MIN_REASON_SUBSTANCE);
+  } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
+}
+
 testIfSelected(
   "eng-design-doc-review-planted-missing-alternatives",
-  async () => {
-    const fixture = loadFixture(
-      "eng-design-doc-review",
+  () =>
+    runPlantedReviewCase(
       "planted-missing-alternatives",
-    );
-    const workDir = mkdtempSync(join(tmpdir(), "eng-design-doc-review-e2e-"));
+      "2026-06-03-session-cache",
+      "eng-design-doc-review-planted-missing-alternatives",
+    ),
+  240_000,
+);
 
-    try {
-      const artifactDir = join(workDir, "docs", "plans", "2026-06-03-session-cache");
-      const design = /```markdown\r?\n([\s\S]*?)\r?\n```/.exec(fixture.body)?.[1];
-      expect(design).toBeDefined();
-      mkdirSync(artifactDir, { recursive: true });
-      writeFileSync(join(artifactDir, "6-design.md"), `${design}\n`, "utf8");
-      const prompt =
-        "You are adversarially reviewing a design document with fresh " +
-        `context. Read ${join(artifactDir, "6-design.md")}. ` +
-        "Use Conventional Comments and end with a verdict.\n\n" +
-        fixture.body;
-
-      const result = await runAgentTest({
-        prompt,
-        systemPromptAppend: loadInstructionContext([
-          "skills/team/principles/durable-state.md",
-          "skills/team/principles/independent-review.md",
-          "skills/team/principles/verified-results.md",
-          "skills/team/principles/focused-work.md",
-          "skills/eng-design-doc-review/references/design-reviewer.md",
-          "skills/team/references/design-template.md",
-          "skills/team/references/decisions.md",
-          "skills/code-review/references/findings.md",
-          "skills/code-review/references/code-reviewer.md",
-          "skills/team/references/code-standards.md",
-          "skills/team/references/artifacts.md",
-        ]).replaceAll("$ARGUMENTS", artifactDir),
-        workingDirectory: workDir,
-        maxTurns: 6,
-        timeout: 180_000,
-        testName: "eng-design-doc-review-planted-missing-alternatives",
-      });
-
-      // Tier 1 — outcome judge (deterministic): did the review surface the
-      // planted gap (missing alternative / unstated trade-off)? Computed from
-      // ground-truth.json, no model call.
-      const outcome = outcomeJudge(fixture.groundTruth, result.output);
-
-      // Tier 2 — LLM judge: only invoked when the deterministic planted-gap
-      // check passed, matching the outer-guard cascade in the other skill
-      // evals. (judgeReviewerOutput ALSO has an internal Conventional-Comment
-      // gate that prevents a paid call on negative cases; the outer guard here
-      // is for symmetry and to skip the call entirely when the gap was missed.)
-      let reasonSubstance = 1;
-      if (outcome.passes_minimum) {
-        const review = await judgeReviewerOutput(result.output);
-        reasonSubstance = review.reason_substance;
-      }
-
-      const passed =
-        result.exitReason === "success" &&
-        outcome.passes_minimum &&
-        reasonSubstance >= MIN_REASON_SUBSTANCE;
-
-      collector.addTest({
-        name: "eng-design-doc-review-planted-missing-alternatives",
-        suite: "eng-design-doc-review-e2e",
-        tier: "e2e",
-        passed,
-        duration_ms: result.duration,
-        cost_usd: result.costEstimate.estimatedCost,
-        transcript: result.transcript,
-        judge_scores: {
-          detection_rate: outcome.detection_rate,
-          reason_substance: reasonSubstance,
-        },
-        exit_reason: result.exitReason,
-        model: result.model,
-        first_response_ms: result.firstResponseMs,
-        max_inter_turn_ms: result.maxInterTurnMs,
-      });
-
-      expect(result.exitReason).toBe("success");
-      expect(outcome.detection_rate).toBeGreaterThanOrEqual(
-        fixture.groundTruth.minimum_detection,
-      );
-      expect(reasonSubstance).toBeGreaterThanOrEqual(MIN_REASON_SUBSTANCE);
-    } finally {
-      rmSync(workDir, { recursive: true, force: true });
-    }
-  },
+testIfSelected(
+  "eng-design-doc-review-planted-unsupported-guarantee",
+  () =>
+    runPlantedReviewCase(
+      "planted-unsupported-guarantee",
+      "2026-06-03-rate-limiter",
+      "eng-design-doc-review-planted-unsupported-guarantee",
+    ),
   240_000,
 );
 
