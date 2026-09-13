@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.5] - 2026-09-12
+
 ### Changed
 
 - Consolidate reviewer briefs and finding contracts into per-entry-point references, preserving reviewer read-only independence, fresh-context inputs, verdict formats, and aggregation semantics.
@@ -948,7 +950,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.4...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.5...HEAD
+[0.104.5]: https://github.com/bostonaholic/team/compare/v0.104.4...v0.104.5
 [0.104.4]: https://github.com/bostonaholic/team/compare/v0.104.3...v0.104.4
 [0.104.3]: https://github.com/bostonaholic/team/compare/v0.104.2...v0.104.3
 [0.104.2]: https://github.com/bostonaholic/team/compare/v0.104.1...v0.104.2
