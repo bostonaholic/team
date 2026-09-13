@@ -339,6 +339,71 @@ describe("design template (L2 content tripwire)", () => {
     expect(text).toContain("## Open questions (deferred)");
     expect(text).toContain("## Risks");
   });
+
+  test("the design template carries caller examples, interface, and experiment records", () => {
+    const text = read(TEMPLATE);
+    expect(text).toContain("## Caller examples");
+    expect(text).toContain("## Interface");
+    expect(text).toContain("## Experiments");
+    for (const field of ["Question", "Alternatives", "Experiment", "Observation", "Decision"]) {
+      expect(text).toContain(field);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Design review is grounded in caller examples and experiments (M11): the
+// design playbook starts shared interface changes from the caller and records
+// disposable-prototype experiments; the reviewer brief sorts findings into
+// supported defects, plausible unresolved risks, and speculative requirements,
+// retaining consequential unsupported-guarantee findings even when no small
+// experiment can reproduce the hazard.
+// ---------------------------------------------------------------------------
+
+describe("design grounds review in callers and experiments (L2 tripwire)", () => {
+  const PLAYBOOK = read(join(REPO_ROOT, "skills", "team", "playbooks", "design.md"));
+  const REVIEW = read(join(REPO_ROOT, "skills", "eng-design-doc-review", "references", "design-reviewer.md"));
+  const AUTHOR = read(join(REPO_ROOT, "agents", "design-author.md"));
+
+  test("the playbook starts shared interface changes from the caller and states the contract", () => {
+    expect(PLAYBOOK.length).toBeGreaterThan(0);
+    const text = squash(PLAYBOOK);
+    expect(text).toContain("## Make decisions observable");
+    expect(/caller/i.test(text)).toBe(true);
+    expect(/inputs, outputs, errors/i.test(text)).toBe(true);
+  });
+
+  test("the playbook records disposable-prototype experiments with all five fields", () => {
+    const text = squash(PLAYBOOK);
+    expect(/prototype only an unresolved question/i.test(text)).toBe(true);
+    for (const field of ["Question", "Alternatives", "Experiment", "Observation", "Decision"]) {
+      expect(text).toContain(field);
+    }
+    expect(/disposable/i.test(text)).toBe(true);
+    expect(/never (?:promote|approve)/i.test(text)).toBe(true);
+  });
+
+  test("the design-author applies the caller-examples and experiment rules", () => {
+    const b = body(AUTHOR);
+    expect(b).toContain("## Make decisions observable");
+    expect(/caller/i.test(b)).toBe(true);
+    expect(/Experiments/i.test(b)).toBe(true);
+  });
+
+  test("the reviewer sorts findings into defect, unresolved risk, and speculation", () => {
+    expect(REVIEW.length).toBeGreaterThan(0);
+    const text = squash(REVIEW);
+    expect(/supported defect/i.test(text)).toBe(true);
+    expect(/unresolved risk/i.test(text)).toBe(true);
+    expect(/speculative requirement/i.test(text)).toBe(true);
+  });
+
+  test("the reviewer retains consequential unsupported-guarantee findings without a reproducing experiment", () => {
+    const text = squash(REVIEW);
+    expect(/unsupported guarantee/i.test(text)).toBe(true);
+    expect(/cannot reproduce/i.test(text)).toBe(true);
+    expect(/security/i.test(text)).toBe(true);
+  });
 });
 
 describe("writing standards reference (L2 content tripwire)", () => {

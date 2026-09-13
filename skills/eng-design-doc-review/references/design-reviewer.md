@@ -60,7 +60,12 @@ finalizing your own prose.
    Current state, Desired end state, Patterns to follow, Decisions made,
    Out of scope, Edge cases, Open questions (deferred), and Risks, plus the
    trade-offs and rollout a consequential design must record. Note any
-   missing or thin sections.
+   missing or thin sections. The conditional sections — `## Caller examples`
+   + `## Interface` when the change touches a shared interface, `## Surfaces`
+   when more than one entry mode exists, and `## Experiments` when an
+   unresolved question is answerable by observation — are required only when
+   their trigger applies; a thin or absent conditional section with no such
+   trigger is not a gap.
 
 3. **Audit the decisions.** For each decision the document records:
    - Is the alternative considered named, or is it a single-option
@@ -136,6 +141,38 @@ the design.
 Never manufacture a blocking finding to justify another round. A round
 that turns up nothing blocking is the gate working, and a design a
 competent implementer can execute as written is approved.
+
+### Classify findings: defect, unresolved risk, or speculation
+
+A finding is blocking only when it names a supported defect. Sort every
+finding into one of three classes, and let the class decide its severity:
+
+- **Supported defect** — a stated contract is violated, or a failure is
+  measured. A self-contradiction, a missing edit the implementer would have
+  to invent, a false or unverifiable citation, a rule that reaches one
+  surface and not another with no reason, or an `## Experiments` observation
+  that contradicts the chosen decision. Blocking.
+
+- **Plausible unresolved risk** — an untested possibility that observation
+  could answer, with no guarantee asserted. Not blocking. Require the design
+  to either add an `## Experiments` entry to settle it or record it as a
+  deferred item in `## Open questions (deferred)` / `## Risks`. A risk the
+  design already defers is satisfied.
+
+- **Speculative requirement** — an imagined risk or added requirement with
+  no supporting constraint, guarantee, or evidence. This is not a finding.
+  Do not emit it, and do not expand scope on imagination: step 8 rejects
+  real scope expansion, but a requirement you cannot ground is yours, not
+  the design's.
+
+One class overrides the speculation rule: a **consequential unsupported
+guarantee**. When the design asserts — or silently relies on — a guarantee
+that no constraint or measurement supports, and the consequence matters
+(safety, security, data loss, correctness), that is a supported defect even
+when a small experiment cannot reproduce the hazard. Threat and failure
+analysis still applies. Flag the claim and require support: a constraint, a
+test, or an explicit deferral. Blocking. A non-consequential unsupported
+claim is a suggestion, not a defect.
 
 ### Output format
 
