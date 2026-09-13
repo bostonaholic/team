@@ -20,9 +20,15 @@ If `docs/plans/<id>/4-repos.md` exists, treat it as the working scope and name e
 
 Never pause for user input. Record every resolved choice in `## Decisions made` as `Assumption — chosen without user review`; defer only low-stakes items to `## Open questions (deferred)`. On revision, address reviewer findings verbatim and record new assumptions the same way. Before resolving a technical choice with two or more viable options, apply the [decision method](references/decisions.md) and record its decision basis with the assumption.
 
+## Make decisions observable
+
+For a shared interface change, start from the caller: write `## Caller examples` with the actual user prompt, call, or read, then `## Interface` — inputs, outputs, errors, and ownership — before any internal implementation. For Team, use real user prompts and name the expected dispatch, resource reads, artifacts, and stop conditions.
+
+Prototype only an unresolved question that observation can answer. When a consequential choice still has two or more viable options, or a claim is unproven, record one `## Experiments` entry with all five fields — Question, Alternatives, Experiment, Observation, Decision — and run the alternatives on matching inputs. Keep the observed evidence. Prototype code is disposable scratch: never promote it into production without the normal implementation checks (test-first, independent review), and it never approves the design — the design review gate still judges the result.
+
 ## Design contract
 
-Read [design template](references/design-template.md) before drafting. The required sections are `## Current state`, `## Desired end state`, `## Patterns to follow`, `## Decisions made`, `## Out of scope`, optional `## Surfaces`, `## Open questions (deferred)`, and `## Risks`.
+Read [design template](references/design-template.md) before drafting. The required sections are `## Current state`, `## Desired end state`, `## Patterns to follow`, `## Decisions made`, `## Out of scope`, `## Open questions (deferred)`, and `## Risks`. Add `## Caller examples` + `## Interface` when the change touches a shared interface, `## Experiments` when an unresolved question is answerable by observation, and `## Surfaces` when more than one entry mode exists.
 
 - Enumerate boundary values (empty, zero, one, max-size, off-by-one), invalid inputs, downstream failures/timeouts/partial writes/retries, concurrency/idempotency/races, authorization states, and resource limits. Choose behavior or put intentional deferrals in `## Out of scope`.
 - Derive every closed set by grep, directory listing, or key-set comparison and record the command. Never list a blast radius or inventory from memory.
