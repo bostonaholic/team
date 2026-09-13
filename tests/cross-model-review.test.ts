@@ -1,5 +1,5 @@
 // Acceptance fence for the always-on cross-vendor review pass. It covers
-// the bundled skills/cross-model-review/external-review.mjs runner (L1
+// the bundled skills/team/references/external-review.mjs runner (L1
 // pure core + L3 subprocess against fake CLIs on a controlled PATH), the
 // TEAM_DISABLE_CROSS_MODEL kill-switch, the
 // no-bypass sweep, the skill/agent/docs wiring tripwires, the
@@ -29,7 +29,7 @@ import {
 import { tmpdir } from "node:os";
 import { isAbsolute, join, relative } from "node:path";
 
-import { frontmatter, read, squash } from "./helpers/text";
+import { read, squash } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 
@@ -55,9 +55,12 @@ const EXPECTED_TIMEOUT_MS = 600_000;
 const EXPECTED_PROMPT_CAP_BYTES = 131_072;
 const EXPECTED_OUTPUT_CAP_BYTES = 32_768;
 
-const SKILL_DIR = join(REPO_ROOT, "skills", "cross-model-review");
-const SKILL_MD = join(SKILL_DIR, "SKILL.md");
+const SKILL_DIR = join(REPO_ROOT, "skills", "team", "references");
+const SKILL_MD = join(SKILL_DIR, "cross-model-review.md");
 const SCRIPT = join(SKILL_DIR, "external-review.mjs");
+const CODE_TEMPLATE = join(SKILL_DIR, "prompt-template-code-review.md");
+const DESIGN_TEMPLATE = join(SKILL_DIR, "prompt-template-design-review.md");
+const CROSS_MODEL_FILES = [SKILL_MD, SCRIPT, CODE_TEMPLATE, DESIGN_TEMPLATE];
 const CODE_REVIEWER = join(REPO_ROOT, "agents", "code-reviewer.md");
 const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
 const TEAM_IMPLEMENT_SKILL = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
@@ -626,7 +629,7 @@ function filesUnder(dir: string): string[] {
   return out;
 }
 
-describe("no unsanctioned bypass flag anywhere in skills/cross-model-review/ (L2)", () => {
+describe("no unsanctioned bypass flag anywhere in the cross-model reference (L2)", () => {
   // The sanctioned full-access flags (codex's
   // --dangerously-bypass-approvals-and-sandbox, agy's
   // --dangerously-skip-permissions) are pinned exactly by the buildArgv
@@ -649,11 +652,9 @@ describe("no unsanctioned bypass flag anywhere in skills/cross-model-review/ (L2
       // Positive control: the sweep can see the token it hunts
       // (docs/testing.md — prove a negative check can find a positive).
       expect(`argv carries ${token} by mistake`).toContain(token);
-      // Guard: a missing or empty skill dir must fail, not vacuously pass.
-      // The exact shipped file count is pinned by the dedicated floor test
-      // in the role-named prompt templates block; this lower bound only
-      // keeps the sweep from running over an emptied directory.
-      const files = filesUnder(SKILL_DIR);
+      // Guard: a missing or empty cross-model reference set must fail, not
+      // vacuously pass.
+      const files = CROSS_MODEL_FILES;
       expect(files.length).toBeGreaterThanOrEqual(3);
       const offenders = files.filter((file) => read(file).includes(token));
       expect(offenders).toEqual([]);
@@ -665,27 +666,20 @@ describe("no unsanctioned bypass flag anywhere in skills/cross-model-review/ (L2
 // wiring tripwires (L2)
 // ---------------------------------------------------------------------------
 
-describe("skill and agent wiring (L2)", () => {
-  test("code-reviewer frontmatter preloads cross-model-review", () => {
-    expect(frontmatter(read(CODE_REVIEWER))).toMatch(/^\s*-\s+cross-model-review\s*$/m);
+describe("cross-model reference and agent wiring (L2)", () => {
+  test("code-reviewer body references the cross-model review reference", () => {
+    expect(read(CODE_REVIEWER)).toContain("team/references/cross-model-review.md");
   });
 
-  test("skill frontmatter keys are exactly name + description + user-invocable: false (methodology convention)", () => {
-    const fm = frontmatter(readOrEmpty(SKILL_MD));
-    const keys = fm
-      .split("\n")
-      .filter((line) => /^[A-Za-z][\w-]*:/.test(line))
-      .map((line) => line.split(":")[0]);
-    expect(keys.sort()).toEqual(["description", "name", "user-invocable"]);
-    expect(fm).toMatch(/^name:\s*cross-model-review\s*$/m);
-    expect(fm).toMatch(/^user-invocable:\s*false\s*$/m);
+  test("cross-model reference is an ordinary file with no skill frontmatter", () => {
+    expect(readOrEmpty(SKILL_MD).startsWith("---\n")).toBe(false);
   });
 
-  test("skill body carries the literal disposition heading", () => {
+  test("reference body carries the literal disposition heading", () => {
     expect(readOrEmpty(SKILL_MD)).toContain(DISPOSITION_HEADING);
   });
 
-  test("skill body carries the unavailable-CLI notification section", () => {
+  test("reference body carries the unavailable-CLI notification section", () => {
     expect(readOrEmpty(SKILL_MD)).toContain(UNAVAILABLE_HEADING);
   });
 
@@ -715,7 +709,7 @@ describe("skill and agent wiring (L2)", () => {
     // runner's own TIMEOUT_MS, so the runner's one-line skip wins the race.
     const section = windowSection(readOrEmpty(SKILL_MD), /^### Vendor couriers/, /^#{1,3} /);
     expect(section.length).toBeGreaterThan(0);
-    expect(section).toContain("team/references/execution.md");
+    expect(section).toContain("references/execution.md");
     expect(squash(section)).toContain("in the foreground");
     expect(squash(section)).toContain("660000");
     expect(squash(section)).toContain("Reply only after the command has exited");
@@ -731,10 +725,10 @@ describe("skill and agent wiring (L2)", () => {
     }
   });
 
-  test("nested-agents guardrails carry the code-reviewer vendor-courier cap section", () => {
-    const nestedAgents = read(join(REPO_ROOT, "skills", "nested-agents", "SKILL.md"));
+  test("agent-dispatch reference carries the code-reviewer vendor-courier cap section", () => {
+    const agentDispatch = read(join(REPO_ROOT, "skills", "team", "references", "agent-dispatch.md"));
     const section = windowSection(
-      nestedAgents,
+      agentDispatch,
       /^### `code-reviewer` — vendor couriers/,
       /^#{1,3} /,
     );
@@ -744,7 +738,7 @@ describe("skill and agent wiring (L2)", () => {
     expect(squash(section)).toMatch(/4-helpers-in-flight/);
   });
 
-  test("skill states the three caps, drift-guarded against the script's exported constants", () => {
+  test("reference states the three caps, drift-guarded against the script's exported constants", () => {
     // MIN_VERSION precedent (tests/nested-agents.test.ts): the prose caps and
     // the script constants must never drift apart.
     expect(typeof mod.TIMEOUT_MS).toBe("number");
@@ -757,9 +751,9 @@ describe("skill and agent wiring (L2)", () => {
     expect(text).toContain(`${mod.OUTPUT_CAP_BYTES! / 1024} KB`);
   });
 
-  test("docs/skills.md documents cross-model-review", () => {
-    // Heading text may be bare or a source link; the entry is the contract.
-    expect(read(SKILLS_MD)).toMatch(/^### \[?cross-model-review\b/m);
+  test("docs/skills.md lists the cross-model reference under shared resources", () => {
+    expect(read(SKILLS_MD)).toContain("cross-model review");
+    expect(read(SKILLS_MD)).toContain("skills/team/references/cross-model-review.md");
   });
 });
 
@@ -931,16 +925,14 @@ describe("TEAM_DISABLE_CROSS_MODEL kill-switch", () => {
 // ---------------------------------------------------------------------------
 
 describe("role-named prompt templates (L2)", () => {
-  const CODE_TEMPLATE = join(SKILL_DIR, "prompt-template-code-review.md");
-  const DESIGN_TEMPLATE = join(SKILL_DIR, "prompt-template-design-review.md");
-
   test("deny-list sweep floor guards four shipped files", () => {
-    // SKILL.md, external-review.mjs, and the two role-named templates: a
-    // dropped file shrinks the surface the forbidden-token sweep covers.
-    expect(filesUnder(SKILL_DIR).length).toBeGreaterThanOrEqual(4);
+    // cross-model-review.md, external-review.mjs, and the two role-named
+    // templates: a dropped file shrinks the surface the forbidden-token
+    // sweep covers.
+    expect(CROSS_MODEL_FILES.length).toBeGreaterThanOrEqual(4);
   });
 
-  test("skill names prompt-template-code-review.md, and the bare prompt-template.md name is gone", () => {
+  test("reference names prompt-template-code-review.md, and the bare prompt-template.md name is gone", () => {
     // Positive control: the sweep can see the token it hunts.
     expect("Build the prompt from prompt-template.md plus the diff").toContain(
       "prompt-template.md",
@@ -949,8 +941,8 @@ describe("role-named prompt templates (L2)", () => {
     // so the sweep cannot false-positive on them.
     expect("prompt-template-code-review.md").not.toContain("prompt-template.md");
     expect(readOrEmpty(SKILL_MD)).toContain("prompt-template-code-review.md");
-    const files = filesUnder(SKILL_DIR);
-    // Guard: a missing or empty skill dir must fail, not vacuously pass.
+    const files = CROSS_MODEL_FILES;
+    // Guard: a missing or empty reference set must fail, not vacuously pass.
     expect(files.length).toBeGreaterThan(0);
     const offenders = files.filter((file) => read(file).includes("prompt-template.md"));
     expect(offenders).toEqual([]);

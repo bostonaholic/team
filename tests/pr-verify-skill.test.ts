@@ -224,8 +224,8 @@ describe("pr-verify skill: hard rules", () => {
     expect(body()).toContain("DATA");
   });
 
-  test("subagent dispatch falls back inline per nested-agents", () => {
-    expect(body()).toContain("skills/nested-agents/SKILL.md");
+  test("subagent dispatch falls back inline per the agent-dispatch reference", () => {
+    expect(body()).toContain("team/references/agent-dispatch.md");
   });
 });
 

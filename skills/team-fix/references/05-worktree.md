@@ -46,7 +46,8 @@ fi
 Create the home worktree on branch `<id>` off `origin/HEAD`, exactly as
 `/team`'s leading WORKTREE phase does. Call the Skill tool with
 `team-worktree` for the single-repo
-"Create the worktree(s)" procedure, and with `worktree-isolation` for the topology:
+"Create the worktree(s)" procedure, and read the
+[worktree playbook](../team-worktree/playbooks/worktree.md) for the topology:
 
 ```sh
 git fetch origin --quiet

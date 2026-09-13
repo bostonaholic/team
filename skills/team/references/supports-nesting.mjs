@@ -12,7 +12,7 @@
  * The pure comparison core (`parseVersion`, `meetsMinimum`) is unit-tested at
  * L1; the CLI below is what a pipeline agent runs through Bash:
  *
- *     node "${CLAUDE_PLUGIN_ROOT}/skills/nested-agents/supports-nesting.mjs" "$(claude --version)"
+ *     node "${CLAUDE_PLUGIN_ROOT}/skills/team/references/supports-nesting.mjs" "$(claude --version)"
  *
  * It prints `supported` (exit 0) or `unsupported` (exit 1). Fail-closed:
  * anything that does not provably parse to a version >= MIN_VERSION — an

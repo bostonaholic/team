@@ -14,11 +14,11 @@ deps:
   - agents/researcher.md
   - agents/technical-writer.md
   - skills/code-review/**
-  - skills/cross-model-review/**
+  - skills/team/references/cross-model-review.md
+  - skills/team/references/agent-dispatch.md
   - skills/engineering-standards/**
   - skills/team-research/**
   - skills/team/**
-  - skills/nested-agents/**
   - skills/team/references/execution.md
   - skills/code-review/**
   - skills/eng-design-doc-review/**

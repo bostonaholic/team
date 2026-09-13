@@ -1,4 +1,7 @@
-# Worktree Isolation Lifecycle
+# Worktree Isolation
+
+Every `/team` run uses one isolated worktree per affected repo. The router owns
+isolation. Read this playbook before setup or teardown.
 
 Every `/team` pipeline run operates in **one or more** isolated git
 worktrees — one per repository the topic touches. The worktree boundary
@@ -17,22 +20,17 @@ is at the **router level** — not per-agent. This means:
 
 ## Single-repo (default)
 
-When `docs/plans/<id>/4-repos.md` is **absent**, the topic touches only the
+Without `docs/plans/<id>/4-repos.md`, the topic touches only the
 home repo (the repo the user invoked `/team` from). The router creates
-exactly one worktree on branch `<id>` off `origin/HEAD`, using the host's
-native worktree support when it offers one and `git worktree add` otherwise:
-
-- Worktree path: `<repo>/.claude/worktrees/<id>`
-- Branch: `<id>`, branched from the default remote branch (`origin/HEAD`)
-- Cleans up automatically if no changes remain after exit
-
-No custom worktree creation, path management, or teardown logic is needed.
+exactly one worktree on branch `<id>` off `origin/HEAD`, at
+`<repo>/.claude/worktrees/<id>`, using the host's native worktree support
+when it offers one and `git worktree add` otherwise.
 
 ## Multi-repo
 
-When `docs/plans/<id>/4-repos.md` is **present**, the topic spans multiple
-repos. The router creates **one worktree per listed repo**, all sharing
-the same branch name `<id>`:
+With `docs/plans/<id>/4-repos.md` present, the topic spans multiple repos.
+The router creates **one worktree per listed repo**, all sharing the same
+branch name `<id>`:
 
 - **Containment check first:** each `<repo-path>`'s `realpath` must
   resolve to a direct child of the home repo's parent directory
@@ -92,8 +90,8 @@ new one. There is no new branch and no artifact copy, and work continues
 in place on the current branch. If that worktree is checked out on the
 default branch (main/master), the phase refuses and stops — implementing
 directly on the default branch is never acceptable, and nesting worktrees
-is not supported. Call the Skill tool with `team-worktree` for the
-"Detect existing worktree" procedure.
+is not supported. Follow the team-worktree skill's
+"Detect existing worktree" procedure (`references/03-detect-existing-worktree.md`).
 
 ### Why first
 
@@ -114,10 +112,7 @@ For artifact ergonomics, the orchestrator
 **reports the absolute worktree-rooted `docs/plans/<id>/` path**. That is
 where `6-design.md` and the `design-review-<n>.md` verdict records live.
 Anyone who audits the run then opens the artifacts cleanly, with no hunt
-for the worktree. This supersedes the old "review on the home tree"
-rationale.
-
-Together these make leading placement a deliberate, articulable choice.
+for the worktree.
 
 ### During the pipeline
 
@@ -139,6 +134,12 @@ The user-invoked, PR-aware teardown — with a merged-PR gate,
 protected-branch refusals, and remote-branch deletion — is `/pr-cleanup`
 (`skills/pr-cleanup/SKILL.md`); the numbered steps below remain the
 orchestrator's in-pipeline teardown.
+
+Hard rules: preserve commits; never delete a primary clone; verify each
+removed path; `pull --rebase origin <base>`; `remote prune origin`; verify
+`docs/plans/<id>` is untracked before deleting only that topic; run
+`skills/pr-cleanup/playbooks/cleanup.md` last and skip its reviewer-only
+section.
 
 When teardown is warranted (post-merge or on explicit request):
 
@@ -205,7 +206,7 @@ When teardown is warranted (post-merge or on explicit request):
 8. **Tear down what the worktree provisioned**, not only the worktree.
    Steps 1-7 remove checkouts, refs, and directories; a database or
    container created for the branch survives all of them. Follow
-   `skills/sweeping-local-state/SKILL.md` — all sections, full depth. Skip
+   `skills/pr-cleanup/playbooks/cleanup.md` — all sections, full depth. Skip
    "Finishing a review rather than a merge". It runs the teardown commands
    the repo declares in `.teamteardown`, and runs nothing when the repo
    declares none.
@@ -230,7 +231,7 @@ multi-repo mode, each repo honors its own `.worktreeinclude` independently.
 `.teamteardown`, also at the project root: one command per line, run when
 the work the worktree carried is finished, so a database or container
 created for the branch does not outlive it. Only the copy committed to the
-default branch ever runs. `skills/sweeping-local-state/SKILL.md` carries
+default branch ever runs. `skills/pr-cleanup/playbooks/cleanup.md` carries
 the format and the rules; teardown step 8 above is what runs it.
 
 ## Fallback

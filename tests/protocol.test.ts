@@ -142,7 +142,7 @@ describe("reporting agents can reach the orchestrator", () => {
 
 describe("multi-repo support", () => {
   const QRSPI = join(REPO_ROOT, "skills", "team", "playbooks", "feature.md");
-  const WORKTREE_ISO = join(REPO_ROOT, "skills", "worktree-isolation", "SKILL.md");
+  const WORKTREE_ISO = join(REPO_ROOT, "skills", "team-worktree", "playbooks", "worktree.md");
   const TEAM_WT = join(REPO_ROOT, "skills", "team-worktree", "SKILL.md");
   const TEAM_IMPL = join(REPO_ROOT, "skills", "team-implement", "SKILL.md");
   const TEAM_PR = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
@@ -472,13 +472,13 @@ describe("L2-demoted heavy-prior-state pipeline skills", () => {
 // state as the first action of a run. The board-move was documented only as a
 // manual dev step, so the orchestrator never did it (issue surfaced on
 // `/team <issue-url>`). The generic, best-effort runtime contract is now
-// canonical in skills/tracking-tickets/SKILL.md (content pins there); the
+// canonical in skills/team-pr/references/tracking.md (content pins there); the
 // full pipeline and the bug-fix pipeline keep short pointer steps (pointer
 // pins), plus a concrete dev binding in the project-tracking doc.
 describe("ticket pickup → in-progress", () => {
   const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
   const TEAM_FIX = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
-  const TRACKING_TICKETS = join(REPO_ROOT, "skills", "tracking-tickets", "SKILL.md");
+  const TRACKING_TICKETS = join(REPO_ROOT, "skills", "team-pr", "references", "tracking.md");
   const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
 
   // The generic runtime contract: tracker-agnostic, best-effort, skip-silently,
@@ -498,12 +498,11 @@ describe("ticket pickup → in-progress", () => {
   }
 
   // Pointer pin: the host names the pickup move and defers the rules to
-  // tracking-tickets rather than restating the full contract. The deferral is
-  // encoded as a Skill-tool load, so the bare name is the reference.
+  // the tracking reference rather than restating the full contract.
   function assertInProgressPointer(path: string) {
     const text = flat(read(path));
     expect(/move the ticket to in-progress/i.test(text)).toBe(true);
-    expect(loadsSkill(text, "tracking-tickets")).toBe(true);
+    expect(text).toContain("tracking.md");
     // Does not hardcode this repo's board into the distributed runtime.
     expect(text).not.toContain("project-set-status");
     expect(text).not.toContain("projects/5");
@@ -539,14 +538,14 @@ describe("ticket pickup → in-progress", () => {
 // ticket to in-review immediately after the draft opened (observed as a Linear
 // issue reading "In Review" against a draft PR — #159). The generic,
 // best-effort runtime contract — including its timing — is now canonical in
-// skills/tracking-tickets/SKILL.md (content pins there); every skill that
+// skills/team-pr/references/tracking.md (content pins there); every skill that
 // opens a PR keeps a short pointer step (pointer pins), while the merge skill
 // (shipit) stays board-agnostic.
 describe("PR open (link) → ready for review (in-review) → (merge) done", () => {
   const TEAM_SKILL = join(REPO_ROOT, "skills", "team", "SKILL.md");
   const TEAM_FIX = join(REPO_ROOT, "skills", "team-fix", "SKILL.md");
   const TEAM_PR = join(REPO_ROOT, "skills", "team-pr", "SKILL.md");
-  const TRACKING_TICKETS = join(REPO_ROOT, "skills", "tracking-tickets", "SKILL.md");
+  const TRACKING_TICKETS = join(REPO_ROOT, "skills", "team-pr", "references", "tracking.md");
   const SHIPIT = join(REPO_ROOT, "skills", "shipit", "SKILL.md");
   const PROJECT_TRACKING = join(REPO_ROOT, "docs", "project-tracking.md");
 
@@ -569,10 +568,10 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
   }
 
   // Pointer pin: the host names the link + in-review moments and defers the
-  // rules (interpretation, timing, multi-repo closing) to tracking-tickets.
+  // rules (interpretation, timing, multi-repo closing) to the tracking reference.
   function assertInReviewPointer(path: string) {
     const text = flat(read(path));
-    expect(loadsSkill(text, "tracking-tickets")).toBe(true);
+    expect(text).toContain("tracking.md");
     // Still names the tracker moment so the pointer step is discoverable.
     expect(/in-review/i.test(text)).toBe(true);
     // Does not hardcode this repo's board into the distributed runtime.
@@ -621,7 +620,7 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
   // — the final line of the authored PR body — with ticketId interpretation
   // codified at the consumption site and multi-repo runs closing the ticket
   // exactly once (home PR only). The closing-footer rules are canonical in
-  // skills/tracking-tickets/SKILL.md (content pins there); team-pr keeps the
+  // skills/team-pr/references/tracking.md (content pins there); team-pr keeps the
   // WHERE — the PR Body Template that ends with the footer — as host glue.
 
   // The PR Body Template: the first fenced code block after the
@@ -697,9 +696,9 @@ describe("PR open (link) → ready for review (in-review) → (merge) done", () 
 
   function assertHomeOnlyClosingPointer(path: string) {
     const text = flat(read(path));
-    // Names the home-only rule and defers its detail to tracking-tickets.
+    // Names the home-only rule and defers its detail to the tracking reference.
     expect(/home[^.]{0,250}closing/i.test(text)).toBe(true);
-    expect(loadsSkill(text, "tracking-tickets")).toBe(true);
+    expect(text).toContain("tracking.md");
   }
 
   test("tracking-tickets: multi-repo — only the home PR carries a closing keyword; companions use a non-closing qualified reference", () => {
@@ -945,7 +944,6 @@ describe("exception vocabulary appears in no rule prose", () => {
     "carve-out|skills/pr-watch-as-author/SKILL.md",
     "carve-out|skills/pr-watch-as-reviewer/SKILL.md",
     "carve-out|skills/team/principles/human-control.md",
-    "exempt|skills/nested-agents/SKILL.md",
   ]);
 
   // All files under `dir` (relative to REPO_ROOT) ending in one of `exts`,

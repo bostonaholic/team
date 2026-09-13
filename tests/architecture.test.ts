@@ -613,7 +613,7 @@ describe("worktree-first pipeline", () => {
   const NO_CP_FILES = [
     join(REPO_ROOT, "skills", "team", "SKILL.md"),
     join(REPO_ROOT, "skills", "team-worktree", "SKILL.md"),
-    join(REPO_ROOT, "skills", "worktree-isolation", "SKILL.md"),
+    join(REPO_ROOT, "skills", "team-worktree", "playbooks", "worktree.md"),
   ];
 
   for (const file of NO_CP_FILES) {
@@ -623,8 +623,8 @@ describe("worktree-first pipeline", () => {
   }
 
   // ---- Slice 3: worktree-isolation rationale is "why first" ----------------
-  test("worktree-isolation rewrites rationale as Why first", () => {
-    expect(read(join(REPO_ROOT, "skills", "worktree-isolation", "SKILL.md"))).toContain("Why first");
+  test("worktree playbook rewrites rationale as Why first", () => {
+    expect(read(join(REPO_ROOT, "skills", "team-worktree", "playbooks", "worktree.md"))).toContain("Why first");
   });
 });
 

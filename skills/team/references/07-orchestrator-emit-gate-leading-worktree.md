@@ -64,5 +64,5 @@ clean for the whole run.
    **in-place for the entire run**. Author `docs/plans/<id>/` at the
    home-repo root, and thread that root downstream as the absolute path.
    Never block the pipeline because worktree creation failed (mirror the
-   best-effort fallback in `skills/worktree-isolation/SKILL.md` →
+   best-effort fallback in `skills/team-worktree/playbooks/worktree.md` →
    "Fallback").

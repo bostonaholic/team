@@ -67,7 +67,7 @@ describe("Installed resource delivery: dispatch callers", () => {
   test.each([
     { caller: "skills/code-review/SKILL.md", operation: "SKILL.md" },
     { caller: "skills/pr-verify/SKILL.md", operation: "references/04-execution.md" },
-    { caller: "skills/nested-agents/SKILL.md", operation: "references/per-agent-dispatch.md" },
+    { caller: "skills/team/references/agent-dispatch.md", operation: "15-host-dispatch.md" },
   ])("$caller resolves its shared installed dispatch contract", ({ caller, operation }) => {
     const installed = installedDispatchLinks(caller, operation);
 

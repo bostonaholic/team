@@ -1,7 +1,7 @@
 // Type declarations for resolve-transcript.mjs — the .mjs is the source of
 // truth; this stub only describes its exports for `tsc --noEmit`. Consumed by
 // TypeScript tooling, never at runtime. Same convention as
-// skills/nested-agents/supports-nesting.d.mts.
+// skills/team/references/supports-nesting.d.mts.
 
 /** Per-span byte cap applied before any lens sees a span. */
 export const PER_SPAN_BYTE_CAP: number;

@@ -1,7 +1,7 @@
 // Type declarations for write-target.mjs — the .mjs is the source of truth;
 // this stub only describes its exports for `tsc --noEmit`. Consumed by
 // TypeScript tooling, never at runtime. Same convention as
-// skills/nested-agents/supports-nesting.d.mts.
+// skills/team/references/supports-nesting.d.mts.
 
 /** True only for a name matching `^[a-z][a-z0-9-]*$`. */
 export function isValidSkillName(name: unknown): boolean;

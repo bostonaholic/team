@@ -1,6 +1,6 @@
 ### 3. Bounded cycle mechanics
 
-Call the Skill tool with `pr-watch-mechanics`. It owns the cycle timing,
+Read the [watch loop](../../pr-watch-as-author/references/watch-loop.md). It owns the cycle timing,
 the 3-cycle soft cap, the handoff, and the three stop conditions that are
 loop mechanics rather than actions of this skill.
 

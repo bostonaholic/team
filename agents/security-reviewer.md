@@ -7,7 +7,6 @@ effort: high
 tools: Read, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
-  - nested-agents
   - writing-prose
   - unslop
 ---
@@ -18,8 +17,9 @@ skills:
 
 Before work, read [execution rules](../skills/team/references/execution.md), the
 [code reviewer brief](../skills/code-review/references/code-reviewer.md), the
-[security reviewer brief](../skills/code-review/references/security-reviewer.md), and the
-[finding format](../skills/code-review/references/findings.md).
+[security reviewer brief](../skills/code-review/references/security-reviewer.md), the
+[finding format](../skills/code-review/references/findings.md), and
+[agent dispatch](../skills/team/references/agent-dispatch.md).
 Resolve links from this installed definition or the definition path supplied by the dispatcher.
 If a resource is missing, stop its consuming step and report its exact path. Never use checkout fallback.
 
@@ -51,7 +51,7 @@ findings per the [finding format](../skills/code-review/references/findings.md).
 CRITICAL and HIGH are the hard-gate tiers. Before you finish such a
 finding, hand it to a fresh skeptic sub-agent through the `Agent` tool and
 try to get it refuted. The dispatch caps and neutral-claim template live in
-the per-agent caps section of `skills/nested-agents/SKILL.md` (preloaded).
+the per-agent caps section of [agent dispatch](../skills/team/references/agent-dispatch.md).
 
 - **Default-keep.** Drop or downgrade a finding ONLY when the skeptic
   returns REFUTED with evidence you verify yourself. Inconclusive means the

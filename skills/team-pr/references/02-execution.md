@@ -45,8 +45,8 @@
    draft PR per repo. Cross-link the PRs in their bodies (see PR Body
    Template below).
 9. **Tracking ticket — link now, in-review when ready.** If `ticketId` is
-   non-null, call the Skill tool with `tracking-tickets` and apply its
-   ticket-lifecycle rules. Render the ticket link as the closing line that the PR Body Template below ends with. That skill owns
+   non-null, read [tracking rules](tracking.md) and apply its
+   ticket-lifecycle rules. Render the ticket link as the closing line that the PR Body Template below ends with. That reference owns
    the `ticketId` interpretation, the omit-when-null rule, the multi-repo
    home-only closing rule, and the in-review timing. The ticket keeps its
    in-progress state while the PR is a draft. It moves to in-review only
@@ -81,8 +81,8 @@
 11. **Leave the worktree(s) in place.** Do not remove a worktree after
    opening a PR — the user may need to iterate on the branch (push
    follow-up commits, address review feedback). Clean up only after the
-   PR is merged or when the user explicitly asks. Call the Skill tool with
-   `worktree-isolation` and follow
+   PR is merged or when the user explicitly asks. Read the
+   [worktree playbook](../team-worktree/playbooks/worktree.md) and follow
    its "Ship (teardown)" procedure:
    commit preservation, worktree and branch removal, the rebase-only
    default-branch update, and deletion of the feature's untracked

@@ -2,7 +2,7 @@
 agent: git-commit
 tier: periodic
 deps:
-  - skills/git-commit/**
+  - skills/team-pr/references/commit.md
 ---
 
 # Self-contained task: author a Conventional Commit for a staged diff

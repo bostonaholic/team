@@ -929,7 +929,7 @@ describe("Slice 1 — scripts/splice.mjs section boundaries (L1)", () => {
 
   test("a nested four-backtick block does not hide the real Screenshots heading", () => {
     // `## Review notes` carries the four-backtick `DATA` block
-    // skills/cross-model-review/SKILL.md mandates, wrapping an odd number of
+    // skills/team/references/cross-model-review.md mandates, wrapping an odd number of
     // three-backtick lines. A blind toggle inverts the mask from there on,
     // hides the real heading, fires the INSERT path, and lands a SECOND
     // `## Screenshots` — after which the two-headings refusal locks the PR out

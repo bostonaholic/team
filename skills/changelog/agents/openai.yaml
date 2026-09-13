@@ -1,4 +1,0 @@
-interface:
-  display_name: "Changelog"
-  short_description: "Update the changelog for a release"
-  default_prompt: "Use $changelog to update the changelog for a release."

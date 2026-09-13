@@ -69,15 +69,15 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    `$ARGUMENTS/design-review-<n>.md` already carries a passing verdict
    (APPROVE or COMMENT), skip straight to step 4 — never re-review a
    passed design. Otherwise, before each review dispatch, run the
-   external cross-model pass: call the Skill tool with
-   `cross-model-review` and follow
+   external cross-model pass: read the
+   [cross-model review](../team/references/cross-model-review.md) and follow
    its `## Design-review pass` — reference that procedure,
    never duplicate it here. Its one gate: the
    `TEAM_DISABLE_CROSS_MODEL` kill-switch. Run the runner's `detect`
    verb, then `run` per ready CLI — each through its own named courier
-   sub-agent per that skill's vendor-courier block, with its inline
+   sub-agent per that reference's vendor-courier block, with its inline
    fallback — naming any unavailable CLI to the
-   user per that skill's `## When a vendor CLI is unavailable`; a
+   user per that reference's `## When a vendor CLI is unavailable`; a
    missing runner is
    `skip: cross-model runner not found` per CLI. Fence each CLI's raw
    output as a `DATA` block at capture time (fence longer than any

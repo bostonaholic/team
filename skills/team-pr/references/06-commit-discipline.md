@@ -1,6 +1,6 @@
 ## Commit Discipline
 
-When creating the commit, call the Skill tool with `git-commit` and apply it:
+When creating the commit, read [commit discipline](commit.md) and apply it:
 
 - Conventional Commits format: `feat:`, `fix:`, `refactor:`, etc.
 - Subject ≤ 50 chars, imperative, no trailing period
