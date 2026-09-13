@@ -18,7 +18,7 @@
 5. **Seed the TodoWrite ledger** with one item per phase, in order:
    `Worktree → Question → Research → Design → Structure → Plan → Implement → PR`.
    Mark `Worktree` as `in_progress`.
-   See `principle-progress-tracking` for the per-step tracking convention agents follow within each phase.
+   See [execution rules](references/execution.md) for the per-step tracking convention agents follow within each phase.
    With no TodoWrite on the host, seed the substitute file ledger the
    Rules reference defines instead; it is written once WORKTREE creates
    the directory.
@@ -46,7 +46,7 @@
    **Never re-dispatch a phase whose artifact already exists** — re-running
    QUESTION over an existing `1-task.md`, for example, would overwrite
    in-progress work (data loss).
-   Resume is an idempotent re-run: already-done is done, never an error (`principle-idempotent-reruns`).
+   Resume is an idempotent re-run: already-done is done, never an error ([durable state rules](principles/durable-state.md)).
 
 You hold the description in your own context. Downstream of QUESTION the
 description must NEVER appear in any artifact or agent payload outside

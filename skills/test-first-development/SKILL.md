@@ -6,7 +6,10 @@ user-invocable: false
 
 # Test-First Development
 
-Acceptance tests are the immutable scope fence (`principle-scope-fence`). Read
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
+Acceptance tests are the immutable scope fence ([human control rules](../team/principles/human-control.md)). Read
 [references/procedure.md](references/procedure.md) for complete error handling,
 stub limits, and the acceptance-versus-step-level distinction.
 
@@ -30,7 +33,7 @@ Audit each against that skill's named checklist before reporting results.
 
 Run the full suite. Every new test must FAIL through its assertion, never ERROR;
 every existing test must pass. This is a deterministic gate
-(`principle-mechanical-gates`). Then run the project's static checks, including
+([verified results rules](../team/principles/verified-results.md)). Then run the project's static checks, including
 typecheck, and make them pass. Report both results.
 
 ## 3. Fix errors, not failures

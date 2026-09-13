@@ -5,7 +5,7 @@ effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 
-Before dispatch, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
+Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 Before artifact work, read [artifact schema](../team/references/artifacts.md).
 
 # Team Plan — Tactical Implementation Plan

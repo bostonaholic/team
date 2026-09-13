@@ -7,7 +7,6 @@ effort: medium
 tools: Read, Grep, Glob, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
-  - principle-progress-tracking
   - nested-agents
   - systems-thinking
   - researching-codebases
@@ -24,6 +23,7 @@ will use to align with the user.
 
 ## Installed resources
 
+Before work, read [execution rules](../skills/team/references/execution.md).
 Before work, read [artifact schema](../skills/team/references/artifacts.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.

@@ -7,7 +7,6 @@ effort: high
 tools: Read, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
 permissionMode: plan
 skills:
-  - principle-progress-tracking
   - nested-agents
   - reviewing-code
   - conventional-comments
@@ -30,6 +29,7 @@ code against them.
 
 ## Installed resources
 
+Before work, read [execution rules](../skills/team/references/execution.md).
 Before the cross-model pass, read [artifact schema](../skills/team/references/artifacts.md) and [external-data rules](../skills/team/references/external-data.md).
 Resolve links from the supplied installed agent definition, never the working directory.
 If the host cannot expose that definition, its dispatcher must supply its path before work.
@@ -96,7 +96,7 @@ the pass check the tree per that skill's `## Invocation`: report any
 mutation you did not make as a Blocking finding. Skip loudly on any
 failure — the pass is an optimization, never a dependency, and never a
 reason to soften a verdict.
-Skip-loudly canon: `skills/principle-skip-loudly/SKILL.md`.
+Skip-loudly canon: [verified results rules](../skills/team/principles/verified-results.md).
 
 ## Verdict
 

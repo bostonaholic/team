@@ -6,6 +6,9 @@ user-invocable: false
 
 # Systematic Debugging
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Find the cause before fixing. Read
 [references/investigation.md](references/investigation.md) for the full evidence
 checklist, 5 Whys method, examples, and escalation payload.
@@ -41,7 +44,7 @@ predictions that can prove it wrong.
 ## Phase 4: CONCLUDE
 
 - Identify the root cause, not the proximate symptom
-  (`principle-fix-root-causes`).
+  ([bug fix rules](../team-fix/playbooks/bug-fix.md)).
 - Make the original reproduction pass without changing unrelated behavior.
 - Search for related instances and document evidence and eliminated theories.
 

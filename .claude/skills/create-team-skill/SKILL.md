@@ -22,7 +22,6 @@ Preserve every command, number, path, name, authorization boundary, untrusted-in
 
 | Tier | Frontmatter | `SKILL.md` budget |
 | --- | --- | ---: |
-| Principle | name starts `principle-` | 25 lines |
 | Methodology | `user-invocable: false` | 80 lines |
 | Entry point | otherwise | 150 lines |
 
@@ -42,7 +41,7 @@ Team cannot see the other tenants and so can never verify that it fits. Be a goo
 
 ## Classify
 
-- A principle states one cross-cutting, observable invariant, is not better enforced mechanically, has a current consumer, uses `user-invocable: false`, and carries no `effort`. Name it `principle-<name>` and keep each rule to one imperative line.
+- Put shared invariants in the applicable ordinary document under `skills/team/principles/` or its scoped operational reference. Do not create principle registrations.
 - Methodology is reusable reference material. Set `user-invocable: false`; never expose it directly as a slash command.
 - An entry point is a user action. Leave `user-invocable` unset. If methodology also needs a command, add a separate front door such as `code-review` over `reviewing-code`.
 - Use `disable-model-invocation: true` only for an explicit-only entry point with a recorded reason.
@@ -93,11 +92,11 @@ Never put `$` followed by a digit in `SKILL.md`; hosts may substitute it as an a
 ## Integrate
 
 - Add entry points to the `AGENTS.md` routing table and `docs/skills.md`.
-- Add methodology and principles to `docs/skills.md`.
+- Add methodology registrations to `docs/skills.md`. Document ordinary resources separately.
 - Write every `docs/skills.md` entry as its heading, the verbatim first sentence of the frontmatter `description`, one `**Used by:**` line, then one `**Uses:**` line. Use comma-separated backticked names, or `None`. Rewriting a `description` updates that entry in the same commit.
 - `Used by` lists, in codepoint order, every skill whose `Uses` list names this skill.
-- `Uses` lists only the skills the files load through ``Call the Skill tool with `<name>` ``, in any `.md` under `skills/<name>/`, references and prompt templates included. A citation is not a use, so a skill it merely names by path or in prose stays off the list. Sort in codepoint order (plain `sort`, so `pr-verify` precedes `principle-fail-closed`). `tests/docs-skills-catalog.test.ts` is the gate.
-- Add one TodoWrite item per ordered step by applying `principle-progress-tracking`; do not copy its banner into the skill.
+- `Uses` lists only the skills the files load through ``Call the Skill tool with `<name>` ``, in any `.md` under `skills/<name>/`, references and prompt templates included. A citation is not a use, so a skill it merely names by path or in prose stays off the list. Sort in codepoint order (plain `sort`, so `pr-verify` precedes `product-thinking`). `tests/docs-skills-catalog.test.ts` is the gate.
+- Add one TodoWrite item per ordered step by applying [execution rules](../../../skills/team/references/execution.md); do not copy its banner into the skill.
 - Update `agents/openai.yaml` whenever the description changes.
 - For runtime behavior, update `CHANGELOG.md` under `Unreleased`; version only at land time.
 

@@ -7,6 +7,9 @@ argument-hint: "[docs/plans/<id>/]"
 
 # Team PR — Create the Pull Request
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Before finalizing prose you author, call the Skill tool with `unslop` and
 `writing-prose`, in that order. Preserve exact commands, tokens, and templates.
 
@@ -78,4 +81,4 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-optimization-never-dependency`.
+Read and apply: [focused work rules](../team/principles/focused-work.md).

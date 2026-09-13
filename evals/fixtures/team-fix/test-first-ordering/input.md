@@ -2,6 +2,12 @@
 agent: team-fix
 tier: periodic
 deps:
+  - skills/team-fix/playbooks/bug-fix.md
+  - skills/team-fix/references/06-execution.md
+  - skills/team/principles/human-control.md
+  - skills/team/references/execution.md
+  - skills/test-driven-bug-fix/SKILL.md
+  - skills/test-driven-bug-fix/references/procedure.md
   - skills/team-fix/**
   - skills/test-driven-bug-fix/**
   - skills/tracking-tickets/**

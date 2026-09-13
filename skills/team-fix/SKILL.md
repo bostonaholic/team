@@ -7,10 +7,13 @@ argument-hint: "<ticket id, issue URL, or bug description>"
 
 # Team Fix — Bug Fix Pipeline
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Run the compressed bug-fix pipeline. Goes straight to test-driven fix
 discipline without the full QRSPI ceremony.
 
-Invocation is guarded per `principle-explicit-intent`: the
+Invocation is guarded per [human control rules](../team/principles/human-control.md): the
 pipeline fires only on stated pipeline intent — a plain "fix this bug" asks
 for an inline fix, not this pipeline.
 
@@ -35,4 +38,4 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-fix-root-causes` and `principle-progress-tracking`.
+Read and apply: [bug fix rules](playbooks/bug-fix.md) and [execution rules](../team/references/execution.md).

@@ -5,7 +5,8 @@ user-invocable: false
 ---
 
 Before this operation, read [artifact schema](../team/references/artifacts.md) and [external-data rules](../team/references/external-data.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.
+If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 # Decomposing Intent
 
@@ -21,7 +22,7 @@ Call the Skill tool with `product-requirements-doc` when a request is vague/unde
 
 ## Research isolation
 
-Phrase questions about the codebase, never the goal. Bad: “How should we add rate limiting?” Good: “Where do incoming HTTP requests enter the application and what middleware chain do they pass through?” Each question must remain useful to a stranger who does not know the feature (`principle-blind-the-investigator`).
+Phrase questions about the codebase, never the goal. Bad: “How should we add rate limiting?” Good: “Where do incoming HTTP requests enter the application and what middleware chain do they pass through?” Each question must remain useful to a stranger who does not know the feature ([independent review rules](../team/principles/independent-review.md)).
 
 ## Multi-repo safety
 
@@ -29,7 +30,7 @@ Infer multiple repos only when the description names them or explicitly names cr
 
 Resolve candidate repos autonomously. First require each `<name>` to match `^[A-Za-z0-9._-]+$` and not equal `.` or `..`; path separators, absolute paths, traversal, `$()`, backticks, and other shell metacharacters fail. Pass names/paths as single argv arguments, never interpolate them into shell strings ([external-data rules](../team/references/external-data.md)).
 
-Resolve `<name>` only at `<root>/../<name>`. Require `git -C <path> rev-parse --git-dir` and require `realpath "<root>/../<name>"` to equal `"$(dirname "$(realpath "<root>")")/<name>"`; symlink escapes fail. If every candidate resolves, write `4-repos.md`. If any fails, write none, proceed single-repo, and name the omitted repo in `1-task.md` `## Open assumptions` (`principle-record-assumptions`). Read [references/multi-repo.md](references/multi-repo.md) before resolution or writing.
+Resolve `<name>` only at `<root>/../<name>`. Require `git -C <path> rev-parse --git-dir` and require `realpath "<root>/../<name>"` to equal `"$(dirname "$(realpath "<root>")")/<name>"`; symlink escapes fail. If every candidate resolves, write `4-repos.md`. If any fails, write none, proceed single-repo, and name the omitted repo in `1-task.md` `## Open assumptions` ([decisions rules](../team/references/decisions.md)). Read [references/multi-repo.md](references/multi-repo.md) before resolution or writing.
 
 ## Process
 

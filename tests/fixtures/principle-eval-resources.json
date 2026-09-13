@@ -1,0 +1,257 @@
+[
+  {
+    "file": "code-reviewer.evals.ts",
+    "name": "planted-null-deref",
+    "callback": "planted-null-deref",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/independent-review.md",
+      "skills/team/principles/verified-results.md",
+      "skills/team/principles/focused-work.md"
+    ],
+    "agent": "code-reviewer",
+    "case": "planted-null-deref",
+    "selection": "planted-null-deref"
+  },
+  {
+    "file": "code-reviewer.evals.ts",
+    "name": "planted-time-bomb",
+    "callback": "planted-time-bomb",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/independent-review.md",
+      "skills/team/principles/verified-results.md",
+      "skills/team/principles/focused-work.md"
+    ],
+    "agent": "code-reviewer",
+    "case": "planted-time-bomb",
+    "selection": "planted-time-bomb"
+  },
+  {
+    "file": "code-reviewer.evals.ts",
+    "name": "planted-comment-violations",
+    "callback": "planted-comment-violations",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/independent-review.md",
+      "skills/team/principles/verified-results.md",
+      "skills/team/principles/focused-work.md"
+    ],
+    "agent": "code-reviewer",
+    "case": "planted-comment-violations",
+    "selection": "planted-comment-violations"
+  },
+  {
+    "file": "code-reviewer.evals.ts",
+    "name": "planted-comment-process-narration",
+    "callback": "planted-comment-process-narration",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/independent-review.md",
+      "skills/team/principles/verified-results.md",
+      "skills/team/principles/focused-work.md"
+    ],
+    "agent": "code-reviewer",
+    "case": "planted-comment-process-narration",
+    "selection": "planted-comment-process-narration"
+  },
+  {
+    "file": "eng-design-doc-review.evals.ts",
+    "name": "eng-design-doc-review-planted-missing-alternatives",
+    "callback": "eng-design-doc-review-planted-missing-alternatives",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/independent-review.md",
+      "skills/team/principles/verified-results.md",
+      "skills/team/principles/focused-work.md"
+    ],
+    "agent": "eng-design-doc-review",
+    "case": "planted-missing-alternatives",
+    "selection": "eng-design-doc-review-planted-missing-alternatives"
+  },
+  {
+    "file": "team-question.evals.ts",
+    "name": "team-question-neutral-questions",
+    "callback": "team-question-neutral-questions",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/independent-review.md",
+      "skills/team/references/decisions.md"
+    ],
+    "agent": "team-question",
+    "case": "neutral-questions",
+    "selection": "team-question-neutral-questions"
+  },
+  {
+    "file": "team-research.evals.ts",
+    "name": "team-research-answers-seeded-questions",
+    "callback": "team-research-answers-seeded-questions",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/independent-review.md",
+      "skills/team/principles/verified-results.md"
+    ],
+    "agent": "team-research",
+    "case": "answers-seeded-questions",
+    "selection": "team-research-answers-seeded-questions"
+  },
+  {
+    "file": "team-design.evals.ts",
+    "name": "team-design-seeded-research-and-task",
+    "callback": "team-design-seeded-research-and-task",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/focused-work.md",
+      "skills/team/references/decisions.md"
+    ],
+    "agent": "team-design",
+    "case": "seeded-research-and-task",
+    "selection": "team-design-seeded-research-and-task"
+  },
+  {
+    "file": "team-structure.evals.ts",
+    "name": "team-structure-seeded-design",
+    "callback": "team-structure-seeded-design",
+    "resources": [
+      "skills/team/principles/durable-state.md"
+    ],
+    "agent": "team-structure",
+    "case": "seeded-design",
+    "selection": "team-structure-seeded-design"
+  },
+  {
+    "file": "team-plan.evals.ts",
+    "name": "team-plan-seeded-structure",
+    "callback": "team-plan-seeded-structure",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/focused-work.md"
+    ],
+    "agent": "team-plan",
+    "case": "seeded-structure",
+    "selection": "team-plan-seeded-structure"
+  },
+  {
+    "file": "team-fix.evals.ts",
+    "name": "team-fix-test-first-ordering",
+    "callback": "team-fix-test-first-ordering",
+    "resources": [
+      "skills/team/principles/human-control.md",
+      "skills/team/references/execution.md",
+      "skills/team-fix/playbooks/bug-fix.md"
+    ],
+    "agent": "team-fix",
+    "case": "test-first-ordering",
+    "selection": "team-fix-test-first-ordering"
+  },
+  {
+    "file": "unslop.evals.ts",
+    "name": "pipeline author behavior evaluation",
+    "callback": "pipeline author behavior evaluation",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/verified-results.md",
+      "skills/team/principles/focused-work.md",
+      "skills/team/references/execution.md"
+    ],
+    "agent": "unslop",
+    "case": "neutral-research",
+    "selection": "unslop-neutral-research"
+  },
+  {
+    "file": "unslop.evals.ts",
+    "name": "technical-writer semantic veto evaluation",
+    "callback": "technical-writer semantic veto evaluation",
+    "resources": [
+      "skills/team/principles/independent-review.md",
+      "skills/team/principles/verified-results.md",
+      "skills/team/references/execution.md"
+    ],
+    "agent": "unslop",
+    "case": "neutral-research",
+    "selection": "unslop-neutral-research"
+  },
+  {
+    "file": "unslop.evals.ts",
+    "name": "fresh DESIGN reviewer prose evaluation",
+    "callback": "fresh DESIGN reviewer prose evaluation",
+    "resources": [
+      "skills/team/principles/independent-review.md",
+      "skills/team/principles/verified-results.md",
+      "skills/team/principles/focused-work.md"
+    ],
+    "agent": "unslop",
+    "case": "neutral-research",
+    "selection": "unslop-neutral-research"
+  },
+  {
+    "file": "unslop.evals.ts",
+    "name": "isolated Research producers and grounded assembly:file-finder",
+    "callback": "isolated Research producers and grounded assembly",
+    "resources": [
+      "skills/team/principles/durable-state.md"
+    ],
+    "agent": "unslop",
+    "case": "neutral-research",
+    "selection": "unslop-neutral-research"
+  },
+  {
+    "file": "unslop.evals.ts",
+    "name": "isolated Research producers and grounded assembly:researcher",
+    "callback": "isolated Research producers and grounded assembly",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/independent-review.md",
+      "skills/team/principles/verified-results.md",
+      "skills/team/principles/focused-work.md",
+      "skills/team/references/execution.md",
+      "skills/team/references/decisions.md"
+    ],
+    "agent": "unslop",
+    "case": "neutral-research",
+    "selection": "unslop-neutral-research"
+  },
+  {
+    "file": "unslop.evals.ts",
+    "name": "isolated Research producers and grounded assembly:standalone",
+    "callback": "isolated Research producers and grounded assembly",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/references/external-data.md"
+    ],
+    "agent": "unslop",
+    "case": "neutral-research",
+    "selection": "unslop-neutral-research"
+  },
+  {
+    "file": "unslop.evals.ts",
+    "name": "isolated Research producers and grounded assembly:full-pipeline",
+    "callback": "isolated Research producers and grounded assembly",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/references/external-data.md",
+      "skills/team/principles/focused-work.md",
+      "skills/team/principles/verified-results.md",
+      "skills/team/references/execution.md"
+    ],
+    "agent": "unslop",
+    "case": "neutral-research",
+    "selection": "unslop-neutral-research"
+  },
+  {
+    "file": "unslop.evals.ts",
+    "name": "named parent fallback on unreadable prose file",
+    "callback": "named parent fallback on unreadable prose file",
+    "resources": [
+      "skills/team/principles/durable-state.md",
+      "skills/team/principles/independent-review.md",
+      "skills/team/principles/verified-results.md",
+      "skills/team/principles/focused-work.md",
+      "skills/team/references/execution.md",
+      "skills/team/references/decisions.md"
+    ],
+    "agent": "unslop",
+    "case": "neutral-research",
+    "selection": "unslop-neutral-research"
+  }
+]

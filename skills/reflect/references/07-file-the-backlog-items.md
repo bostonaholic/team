@@ -49,7 +49,7 @@ Creation is public and irreversible, so the granularity is **one question per
 issue**, not one for the class: fire a separate `AskUserQuestion` per proposed
 issue, each presenting the exact title and body it would create. Approving one
 issue never creates another, and approving the skill-edit class never creates
-any. The granularity rule is `principle-explicit-intent`: one
+any. The granularity rule is [human control rules](../team/principles/human-control.md): one
 yes per irreversible mutation.
 
 Each body paraphrases — it carries the learning, the file path or turn index

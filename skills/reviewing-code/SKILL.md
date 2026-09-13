@@ -5,15 +5,15 @@ user-invocable: false
 ---
 
 # Reviewing Code
-
+Before each consuming step, read its linked shared rules from this installed skill directory. If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 Review with fresh context. The generator never evaluates or fixes its output. Reviewers have
-read-only tools and `permissionMode: plan` (`principle-generator-evaluator`, `principle-least-privilege`).
+read-only tools and `permissionMode: plan` ([independent review rules](../team/principles/independent-review.md)).
 Read [references/review-manual.md](references/review-manual.md).
 Call the Skill tool with `writing-prose` and apply Self-lint before returning the report.
 
 ## Report Format
 
-Emit every heading below in order. Use Code Reviewer tokens from Verdict Criteria first. Relay the full report unchanged (`principle-skip-loudly`).
+Emit every heading below in order. Use Code Reviewer tokens from Verdict Criteria first. Relay the full report unchanged ([verified results rules](../team/principles/verified-results.md)).
 
 ```markdown
 **Verdict: <✅ APPROVE | ❌ REQUEST CHANGES | 💬 COMMENT>**

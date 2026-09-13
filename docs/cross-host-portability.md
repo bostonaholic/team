@@ -255,8 +255,7 @@ cross-cutting recency caveat:
    on MCP (decision 4).
 
 2. **Codex lists every skill in the `$` picker, so `user-invocable: false` is a
-   Claude-Code-only guarantee (hard gap).** Team's 64 methodology and
-   `principle-*` skills are reference material an agent loads, never something a
+   Claude-Code-only guarantee (hard gap).** Team's 40 registered methodology skills are reference material an agent loads, never something a
    human runs. On Claude Code, `user-invocable: false` keeps them out of the `/`
    menu. Codex has no equivalent, so they all appear under `$` and a user can
    invoke any of them directly. There is no workaround short of moving those
@@ -394,9 +393,8 @@ full parity. It starts from the matrix and works around the named gaps.
   equivalent — `policy.allow_implicit_invocation: false` in each skill's
   `agents/openai.yaml` — keeps all four out of the implicit catalog. The
   divergence is deliberate and the validator finding is expected.
-- **Codex ignores `user-invocable: false`, so every methodology and
-  `principle-*` skill shows up in its `$` picker. Do not try to fix this.** The
-  `$` picker is fed by the `skills/list` app-server method, which returned all
+- **Codex ignores `user-invocable: false` for registered methodologies.** Ordinary principles now use installed file reads and add no picker entries.
+  Historical probe evidence: the `$` picker was fed by the `skills/list` app-server method, which returned all
   100 Team skills with `enabled: true`, `team:principle-fix-root-causes` among
   them. Its `SkillMetadata` payload carries nine fields — `dependencies`,
   `description`, `enabled`, `interface`, `name`, `path`, `pluginId`, `scope`,

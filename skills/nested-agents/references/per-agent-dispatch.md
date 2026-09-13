@@ -1,6 +1,8 @@
+Before each `team:file-finder` dispatch or follow-up, read [host dispatch](../team/references/15-host-dispatch.md).
+
 # Per-agent nested dispatch
 
-Read the shared invariants in `../SKILL.md` first. This file is mandatory before the relevant agent dispatches helpers.
+Read the shared invariants in [shared guardrails](SKILL.md) first. This file is mandatory before the relevant agent dispatches helpers.
 
 ## Prose procedure for non-vendor helpers
 

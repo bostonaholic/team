@@ -2,7 +2,7 @@
 
 Every claim in the final output sits in exactly one tier. The tier
 decides which output section it goes in and how it is phrased
-(`principle-evidence-over-assertion`).
+([verified results rules](../team/principles/verified-results.md)).
 
 | Tier | Meaning | Phrasing |
 |---|---|---|
@@ -29,4 +29,4 @@ Phrasing rules:
   narrative.
 - A null result from a searched source is a finding. A skipped search is
   a blind spot — and every skip is reported by name with its reason
-  (`principle-skip-loudly`).
+  ([verified results rules](../team/principles/verified-results.md)).

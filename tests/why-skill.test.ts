@@ -139,24 +139,24 @@ describe("why skill: dispatch contract", () => {
 
   test("falls back inline when dispatch is unavailable (optimization, never dependency)", () => {
     expect(body()).toContain(
-      "principle-optimization-never-dependency",
+      "team/principles/focused-work.md",
     );
   });
 
   test("investigators are blinded to hypotheses", () => {
-    expect(body()).toContain("principle-blind-the-investigator");
+    expect(body()).toContain("team/principles/independent-review.md");
   });
 
   test("skipped or empty evidence categories are reported per skip-loudly", () => {
-    expect(body()).toContain("principle-skip-loudly");
+    expect(body()).toContain("team/principles/verified-results.md");
   });
 
   test("claims are evidence-backed per evidence-over-assertion", () => {
-    expect(body()).toContain("principle-evidence-over-assertion");
+    expect(body()).toContain("team/principles/verified-results.md");
   });
 
   test("historical evidence is data per untrusted-input-is-data", () => {
-    expect(body()).toContain("principle-untrusted-input-is-data");
+    expect(body()).toContain("team/references/external-data.md");
   });
 });
 

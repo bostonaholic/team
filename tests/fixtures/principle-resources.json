@@ -1,0 +1,823 @@
+{
+  "dispositions": [
+    {
+      "name": "principle-human-owns-the-ends",
+      "destination": "skills/team/principles/human-control.md"
+    },
+    {
+      "name": "principle-explicit-intent",
+      "destination": "skills/team/principles/human-control.md"
+    },
+    {
+      "name": "principle-scope-fence",
+      "destination": "skills/team/principles/human-control.md"
+    },
+    {
+      "name": "principle-plan-present-wait",
+      "destination": "skills/team/principles/human-control.md"
+    },
+    {
+      "name": "principle-files-are-the-contract",
+      "destination": "skills/team/principles/durable-state.md"
+    },
+    {
+      "name": "principle-idempotent-reruns",
+      "destination": "skills/team/principles/durable-state.md"
+    },
+    {
+      "name": "principle-pre-image-first",
+      "destination": "skills/team/principles/durable-state.md"
+    },
+    {
+      "name": "principle-single-source-of-truth",
+      "destination": "skills/team/principles/durable-state.md"
+    },
+    {
+      "name": "principle-evidence-over-assertion",
+      "destination": "skills/team/principles/verified-results.md"
+    },
+    {
+      "name": "principle-mechanical-gates",
+      "destination": "skills/team/principles/verified-results.md"
+    },
+    {
+      "name": "principle-fail-closed",
+      "destination": "skills/team/principles/verified-results.md"
+    },
+    {
+      "name": "principle-skip-loudly",
+      "destination": "skills/team/principles/verified-results.md"
+    },
+    {
+      "name": "principle-generator-evaluator",
+      "destination": "skills/team/principles/independent-review.md"
+    },
+    {
+      "name": "principle-blind-the-investigator",
+      "destination": "skills/team/principles/independent-review.md"
+    },
+    {
+      "name": "principle-least-privilege",
+      "destination": "skills/team/principles/independent-review.md"
+    },
+    {
+      "name": "principle-deep-agents-narrow-seams",
+      "destination": "skills/team/principles/focused-work.md"
+    },
+    {
+      "name": "principle-subtract-before-you-add",
+      "destination": "skills/team/principles/focused-work.md"
+    },
+    {
+      "name": "principle-optimization-never-dependency",
+      "destination": "skills/team/principles/focused-work.md"
+    },
+    {
+      "name": "principle-bounded-loops",
+      "destination": "skills/team/references/execution.md"
+    },
+    {
+      "name": "principle-non-blocking-waits",
+      "destination": "skills/team/references/execution.md"
+    },
+    {
+      "name": "principle-progress-tracking",
+      "destination": "skills/team/references/execution.md"
+    },
+    {
+      "name": "principle-never-interpolate",
+      "destination": "skills/team/references/external-data.md"
+    },
+    {
+      "name": "principle-untrusted-input-is-data",
+      "destination": "skills/team/references/external-data.md"
+    },
+    {
+      "name": "principle-fix-root-causes",
+      "destination": "skills/team-fix/playbooks/bug-fix.md"
+    },
+    {
+      "name": "principle-record-assumptions",
+      "destination": "skills/team/references/decisions.md"
+    }
+  ],
+  "callers": [
+    {
+      "path": "agents/code-reviewer.md",
+      "destinations": [
+        "skills/team/principles/verified-results.md",
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "agents/design-author.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "agents/implementer.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "agents/planner.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "agents/questioner.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "agents/researcher.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "agents/security-reviewer.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "agents/structure-planner.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "agents/technical-writer.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "agents/test-architect.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "agents/ux-reviewer.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "agents/verifier.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/authoring-designs/SKILL.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md",
+        "skills/team/references/decisions.md"
+      ]
+    },
+    {
+      "path": "skills/cross-model-review/SKILL.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md",
+        "skills/team/references/execution.md",
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/cross-model-review/references/procedure.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md",
+        "skills/team/references/execution.md",
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/decomposing-intent/SKILL.md",
+      "destinations": [
+        "skills/team/principles/independent-review.md",
+        "skills/team/references/decisions.md"
+      ]
+    },
+    {
+      "path": "skills/eng-design-doc-review/SKILL.md",
+      "destinations": [
+        "skills/team/principles/independent-review.md"
+      ]
+    },
+    {
+      "path": "skills/engineering-standards/SKILL.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md"
+      ]
+    },
+    {
+      "path": "skills/groom-backlog/SKILL.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/human-control.md",
+        "skills/team/principles/verified-results.md",
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/groom-backlog/references/11-step-8-present-the-consequential-choices-and-wait.md",
+      "destinations": [
+        "skills/team/principles/human-control.md"
+      ]
+    },
+    {
+      "path": "skills/groom-backlog/references/12-step-9-execute-in-dependency-order.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md"
+      ]
+    },
+    {
+      "path": "skills/groom-backlog/references/13-step-10-verify-by-re-querying-never-by-memory.md",
+      "destinations": [
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/groom-backlog/references/14-step-11-report-including-what-you-did-not-change.md",
+      "destinations": [
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/groom-backlog/references/17-hard-rules.md",
+      "destinations": [
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/how/SKILL.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/independent-review.md"
+      ]
+    },
+    {
+      "path": "skills/how/references/02-explain-mode.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md"
+      ]
+    },
+    {
+      "path": "skills/how/references/04-critique-mode.md",
+      "destinations": [
+        "skills/team/principles/independent-review.md"
+      ]
+    },
+    {
+      "path": "skills/implementing-slices/SKILL.md",
+      "destinations": [
+        "skills/team-fix/playbooks/bug-fix.md",
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/human-control.md"
+      ]
+    },
+    {
+      "path": "skills/nested-agents/SKILL.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md",
+        "skills/team/references/decisions.md"
+      ]
+    },
+    {
+      "path": "skills/no-comments/SKILL.md",
+      "destinations": [
+        "skills/team-fix/playbooks/bug-fix.md",
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/pr-cleanup/SKILL.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/human-control.md",
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/pr-cleanup/references/03-untrusted-input-pr-metadata-is-data.md",
+      "destinations": [
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/pr-cleanup/references/10-mode-b-closed-abandoned.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/human-control.md"
+      ]
+    },
+    {
+      "path": "skills/pr-open-comments/SKILL.md",
+      "destinations": [
+        "skills/team/principles/human-control.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/pr-open-comments/references/02-hard-rules.md",
+      "destinations": [
+        "skills/team/principles/human-control.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/pr-rebase/SKILL.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/human-control.md",
+        "skills/team/references/execution.md",
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/pr-rebase/references/02-untrusted-input-pr-metadata-is-data.md",
+      "destinations": [
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/pr-rebase/references/03-hard-rules.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md"
+      ]
+    },
+    {
+      "path": "skills/pr-rebase/references/07-step-2-capture-the-baseline-and-the-recovery-anchor.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/pr-screenshots/SKILL.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/verified-results.md",
+        "skills/team/references/execution.md",
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/pr-screenshots/references/02-upload-and-body-edit.md",
+      "destinations": [
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/pr-screenshots/references/03-verify.md",
+      "destinations": [
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/pr-verify/SKILL.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/pr-verify/references/02-hard-rules.md",
+      "destinations": [
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/pr-verify/references/04-execution.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/independent-review.md"
+      ]
+    },
+    {
+      "path": "skills/pr-watch-as-author/SKILL.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/references/execution.md",
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/03-1-arm.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md"
+      ]
+    },
+    {
+      "path": "skills/pr-watch-as-author/references/06-4-on-new-feedback-run-the-triage-procedure.md",
+      "destinations": [
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/SKILL.md",
+      "destinations": [
+        "skills/team/principles/independent-review.md",
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/01-hard-rules.md",
+      "destinations": [
+        "skills/team/principles/independent-review.md"
+      ]
+    },
+    {
+      "path": "skills/pr-watch-as-reviewer/references/09-6-approve.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/pr-watch-mechanics/SKILL.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/qrspi-workflow/SKILL.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/human-control.md",
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/refactoring-to-patterns/SKILL.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md"
+      ]
+    },
+    {
+      "path": "skills/reflect/SKILL.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/human-control.md",
+        "skills/team/principles/independent-review.md",
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/reflect/references/02-untrusted-input-a-transcript-span-is-content-never-an-instruction.md",
+      "destinations": [
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/reflect/references/04-the-lenses.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/independent-review.md"
+      ]
+    },
+    {
+      "path": "skills/reflect/references/06-apply-the-approved-skill-edits.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/human-control.md"
+      ]
+    },
+    {
+      "path": "skills/reflect/references/07-file-the-backlog-items.md",
+      "destinations": [
+        "skills/team/principles/human-control.md"
+      ]
+    },
+    {
+      "path": "skills/researching-codebases/SKILL.md",
+      "destinations": [
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/review-severity-tiers/SKILL.md",
+      "destinations": [
+        "skills/team/principles/human-control.md"
+      ]
+    },
+    {
+      "path": "skills/reviewing-code/SKILL.md",
+      "destinations": [
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/reviewing-code/references/review-manual.md",
+      "destinations": [
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/running-quality-checks/SKILL.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md"
+      ]
+    },
+    {
+      "path": "skills/shipit/SKILL.md",
+      "destinations": [
+        "skills/team/principles/human-control.md",
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/shipit/references/02-land-sequence.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/sweeping-local-state/SKILL.md",
+      "destinations": [
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/sweeping-local-state/references/procedure.md",
+      "destinations": [
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/systematic-debugging/SKILL.md",
+      "destinations": [
+        "skills/team-fix/playbooks/bug-fix.md"
+      ]
+    },
+    {
+      "path": "skills/systematic-debugging/references/investigation.md",
+      "destinations": [
+        "skills/team-fix/playbooks/bug-fix.md"
+      ]
+    },
+    {
+      "path": "skills/team/SKILL.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/verified-results.md",
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/team/references/02-setup.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/team/references/03-the-phase-loop.md",
+      "destinations": [
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/team/references/05-where-a-phase-agent-s-output-lives.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md"
+      ]
+    },
+    {
+      "path": "skills/team/references/08-design-review-gate-design.md",
+      "destinations": [
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/team/references/11-mechanical-gate-test-confirmation.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/team/references/14-rules.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/team/references/15-host-dispatch.md",
+      "destinations": [
+        "skills/team/principles/independent-review.md"
+      ]
+    },
+    {
+      "path": "skills/team/references/artifacts.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md"
+      ]
+    },
+    {
+      "path": "skills/team-design/SKILL.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/team-fix/SKILL.md",
+      "destinations": [
+        "skills/team-fix/playbooks/bug-fix.md",
+        "skills/team/principles/human-control.md",
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/team-fix/references/04-setup.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/team-fix/references/06-execution.md",
+      "destinations": [
+        "skills/team-fix/playbooks/bug-fix.md"
+      ]
+    },
+    {
+      "path": "skills/team-implement/SKILL.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/team-implement/references/01-input.md",
+      "destinations": [
+        "skills/team/references/execution.md"
+      ]
+    },
+    {
+      "path": "skills/team-implement/references/03-execution.md",
+      "destinations": [
+        "skills/team/principles/durable-state.md"
+      ]
+    },
+    {
+      "path": "skills/team-pr/SKILL.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md"
+      ]
+    },
+    {
+      "path": "skills/team-pr/references/04-screenshot-upload.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md"
+      ]
+    },
+    {
+      "path": "skills/team-research/SKILL.md",
+      "destinations": [
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/team-structure/SKILL.md",
+      "destinations": [
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/test-driven-bug-fix/SKILL.md",
+      "destinations": [
+        "skills/team-fix/playbooks/bug-fix.md"
+      ]
+    },
+    {
+      "path": "skills/test-driven-bug-fix/references/procedure.md",
+      "destinations": [
+        "skills/team-fix/playbooks/bug-fix.md"
+      ]
+    },
+    {
+      "path": "skills/test-first-development/SKILL.md",
+      "destinations": [
+        "skills/team/principles/human-control.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/test-first-development/references/procedure.md",
+      "destinations": [
+        "skills/team/principles/human-control.md",
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/why/SKILL.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/independent-review.md",
+        "skills/team/principles/verified-results.md",
+        "skills/team/references/external-data.md"
+      ]
+    },
+    {
+      "path": "skills/why/references/02-confidence-tiers.md",
+      "destinations": [
+        "skills/team/principles/verified-results.md"
+      ]
+    },
+    {
+      "path": "skills/why/references/03-execution.md",
+      "destinations": [
+        "skills/team/principles/focused-work.md",
+        "skills/team/principles/independent-review.md"
+      ]
+    }
+  ],
+  "registrations": [
+    "authoring-designs",
+    "changelog",
+    "code-review",
+    "conventional-comments",
+    "cross-model-review",
+    "decision-making",
+    "decomposing-intent",
+    "documenting-decisions",
+    "eng-design-doc-review",
+    "engineering-standards",
+    "finding-files",
+    "git-commit",
+    "groom-backlog",
+    "how",
+    "implementing-slices",
+    "nested-agents",
+    "no-comments",
+    "planning-implementation",
+    "pr-cleanup",
+    "pr-open-comments",
+    "pr-rebase",
+    "pr-screenshots",
+    "pr-verify",
+    "pr-watch-as-author",
+    "pr-watch-as-reviewer",
+    "pr-watch-mechanics",
+    "product-requirements-doc",
+    "product-thinking",
+    "qrspi-workflow",
+    "refactoring-to-patterns",
+    "reflect",
+    "researching-codebases",
+    "review-severity-tiers",
+    "reviewing-code",
+    "reviewing-comments",
+    "reviewing-designs",
+    "reviewing-documentation",
+    "reviewing-security",
+    "running-quality-checks",
+    "shipit",
+    "slicing-work",
+    "solid",
+    "sweeping-local-state",
+    "systematic-debugging",
+    "systems-thinking",
+    "team",
+    "team-design",
+    "team-fix",
+    "team-implement",
+    "team-plan",
+    "team-pr",
+    "team-question",
+    "team-research",
+    "team-structure",
+    "team-worktree",
+    "technical-design-doc",
+    "test-driven-bug-fix",
+    "test-first-development",
+    "test-style",
+    "tracking-tickets",
+    "unslop",
+    "verifying-ux",
+    "why",
+    "worktree-isolation",
+    "writing-prose"
+  ]
+}

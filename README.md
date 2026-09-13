@@ -8,6 +8,8 @@ Team installs on Claude Code, Codex CLI, Antigravity CLI, and OpenCode. The full
 
 **Documentation:** [team.bostonaholic.dev](https://team.bostonaholic.dev)
 
+The [shared principle resources](docs/skills.md#shared-principle-resources) define the installed rules for scope, state, evidence, review, and focused work.
+
 ## Install
 
 Each host installs Team through its own plugin mechanism. Every section below

@@ -2,6 +2,8 @@
 agent: team-plan
 tier: periodic
 deps:
+  - skills/team/principles/durable-state.md
+  - skills/team/principles/focused-work.md
   - skills/team/references/artifacts.md
   - skills/planning-implementation/SKILL.md
   - skills/engineering-standards/SKILL.md

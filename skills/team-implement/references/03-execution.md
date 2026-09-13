@@ -1,3 +1,5 @@
+Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md).
+
 Before this operation, read [artifact schema](../team/references/artifacts.md).
 Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
 
@@ -29,7 +31,7 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    that skips step 2 skips this gate too.
    **Inverted for a zero-behavior-change refactor:** capture the suite and
    the static checks as a baseline **before** any file moves
-   (`principle-pre-image-first`), and advance only when they reproduce it —
+   ([durable state rules](../team/principles/durable-state.md)), and advance only when they reproduce it —
    green is the correct state throughout, and a new failure is a
    regression. Structural checks carry what the tests cannot express here:
    a `grep` with an exact expected match count, a path that must no longer

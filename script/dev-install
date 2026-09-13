@@ -113,9 +113,9 @@ case "${1:-}" in
 esac
 
 # Decide the pull hooks before the harness output scrolls by, but never gate the
-# install on them: they only re-run the installer after a pull, so a hooks
-# surface Team cannot own is a skip, not a failure.
-# See skills/principle-optimization-never-dependency/SKILL.md.
+# install on them: they only re-run the installer after a pull, so a
+# hooks surface Team cannot own is a skip, not a failure.
+# See skills/team/principles/focused-work.md.
 PULL_HOOKS_OWNED=false
 if preflight_pull_hooks; then
   PULL_HOOKS_OWNED=true

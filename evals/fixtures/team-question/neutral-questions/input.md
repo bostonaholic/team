@@ -2,6 +2,9 @@
 agent: team-question
 tier: periodic
 deps:
+  - skills/team/principles/durable-state.md
+  - skills/team/principles/independent-review.md
+  - skills/team/references/decisions.md
   - skills/team/references/artifacts.md
   - skills/decomposing-intent/SKILL.md
   - skills/decomposing-intent/references/artifact-templates.md

@@ -941,7 +941,7 @@ describe("exception vocabulary appears in no rule prose", () => {
     "carve-out|skills/pr-open-comments/SKILL.md",
     "carve-out|skills/pr-watch-as-author/SKILL.md",
     "carve-out|skills/pr-watch-as-reviewer/SKILL.md",
-    "carve-out|skills/principle-plan-present-wait/SKILL.md",
+    "carve-out|skills/team/principles/human-control.md",
     "exempt|skills/nested-agents/SKILL.md",
   ]);
 
@@ -1457,20 +1457,20 @@ describe("the IMPLEMENT round item carries the open finding count (L2 tripwire)"
 // No ceiling-hugging foreground sleep — free L2 forbidden-pattern sweep
 // (docs/testing.md §2, forbidden-pattern form). A wait on anything outside the
 // session is one backgrounded call
-// (skills/principle-non-blocking-waits/SKILL.md). A foreground wait is killed
+// (skills/team/references/execution.md). A foreground wait is killed
 // at the harness ceiling (600s in Claude Code), so a procedure that sizes a
 // sleep to sit at or just under that ceiling has chunked a wait it should have
 // backgrounded: it pays a turn per fragment and still dies at the cap when the
 // host suspends. The 540-600s band is that signature; no in-script poll
 // interval lands there by coincidence.
 //
-// skills/principle-non-blocking-waits/ is exempt: it names the banned values as
+// skills/team/references/execution.md is exempt: it names the banned values as
 // the counter-examples that motivate the rule, the same way CHANGELOG.md is
 // exempt from the round-cap sweep as history.
 // ---------------------------------------------------------------------------
 
 describe("no ceiling-hugging foreground sleep (L2 forbidden-pattern sweep)", () => {
-  const EXEMPT = "skills/principle-non-blocking-waits/";
+  const EXEMPT = "skills/team/references/execution.md";
 
   function mdFilesUnder(dir: string): string[] {
     const out: string[] = [];
@@ -1519,7 +1519,7 @@ describe("no ceiling-hugging foreground sleep (L2 forbidden-pattern sweep)", () 
   test("the exemption is real: the principle names the counter-examples it bans", () => {
     // Without this, the exemption could silently cover an empty file and the
     // sweep would look principled while protecting nothing.
-    const principle = read(join(REPO_ROOT, "skills", "principle-non-blocking-waits", "SKILL.md"));
+    const principle = read(join(REPO_ROOT, "skills/team/references/execution.md"));
     expect(CEILING_SLEEP.test(flat(principle))).toBe(true);
   });
 });
@@ -1576,13 +1576,13 @@ describe("the inverted mechanical gate cites its baseline rule (L2 tripwire)", (
     join("skills", "team-implement", "references", "03-execution.md"),
   ];
 
-  test("both test-architect dispatch surfaces name principle-pre-image-first", () => {
+  test("both test-architect dispatch surfaces cite the durable-state baseline", () => {
     for (const relative of DISPATCH_SURFACES) {
       const text = read(join(REPO_ROOT, relative));
       // Guard: a renamed or deleted surface must fail, not vacuously pass.
       expect(text.length).toBeGreaterThan(0);
       expect(text).toContain("test-architect");
-      expect(text).toContain("principle-pre-image-first");
+      expect(text).toContain("principles/durable-state.md");
     }
   });
 });

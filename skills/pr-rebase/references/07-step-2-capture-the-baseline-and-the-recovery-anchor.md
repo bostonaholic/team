@@ -31,7 +31,7 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    distinguish a pre-existing failure from a new one.
 
    A check suite is the long wait this procedure runs twice, so spend it per
-   `principle-non-blocking-waits`: one backgrounded call the harness reports
+   [execution rules](../team/references/execution.md): one backgrounded call the harness reports
    on, never a foreground `sleep` sized to just miss the turn ceiling.
 
 3. Classify each check `PASS`, `FAIL`, or `UNKNOWN`. `UNKNOWN` is for a

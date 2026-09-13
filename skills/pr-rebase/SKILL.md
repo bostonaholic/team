@@ -7,7 +7,8 @@ disable-model-invocation: true
 ---
 
 Before this operation, read [external-data rules](../team/references/external-data.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.
+If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 # pr-rebase — rebase onto the latest base without changing behavior
 
@@ -28,7 +29,7 @@ remote. Three things make it more than `git pull --rebase`:
 Model invocation is disabled (`disable-model-invocation: true`). The push
 rewrites published history: a teammate who has the branch checked out ends
 up on a discarded line of development, and no verification step can undo
-that after the fact. Per `principle-explicit-intent`, the
+that after the fact. Per [human control rules](../team/principles/human-control.md), the
 deliberate invocation is the authorization to publish: once the step 6 gate
 reports no regression, the run publishes without stopping to re-ask (step 7).
 `agents/openai.yaml` restates the same guard for Codex as
@@ -53,5 +54,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-pre-image-first`,
-`principle-untrusted-input-is-data`, and `principle-non-blocking-waits`.
+Read and apply: [durable state rules](../team/principles/durable-state.md),
+[external data rules](../team/references/external-data.md), and [execution rules](../team/references/execution.md).

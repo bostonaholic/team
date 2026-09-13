@@ -38,7 +38,7 @@ answered. Each question names the load-bearing fact the verdict rests on: the fi
 symbol, or behavior state the run itself observed. Approving any other class never
 carries a closure.
 
-The granularity rule is `principle-explicit-intent`: one yes per
+The granularity rule is [human control rules](../team/principles/human-control.md): one yes per
 irreversible mutation, and an adjacent class's approval never carries one.
 
 Then wait for the user's approval. Nothing on the tracker changes before the user answers. No

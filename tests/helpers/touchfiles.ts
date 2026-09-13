@@ -8,6 +8,11 @@ import { test } from "bun:test";
 
 export const E2E_TOUCHFILES: Record<string, string[]> = {
   "planted-null-deref": [
+    "skills/team/principles/durable-state.md",
+    "skills/team/principles/focused-work.md",
+    "skills/team/principles/independent-review.md",
+    "skills/team/principles/verified-results.md",
+
     "skills/team/references/artifacts.md",
     "skills/team/references/external-data.md",
     "skills/reviewing-code/SKILL.md",
@@ -21,6 +26,11 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/code-reviewer.md",
   ],
   "planted-time-bomb": [
+    "skills/team/principles/durable-state.md",
+    "skills/team/principles/focused-work.md",
+    "skills/team/principles/independent-review.md",
+    "skills/team/principles/verified-results.md",
+
     "skills/team/references/artifacts.md",
     "skills/team/references/external-data.md",
     "skills/reviewing-code/SKILL.md",
@@ -38,6 +48,11 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   // can alter this fixture's outcome — it is a dep alongside the reviewer
   // agent and the severity skill.
   "planted-comment-violations": [
+    "skills/team/principles/durable-state.md",
+    "skills/team/principles/focused-work.md",
+    "skills/team/principles/independent-review.md",
+    "skills/team/principles/verified-results.md",
+
     "skills/team/references/artifacts.md",
     "skills/team/references/external-data.md",
     "skills/reviewing-code/SKILL.md",
@@ -52,6 +67,11 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/code-reviewer.md",
   ],
   "planted-comment-process-narration": [
+    "skills/team/principles/durable-state.md",
+    "skills/team/principles/focused-work.md",
+    "skills/team/principles/independent-review.md",
+    "skills/team/principles/verified-results.md",
+
     "skills/team/references/artifacts.md",
     "skills/team/references/external-data.md",
     "skills/reviewing-code/SKILL.md",
@@ -78,6 +98,10 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/changelog.md",
   ],
   "team-question-neutral-questions": [
+    "skills/team/principles/durable-state.md",
+    "skills/team/principles/independent-review.md",
+    "skills/team/references/decisions.md",
+
     "skills/team/references/external-data.md",
     "skills/decomposing-intent/references/artifact-templates.md",
     "skills/decomposing-intent/SKILL.md",
@@ -90,6 +114,11 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/team-question.md",
   ],
   "eng-design-doc-review-planted-missing-alternatives": [
+    "skills/team/principles/durable-state.md",
+    "skills/team/principles/focused-work.md",
+    "skills/team/principles/independent-review.md",
+    "skills/team/principles/verified-results.md",
+
     "skills/reviewing-designs/SKILL.md",
     "skills/reviewing-designs/references/review-brief.md",
     "skills/technical-design-doc/SKILL.md",
@@ -107,6 +136,13 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/eng-design-doc-review.md",
   ],
   "team-fix-test-first-ordering": [
+    "skills/team-fix/playbooks/bug-fix.md",
+    "skills/team-fix/references/06-execution.md",
+    "skills/team/principles/human-control.md",
+    "skills/team/references/execution.md",
+    "skills/test-driven-bug-fix/SKILL.md",
+    "skills/test-driven-bug-fix/references/procedure.md",
+
     "skills/team-fix/**",
     "skills/test-driven-bug-fix/**",
     "skills/tracking-tickets/**",
@@ -117,6 +153,10 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   // The four seeded-state evals share tests/helpers/seed.ts (extractSeed); a
   // change to it could alter any of their outcomes, so each lists it as a dep.
   "team-research-answers-seeded-questions": [
+    "skills/team/principles/durable-state.md",
+    "skills/team/principles/independent-review.md",
+    "skills/team/principles/verified-results.md",
+
     "skills/finding-files/SKILL.md",
     "skills/researching-codebases/SKILL.md",
     "skills/team/references/artifacts.md",
@@ -130,6 +170,10 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/team-research.md",
   ],
   "team-design-seeded-research-and-task": [
+    "skills/team/principles/durable-state.md",
+    "skills/team/principles/focused-work.md",
+    "skills/team/references/decisions.md",
+
     "skills/team/references/external-data.md",
     "skills/systems-thinking/SKILL.md",
     "skills/decision-making/SKILL.md",
@@ -145,6 +189,8 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/team-design.md",
   ],
   "team-structure-seeded-design": [
+    "skills/team/principles/durable-state.md",
+
     "skills/systems-thinking/SKILL.md",
     "skills/slicing-work/references/structure-template.md",
     "skills/slicing-work/SKILL.md",
@@ -158,6 +204,9 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/team-structure.md",
   ],
   "team-plan-seeded-structure": [
+    "skills/team/principles/durable-state.md",
+    "skills/team/principles/focused-work.md",
+
     "skills/systems-thinking/SKILL.md",
     "skills/engineering-standards/SKILL.md",
     "skills/planning-implementation/SKILL.md",
@@ -171,6 +220,12 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "evals/rubrics/team-plan.md",
   ],
   "unslop-neutral-research": [
+    "skills/team/principles/durable-state.md",
+    "skills/team/principles/focused-work.md",
+    "skills/team/principles/independent-review.md",
+    "skills/team/principles/verified-results.md",
+    "skills/team/references/decisions.md",
+
     "skills/team/references/external-data.md",
     "skills/team/references/artifacts.md",
     "agents/file-finder.md",
@@ -185,8 +240,8 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
     "skills/team-research/**",
     "skills/team/**",
     "skills/nested-agents/**",
-    "skills/principle-untrusted-input-is-data/**",
-    "skills/principle-progress-tracking/**",
+    "skills/team/references/external-data.md",
+    "skills/team/references/execution.md",
     "skills/researching-codebases/**",
     "skills/reviewing-code/**",
     "skills/reviewing-designs/**",

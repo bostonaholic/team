@@ -7,6 +7,9 @@ argument-hint: "<ticket id, issue URL, or feature description>"
 
 # Team — Phase-Table Orchestrator
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Before finalizing prose you author, call the Skill tool with `unslop` and
 `writing-prose`, in that order. Relay completed agent and vendor returns unchanged.
 
@@ -72,6 +75,6 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-deep-agents-narrow-seams`, `principle-fail-closed`,
-`principle-files-are-the-contract`, `principle-idempotent-reruns`, and
-`principle-progress-tracking`.
+Read and apply: [focused work rules](principles/focused-work.md), [verified results rules](principles/verified-results.md),
+[durable state rules](principles/durable-state.md), and
+[execution rules](references/execution.md).

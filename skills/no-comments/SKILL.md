@@ -8,6 +8,12 @@ disable-model-invocation: true
 
 # No Comments
 
+Before dispatch, resolve [independent review](../team/principles/independent-review.md). Pass their absolute installed paths with the retained brief.
+The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
+
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 Remove comments that fail Team's comment rules. Preserve comments that carry
 current facts code cannot express. Encode enforceable constraints only with the
 user's approval.
@@ -29,7 +35,7 @@ An empty scope is a successful no-op. Report it and stop.
 
 ## Execution
 
-Call the Skill tool with `principle-progress-tracking`, then track these steps.
+Read [execution rules](../team/references/execution.md), then track these steps.
 
 1. **Resolve scope.** Record the exact files and the pre-review working-tree
    state. Do not widen the scope when a finding points elsewhere.
@@ -44,8 +50,7 @@ Call the Skill tool with `principle-progress-tracking`, then track these steps.
    limit: 1.** Use a new `Explore` reviewer and name the failed contract. If the
    second report is invalid, stop without applying findings.
 5. **Apply accepted findings.** Leave every `KEEP` unchanged. Delete each
-   comment-only `REMOVE`. For a root-cause `REMOVE`, call the Skill tool with
-   `principle-fix-root-causes`, implement the smallest in-scope correction, and
+   comment-only `REMOVE`. For a root-cause `REMOVE`, read [bug fix rules](../team-fix/playbooks/bug-fix.md), implement the smallest in-scope correction, and
    then remove the workaround comment.
 6. **Gate encodings.** Present all `ENCODE` findings as one named set through
    `AskUserQuestion`: approve the stated encodings or keep the comments. On

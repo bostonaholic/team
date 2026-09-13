@@ -6,6 +6,7 @@ user-invocable: false
 
 # Running Quality Checks
 
+Before each consuming step, read its linked shared rules from this installed skill directory. If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 The verifier's procedure: detect the checks the project configures, run
 them in speed order, and report evidence. No opinions — just evidence.
 
@@ -65,7 +66,7 @@ them in speed order, and report evidence. No opinions — just evidence.
   Reruns that turn red → green without a code change are evidence of a
   flake or a real intermittent bug, not a verdict of PASS.
 - **A baseline is comparable only under the same isolation.** When this run is
-  the before side of a before/after comparison (`principle-pre-image-first`),
+  the before side of a before/after comparison ([durable state rules](../team/principles/durable-state.md)),
   run both sides the same way. A false red recorded as the pre-change state
   reclassifies a later regression as pre-existing — a failure in the safe
   direction, which is why it goes unnoticed.

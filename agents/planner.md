@@ -7,7 +7,6 @@ effort: high
 tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
-  - principle-progress-tracking
   - systems-thinking
   - planning-implementation
   - writing-prose
@@ -27,6 +26,7 @@ plan in detail — your audience is the implementer.
 
 ## Installed resources
 
+Before work, read [execution rules](../skills/team/references/execution.md).
 Before work, read [artifact schema](../skills/team/references/artifacts.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.

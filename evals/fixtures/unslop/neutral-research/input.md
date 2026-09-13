@@ -2,6 +2,11 @@
 agent: unslop
 tier: periodic
 deps:
+  - skills/team/principles/durable-state.md
+  - skills/team/principles/focused-work.md
+  - skills/team/principles/independent-review.md
+  - skills/team/principles/verified-results.md
+  - skills/team/references/decisions.md
   - skills/team/references/artifacts.md
   - skills/team/references/external-data.md
   - agents/file-finder.md
@@ -16,7 +21,7 @@ deps:
   - skills/team-research/**
   - skills/team/**
   - skills/nested-agents/**
-  - skills/principle-progress-tracking/**
+  - skills/team/references/execution.md
   - skills/researching-codebases/**
   - skills/reviewing-code/**
   - skills/reviewing-designs/**

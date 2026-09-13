@@ -51,7 +51,7 @@ every job it has created so far has passed.
 
 **3a — Settle.** Let the push's workflows register before watching. This is the
 wait shorter than a turn's overhead that
-`principle-non-blocking-waits` names as its exception, so it
+[execution rules](../team/references/execution.md) names as its exception, so it
 runs inline rather than backgrounded:
 
 ```bash
@@ -84,7 +84,7 @@ ceiling (600 s in Claude Code) with exit 143, so on any repo whose CI runs
 longer than ten minutes the stated 30-minute cap never applies and the watch
 is lost rather than timed out. Backgrounded, the harness reports the call when
 it exits and `WATCH_STATUS` is the real verdict. See
-`principle-non-blocking-waits`.
+[execution rules](../team/references/execution.md).
 
 Map `WATCH_STATUS` first — it is the fast path out, never the way in:
 

@@ -8,7 +8,7 @@ serially with backoff so a secondary rate limit cannot shred a half-applied plan
 each item immediately before writing it. An item whose state changed since the cache is
 skipped and reported, not overwritten. Match a construct or issue by title before creating
 one, so re-running an approved plan never duplicates.
-Those are the `principle-idempotent-reruns` rules: a re-run converges on
+Those are the [durable state rules](../team/principles/durable-state.md) rules: a re-run converges on
 the same end state instead of failing or duplicating.
 
 Every text-bearing write goes through a file in `$RUN_DIR`, never through the command line.
@@ -16,7 +16,7 @@ Every text-bearing write goes through a file in `$RUN_DIR`, never through the co
 body to `$RUN_DIR/original-body-<n>.md`. Write the replacement to `$RUN_DIR/body-<n>.md` and
 pass it by path. A rewrite with no cached pre-image does not run. The only record of what the
 item said is then the tracker value the write is about to destroy.
-The rule is `principle-pre-image-first`: no pre-image, no destructive
+The rule is [durable state rules](../team/principles/durable-state.md): no pre-image, no destructive
 write.
 
 Each link write re-reads both endpoints first. One closed since the cache makes the link

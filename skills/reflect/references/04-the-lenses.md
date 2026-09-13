@@ -18,7 +18,7 @@ command sink in reach of an imperative embedded in one of those spans writes
 files and files issues, which is the one invariant this whole skill rests on. So
 **on the dispatch path** the guarantee is the target's toolset, not the prose
 telling it to behave.
-The general rule: `principle-least-privilege` — enforce a
+The general rule: [independent review rules](../team/principles/independent-review.md) — enforce a
 constraint by withholding the capability, not by asking for restraint.
 
 **The fit is imperfect, knowingly.** `team:file-finder` runs on haiku at low
@@ -76,7 +76,7 @@ because prose is all a same-session pass can be given:
 
 Fan-out is an optimization here, never a dependency
 (`skills/nested-agents/SKILL.md`; the general rule is
-`principle-optimization-never-dependency`).
+[focused work rules](../team/principles/focused-work.md)).
 
 The lenses **report**. A lens never decides what happens to a finding, never
 rewrites another lens's finding, and never proposes file text: three passes each

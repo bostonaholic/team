@@ -39,7 +39,7 @@
    run verified nothing at all: the publish proceeds on the invocation's
    authority, but it is reported as unverified in exactly those words —
    never as checks matching a baseline (step 7).
-   Rules 8 and 9 are `principle-pre-image-first`: capture
+   Rules 8 and 9 are [durable state rules](../team/principles/durable-state.md): capture
    the baseline and the recovery anchor before anything is rewritten.
 10. **No destructive command relies on a variable set in an earlier Bash
     invocation.** Shell state does not persist between invocations: the

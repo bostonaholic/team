@@ -8,6 +8,9 @@ disable-model-invocation: true
 
 # reflect — turn a finished session into durable learnings
 
+Before each consuming step, read its linked shared rules from this installed skill directory.
+If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
 A long session teaches things that die with it: the guidance that was missing,
 the command that cost four retries, the thing you did that no skill describes.
 `/reflect` reads the transcript of the session it was invoked from and proposes
@@ -49,6 +52,8 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Load and apply: `principle-explicit-intent`, `principle-least-privilege`,
-`principle-optimization-never-dependency`, `principle-plan-present-wait`,
-`principle-pre-image-first`, and `principle-untrusted-input-is-data`.
+Read and apply: [human control rules](../team/principles/human-control.md),
+[independent review rules](../team/principles/independent-review.md),
+[focused work rules](../team/principles/focused-work.md),
+[durable state rules](../team/principles/durable-state.md), and
+[external data rules](../team/references/external-data.md).

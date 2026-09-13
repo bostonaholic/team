@@ -5,7 +5,8 @@ user-invocable: false
 ---
 
 Before this operation, read [artifact schema](../team/references/artifacts.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.
+If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 # Authoring Designs
 
@@ -23,7 +24,7 @@ When all candidates resolve, write `docs/plans/<id>/4-repos.md` from [artifact s
 
 ## Resolve choices autonomously
 
-Never pause for user input. Record every resolved choice in `## Decisions made` as “Assumption — chosen without user review”; defer only low-stakes items to `## Open questions (deferred)` (`principle-record-assumptions`). On revision, address reviewer findings verbatim and record new assumptions the same way.
+Never pause for user input. Record every resolved choice in `## Decisions made` as “Assumption — chosen without user review”; defer only low-stakes items to `## Open questions (deferred)` ([decisions rules](../team/references/decisions.md)). On revision, address reviewer findings verbatim and record new assumptions the same way.
 
 Call the Skill tool with `decision-making` before resolving a technical choice
 with two or more viable options. Record its decision basis with the assumption.
@@ -36,6 +37,6 @@ Read [references/design-template.md](references/design-template.md) before draft
 - Derive every closed set by grep, directory listing, or key-set comparison and record the command. Never list a blast radius or inventory from memory.
 - No implementation bodies or full type definitions; signatures are allowed only to fix a decision. Reference patterns by `file:line`, never duplicate them.
 - Prefer “follow `lib/foo.ts:30-60`” over copying those lines.
-- Prefer removing or replacing an existing mechanism over adding a parallel one; name what the change deletes in `## Decisions made` (`principle-subtract-before-you-add`).
+- Prefer removing or replacing an existing mechanism over adding a parallel one; name what the change deletes in `## Decisions made` ([focused work rules](../team/principles/focused-work.md)).
 - Call the Skill tool with `systems-thinking` and apply `## When Designing`: cover adjacent components in `## Current state` and surfaces that must change together in `## Decisions made`; this adds no gate.
 - Existing rationale constrains changes to deliberate guards, thresholds, ownership, and layering. Default to `5-research.md`; use `skills/why/SKILL.md` for Preserve/Change/Avoid/Risk archaeology and `skills/how/SKILL.md` for current-state explanation when needed.

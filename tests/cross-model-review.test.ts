@@ -715,7 +715,7 @@ describe("skill and agent wiring (L2)", () => {
     // runner's own TIMEOUT_MS, so the runner's one-line skip wins the race.
     const section = windowSection(readOrEmpty(SKILL_MD), /^### Vendor couriers/, /^#{1,3} /);
     expect(section.length).toBeGreaterThan(0);
-    expect(section).toContain("principle-non-blocking-waits");
+    expect(section).toContain("team/references/execution.md");
     expect(squash(section)).toContain("in the foreground");
     expect(squash(section)).toContain("660000");
     expect(squash(section)).toContain("Reply only after the command has exited");

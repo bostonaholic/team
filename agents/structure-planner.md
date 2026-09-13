@@ -8,7 +8,6 @@ tools: Read, Write, Edit, Grep, Glob, TodoWrite
 permissionMode: acceptEdits
 skills:
   - product-thinking
-  - principle-progress-tracking
   - systems-thinking
   - slicing-work
   - writing-prose
@@ -24,6 +23,7 @@ each slice's tests pass.
 
 ## Installed resources
 
+Before work, read [execution rules](../skills/team/references/execution.md).
 Before work, read [artifact schema](../skills/team/references/artifacts.md).
 Resolve links from this installed agent definition, never the working directory.
 Use the supplied definition path, or resolve it from the host installation.
