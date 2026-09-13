@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.104.6] - 2026-09-12
+
 ### Changed
 
 - Consolidate delivery, worktree, and agent execution contracts into per-entry-point references, preserving signing, cleanup, tracking, watch-loop mechanics, cross-model review, and nested-dispatch authorization.
@@ -954,7 +956,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.5...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.104.6...HEAD
+[0.104.6]: https://github.com/bostonaholic/team/compare/v0.104.5...v0.104.6
 [0.104.5]: https://github.com/bostonaholic/team/compare/v0.104.4...v0.104.5
 [0.104.4]: https://github.com/bostonaholic/team/compare/v0.104.3...v0.104.4
 [0.104.3]: https://github.com/bostonaholic/team/compare/v0.104.2...v0.104.3
