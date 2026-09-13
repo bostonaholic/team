@@ -492,7 +492,7 @@
       ]
     },
     {
-      "path": "skills/running-quality-checks/SKILL.md",
+      "path": "skills/team/playbooks/verify.md",
       "destinations": [
         "skills/team/principles/durable-state.md"
       ]
@@ -706,7 +706,6 @@
     "pr-watch-as-author",
     "pr-watch-as-reviewer",
     "reflect",
-    "running-quality-checks",
     "shipit",
     "team",
     "team-design",
@@ -718,7 +717,6 @@
     "team-research",
     "team-structure",
     "team-worktree",
-    "verifying-ux",
     "why"
   ]
 }

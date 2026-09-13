@@ -22,12 +22,10 @@ const REPO_ROOT = process.cwd();
 
 const REQUIRED_LOADS_BY_COMPONENT: Record<string, readonly string[]> = {
   "skills/team-fix": ["team-worktree", "why"],
-  "skills/pr-verify": ["running-quality-checks"],
-  "skills/team": ["team-worktree", "running-quality-checks", "team-pr"],
-  "skills/team-pr": ["verifying-ux", "pr-screenshots"],
-  "skills/pr-rebase": ["running-quality-checks"],
+  "skills/team": ["team-worktree", "team-pr"],
+  "skills/team-pr": ["pr-screenshots"],
   "skills/pr-watch-as-author": ["pr-open-comments"],
-  "skills/team-implement": ["running-quality-checks", "team-pr"],
+  "skills/team-implement": ["team-pr"],
 };
 
 // Every distributed prose surface that can carry a load: the 13 agent bodies
@@ -65,9 +63,9 @@ describe("Skill-tool loads resolve to real skills", () => {
     // positive"). Floors, not exact counts: adding an agent or skill is
     // ordinary work and must not fail this.
     expect(bodies.length).toBeGreaterThan(60);
-    expect(valid.size).toBeGreaterThan(25);
+    expect(valid.size).toBeGreaterThan(20);
     const loading = bodies.filter((b) => loadedSkills(b.text).length > 0);
-    expect(loading.length).toBeGreaterThan(15);
+    expect(loading.length).toBeGreaterThan(10);
   });
 
   test("every loaded name is a skill that exists", () => {

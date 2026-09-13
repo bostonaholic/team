@@ -683,20 +683,19 @@ review filter accepts only APPROVE or COMMENT from the highest-numbered
 
 Methodology skills carry no `argument-hint`. Agents load them through one
 of two mechanisms. The first is a `skills:` YAML **block** list in the
-agent's frontmatter, one indented `- <name>` per line. For example,
-`agents/ux-reviewer.md` declares:
+agent's frontmatter, one indented `- <name>` per line.
 
-```yaml
-skills:
-  - verifying-ux
-```
-
+After the playbook-and-verification consolidation, no methodology skill
+remains registered: the last two (`running-quality-checks` and
+`verifying-ux`) moved into the [verify playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/verify.md)
+and the [ux reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/ux-reviewer.md).
 The block form is the contract: three
 test parsers read it, and the one-line inline flow form parses to zero
 names, so it is an offender rather than a second shape.
-The second is an inline prose load instruction in the agent body. Most
-methodology content is no longer a registered skill at all: it lives in
-ordinary references such as the [code standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/code-standards.md)
+The second is an inline prose load instruction in the agent body. All
+methodology content is now an ordinary resource rather than a registered
+skill: it lives in ordinary references such as the
+[code standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/code-standards.md)
 and [writing standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/writing.md),
 which consumers read by path before work.
 
@@ -908,7 +907,7 @@ entry points. Descriptions are at most 200 characters, or 150 for methodology.
    Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
    Twelve agent bodies read execution rules. File-finder retains its single-step contract.
-   Resources use no skill frontmatter or discovery metadata. Keep the 2 methodologies and 25 commands registered.
+   Resources use no skill frontmatter or discovery metadata. Keep the 25 commands registered.
    Do not add principle registrations, recursive loading, compatibility stubs, or a resource registry.
 
 ### Codex host manifests

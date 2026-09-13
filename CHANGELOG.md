@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Add reusable verification for actual acceptance claims: move `running-quality-checks` into the shared `skills/team/playbooks/verify.md` playbook and `verifying-ux` into the `skills/code-review/references/ux-reviewer.md` brief. Verification now matches the claim's surface — a library runs a real consumer, a CLI checks invocation and filesystem effects, a service checks requests and state, and UI interaction drives the app as a user — with evidence records naming revision, environment, action, and expected/actual outcome, and unavailable tools reported UNKNOWN rather than passed. The catalog drops from 27 to 25 registrations.
+
 ## [0.104.7] - 2026-09-12
 
 ### Changed

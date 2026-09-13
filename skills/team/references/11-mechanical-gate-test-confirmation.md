@@ -4,7 +4,7 @@ When the `test-architect` returns failing tests:
 
 1. Run the test suite.
 2. Run every **static** check the project defines — typecheck, lint, format,
-   build. Call the Skill tool with `running-quality-checks` and detect them
+   build. Read the [verify playbook](playbooks/verify.md) and detect them
    the way it does. Skip the test entry there: step 1 already ran it.
 3. Advance only when both hold: all tests fail with assertion errors (not
    crashes), **and** every static check passes.
