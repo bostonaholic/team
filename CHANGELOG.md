@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.108.1] - 2026-09-14
+
+### Fixed
+
+- Point the `/team-design` design-review gate at the extracted [design review gate reference](https://github.com/bostonaholic/team/blob/main/skills/team/references/08-design-review-gate-design.md) instead of the `team` SKILL.md, so the design phase reads the blockquote rule where it is defined rather than from the orchestrator.
+
 ## [0.108.0] - 2026-09-14
 
 ### Added
@@ -986,7 +992,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.108.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.108.1...HEAD
+[0.108.1]: https://github.com/bostonaholic/team/compare/v0.108.0...v0.108.1
 [0.108.0]: https://github.com/bostonaholic/team/compare/v0.107.0...v0.108.0
 [0.107.0]: https://github.com/bostonaholic/team/compare/v0.106.0...v0.107.0
 [0.106.0]: https://github.com/bostonaholic/team/compare/v0.105.0...v0.106.0
