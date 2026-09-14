@@ -15,10 +15,18 @@ version of that file. **A tracked comment has no `path`, so it cannot be
 narrowed that way: re-check every tracked comment whenever the head
 moved after its verdict.** Failing closed on the whole set is the only
 sound option when the item does not say which files it covers. A
-rejected verdict here rebuts and blocks the cast, before any
-confirmation is asked — resume polling on the loop path, and on the
-immediate path stop and report the open dispute rather than starting a
-loop that was not asked for. A pending
+rejected verdict here blocks the cast, before any confirmation is
+asked. The sweep renders every verdict, across both shapes, before any
+write: test every thread with a rejected verdict for a viewer reply
+already below its first comment, and only then rebut. When any one
+thread already carries that reply, Dispute stands (step 5) fires
+instead, on either path: stop and report the thread and the
+disagreement, and take no rebuttal on any thread or tracked comment
+that cycle. Otherwise, rebut every rejected verdict of either shape — a
+tracked comment's rejected verdict always rebuts here, since Dispute
+stands tests threads only — then, on the loop path resume polling, or
+on the immediate path stop and report the open dispute rather than
+starting a loop that was not asked for. A pending
 verdict here means the approval condition does not hold: never cast, and
 on the loop path resume polling. A thread the skill itself resolved is
 re-checked here on exactly the same terms as one the author resolved:

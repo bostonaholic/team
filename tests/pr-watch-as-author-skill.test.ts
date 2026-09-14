@@ -25,7 +25,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { frontmatter, read } from "./helpers/text";
+import { frontmatter, read, squash } from "./helpers/text";
 import { loadsSkill } from "./helpers/skill-refs";
 
 const REPO_ROOT = process.cwd();
@@ -54,6 +54,18 @@ function teamPrBody(): string {
 // Flatten newlines so multi-line prose can be matched in one regex.
 function flat(text: string): string {
   return text.replace(/\n/g, " ");
+}
+
+// Single-file guarded readers, so a phrase search scoped to one reference
+// file cannot accidentally match the same words in a different file that
+// body() would otherwise concatenate them next to.
+const AUTHOR_POLL = join(REFERENCES, "05-3-poll-and-change-detection.md");
+const AUTHOR_TRIAGE = join(REFERENCES, "06-4-on-new-feedback-run-the-triage-procedure.md");
+const AUTHOR_STOP_CONDITIONS = join(REFERENCES, "09-6-stop-conditions.md");
+const AUTHOR_COMPACTION = join(REFERENCES, "11-compaction-defense.md");
+const AUTHOR_EDGE_CASES = join(REFERENCES, "08-5-edge-cases.md");
+function fileBody(path: string): string {
+  return existsSync(path) ? read(path) : "";
 }
 
 describe("pr-watch-as-author skill: runtime standalone utility frontmatter", () => {
@@ -134,6 +146,17 @@ describe("pr-watch-as-author skill: pinned edge cases", () => {
     const t = flat(body());
     expect(t).toContain("CHANGES_REQUESTED");
   });
+
+  // The needs-clarification recipient text widens to cover a choice the user
+  // owns, not only an unclear ask.
+  test("the CHANGES_REQUESTED needs-clarification edge case widens who it asks — the reviewer when unclear, the user when the user owns the choice", () => {
+    const t = squash(fileBody(AUTHOR_EDGE_CASES));
+    const idx = t.indexOf("CHANGES_REQUESTED");
+    expect(idx).toBeGreaterThan(-1);
+    const window = t.slice(idx, idx + 500);
+    expect(window).toContain("ask the reviewer when the ask itself is unclear");
+    expect(window).toContain("present the choice to the user when the user owns it");
+  });
 });
 
 describe("pr-watch-as-author skill: triage contract is referenced, never restated", () => {
@@ -163,4 +186,54 @@ describe("pr-watch-as-author skill: team-pr handoff", () => {
     expect(handoff).toBeGreaterThan(create);
   });
 
+});
+
+// A third-party login on an unresolved tracked thread stops the loop before
+// the triage call that cycle. Unlike the reviewer side, the check also
+// requires the viewer to have replied on the thread first — a second
+// reviewer commenting on a thread the loop never answered stays ordinary
+// feedback.
+describe("pr-watch-as-author skill: third-party participant stop", () => {
+  function pollSection(): string {
+    const t = squash(fileBody(AUTHOR_POLL));
+    const start = t.indexOf("a trimmed GraphQL");
+    if (start < 0) return "";
+    const end = t.indexOf("the latest review submission");
+    return end > start ? t.slice(start, end) : t.slice(start, start + 400);
+  }
+
+  test("the reviewThreads selection widens beyond thread ids and isResolved to each comment's id and author login", () => {
+    const section = pollSection();
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).not.toContain("thread ids and `isResolved` only");
+    expect(section).toContain("author { login }");
+    expect(section).toContain("comment");
+  });
+
+  test("the check order runs the third-party check after the poll and before the triage call", () => {
+    const t = squash(fileBody(AUTHOR_TRIAGE));
+    const thirdPartyIdx = t.indexOf("third-party");
+    const triageIdx = t.indexOf("call the Skill tool with `pr-open-comments`");
+    expect(thirdPartyIdx).toBeGreaterThan(-1);
+    expect(triageIdx).toBeGreaterThan(-1);
+    expect(thirdPartyIdx).toBeLessThan(triageIdx);
+  });
+
+  test("the check requires both a viewer comment and a third-party comment on the thread — a second reviewer alone stays ordinary feedback", () => {
+    const t = squash(fileBody(AUTHOR_TRIAGE));
+    const idx = t.indexOf("third-party");
+    expect(idx).toBeGreaterThan(-1);
+    const window = t.slice(Math.max(0, idx - 200), idx + 200);
+    expect(window).toContain("viewer");
+  });
+
+  test("stop-conditions file names Third-party participant and adds three", () => {
+    const t = squash(fileBody(AUTHOR_STOP_CONDITIONS));
+    expect(t).toContain("adds three");
+    expect(t).toContain("Third-party participant");
+  });
+
+  test("compaction-defense names third-party participant in the stop-reason list", () => {
+    expect(squash(fileBody(AUTHOR_COMPACTION))).toContain("third-party participant");
+  });
 });

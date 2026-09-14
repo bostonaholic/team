@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.109.0] - 2026-09-14
+
+### Added
+
+- **Both PR watch loops now stop and name the login when a third party comments on an unresolved thread the loop is driving.** A resolved thread is unaffected, and a deleted-account (`null`) commenter still counts as a third party. **What this asks of you:** nothing.
+
+### Changed
+
+- **A one-way-door dispute `pr-open-comments` cannot settle now returns to you as an option-G recommendation, instead of the decision method picking a side.** A two-way door keeps today's fast pick. **What this asks of you:** nothing.
+- **`pr-watch-as-reviewer` now stops instead of rebutting when a rejected verdict repeats on a thread that already carries your reply.** A fresh addressed, answered, or pending verdict still renders and acts as before. **What this asks of you:** nothing.
+
 ## [0.108.1] - 2026-09-14
 
 ### Fixed
@@ -992,7 +1003,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.108.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.109.0...HEAD
+[0.109.0]: https://github.com/bostonaholic/team/compare/v0.108.1...v0.109.0
 [0.108.1]: https://github.com/bostonaholic/team/compare/v0.108.0...v0.108.1
 [0.108.0]: https://github.com/bostonaholic/team/compare/v0.107.0...v0.108.0
 [0.107.0]: https://github.com/bostonaholic/team/compare/v0.106.0...v0.107.0

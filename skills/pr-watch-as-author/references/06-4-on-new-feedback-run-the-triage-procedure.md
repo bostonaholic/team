@@ -1,5 +1,11 @@
 ### 4. On new feedback — run the triage procedure
 
+**Check order.** Step 3's third-party check — an unresolved thread
+carrying both a comment from the viewer and a comment from a
+third-party login — runs every poll, before change detection, and
+stops the loop before any triage that cycle. When it does not fire and
+a poll detects a change, proceed below.
+
 When a poll detects a change, call the Skill tool with `pr-open-comments`
 and follow it. This skill never restates the triage steps — the fetch, verification, and punch-list format
 live there.

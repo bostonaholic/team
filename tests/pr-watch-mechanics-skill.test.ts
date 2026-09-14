@@ -14,7 +14,7 @@ import { describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-import { read } from "./helpers/text";
+import { read, squash } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
 const WATCH_LOOP = join(REPO_ROOT, "skills", "pr-watch-as-author", "references", "watch-loop.md");
@@ -97,5 +97,52 @@ describe("watch-loop reference: both watches read it", () => {
     // The drift this extraction exists to prevent: one copy edited, one missed.
     expect(watchBody(AUTHOR)).not.toContain("sleep 1860");
     expect(watchBody(REVIEWER)).not.toContain("sleep 1860");
+  });
+});
+
+// The third-party definition both watch skills consume for their own
+// "Third-party participant" stop condition — defined once here, owned by
+// neither consumer, and this skill still owns exactly three stop conditions,
+// never four.
+describe("pr-watch-mechanics skill: third-party definition", () => {
+  // The new section, isolated by its own heading. An absent heading yields
+  // "" so the assertions below fail rather than reading past unrelated prose.
+  function thirdPartySection(): string {
+    const heading = "## Third-party definition";
+    const t = squash(body());
+    const start = t.indexOf(heading);
+    if (start < 0) return "";
+    const rest = t.slice(start + heading.length);
+    const next = rest.search(/##\s/);
+    return next >= 0 ? rest.slice(0, next) : rest;
+  }
+
+  test("adds a ## Third-party definition section without inflating the three mechanics-owned stop conditions", () => {
+    const t = squash(body());
+    expect(t).toContain("## Third-party definition");
+    // The lock this section must not break: mechanics still owns three, never four.
+    expect(t).toContain("Three stop conditions are loop mechanics");
+    expect(t).not.toContain("Four stop conditions");
+  });
+
+  test("defines a third login as neither the viewer's nor the thread's original counterpart's login", () => {
+    const section = thirdPartySection();
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain("third login");
+    expect(section).toContain("neither the viewer's");
+    expect(section).toContain("original counterpart");
+  });
+
+  test("scopes the definition to a thread marked isResolved: false", () => {
+    const section = thirdPartySection();
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain("isResolved: false");
+  });
+
+  test("a null comment author counts as a third-party login", () => {
+    const section = thirdPartySection();
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain("null");
+    expect(section).toContain("third-party login");
   });
 });
