@@ -1247,11 +1247,6 @@ const SHARED_RULE_CALLERS = [
     "skills/pr-cleanup/SKILL.md"
   ],
   [
-    "principle-fix-root-causes",
-    "skills/team-fix/playbooks/bug-fix.md",
-    "skills/team/playbooks/implement.md"
-  ],
-  [
     "principle-record-assumptions",
     "skills/team/references/decisions.md",
     "skills/team/playbooks/design.md"
@@ -1335,9 +1330,9 @@ describe("the principle set is derived, not counted", () => {
   const BUNDLES: string[] = [];
 
   // Guard: an empty prefix set on either side would pass both directions.
-  test("the principle registrations are absent on disk and in the catalog", () => {
-    expect(onDisk).toEqual([]);
-    expect(catalogued).toEqual([]);
+  test("the principle set is derived from disk and the catalog together", () => {
+    expect(onDisk).toEqual(["principle-fix-root-causes"]);
+    expect(catalogued).toEqual(["principle-fix-root-causes"]);
   });
 
   // Takes both sides as arguments, so synthetic sets can prove the comparison
@@ -1380,5 +1375,15 @@ describe("the principle set is derived, not counted", () => {
       }
     }
     expect(offenders).toEqual([]);
+  });
+
+  test("principle-fix-root-causes is a guarded skill read by the bug-fix surface", () => {
+    const skill = join(REPO_ROOT, "skills", "principle-fix-root-causes", "SKILL.md");
+
+    expect(read(skill)).toContain("disable-model-invocation: true");
+    expect(read(join(REPO_ROOT, "skills/team-fix/playbooks/bug-fix.md")))
+      .toContain("principle-fix-root-causes/SKILL.md");
+    expect(read(join(REPO_ROOT, "skills/team/playbooks/implement.md")))
+      .toContain("team-fix/playbooks/bug-fix.md");
   });
 });

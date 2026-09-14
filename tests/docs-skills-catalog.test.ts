@@ -253,6 +253,24 @@ function namedSkills(text: string, self: string, names: Set<string>): Set<string
   return found;
 }
 
+/**
+ * Guarded principles a skill's files read by path. A principle sets
+ * `disable-model-invocation: true`, so no consumer can load it through the
+ * Skill tool; the consuming procedure reads its `SKILL.md` by relative path
+ * instead. That read is the principle's `Used by` edge — reading the principle
+ * is what applies it — so the edge is derived from the reference, not a load.
+ * The match requires the `<name>/SKILL.md` path, so an incidental prose
+ * mention stays off the list.
+ */
+function citedPrinciples(text: string, self: string, principles: Set<string>): Set<string> {
+  const found = new Set<string>();
+  for (const match of text.matchAll(/(?:^|[\s(\[])(?:\.\.?\/)*([a-z0-9][a-z0-9-]*)\/SKILL\.md/g)) {
+    const name = match[1] as string;
+    if (name !== self && principles.has(name)) found.add(name);
+  }
+  return found;
+}
+
 // ---------------------------------------------------------------------------
 // Read once at module scope: the page, plus every `.md` file under skills/
 // (skillContents and agentContents in tests/methodology.test.ts).
@@ -315,6 +333,17 @@ const NAMED_EDGES = new Set(
   ),
 );
 const SKILL_MD_EDGES = edgeSet(SKILL_MD_TEXT);
+
+// A guarded principle's `Used by` edge is the path read, not a load. Rebuild it
+// from every `.md` file under `skills/`, the same walk `ALL_MD_TEXT` uses, so a
+// consumer that reads the principle from a reference or template counts too.
+const PRINCIPLE_NAMES = new Set(SKILL_DIRECTORIES.filter((name) => name.startsWith("principle-")));
+const PRINCIPLE_CITATIONS = new Map<string, string[]>();
+for (const [owner, text] of ALL_MD_TEXT) {
+  for (const principle of citedPrinciples(text, owner, PRINCIPLE_NAMES)) {
+    PRINCIPLE_CITATIONS.set(principle, [...(PRINCIPLE_CITATIONS.get(principle) ?? []), owner]);
+  }
+}
 const ENTRIES_WITH_USES = ENTRIES.filter((entry) => entry.loads.length > 0).length;
 const ENTRIES_WITHOUT_USES = ENTRIES.filter((entry) => entry.loads.length === 0).length;
 const EMPTY_ENTRY_BODIES = ENTRIES.filter((entry) => entry.body.length === 0).map(
@@ -335,6 +364,13 @@ function usageReciprocityOffenders(entries: Entry[]): string[] {
       if (!usedBy) unknownLoads.push(`${entry.name}: loads unknown skill ${load}`);
       else usedBy.push(entry.name);
     }
+  }
+
+  // A principle has no load edge; its consumer reads it by path. Fold those
+  // citation edges in so the principle's `Used by` lists the consuming
+  // procedures instead of `None`.
+  for (const [principle, consumers] of PRINCIPLE_CITATIONS) {
+    for (const consumer of consumers) expected.get(principle)?.push(consumer);
   }
 
   return [

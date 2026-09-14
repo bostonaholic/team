@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Re-introduce the guarded `principle-*` skill tier, starting with [`principle-fix-root-causes`](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md). A principle is a `/`-invocable command that sets `disable-model-invocation: true`, so the model never applies it on its own, and a consuming procedure reads it by installed path — the bug-fix playbook reads this one. Its `agents/openai.yaml` declares `allow_implicit_invocation: false` for Codex. The catalog rises from 25 to 26 registrations; the Codex footprint ceilings rise with the restored skill.
+
 ## [0.107.0] - 2026-09-12
 
 ### Changed

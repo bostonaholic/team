@@ -9,7 +9,7 @@ import { loadFixture } from "./fixtures";
 import { E2E_TOUCHFILES, GLOBAL_TOUCHFILES, globMatch, selectTests } from "./touchfiles";
 
 const REPO = join(import.meta.dir, "../..");
-const RESOURCES = [...new Set(disposition.dispositions.map(({ destination }) => destination))];
+const RESOURCES = [...new Set([...disposition.dispositions.map(({ destination }) => destination), ...disposition.resources])];
 let root = "";
 let priorAll: string | undefined;
 
@@ -128,9 +128,11 @@ function consumerNamed(name: string): Consumer {
 }
 
 function retiredDependencies(): string[] {
+  const retired = new Set(disposition.dispositions.map(({ name }) => name));
   const fixtures = consumers.flatMap(({ agent, case: caseName }) => loadFixture(agent, caseName).frontmatter.deps);
   return [...new Set([...Object.values(E2E_TOUCHFILES).flat(), ...fixtures])]
-    .filter((path) => path.startsWith("skills/principle-"));
+    .filter((path) => path.startsWith("skills/principle-"))
+    .filter((path) => retired.has(path.split("/")[1] ?? ""));
 }
 
 describe("Evaluation connection: principle resources", () => {

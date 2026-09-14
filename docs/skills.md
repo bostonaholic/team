@@ -11,7 +11,8 @@ nav_label: skills
 > **The features you use.** Every entry-point skill is a slash command you can
 > run (`/team`, `/team-fix`, …). There are no methodology skills: what agents
 > used to preload now lives in ordinary playbooks and references they read by
-> path.
+> path. A principle is a guarded command — explicitly invoked, never applied by
+> the model on its own — that a consuming procedure reads by installed path.
 >
 > **Source of truth:** the skill bodies themselves, `skills/*/SKILL.md`.
 > This page is a hand-maintained reference. When it disagrees with a
@@ -23,6 +24,7 @@ the skills that load it. Both use comma-separated lists, or `None`.
 The load form is
 ``Call the Skill tool with `<name>` ``. Naming a skill another way is a
 citation, not an edge. Shared rules use explicit ordinary-resource reads instead of skill registration.
+A guarded principle is not loadable, so its `**Used by:**` lists the procedures that read it by path; the read is what applies it.
 
 The edges are therefore **directed**, and reading them transitively gives the
 graph. `team-implement` loads `team-pr`, which loads `pr-screenshots`. None of
@@ -35,7 +37,7 @@ This page carries both directions of each skill-to-skill load edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 25 registered skills, all commands. Shared principles, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 26 registered skills, all commands. The five shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 ## Entry-point skills
@@ -245,6 +247,19 @@ Reviews a diff with fresh context.
 Removes low-value source comments and encodes valid constraints.
 
 **Used by:** None
+
+**Uses:** None
+
+## Principles
+
+Guarded commands: an explicit invocation starts them; the model never applies
+them on its own. Consuming procedures read them by installed path.
+
+### [principle-fix-root-causes](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md)
+
+Requires diagnosis and repair of root causes.
+
+**Used by:** `team-fix`
 
 **Uses:** None
 
