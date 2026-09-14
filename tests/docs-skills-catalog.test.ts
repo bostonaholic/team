@@ -197,7 +197,7 @@ function sentence(descriptionLines: string[], description: string): string[] {
 }
 
 /**
- * Load-set offenders, each naming the offending name: a derived name missing
+ * Uses-set offenders, each naming the offending name: a derived name missing
  * from the field, a listed name absent from the derived set, and a listed name
  * that is not a real skill at all. The second one is the direction check — a
  * skill that only *names* another skill has no edge to it, so listing it here
@@ -206,9 +206,9 @@ function sentence(descriptionLines: string[], description: string): string[] {
 function loadSet(values: string[], derived: Set<string>, names: Set<string>): string[] {
   const listed = new Set(values);
   return [
-    ...[...derived].filter((name) => !listed.has(name)).map((name) => `loads omit ${name}`),
-    ...values.filter((name) => !derived.has(name)).map((name) => `loads list ${name}, which its files never load`),
-    ...values.filter((name) => !names.has(name)).map((name) => `loads list ${name}, which is not a skill`),
+    ...[...derived].filter((name) => !listed.has(name)).map((name) => `uses omit ${name}`),
+    ...values.filter((name) => !derived.has(name)).map((name) => `uses list ${name}, which its files never use`),
+    ...values.filter((name) => !names.has(name)).map((name) => `uses list ${name}, which is not a skill`),
   ];
 }
 
@@ -220,7 +220,7 @@ function loadSet(values: string[], derived: Set<string>, names: Set<string>): st
 function loadOrder(values: string[]): string[] {
   const sorted = [...values].sort();
   const at = values.findIndex((name, index) => name !== sorted[index]);
-  return at === -1 ? [] : [`loads out of order at ${values[at]}, expected ${sorted[at]}`];
+  return at === -1 ? [] : [`uses out of order at ${values[at]}, expected ${sorted[at]}`];
 }
 
 /**
@@ -254,21 +254,45 @@ function namedSkills(text: string, self: string, names: Set<string>): Set<string
 }
 
 /**
- * Guarded principles a skill's files read by path. A principle sets
- * `disable-model-invocation: true`, so no consumer can load it through the
- * Skill tool; the consuming procedure reads its `SKILL.md` by relative path
- * instead. That read is the principle's `Used by` edge — reading the principle
- * is what applies it — so the edge is derived from the reference, not a load.
- * The match requires the `<name>/SKILL.md` path, so an incidental prose
- * mention stays off the list.
+ * True when the reference at `index` names a skill's `SKILL.md` only to locate
+ * the skill's install directory — "the absolute directory containing
+ * `skills/<name>/SKILL.md`", then a script run from it. That names a location,
+ * not the skill's instructions, so it is not a use.
  */
-function citedPrinciples(text: string, self: string, principles: Set<string>): Set<string> {
+function isDirectoryLocator(text: string, index: number): boolean {
+  const before = text.slice(Math.max(0, index - 120), index);
+  const after = text.slice(index, index + 120);
+  return /directory\s+containing\s*`?\s*$/i.test(before) || /from the repository root, run/i.test(after);
+}
+
+/**
+ * The skills `text` consumes by path: a reference to `<name>/SKILL.md`,
+ * relative or root-relative. This is the load form's counterpart for a skill
+ * the model cannot load — a guarded principle — and for any other skill whose
+ * `SKILL.md` a procedure reads rather than invokes. A reference to any other
+ * file in a skill's directory is not matched, and a directory locator is
+ * skipped, so neither a `references/*.md` citation nor a script-locating path
+ * draws an edge.
+ */
+function citedSkills(text: string, self: string, names: Set<string>): Set<string> {
   const found = new Set<string>();
-  for (const match of text.matchAll(/(?:^|[\s(\[])(?:\.\.?\/)*([a-z0-9][a-z0-9-]*)\/SKILL\.md/g)) {
-    const name = match[1] as string;
-    if (name !== self && principles.has(name)) found.add(name);
+  for (const pattern of [
+    /(?:^|[\s(\[])(?:\.\.?\/)*([a-z0-9][a-z0-9-]*)\/SKILL\.md/g,
+    /skills\/([a-z0-9][a-z0-9-]*)\/SKILL\.md/g,
+  ]) {
+    for (const match of text.matchAll(pattern)) {
+      const name = match[1] as string;
+      if (name === self || !names.has(name)) continue;
+      if (isDirectoryLocator(text, match.index ?? 0)) continue;
+      found.add(name);
+    }
   }
   return found;
+}
+
+/** The skills `text` uses: those it loads, plus those it reads by path. */
+function deriveUses(text: string, self: string, names: Set<string>): Set<string> {
+  return new Set([...deriveLoads(text, self, names), ...citedSkills(text, self, names)]);
 }
 
 // ---------------------------------------------------------------------------
@@ -311,10 +335,10 @@ const sentenceOffenders = (name: string): string[] =>
     (offender) => `${name}: ${offender}`,
   );
 
-const loadSetOffenders = (name: string): string[] =>
+const usesSetOffenders = (name: string): string[] =>
   loadSet(
     ENTRY_BY_NAME.get(name)?.loads ?? [],
-    deriveLoads(ALL_MD_TEXT.get(name) ?? "", name, NAMES),
+    deriveUses(ALL_MD_TEXT.get(name) ?? "", name, NAMES),
     NAMES,
   ).map((offender) => `${name}: ${offender}`);
 
@@ -323,7 +347,7 @@ const loadOrderOffenders = (name: string): string[] =>
 
 const MISSING_CATALOG_ENTRIES = SKILL_DIRECTORIES.filter((name) => !ENTRY_BY_NAME.has(name));
 const SENTENCE_OFFENDERS = SKILL_DIRECTORIES.flatMap(sentenceOffenders);
-const LOAD_SET_OFFENDERS = SKILL_DIRECTORIES.flatMap(loadSetOffenders);
+const USES_SET_OFFENDERS = SKILL_DIRECTORIES.flatMap(usesSetOffenders);
 const LOAD_ORDER_OFFENDERS = SKILL_DIRECTORIES.flatMap(loadOrderOffenders);
 const SHAPE_OFFENDERS = SKILL_DIRECTORIES.flatMap(shapeOffenders);
 const ALL_EDGES = edgeSet(ALL_MD_TEXT);
@@ -334,16 +358,17 @@ const NAMED_EDGES = new Set(
 );
 const SKILL_MD_EDGES = edgeSet(SKILL_MD_TEXT);
 
-// A guarded principle's `Used by` edge is the path read, not a load. Rebuild it
-// from every `.md` file under `skills/`, the same walk `ALL_MD_TEXT` uses, so a
-// consumer that reads the principle from a reference or template counts too.
-const PRINCIPLE_NAMES = new Set(SKILL_DIRECTORIES.filter((name) => name.startsWith("principle-")));
-const PRINCIPLE_CITATIONS = new Map<string, string[]>();
-for (const [owner, text] of ALL_MD_TEXT) {
-  for (const principle of citedPrinciples(text, owner, PRINCIPLE_NAMES)) {
-    PRINCIPLE_CITATIONS.set(principle, [...(PRINCIPLE_CITATIONS.get(principle) ?? []), owner]);
-  }
-}
+// A skill's `Uses` edge is a load OR a path reference to its `SKILL.md`. The
+// path form covers a guarded principle, which no consumer can load, and any
+// other skill a procedure reads by installed path. Both feed the same edge set,
+// so `Uses` and `Used by` stay reciprocal. Rebuilt from every `.md` file under
+// `skills/`, the same walk `ALL_MD_TEXT` uses.
+const CITATION_EDGES = new Set(
+  [...ALL_MD_TEXT].flatMap(([owner, text]) =>
+    [...citedSkills(text, owner, NAMES)].map((name) => `${owner} -> ${name}`),
+  ),
+);
+const USES_EDGES = new Set([...ALL_EDGES, ...CITATION_EDGES]);
 const ENTRIES_WITH_USES = ENTRIES.filter((entry) => entry.loads.length > 0).length;
 const ENTRIES_WITHOUT_USES = ENTRIES.filter((entry) => entry.loads.length === 0).length;
 const EMPTY_ENTRY_BODIES = ENTRIES.filter((entry) => entry.body.length === 0).map(
@@ -354,27 +379,19 @@ const SKILL_MD_EDGES_OUTSIDE_FULL_SCAN = [...SKILL_MD_EDGES].filter(
   (edge) => !ALL_EDGES.has(edge),
 );
 
-function usageReciprocityOffenders(entries: Entry[]): string[] {
+function usageReciprocityOffenders(entries: Entry[], usesEdges: Set<string>): string[] {
   const expected = new Map(entries.map((entry) => [entry.name, [] as string[]]));
-  const unknownLoads: string[] = [];
+  const unknownUses: string[] = [];
 
-  for (const entry of entries) {
-    for (const load of entry.loads) {
-      const usedBy = expected.get(load);
-      if (!usedBy) unknownLoads.push(`${entry.name}: loads unknown skill ${load}`);
-      else usedBy.push(entry.name);
-    }
-  }
-
-  // A principle has no load edge; its consumer reads it by path. Fold those
-  // citation edges in so the principle's `Used by` lists the consuming
-  // procedures instead of `None`.
-  for (const [principle, consumers] of PRINCIPLE_CITATIONS) {
-    for (const consumer of consumers) expected.get(principle)?.push(consumer);
+  for (const edge of usesEdges) {
+    const [owner, name] = edge.split(" -> ") as [string, string];
+    const usedBy = expected.get(name);
+    if (!usedBy) unknownUses.push(`${owner}: uses unknown skill ${name}`);
+    else usedBy.push(owner);
   }
 
   return [
-    ...unknownLoads,
+    ...unknownUses,
     ...entries.flatMap((entry) => {
       const actual = relationshipNames(entry.usedBy);
       if (!actual) return [`${entry.name}: invalid Used by list ${JSON.stringify(entry.usedBy)}`];
@@ -420,7 +437,7 @@ const MISSING_INTRODUCTION_LABELS = [USED_BY_HEADER, USES_HEADER].filter(
 const CONTEXT_FIELD_OFFENDERS = CATALOG_TEXT.includes("**Context:**")
   ? ["context field remains"]
   : [];
-const USAGE_RECIPROCITY_OFFENDERS = usageReciprocityOffenders(ENTRIES);
+const USAGE_RECIPROCITY_OFFENDERS = usageReciprocityOffenders(ENTRIES, USES_EDGES);
 const LONG_USED_BY_BODY = [
   "Long relationship.",
   `${USED_BY_HEADER} ${Array.from({ length: 40 }, (_, index) => `\`skill-${index}\``).join(", ")}`,
@@ -437,7 +454,7 @@ const FINAL_ENTRY_BODY = catalogEntries([
 ].join("\n"))[0]?.body;
 
 describe("docs/skills.md catalog matches the skills on disk", () => {
-  test("catalog entries preserve sourced descriptions and direct loads", () => {
+  test("catalog entries preserve sourced descriptions and direct uses", () => {
     // Seven vacuity guards. Each names the property that vanished, because a
     // mis-scoped haystack makes every sweep below pass for the wrong reason
     // (docs/testing.md, "Prove a negative check can find a positive").
@@ -467,7 +484,7 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(MISSING_CATALOG_ENTRIES).toEqual([]);
 
     expect(SENTENCE_OFFENDERS).toEqual([]);
-    expect(LOAD_SET_OFFENDERS).toEqual([]);
+    expect(USES_SET_OFFENDERS).toEqual([]);
     expect(LOAD_ORDER_OFFENDERS).toEqual([]);
   });
 
@@ -476,6 +493,13 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
     expect(ENTRIES.length).toBe(NAMES.size);
     expect(SHAPE_OFFENDERS).toEqual([]);
     expect(USAGE_RECIPROCITY_OFFENDERS).toEqual([]);
+  });
+
+  test("no skill uses the team skill", () => {
+    // `team` is the orchestrator, not a library. A skill that consumes it means
+    // the content the consumer needs belongs in a shared reference — extract it
+    // and point both at the reference, rather than letting the edge stand.
+    expect([...USES_EDGES].filter((edge) => edge.endsWith(" -> team"))).toEqual([]);
   });
 
   test("create-team-skill instructions preserve the reciprocal call graph contract", () => {
@@ -560,10 +584,11 @@ describe("docs/skills.md catalog matches the skills on disk", () => {
       `${USED_BY_HEADER} \`a\``,
       `${USES_HEADER} None`,
     ].join("\n"));
-    expect(usageReciprocityOffenders(reciprocal)).toEqual([]);
+    expect(usageReciprocityOffenders(reciprocal, new Set(["a -> b"]))).toEqual([]);
     expect(
       usageReciprocityOffenders(
         reciprocal.map((entry) => entry.name === "b" ? { ...entry, usedBy: "None" } : entry),
+        new Set(["a -> b"]),
       ),
     ).not.toEqual([]);
 
