@@ -19,21 +19,25 @@ nav_label: skills
 > `SKILL.md`, the `SKILL.md` wins.
 
 Each entry starts with one sentence copied from that skill's frontmatter
-`description`. `**Uses:**` lists the skills it loads. `**Used by:**` lists
-the skills that load it. Both use comma-separated lists, or `None`.
+`description`. `**Uses:**` lists the skills this skill consumes: the ones it
+loads through the Skill tool and the ones whose `SKILL.md` its files read by
+path. `**Used by:**` lists the skills that consume it. Both use
+comma-separated lists, or `None`.
 The load form is
-``Call the Skill tool with `<name>` ``. Naming a skill another way is a
-citation, not an edge. Shared rules use explicit ordinary-resource reads instead of skill registration.
-A guarded principle is not loadable, so its `**Used by:**` lists the procedures that read it by path; the read is what applies it.
+``Call the Skill tool with `<name>` ``. The path form is a reference to
+`<name>/SKILL.md`, relative or root-relative. A reference to any other file in
+a skill's directory is neither a load nor a use, and neither is a reference
+that only locates a skill's install directory — "the directory containing
+`skills/<name>/SKILL.md`" names a location, not the skill.
 
 The edges are therefore **directed**, and reading them transitively gives the
 graph. `team-implement` loads `team-pr`, which loads `pr-screenshots`. None of
 the three loads back. `**Uses:** None` marks a
-leaf with no further Skill-tool loads.
+leaf with no further consumption.
 
-Loads are collected across every `.md` file in the skill's directory, so a
-load written in a `references/` file counts the same as one in `SKILL.md`.
-This page carries both directions of each skill-to-skill load edge.
+References are collected across every `.md` file in the skill's directory, so a
+reference written in a `references/` file counts the same as one in `SKILL.md`.
+This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
@@ -51,7 +55,7 @@ Runs the 8-phase QRSPI feature pipeline, or a leading-argument route.
 
 **Used by:** None
 
-**Uses:** `team-pr`, `team-worktree`
+**Uses:** `how`, `team-implement`, `team-pr`, `team-worktree`, `why`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -99,13 +103,13 @@ Prepares isolated git worktrees.
 
 **Used by:** `team`, `team-fix`
 
-**Uses:** None
+**Uses:** `pr-cleanup`
 
 ### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
 
 Executes and verifies implementation slices.
 
-**Used by:** None
+**Used by:** `team`
 
 **Uses:** `team-pr`
 
@@ -123,7 +127,7 @@ Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
-**Uses:** `team-worktree`, `why`
+**Uses:** `principle-fix-root-causes`, `team-worktree`, `why`
 
 ### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 
@@ -150,9 +154,9 @@ Lands a reviewed pull request.
 
 Triages unresolved PR review comments.
 
-**Used by:** `pr-watch-as-author`
+**Used by:** `pr-watch-as-author`, `pr-watch-as-reviewer`
 
-**Uses:** None
+**Uses:** `pr-screenshots`
 
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
@@ -168,7 +172,7 @@ Watches a reviewed PR and approves settled feedback.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `pr-open-comments`
 
 ### [groom-backlog](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
 
@@ -182,7 +186,7 @@ Grooms a project backlog and proposes tracker changes.
 
 Cleans PR state.
 
-**Used by:** None
+**Used by:** `pr-rebase`, `team-worktree`
 
 **Uses:** None
 
@@ -198,7 +202,7 @@ Verifies a PR test plan with evidence-rated verdicts.
 
 Attaches local images to a PR body.
 
-**Used by:** `team-pr`
+**Used by:** `pr-open-comments`, `team-pr`
 
 **Uses:** None
 
@@ -208,7 +212,7 @@ Rebases a branch onto its base.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `pr-cleanup`
 
 ### [reflect](https://github.com/bostonaholic/team/blob/main/skills/reflect/SKILL.md)
 
@@ -222,15 +226,15 @@ Mines a session for durable learnings.
 
 Investigates design rationale behind code.
 
-**Used by:** `code-review`, `how`, `team-fix`
+**Used by:** `code-review`, `how`, `team`, `team-fix`
 
-**Uses:** None
+**Uses:** `how`
 
 ### [how](https://github.com/bostonaholic/team/blob/main/skills/how/SKILL.md)
 
 Explains subsystem architecture and runtime flow.
 
-**Used by:** None
+**Used by:** `team`, `why`
 
 **Uses:** `why`
 

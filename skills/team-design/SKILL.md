@@ -100,8 +100,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    reviewer's verdict is the terminal line of its report. When the
    report contains a `### Cross-model disposition` section, append that
    section as one block to `$ARGUMENTS/cross-model-notes.md`,
-   blockquote-wrapped — prefix every line with `>` at append time, per
-   the design-review gate in `skills/team/SKILL.md` — opening with the
+    blockquote-wrapped — prefix every line with `>` at append time, per the
+    [design review gate](../team/references/08-design-review-gate-design.md) — opening with the
    orchestrator-authored label
    line — the literal `> **Design round <n>**` — prepended inside the
    wrap; same frontmatter-on-first-append rules as the other gates

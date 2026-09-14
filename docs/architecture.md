@@ -704,8 +704,8 @@ sets `disable-model-invocation: true`, so the model never applies it on its
 own, and it carries no `argument-hint`. It stays user-invocable through `/`,
 and a consuming procedure reads it through its installed path — the same
 citation form ordinary references use. The catalog files it under
-`## Principles`, and because it cannot be loaded the consuming read is its
-`Used by` edge rather than a `Uses` load. [`principle-fix-root-causes`](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md)
+`## Principles`, and a read of its `SKILL.md` is a `Uses` edge in the catalog
+just as a load is. [`principle-fix-root-causes`](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md)
 is read by the [bug-fix playbook](https://github.com/bostonaholic/team/blob/main/skills/team-fix/playbooks/bug-fix.md);
 its `agents/openai.yaml` declares `allow_implicit_invocation: false` for Codex.
 
@@ -716,6 +716,13 @@ reference is one of two kinds, and each has its own encoding:
 |------|-------|-----------|------------|
 | **Load** — the reader must go execute that skill | ``Call the Skill tool with `<name>` `` | bare name | `tests/skill-tool-invocation.test.ts` resolves the name against `skills/*/SKILL.md` |
 | **Citation** — a schema lookup, a "see also", a rule restated nearby | `skills/<name>/SKILL.md` | path | the path assertions in `tests/methodology.test.ts` and siblings |
+
+The citation row splits. A reference to a skill's own `SKILL.md` is also an
+edge in the [`docs/skills.md`](skills.md) `Uses`/`Used by` graph — the consuming
+procedure reads the skill, so it uses it. A reference to any other file in that
+skill's directory is a citation only and draws no edge, and so does a reference
+that only locates a skill's install directory (for example, "the directory
+containing `skills/team/SKILL.md`", read to run a script beside it).
 
 The imperative phrasing on a load is what makes a model actually issue the
 tool call. "Load X", "see X", and "per X" all read as citations, and a model
@@ -738,7 +745,9 @@ The [dispatch contract](https://github.com/bostonaholic/team/blob/main/skills/te
 The load form applies **only where the other skill is genuinely needed**. A
 citation keeps its path and its ordinary wording: a schema lookup, a "see
 also", and a pointer to a skill the frontmatter already preloaded. Turning one of those into a tool call would spend a call
-and a slice of context on content nobody asked for.
+and a slice of context on content nobody asked for. A citation to a skill's
+`SKILL.md` still draws a `Uses` edge — the procedure reads the skill — even
+though it is not a load.
 
 The sweep asserts the *reference*, not the sentence around it — the same
 thing the path assertions always asserted, which is why
