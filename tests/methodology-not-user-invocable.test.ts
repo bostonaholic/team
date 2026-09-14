@@ -30,6 +30,7 @@ const REPO_ROOT = join(import.meta.dir, "..");
 const CATALOG = join(REPO_ROOT, "docs", "skills.md");
 
 const METHODOLOGY_SECTION = "## Methodology skills";
+const PRINCIPLE_SECTION = "## Principles";
 // Every other section that catalogues a skill a user can type.
 const COMMAND_SECTIONS = ["## Entry-point skills", "## Standalone utilities"];
 
@@ -59,8 +60,9 @@ describe("methodology skills are never user-invocable", () => {
 
   // Guard: an empty or mis-parsed catalog would pass every check below.
   test("the catalog parse sees both kinds of section", () => {
-    expect(entries.length).toBe(25);
+    expect(entries.length).toBe(26);
     expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(0);
+    expect(entries.filter((e) => e.section === PRINCIPLE_SECTION).length).toBe(1);
     expect(entries.filter((e) => COMMAND_SECTIONS.includes(e.section)).length).toBe(25);
   });
 
@@ -125,7 +127,7 @@ function takesArguments(name: string): boolean {
   return /^argument-hint:/m.test(frontmatter(read(path)));
 }
 
-const KNOWN_SECTIONS = [METHODOLOGY_SECTION, ...COMMAND_SECTIONS];
+const KNOWN_SECTIONS = [METHODOLOGY_SECTION, PRINCIPLE_SECTION, ...COMMAND_SECTIONS];
 
 // The four offender rules, factored so the planted-positive test can run each
 // one against synthetic input instead of trusting that it fired on real data.
@@ -140,13 +142,16 @@ const KNOWN_SECTIONS = [METHODOLOGY_SECTION, ...COMMAND_SECTIONS];
 function classifierDisagreements(entries: Entry[]): string[] {
   return entries
     .filter((entry) => KNOWN_SECTIONS.includes(entry.section))
-    .filter(
-      (entry) =>
-        (entry.section === METHODOLOGY_SECTION) !== isModelOnly(entry.name) ||
-        // Equal is the disagreement: every command carries `argument-hint`, which
-        // `docs/architecture.md` uses as the flavor sorter.
-        isModelOnly(entry.name) === takesArguments(entry.name),
-    )
+    .filter((entry) => {
+      const modelOnly = isModelOnly(entry.name);
+      const takesArgs = takesArguments(entry.name);
+      // A principle is a guarded command that takes no arguments: not hidden
+      // from the user, and not a model-only preload.
+      if (entry.section === PRINCIPLE_SECTION) return modelOnly || takesArgs;
+      // Equal is the disagreement: every other command carries `argument-hint`, which
+      // `docs/architecture.md` uses as the flavor sorter.
+      return (entry.section === METHODOLOGY_SECTION) !== modelOnly || modelOnly === takesArgs;
+    })
     .map(
       (entry) =>
         `${entry.name}: section=${entry.section} user-invocable-false=${isModelOnly(entry.name)} argument-hint=${takesArguments(entry.name)}`,

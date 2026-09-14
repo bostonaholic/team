@@ -93,13 +93,13 @@
       "destination": "skills/team/references/external-data.md"
     },
     {
-      "name": "principle-fix-root-causes",
-      "destination": "skills/team-fix/playbooks/bug-fix.md"
-    },
-    {
       "name": "principle-record-assumptions",
       "destination": "skills/team/references/decisions.md"
     }
+  ],
+  "resources": [
+    "skills/principle-fix-root-causes/SKILL.md",
+    "skills/team-fix/playbooks/bug-fix.md"
   ],
   "callers": [
     {
@@ -705,6 +705,7 @@
     "pr-verify",
     "pr-watch-as-author",
     "pr-watch-as-reviewer",
+    "principle-fix-root-causes",
     "reflect",
     "shipit",
     "team",

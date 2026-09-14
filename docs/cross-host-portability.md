@@ -262,8 +262,10 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
    equivalent, so they all appeared under `$` and a user could invoke any of
    them directly. The playbook refactor moved that
    content out of `skills/` into ordinary references and playbooks read by
-   path, so no methodology or principle registration remains for Codex to
-   list. The `$` picker now shows only the 25 entry-point commands. See
+   path, so no methodology registration remains for Codex to list. The principle
+   tier is returning as guarded `disable-model-invocation` skills, kept out of
+   Codex's implicit catalog by `allow_implicit_invocation: false`; the `$`
+   picker shows the 26 commands. See
    [the divergence note](#57-codex-port) for the historical evidence.
 
 3. **Recency risk.** This is cross-cutting rather than a primitive gap. Codex's
@@ -391,12 +393,12 @@ full parity. It starts from the matrix and works around the named gaps.
   runs the new code under the old number (#355).
 - **Codex's plugin validator rejects `disable-model-invocation`.**
   `plugin-creator`'s `validate_plugin.py` requires the key to be absent or
-  `false`, and Team's four guarded skills set it `true` because Claude Code
+  `false`, and Team's five guarded skills set it `true` because Claude Code
   needs it. The runtime does not enforce the rule, and this host's own
   equivalent — `policy.allow_implicit_invocation: false` in each skill's
-  `agents/openai.yaml` — keeps all four out of the implicit catalog. The
+  `agents/openai.yaml` — keeps all five out of the implicit catalog. The
   divergence is deliberate and the validator finding is expected.
-- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 25 entry commands remain in the picker. Ordinary principles now use installed file reads and add no picker entries.
+- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 26 entry commands remain in the picker. Principles are guarded `disable-model-invocation` skills read by installed path, so they add no implicit-invocation entries.
   Historical probe evidence: the `$` picker was fed by the `skills/list` app-server method, which returned all
   100 Team skills with `enabled: true`, `team:principle-fix-root-causes` among
   them. Its `SkillMetadata` payload carries nine fields — `dependencies`,

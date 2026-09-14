@@ -699,6 +699,16 @@ skill: it lives in ordinary references such as the
 and [writing standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/writing.md),
 which consumers read by path before work.
 
+**Principles are the third flavor.** A principle is a guarded command: it
+sets `disable-model-invocation: true`, so the model never applies it on its
+own, and it carries no `argument-hint`. It stays user-invocable through `/`,
+and a consuming procedure reads it through its installed path — the same
+citation form ordinary references use. The catalog files it under
+`## Principles`, and because it cannot be loaded the consuming read is its
+`Used by` edge rather than a `Uses` load. [`principle-fix-root-causes`](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md)
+is read by the [bug-fix playbook](https://github.com/bostonaholic/team/blob/main/skills/team-fix/playbooks/bug-fix.md);
+its `agents/openai.yaml` declares `allow_implicit_invocation: false` for Codex.
+
 **Two reference forms, and the form is the contract.** Every skill-to-skill
 reference is one of two kinds, and each has its own encoding:
 
@@ -752,7 +762,10 @@ command.
 
 The field is honored by Claude Code only. Codex reads no invocability
 field at all, so it lists every registered methodology skill in
-its `$` picker and a user can invoke any of them. There is no fix on
+its `$` picker and a user can invoke any of them. Principles avoid that leak
+with `disable-model-invocation: true` plus `allow_implicit_invocation: false`
+in their `agents/openai.yaml`, which keeps them out of Codex's implicit
+catalog. There is no fix on
 Team's side, and the workarounds that look plausible all fail — see
 [cross-host-portability.md](cross-host-portability.md#57-codex-port)
 before spending time on it.
@@ -907,8 +920,11 @@ entry points. Descriptions are at most 200 characters, or 150 for methodology.
    Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
    Twelve agent bodies read execution rules. File-finder retains its single-step contract.
-   Resources use no skill frontmatter or discovery metadata. Keep the 25 commands registered.
-   Do not add principle registrations, recursive loading, compatibility stubs, or a resource registry.
+   Resources use no skill frontmatter or discovery metadata. Keep the 26 commands registered.
+   Guarded principles are their own tier: they carry skill frontmatter and
+   `agents/openai.yaml`, register as commands, and set `disable-model-invocation:
+   true` so the model never applies them on its own. Do not add unguarded
+   principle registrations, recursive loading, compatibility stubs, or a resource registry.
 
 ### Codex host manifests
 

@@ -22,7 +22,9 @@
 // lower them when compression lands, never raise them to admit a new skill. A
 // ceiling may not sit more than RATCHET_SLACK_CHARS above the measured
 // footprint, so headroom cannot be bought in advance and every raise shows up
-// in the diff as a raise.
+// in the diff as a raise. The one exception is un-retiring a skill the fleet
+// already carried before a consolidation — that restores a footprint the
+// ceiling was lowered past, so the ceiling rises with it, still within slack.
 
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
@@ -41,8 +43,8 @@ const MAX_SKILL_NAME_CHARS = 64;
 // Team's declared footprint ceilings, in characters. Not derived from Codex's
 // budget — Team's share of a pool it cannot see is a judgement, not a
 // calculation. They record what Team spends today and only ever come down.
-const FLEET_DESCRIPTION_BUDGET_CHARS = 3_650;
-const FLEET_CATALOG_BUDGET_CHARS = 4_850;
+const FLEET_DESCRIPTION_BUDGET_CHARS = 3_750;
+const FLEET_CATALOG_BUDGET_CHARS = 5_030;
 const RATCHET_SLACK_CHARS = 100;
 
 // Codex aliases a plugin's shared skill root to `r<index>` and renders each
