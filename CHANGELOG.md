@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.115.0] - 2026-09-15
+
 ### Added
 
 - **Team's four runtime hooks now have bindings on Codex CLI, Antigravity CLI, and OpenCode, not only Claude Code.** `session-start-recover` and `pre-compact-anchor` run on Codex through stdout-envelope copies under `hooks/codex/`; `post-write-validate` runs on Codex against `apply_patch` writes and on OpenCode through a `tool.execute.after` adapter; the `.team/config.json` guard reuses the canonical hook on Codex and injects an advisory message at Antigravity `PreInvocation`; and OpenCode gets recovery and compaction context through the plugin's `experimental.chat.system.transform` and `experimental.session.compacting` callbacks. Codex registers through `hooks/hooks.json` via `.codex-plugin/plugin.json`, Antigravity through a root `hooks.json`. Antigravity has no public `SessionStart`, `PreCompact`, or blocking `PostToolUse`, and OpenCode has no prompt-block hook, so those cells are documented gaps rather than silent stubs. `docs/hooks-portability.md` is the hook × host matrix.
@@ -1045,7 +1047,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.114.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.115.0...HEAD
+[0.115.0]: https://github.com/bostonaholic/team/compare/v0.114.0...v0.115.0
 [0.114.0]: https://github.com/bostonaholic/team/compare/v0.113.0...v0.114.0
 [0.113.0]: https://github.com/bostonaholic/team/compare/v0.112.0...v0.113.0
 [0.112.0]: https://github.com/bostonaholic/team/compare/v0.111.0...v0.112.0
