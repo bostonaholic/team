@@ -29,7 +29,7 @@ export function fixture(checkoutName = "checkout", catalog: "one" | "empty" | "f
   const target = join(config, "plugins/team.js");
   mkdirSync(home, { recursive: true });
   mkdirSync(join(checkout, "skills"), { recursive: true });
-  for (const dir of ["opencode", "script"]) cpSync(join(REPO, dir), join(checkout, dir), { recursive: true });
+  for (const dir of ["opencode", "script", "hooks"]) cpSync(join(REPO, dir), join(checkout, dir), { recursive: true });
   write(join(checkout, "package.json"), '{"type":"module"}\n');
   const bin = join(root, "bin");
   mkdirSync(bin);
@@ -58,7 +58,7 @@ export async function load(f: Fixture, config: Config = {}, entry = join(f.check
   expect(plugins.length, "native entry point must export exactly one plugin function").toBe(1);
   expect(Object.keys(module).length, "native entry point exports no catalog helpers").toBe(1);
   const hooks = await plugins[0]!({ directory: f.root, worktree: f.root });
-  expect(Object.keys(hooks)).toEqual(["config"]);
+  expect(Object.keys(hooks)).toEqual(["config", "experimental.chat.system.transform", "experimental.session.compacting"]);
   await hooks.config(config);
   return config;
 }
