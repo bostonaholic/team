@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Team's four runtime hooks now have bindings on Codex CLI, Antigravity CLI, and OpenCode, not only Claude Code.** `session-start-recover` and `pre-compact-anchor` run on Codex through stdout-envelope copies under `hooks/codex/`; `post-write-validate` runs on Codex against `apply_patch` writes and on OpenCode through a `tool.execute.after` adapter; the `.team/config.json` guard reuses the canonical hook on Codex and injects an advisory message at Antigravity `PreInvocation`; and OpenCode gets recovery and compaction context through the plugin's `experimental.chat.system.transform` and `experimental.session.compacting` callbacks. Codex registers through `hooks/hooks.json` via `.codex-plugin/plugin.json`, Antigravity through a root `hooks.json`. Antigravity has no public `SessionStart`, `PreCompact`, or blocking `PostToolUse`, and OpenCode has no prompt-block hook, so those cells are documented gaps rather than silent stubs. `docs/hooks-portability.md` is the hook × host matrix.
+
+### Changed
+
+- **`hooks/post-write-validate.mjs` validates hook syntax with a parse-only check instead of importing the file.** It no longer executes a written plugin file in the hook process; on Bun it parses through `Bun.Transpiler`, on Node through `node --check`. The plugin-file rules moved to a shared `hooks/lib/validate-plugin-file.mjs` used by the Claude, Codex, and OpenCode callers. **What this asks of you:** nothing.
+
 ## [0.114.0] - 2026-09-15
 
 ### Fixed
