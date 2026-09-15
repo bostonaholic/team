@@ -26,6 +26,12 @@ Replace every fixed `sleep(N)` with a wait-for-condition primitive.
 
 Never depend on scheduler order. `join()`/`await` every concurrent task before asserting. Sort or compare sets unless order is the contract.
 
+## Prove a race with two connections, never by reading code
+
+A claimed race is proven by a test that reproduces it, and it must fail before the fix. Drive each side on its own connection: a transactional test harness puts both on one connection, which hides the conflict entirely. Gate the interleaving with explicit handoffs so it is deterministic rather than scheduler-dependent, then assert the surviving state — the handoffs make the outcome reachable, they are not themselves the assertion.
+
+Detect blocking by whether the second side completes within a timeout. Engine lock tables report only your own transactions without elevated privileges, so an empty result there is not evidence that nothing is locked.
+
 ## Control the clock
 
 Freeze or inject time. Never feed real `new Date()`, `Date.now()`, naive calendar math, future expiry literals, or timezone-naive dates into assertions.
