@@ -82,15 +82,15 @@ There are four non-portable bindings:
    nesting semantics.
 4. **SKILL.md slash-command auto-registration**, plus `user-invocable`.
 
-The host also interprets the agent frontmatter field semantics: `name`, `model`,
-`tools`, `skills`, and `permissionMode`. Everything portable rides *on top of*
-these four non-portable bindings. The `model:` field is a *Claude-specific model
-name*. To make it portable, resolve it through host-neutral config. Do not bake a
-literal into each definition. See `.team/config.json` under Desired end state.
+The host also interprets agent frontmatter: `name`, `model`, `tools`, `skills`,
+`effort`, and `permissionMode`. Claude's native model aliases stay in the agent
+files. Body-loaded dispatch on Codex and Antigravity translates those aliases
+through a model-selection map, then applies the host's actual spawn arguments.
+See [Model selection](#model-selection).
 
 ## Agent dispatch
 
-Of the four blocking bindings, the fourth — Agent/Task dispatch — needs no
+Of the four blocking bindings, the third — Agent/Task dispatch — needs no
 per-host agent registration. Team resolves it in the orchestrator itself,
 through the portable definition contract in
 `skills/team/references/15-host-dispatch.md`:
@@ -108,45 +108,97 @@ through the portable definition contract in
 
 The consequence for this study: the "agent dispatch" primitive is reachable on
 every host that can spawn a subagent, without a per-host shim. The remaining
-per-host work is the bindings the study already names — hook registration and
-the model-tier map — not agent registration.
+per-host work includes hook registration and live verification of the permission
+and execution contracts. Model selection is defined below.
 
 ## Desired end state
 
-The end state is a single canonical "core" of host-neutral definitions, which
-means the Markdown bodies and the Node hook logic, maintained once. Thin per-host
-binding shims sit on top. Each shim translates the four blocking contracts into
-its host's idiom. Claude Code keeps its current `.claude-plugin/plugin.json` and
-`skills:` injection. Antigravity CLI's shim already ships: the root
-`plugin.json` manifest, which the host resolves with `skills/` and `agents/`
-beside it. A Codex build emits `.codex/` with config.toml or hooks.json and
-`agents/*.md`. Skills need no build step on Codex: `.codex-plugin/plugin.json`
-and `.agents/plugins/marketplace.json` already make the checkout an installable
-Codex plugin, and `codex plugin add` reads `skills/<name>/SKILL.md` out of it
-directly.
-The high-churn binding layer stays isolated from the stable cores. A host API
-change thus touches one shim, not 68 definition files.
+Team shares agent and skill Markdown and Node hook logic across hosts. Claude,
+Codex, and Antigravity already install through native manifests; no generated
+core or binding-shim layer was needed for those installs. Body-loaded dispatch
+uses the shared agent body. OpenCode separately ships its discovery adapter.
+Hook and permission parity remain host work owned by #56 and #57.
 
-Per-project configuration is host-neutral. Each project that uses Team carries one
-`.team/config.json` at its root. It is plain JSON, part of the portable core, and
-identical on every host. It declares the settings that would otherwise leak host
-specifics into the definitions:
+The earlier proposal required `.team/config.json` for models, host selection,
+parallelism, and repositories. Model resolution does not justify that combined
+configuration. Only optional `.team/models.json` overrides ship, consumed by the
+installed resolver before body-loaded dispatch. Agent frontmatter stays native
+to Claude. The remaining parity target covers the three runtime hook events,
+parallel and nested subagents, and structured returns.
 
-- The map from Team's abstract model tiers to the active host's concrete model
-  IDs. The agent `model:` frontmatter becomes a *tier key*, not a literal Claude
-  model name.
-- Host selection.
-- Per-host parallelism caps.
-- The multi-repo list.
+### Model selection
 
-The per-host shims **read** this file. They never redefine it. It is the
-host-neutral counterpart to the per-host manifests. Those manifests carry only
-bindings. `.team/config.json` carries the host-agnostic project config.
+The [installed procedure](../skills/team/references/model-selection.md) and
+[resolver](../skills/team/references/resolve-model.mjs) define the config and
+validation contract. [Bundled selections](../skills/team/references/model-defaults.json):
 
-This document does not build that end state. It is the strategy and capability
-matrix that lets epic #57 build it. The epic targets **full parity** against
-named, tracked host risks. Full parity means all four hook events, parallel and
-nested subagents, and structured returns.
+| Agent `model:` | Codex model ID | Antigravity invocation tier |
+| --- | --- | --- |
+| `opus` | `gpt-6-astra` | `pro` |
+| `sonnet` | `gpt-5.6-sol` | `flash` |
+| `haiku` | `gpt-5.6-luna` | `flash_lite` |
+
+Codex preserves each agent's effort unless an override specifies
+`reasoning_effort`. Antigravity's invocation tier selects its effort; there is
+no separate effort argument. The optional `<home-project>/.team/models.json`
+replaces individual selections, for example:
+
+```json
+{
+  "codex": {
+    "sonnet": { "model": "gpt-5.6-terra", "reasoning_effort": "medium" }
+  }
+}
+```
+
+The resolver rejects unknown config fields, unavailable selections, and
+unsupported Codex effort using capability data from the running host. It does
+not query a provider or spawn an agent. The orchestrator supplies that data and
+applies the returned arguments. Missing overrides use bundled selections;
+invalid overrides fail. Claude named-agent dispatch never reads this config.
+The `.team/` ignore entry reserves local overrides; pipeline state still lives
+under `docs/plans/<id>/`.
+
+**Evidence, 2026-09-15:** live probes on Codex CLI 0.154.0 and Antigravity CLI
+1.2.1 used completed child responses and host runtime metadata, not model
+self-identification. Confidence: high for these observed selections.
+
+| Probe | Observed result |
+| --- | --- |
+| Both CLIs, `--model opus`, `sonnet`, or `haiku` | Rejected; no native CLI alias resolution |
+| Codex, three fresh children without overrides | All selected `gpt-6-astra`, effort `medium` |
+| Codex, explicit child override | `gpt-5.6-luna`, effort `low` |
+| Antigravity, `Model: inherit` with a Pro parent | `gemini-3.1-pro-low` |
+| Antigravity, `Model: pro` | `gemini-3.1-pro-low` |
+| Antigravity, `Model: flash` | `gemini-3.8-flash-tiered` |
+| Antigravity, `Model: flash_lite` | `gemini-3.5-flash-lite` |
+
+Antigravity's invocation schema accepts `inherit`, `flash_lite`, `flash`, and
+`pro`; explicit `opus` and `sonnet` invocations failed validation. The native
+frontmatter fixture was not discovered, so its model resolution was not proven.
+The CLI returned exit 0 after a tool validation error, making successful child
+completion a separate check. Codex child turn contexts and Antigravity child
+`gen_metadata`/`executor_metadata` supplied the selected IDs above.
+
+After wiring the resolver, a Codex procedure probe ran all three selections:
+child metadata confirmed Astra/high, Sol/medium, and Luna/low. The corresponding
+Antigravity procedure probe stopped at a headless file-read permission denial,
+including when retried from the repository workspace. Its new resolver outputs
+are covered by deterministic tests; the native tier calls above were verified
+separately. Neither probe establishes full QRSPI or cross-provider quality parity.
+
+The [Codex contract](https://developers.openai.com/codex/subagents/) describes
+model/effort inheritance and explicit overrides. The
+[Antigravity contract](https://antigravity.google/docs/subagents) describes native
+agent tiers; its live invocation schema also exposed `flash_lite` during the probe.
+
+**Decision:** preserve distinct tiers with explicit host selections and report
+requested and observed values separately. Confidence: moderate; routing is
+verified, but quality equivalence and the best per-host assignments are not.
+These defaults are initial policy choices, not a claim that another provider
+reproduces Claude's quality or its security-reviewer model pin. Concrete IDs
+behind Antigravity tiers may change. See the installed procedure for evidence
+reporting, mismatch handling, and unsupported-host limits.
 
 ## Patterns to follow
 
@@ -214,8 +266,8 @@ facility, so the design must work around it.
 | MCP prompts-as-slash-commands | native | **hard gap**: MCP prompts unsupported client-side, so route through Skills |
 | MCP resources | native | native (`read_mcp_resource`/`list_mcp_resources`) |
 | Manifest / binding format | `.claude-plugin/plugin.json` | `.codex-plugin/plugin.json` + `.agents/plugins/marketplace.json` for the package; `config.toml`/`hooks.json` + `.codex/` for hooks and agents |
-| Per-project config (host-neutral) | `.team/config.json` (plain JSON, read by portable core) | `.team/config.json` (same file, unchanged) |
-| Abstract model tier → host model | native (`model:` is a literal Claude model) | workaround: resolve tier through `.team/config.json` map |
+| Model-selection overrides | Native agent frontmatter; no Team config needed | Optional `.team/models.json` |
+| Agent tier → host model | Native Claude alias | Installed resolver emits explicit model ID and effort |
 
 Antigravity CLI is not a third column. Only some of these rows are settled for
 it — manifest layout, skill and agent discovery, naming, hooks — while the MCP
@@ -277,24 +329,12 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
 
 ## Decisions made
 
-1. **Chosen strategy: a hybrid.** It pairs a shared host-neutral core with thin
-   per-host binding shims. The canonical core is the portable layer, maintained
-   once. That layer holds the Markdown bodies, the Node hook logic, the artifact
-   I/O, and the envelope convention. Per host, a thin shim gives only the four
-   blocking bindings: (a) the manifest and config format. (b) the hook stdin and
-   stdout schema adapter. (c) the plugin-root and project-dir env resolution. (d)
-   the slash-entry registration. Each host can generate its shims or hand-write
-   them. Either way they are small and isolated.
-   - *Why:* the expensive, divergent, high-churn surface is exactly the bindings
-     (three manifest formats ship today — Claude Code's, Codex's, and
-     Antigravity's — atop per-host hook schemas and still-moving host APIs),
-     while the stable, valuable surface, the agent and skill definitions and 3 hook
-     logic files, is *already portable*. The hybrid boundary lines up with the
-     natural portable/non-portable seam, so it minimizes both duplication and the
-     blast radius of churn.
-   - *Serves whom:* Team's maintainer and the #56/#57 epic implementers. They
-     edit behavior once and re-bind per host, instead of maintaining a drifting
-     copy per host.
+1. **Shared definitions with native host bindings.** The Markdown bodies,
+   Node hook logic, artifact I/O, and envelope convention are maintained once.
+   Claude, Codex, and Antigravity install through native manifests. The proposed
+   generated core and shim layer were not needed for those installs. Add
+   adapters only for demonstrated host differences, such as OpenCode discovery
+   or the model selection described above. Hook parity remains port work.
 
 2. **Rejected: single source of truth plus a full transpile/build.** One canonical
    set. A build step emits a complete package per host. *Why rejected:* it forces
@@ -325,27 +365,23 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
    the option without coupling the strategy to it.
 
 5. **Parity target for #57: full hook and subagent parity**, not MVP-first.
-   The epic targets all four hook events, parallel **and** nested subagents, and
+   The epic targets all three runtime hook events, parallel **and** nested subagents, and
    structured returns before it declares the work done. This raises the bar
    against the young-API and open-bug risk. The design thus confronts those risks
    directly rather than defer them by a cut in scope. See the risks and "what
    #57 builds against" below.
 
-6. **Per-project configuration lives in a host-neutral `.team/config.json`.** The
-   [Desired end state](#desired-end-state) specifies the artifact and its
-   relationship to the per-host manifests. It also specifies the host-agnostic
-   settings the artifact holds: the model-tier to host-model map, host selection,
-   per-host parallelism caps, and the multi-repo list.
-   - *Why:* it pulls the one irreducibly host-varying value out of the portable
-     definitions, since the agent `model:` frontmatter is a Claude-specific model
-     name and meaningless on Codex, and puts it behind a single host-agnostic
-     indirection, so the agent and skill definitions never carry a host-specific model
-     literal. The per-host shims *read* `.team/config.json`; they never restate
-     it.
+6. **Model configuration is limited to model selection.** Optional
+   `.team/models.json` overrides bundled host mappings. The installed resolver
+   validates them against the active host's capabilities; dispatch applies the
+   resulting arguments. Claude aliases and native dispatch stay unchanged.
+   Host selection, concurrency limits, and repository lists are not part of this
+   file. This replaces the earlier combined-config proposal after the live
+   [model resolution probes](#model-selection) for #55.
 
 ## What #57 builds against
 
-The epic builds the hybrid core plus a per-host shim for its host, targeting
+The epic completes the remaining Codex bindings, targeting
 full parity. It starts from the matrix and works around the named gaps.
 
 ### #57. Codex port
@@ -421,15 +457,15 @@ full parity. It starts from the matrix and works around the named gaps.
 
   Verified on codex-cli 0.153.4, 2026-09-10. The only real fix is a Codex
   feature (honoring `user-invocable`, or a `policy.allow_explicit_invocation`).
-- Hooks: reuse the 4 `.mjs` files. The shim adapts to Codex
+- Hooks: reuse the 3 `.mjs` files. The shim adapts to Codex
   `hooks.json`/`[hooks]`, whose schema mirrors Claude closely
   (`permissionDecision:"deny"`/exit 2). Events map nearly 1:1
-  (`PreToolUse`/`PostToolUse`/`SessionStart`/`PreCompact`).
+  (`PostToolUse`/`SessionStart`/`PreCompact`).
 - Slash entry points → Codex Skills, not MCP (gap 1).
 - Env: resolve through `.codex/` trust + config.toml.
-- Config: model tiers resolve through `.team/config.json`. Map Team's tiers to
-  concrete Codex or GPT model IDs. Read the `model:` frontmatter as a tier key.
-  The per-host parallelism cap (`agents.max_threads=6`) also comes from config.
+- Models: use the installed resolver and optional `.team/models.json` overrides.
+  Apply its explicit model and effort to fresh children; verify runtime metadata.
+  Parallelism stays in native host configuration.
 - **Known hazards to track:**
   - **[codex#15250](https://github.com/openai/codex/issues/15250) (open).** Custom
     agents are not always reachable from tool-backed sessions. Full subagent parity
@@ -693,9 +729,8 @@ handle.
   design around it. The other cited issue,
   [codex#15451](https://github.com/openai/codex/issues/15451), is already
   resolved upstream.
-- **The full `.team/config.json` schema.** Decision 6 fixes its purpose and core
-  fields: model-tier map, host, parallelism caps, and repos. The exhaustive
-  schema, defaults, and validation are for the port epic to pin.
+- **Model assignment quality.** The mappings preserve distinct selections.
+  Per-role quality and cost evaluation still determine the best host assignments.
 
 ## Risks
 

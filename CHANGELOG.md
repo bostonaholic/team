@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Explicit model selections for body-loaded Codex and Antigravity agents, with optional `.team/models.json` overrides, validation against host capabilities, and separate requested/resolved model reporting. Claude agent frontmatter is unchanged.
+
 ## [0.109.0] - 2026-09-14
 
 ### Added
