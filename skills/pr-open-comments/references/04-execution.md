@@ -100,6 +100,13 @@ code can have moved since. For every unresolved thread:
      comment no longer applies as written.
    - `INACCURATE` — the comment's claim does not hold against the actual
      code (for example, the "bug" cannot occur); note the evidence.
+     Rate the **concern, not the premise**. A comment can cite the wrong
+     version, line, or symbol and still name a real defect, so disproving
+     what it cited settles the citation alone. Say which of the two is
+     inaccurate. Where the premise is wrong and the concern survives it,
+     the verdict is `STILL RELEVANT` on the concern and the reply corrects
+     the citation — declining the thread there discards a live defect on a
+     technicality.
 5. **Rate confidence in the recommendation.** Assign the rating only
    after the verdict (Hard Rule 1). Only a `STILL RELEVANT` verdict
    reaches the auto-apply bar. For a behavioral claim, a rating
