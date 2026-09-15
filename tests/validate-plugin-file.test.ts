@@ -20,7 +20,6 @@ const VALID_SKILL = "---\nname: sample\ndescription: A sample\n---\n# Body\n";
 const VALID_AGENT = "---\nname: sample\ndescription: A sample\n---\nBody\n";
 
 describe("validatePluginFile", () => {
-  // @ts-expect-error The shared validator is JavaScript without declarations.
   const load = () => import(pathToFileURL(join(ROOT, "hooks/lib/validate-plugin-file.mjs")).href);
 
   test("exports PLUGIN_DIRS", async () => {

@@ -54,7 +54,7 @@ describe("opencode recovery and compaction adapters", () => {
     const hooks = await mount(f);
     const first = { system: [] as string[] };
     await (hooks["experimental.chat.system.transform"] as Function)({ sessionID: "s1" }, first);
-    const recovered = first.system[0];
+    const recovered = first.system[0]!;
     expect(recovered).toContain("[Team Pipeline Recovery]");
     rmSync(dir, { recursive: true, force: true });
 
