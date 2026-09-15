@@ -86,6 +86,12 @@ Every test must reject at least one plausible broken implementation. Observe it 
 - Sort (or `ORDER BY`) before positional assertions; otherwise use unordered matchers. Never compare ordered expectations with set-backed results.
 - Stub real networks, allocate ports dynamically, close resources, pin locale, timezone, paths, and line endings, and compare floats with tolerance.
 
+## Prove a race with two connections, never by reading code
+
+A claimed race is proven by a test that reproduces it, and it must fail before the fix. Drive each side on its own connection: a transactional test harness puts both on one connection, which hides the conflict entirely. Gate the interleaving with explicit handoffs so it is deterministic rather than scheduler-dependent, then assert the surviving state — the handoffs make the outcome reachable, they are not themselves the assertion.
+
+Detect blocking by whether the second side completes within a timeout. Engine lock tables report only your own transactions without elevated privileges, so an empty result there is not evidence that nothing is locked.
+
 ## Fidelity ladder: real > fake > mock
 
 Wrap vendor types behind owned interfaces. Reserve E2E for critical user journeys; when behavior overlaps an existing feature, add a cross-feature interaction test.
