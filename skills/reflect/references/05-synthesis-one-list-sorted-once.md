@@ -11,12 +11,21 @@ cause. Every item lands in exactly one bucket:
   line of reason each, so a rejection is auditable rather than silent.
 - **Backlog** — a finding a machine check would enforce better than prose.
 
-**The Backlog criterion, applied once, here.** An item is demoted when it can
-be restated as a deterministic predicate over files at rest or over a command's
-exit status, with no judgment about intent. The item names the layer that would
-carry the check (`docs/testing.md`). A finding that is half judgment and half
-mechanics goes to Backlog whole — splitting it would ask for approval on two
-halves of one idea and land prose asserting a rule nothing yet enforces.
+**The Backlog criterion, applied once, here.** Classify the finding before
+writing it, because the classification is what picks its destination:
+
+- **Mechanical** — a fixed syntactic pattern, a banned call or API, an import
+  shape, a file-location rule: anything restatable as a deterministic predicate
+  over files at rest or over a command's exit status, with no judgment about
+  intent. It is demoted to Backlog, and the item names the layer that would
+  carry the check (`docs/testing.md`).
+- **Judgement call** — cross-file consistency, "matches the surrounding
+  style," anything that needs intent to decide. No guardrail could ever
+  substitute for it, so it stays Accepted as a skill edit.
+
+Default to the check over the rule. A finding that is half judgment and half
+mechanics is demoted whole — splitting it would ask for approval on two halves
+of one idea and land prose asserting a rule nothing yet enforces.
 
 Two kinds of proposal are demoted by rule, whatever a lens claimed: rewriting
 `AGENTS.md`, `CLAUDE.md`, or anything under `docs/` is a Backlog item with the

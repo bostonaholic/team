@@ -5,7 +5,13 @@ Three read-only passes over `transcript.jsonl`, each looking for one thing:
 - **judgment** — where guidance was absent, ambiguous, or misleading, and the
   user had to correct course. The evidence is the correction itself.
 - **tooling** — where a command, script, hook, or test cost retries the task
-  did not warrant. The evidence is the repeated invocation.
+  did not warrant. The evidence is the repeated invocation. Read the repo's own
+  check command first: one that already exists but sits unwired or silently
+  broken is the finding, not a second check beside it. A repo with no
+  **guardrail** at all (no pre-commit hook and no CI job running its lint,
+  typecheck, or test command) is itself a finding, and its evidence is that
+  absence — an un-linted repo is a standing missed opportunity, not a neutral
+  default.
 - **divergent** — where the session did something no skill describes, whether
   or not it worked. The evidence is the absence of a skill that covers it.
 
