@@ -247,8 +247,6 @@ async function main() {
   if (!phase) process.exit(0);
   const ctx = [
     "[Team Pipeline Recovery]",
-    "An active Team pipeline was detected. Re-invoke /team to continue from the detected phase.",
-    "",
     `Phase: ${phase} | Id: ${active.id}`,
     `Artifact directory: ${active.dir}`,
     `To continue: re-invoke /team to resume from the detected phase (it reads the artifacts at the path above).`,

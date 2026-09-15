@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -69,6 +69,33 @@ describe("validatePluginFile", () => {
     const reasons = await validatePluginFile("hooks/bad.mjs", absolute);
     expect(reasons.length).toBeGreaterThan(0);
     expect(reasons[0]).toContain("Syntax error");
+  });
+
+  // Positive control for the parse-only contract. This suite runs under Bun,
+  // where the old `process.execPath --check` path ignored the unknown flag and
+  // RAN the file. A planted top-level side effect must not fire: with a syntax
+  // error the parser throws before execution, and with valid syntax the
+  // Transpiler still returns transformed source without evaluating it.
+  test("does not execute a hook's top-level side effects", async () => {
+    const { validatePluginFile } = await load();
+
+    const brokenSentinel = join(WORK, "sentinel-broken");
+    const broken = write(
+      "hooks/side-effect-broken.mjs",
+      `import { writeFileSync } from "node:fs";\nwriteFileSync(${JSON.stringify(brokenSentinel)}, "executed");\nexport const = ;\n`,
+    );
+    const brokenReasons = await validatePluginFile("hooks/side-effect-broken.mjs", broken);
+    expect(existsSync(brokenSentinel)).toBe(false);
+    expect(brokenReasons.length).toBeGreaterThan(0);
+    expect(brokenReasons[0]).toContain("Syntax error");
+
+    const validSentinel = join(WORK, "sentinel-valid");
+    const valid = write(
+      "hooks/side-effect-valid.mjs",
+      `import { writeFileSync } from "node:fs";\nwriteFileSync(${JSON.stringify(validSentinel)}, "executed");\nexport const ok = true;\n`,
+    );
+    expect(await validatePluginFile("hooks/side-effect-valid.mjs", valid)).toEqual([]);
+    expect(existsSync(validSentinel)).toBe(false);
   });
 
   test("ignores files outside the plugin directories", async () => {

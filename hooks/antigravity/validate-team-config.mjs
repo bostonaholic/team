@@ -36,7 +36,7 @@ function projectDir(input) {
 }
 
 function inject(configPath, reason) {
-  const ephemeralMessage = `[Team config] ${configPath} is invalid: ${reason}. Fix the file before continuing.`;
+  const ephemeralMessage = `[Team config] ${configPath} is invalid: ${reason}. Team will continue; fix the file to avoid dispatch-time failures.`;
   process.stdout.write(JSON.stringify({ injectSteps: [{ ephemeralMessage }] }) + "\n");
 }
 

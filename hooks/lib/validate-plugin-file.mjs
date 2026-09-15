@@ -41,12 +41,26 @@ function validatePluginJson(filePath, content, reasons) {
   }
 }
 
-// Parse only. `node --check` compiles the file without evaluating its top-level
-// code, so an agent-induced write of `hooks/x.mjs` cannot execute in the hook's
-// unsandboxed process. A non-zero status or a spawn error is a syntax failure;
-// the compiler's stderr is the reason.
-function validateHookSyntax(filePath, absolutePath, reasons) {
+// Parse only, on both runtimes, without ever evaluating the file's top-level
+// code — an agent-induced write of `hooks/x.mjs` must not execute in the hook's
+// unsandboxed process.
+//
+// On Node, `node --check` compiles the file and does not run it. On Bun,
+// `process.execPath` is `bun`, which has no `--check`, ignores the unknown flag,
+// and RUNS the file — so Bun parses through the Transpiler instead, which
+// returns only on a successful parse and throws otherwise. A non-zero status, a
+// spawn error, or a thrown parse error is a syntax failure; the detail is the
+// reason.
+function validateHookSyntax(filePath, content, absolutePath, reasons) {
   if (extname(filePath) !== ".mjs") return;
+  if (typeof Bun !== "undefined") {
+    try {
+      new Bun.Transpiler({ loader: "js" }).transformSync(content);
+    } catch (err) {
+      reasons.push(`Syntax error — ${err.message}`);
+    }
+    return;
+  }
   const result = spawnSync(process.execPath, ["--check", absolutePath], {
     stdio: ["ignore", "ignore", "pipe"],
   });
@@ -72,13 +86,11 @@ export async function validatePluginFile(relativePath, absolutePath) {
   const pluginDir = findPluginDir(relativePath);
   if (!pluginDir) return reasons;
 
-  const validate = VALIDATORS[pluginDir];
-  if (pluginDir === "hooks/") {
-    validate(relativePath, absolutePath, reasons);
-    return reasons;
-  }
-
   const content = await readFile(absolutePath, "utf-8");
-  await validate(relativePath, content, reasons);
+  if (pluginDir === "hooks/") {
+    validateHookSyntax(relativePath, content, absolutePath, reasons);
+  } else {
+    await VALIDATORS[pluginDir](relativePath, content, reasons);
+  }
   return reasons;
 }

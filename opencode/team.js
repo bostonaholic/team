@@ -100,7 +100,7 @@ export default async function TeamPlugin(input) {
         return;
       }
       if (reasons.length > 0) {
-        throw new Error(`Plugin file validation failed for ${relativePath}: ${reasons.join("; ")}. Fix the issue before proceeding.`);
+        throw new Error(`BLOCKED: Plugin file validation failed for ${relativePath}: ${reasons.join("; ")}. Fix the issue before proceeding.`);
       }
     },
   };

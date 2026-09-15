@@ -1,6 +1,9 @@
 ---
 title: Hook portability
 description: "The hook × host matrix for Team's runtime hooks: every copy, its registration, its blocking semantics, and exactly which cells are verified against a running host."
+audience: [developer]
+nav_order: 8
+nav_label: hooks
 ---
 
 # Hook portability
@@ -43,7 +46,7 @@ that event. "none" means the hook always exits 0 and only adds context.
 |---|---|---|---|---|---|---|---|
 | `session-start-recover` | Claude Code | `hooks/session-start-recover.mjs` | `SessionStart` | `.claude-plugin/plugin.json` | none — exit 0, stderr `hookSpecificOutput.additionalContext` | verified (program); host-firing unverified | 2.1.270, 2026-09-15 |
 | `pre-compact-anchor` | Claude Code | `hooks/pre-compact-anchor.mjs` | `PreCompact` | `.claude-plugin/plugin.json` | none — exit 0, stderr `hookSpecificOutput.additionalContext` | verified (program); host-firing unverified | 2.1.270, 2026-09-15 |
-| `post-write-validate` | Claude Code | `hooks/post-write-validate.mjs` | `PostToolUse` (`Write\|Edit`) | `.claude-plugin/plugin.json` | exit 1 blocks; stderr `additionalContext` | verified (program); host-firing unverified | 2.1.270, 2026-09-15 |
+| `post-write-validate` | Claude Code | `hooks/post-write-validate.mjs` | `PostToolUse` (`Write\|Edit`) | `.claude-plugin/plugin.json` | exit 1 does not block; stderr `hookSpecificOutput.additionalContext` | verified (program); host-firing unverified | 2.1.270, 2026-09-15 |
 | `validate-team-config` | Claude Code | `hooks/validate-team-config.mjs` | `UserPromptSubmit` | `.claude-plugin/plugin.json` | exit 2 blocks; stderr reason | verified (program); host-firing unverified | 2.1.270, 2026-09-15 |
 | `session-start-recover` | Codex CLI | `hooks/codex/session-start-recover.mjs` | `SessionStart` | `.codex-plugin/plugin.json` → `hooks/hooks.json` | none — exit 0, stdout `hookSpecificOutput` | verified (program); host-firing unverified | 0.154.0, 2026-09-15 |
 | `pre-compact-anchor` | Codex CLI | `hooks/codex/pre-compact-anchor.mjs` | `PreCompact` | `.codex-plugin/plugin.json` → `hooks/hooks.json` | none — exit 0, stdout `hookSpecificOutput` | verified (program); host-firing unverified | 0.154.0, 2026-09-15 |
@@ -66,7 +69,7 @@ hook; it is called by Claude `post-write-validate.mjs`, Codex
 
 Duplication is deliberate: a host whose stdin, output envelope, or exit-code
 contract differs gets a readable host-native copy rather than a compatibility
-layer. Every copy's header names its siblings and its exact divergence.
+layer. Every duplicated copy's header names its siblings and its exact divergence.
 
 | Logical hook | Canonical copy | Codex copy | Antigravity copy | OpenCode binding |
 |---|---|---|---|---|
