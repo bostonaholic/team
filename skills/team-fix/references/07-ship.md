@@ -12,8 +12,10 @@
 3. **Screenshots for a UI-impacting fix.** Read the
    [ux reviewer brief](../code-review/references/ux-reviewer.md) and apply its
    `## Screenshot Capture (UI projects)` UI-impact gate to the full branch
-   diff. When the fix does not impact a UI, attach nothing. When it does, run
-   the brief's capture procedure into `docs/plans/<id>/screenshots/`, then call
+   diff. A backend fix that changes the interface counts. When UI impact is
+   uncertain, capture. Only a fix that does not change the interface attaches
+   nothing. When it does, run the brief's capture procedure into
+   `docs/plans/<id>/screenshots/`, then call
    the Skill tool with `pr-screenshots` and attach the PNGs. Build the entries
    file and read `result.json` per
    [Screenshot Upload](../team-pr/references/04-screenshot-upload.md), with the

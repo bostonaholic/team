@@ -92,15 +92,19 @@ Runs as step 5 of UI Project Verification, inside the server lifecycle (the
 server is up; you have not stopped it yet). Skip this entire section for API,
 CLI, and Library projects.
 
-**UI-impact gate.** Capture only when both conditions hold: the project type
-is UI **and** the branch's full diff touches components, templates, pages,
-routes, or styles — check
+**UI-impact gate.** Capture when the branch changes something substantial
+about the user interface, whether the changed files are frontend or backend.
+That includes a diff touching components, templates, pages, routes, or styles,
+and it includes a backend, data, or configuration change that alters rendered
+output, copy, layout, states, or navigation. Check
 `git diff $(git merge-base <base-branch> HEAD)..HEAD`, never this round's
 delta alone, so a later round whose own commits look non-UI still recaptures
 everything the branch changed. Resolve `<base-branch>` with
 `git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`,
-falling back to `main`. If either condition fails, create no
-`screenshots/` directory and no manifest — skip the rest of this section.
+falling back to `main`. **When UI impact is uncertain, capture.** A skipped
+capture names a reason a reader can check. Only a branch that does not change
+the interface creates no `screenshots/` directory and no manifest, and skips
+the rest of this section.
 
 **Wipe and recapture.** Delete the contents of `<artifact-dir>/screenshots/`
 before capturing, so stale images from earlier rounds never reach the PR.

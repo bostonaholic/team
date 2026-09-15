@@ -19,10 +19,11 @@
 4. **Decide UI impact and resolve the screenshot manifest.** Read the
    [ux reviewer brief](../code-review/references/ux-reviewer.md) and apply its
    `## Screenshot Capture (UI projects)` UI-impact gate to the full branch
-   diff, never this round's delta. When the branch does not impact a UI, the
-   PR body carries no Screenshots section — non-UI changes are never forced
-   to include one. When it does, the PR must carry one, so capture when
-   needed:
+   diff, never this round's delta. A backend change that alters the interface
+   counts. When UI impact is uncertain, capture. Only a branch that does not
+   change the interface omits the section — non-UI changes are never forced to
+   include one. When the branch does change the interface, the PR must carry
+   the section, so capture when needed:
    - `$ARGUMENTS/screenshots/manifest.md` holding `## Captured` entries whose
      PNGs exist on disk is the manifest to render. Parse its frontmatter and
      `## Captured` / `## Skipped` body for the Screenshots section (see PR
