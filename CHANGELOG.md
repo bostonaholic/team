@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.111.0] - 2026-09-15
+
+### Changed
+
+- **`/reflect` now classifies each finding as mechanical or a judgement call, and sends mechanical ones to a deterministic check instead of skill prose.** The tooling lens reads the repo's own check command first, so an existing check that sits unwired or silently broken is the finding rather than a second check beside it, and a repo with no guardrail at all is now a finding in its own right. **What this asks of you:** nothing.
+
 ## [0.110.0] - 2026-09-15
 
 ### Added
@@ -1009,7 +1015,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.110.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.111.0...HEAD
+[0.111.0]: https://github.com/bostonaholic/team/compare/v0.110.0...v0.111.0
 [0.110.0]: https://github.com/bostonaholic/team/compare/v0.109.0...v0.110.0
 [0.109.0]: https://github.com/bostonaholic/team/compare/v0.108.1...v0.109.0
 [0.108.1]: https://github.com/bostonaholic/team/compare/v0.108.0...v0.108.1
