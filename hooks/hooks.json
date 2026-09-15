@@ -1,0 +1,24 @@
+{
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node hooks/codex/session-start-recover.mjs",
+          "timeout": 5000
+        }
+      ]
+    }
+  ],
+  "PreCompact": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node hooks/codex/pre-compact-anchor.mjs",
+          "timeout": 5000
+        }
+      ]
+    }
+  ]
+}

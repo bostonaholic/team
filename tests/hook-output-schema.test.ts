@@ -18,6 +18,8 @@ import { join } from "node:path";
 
 const HOOK_DIRS = [
   join(process.cwd(), "hooks"),
+  join(process.cwd(), "hooks", "codex"),
+  join(process.cwd(), "hooks", "antigravity"),
   join(process.cwd(), ".claude", "hooks"),
 ];
 

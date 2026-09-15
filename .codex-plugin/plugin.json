@@ -8,6 +8,7 @@
   },
   "homepage": "https://team.bostonaholic.dev",
   "license": "MIT",
+  "hooks": "./hooks/hooks.json",
   "keywords": [
     "agents",
     "orchestration",
