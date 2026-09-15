@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed the weekly `unslop` live-model eval failures. The writing standards now protect modal verbs and defer to a brief's terminal-verdict contract, so pipeline prose keeps `may`/`should` and design reviews end with their verdict instead of leading with it. The eval harness no longer fails on valid paraphrases, or on a note that quotes discarded evidence to mark it inert.
+
 ## [0.113.0] - 2026-09-15
 
 ### Added

@@ -85,16 +85,28 @@ export function vagueMetaphorRewritePreservesMeaning(text: string): boolean {
   const preparation = markedLine(text, "METAPHOR_PREPARATION");
   const reversesInstruction = (line: string): boolean =>
     /\b(?:do not|don't|does not|doesn't|is not|isn't|are not|aren't|cannot|can't|not|never|avoid|without|instead of|rather than|remove|disable|stop)\b/i.test(line);
+  const namesComponent = /\b(?:job runner|worker|runner|handler|service|component|module)\b/i.test(owner);
+  const importanceClaim = /\b(?:most important|important|critical|crucial|vital|essential|key part|center)\b/i.test(owner);
   return vagueMetaphorTerms(text).length === 0 &&
     ![owner, measurement, constraint, boundary, capability, preparation]
       .some(reversesInstruction) &&
-    /\bjob runner handles retries\b/i.test(owner) &&
-    /\bcache reduces requests from two to one\b/i.test(measurement) &&
-    /\bremove(?:s|d)?\b.*\bstatus endpoint\b/i.test(endpoint) &&
-    /\bstale data causes retry failures\b/i.test(constraint) &&
-    /\bsplit\b.*\bHTTP boundary\b/i.test(boundary) &&
-    /\benables retries\b/i.test(capability) &&
-    /\bprepares rollout\b/i.test(preparation);
+    namesComponent &&
+    /\bretr(?:y|ies|ying)\b/i.test(owner) &&
+    !importanceClaim &&
+    /\bcache\b/i.test(measurement) &&
+    /\b(?:two|2)\b/i.test(measurement) &&
+    /\b(?:one|1)\b/i.test(measurement) &&
+    /\bstatus endpoint\b/i.test(endpoint) &&
+    /\b(?:remov|eliminat|drop|delet)/i.test(endpoint) &&
+    /\bstale\b/i.test(constraint) &&
+    /\bretr(?:y|ies)\b/i.test(constraint) &&
+    /\bfail/i.test(constraint) &&
+    /\bsplit/i.test(boundary) &&
+    /\bHTTP boundary\b/i.test(boundary) &&
+    /\b(?:enabl\w*|allows?|permits?|makes?)\b/i.test(capability) &&
+    /\bretr(?:y|ies)\b/i.test(capability) &&
+    /\bprepar/i.test(preparation) &&
+    /\brollout\b/i.test(preparation);
 }
 
 function markedLine(text: string, label: string): string {
