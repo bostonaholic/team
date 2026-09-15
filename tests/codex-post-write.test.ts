@@ -131,7 +131,10 @@ describe("codex post-write-validate", () => {
 
 describe("codex hook registration", () => {
   test("hooks/hooks.json binds apply_patch and the canonical config guard", () => {
-    const hooks = JSON.parse(readFileSync(HOOKS_JSON, "utf8"));
+    // Codex's `HooksFile` wraps the event map in a top-level `hooks` object
+    // (codex-rs/config/src/hook_config.rs), unlike Claude's inline event map.
+    const file = JSON.parse(readFileSync(HOOKS_JSON, "utf8"));
+    const hooks = file.hooks;
     const post = hooks.PostToolUse.flatMap((entry: { hooks: { command: string }[] }) => entry.hooks);
     expect(post.some((hook: { command: string }) => hook.command.includes("hooks/codex/post-write-validate.mjs"))).toBe(true);
     expect(hooks.PostToolUse.some((entry: { matcher?: string }) => entry.matcher === "apply_patch")).toBe(true);

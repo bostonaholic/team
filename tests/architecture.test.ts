@@ -636,9 +636,11 @@ describe("worktree-first pipeline", () => {
   });
 
   test("Codex registers the recovery hooks and the manifest points at the config", () => {
-    const hooks = JSON.parse(read(join(REPO_ROOT, "hooks", "hooks.json")));
-    expect(hooks.SessionStart[0].hooks[0].command).toContain("hooks/codex/session-start-recover.mjs");
-    expect(hooks.PreCompact[0].hooks[0].command).toContain("hooks/codex/pre-compact-anchor.mjs");
+    // Codex's `HooksFile` wraps the event map in a top-level `hooks` object
+    // (codex-rs/config/src/hook_config.rs), unlike Claude's inline event map.
+    const file = JSON.parse(read(join(REPO_ROOT, "hooks", "hooks.json")));
+    expect(file.hooks.SessionStart[0].hooks[0].command).toContain("hooks/codex/session-start-recover.mjs");
+    expect(file.hooks.PreCompact[0].hooks[0].command).toContain("hooks/codex/pre-compact-anchor.mjs");
     const manifest = JSON.parse(read(join(REPO_ROOT, ".codex-plugin", "plugin.json")));
     expect(manifest.hooks).toBe("./hooks/hooks.json");
   });
