@@ -127,7 +127,7 @@ Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
-**Uses:** `principle-fix-root-causes`, `team-worktree`, `why`
+**Uses:** `pr-screenshots`, `principle-fix-root-causes`, `team-worktree`, `why`
 
 ### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 
@@ -202,7 +202,7 @@ Verifies a PR test plan with evidence-rated verdicts.
 
 Attaches local images to a PR body.
 
-**Used by:** `pr-open-comments`, `team-pr`
+**Used by:** `pr-open-comments`, `team-fix`, `team-pr`
 
 **Uses:** None
 

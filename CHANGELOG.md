@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A UI-impacting PR now always carries screenshots, whichever path opened it.** `/team-pr` decided the `## Screenshots` section from `ux-reviewer`'s capture manifest and treated a missing manifest as a non-UI change, so a standalone `/team-pr` or a `/team-fix` PR could ship a UI change with no screenshots. UI impact, computed from the full branch diff against the ux-reviewer brief's gate, now decides the section: a branch that impacts a UI captures per the brief when no captured manifest exists, then attaches through `/pr-screenshots`. Non-UI changes still omit the section, and a capture that cannot run still degrades to the note instead of blocking the PR. **What this asks of you:** nothing.
+
 ## [0.115.0] - 2026-09-15
 
 ### Added

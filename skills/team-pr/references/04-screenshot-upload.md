@@ -9,12 +9,15 @@ whether to run, when, and which manifest entries qualify.
 
 ### When to call
 
-Call only when `$ARGUMENTS/screenshots/manifest.md` carries `## Captured`
-entries whose PNGs exist on disk. In every other case — manifest absent,
-`status` any `skipped-*` value, a malformed manifest, or every listed PNG
-missing from disk — do **not** call. The rendering rules in
-`references/03-pr-body-template.md` already produced the final section (absent,
-or note-only) and there is nothing to upload.
+Call when the manifest carries `## Captured` entries whose PNGs exist on disk.
+A UI-impacted branch reaches this step with a manifest: when the ux-reviewer
+produced none, `references/02-execution.md` step 4 captured one before the
+section rendered. Do **not** call when the branch is non-UI (the section is
+omitted), when capture could not run (`status` any `skipped-*` value or a
+malformed manifest), or when every listed PNG is missing from disk. The
+rendering rules in `references/03-pr-body-template.md` already produced the
+final section (absent, or note-only) for each of those, so there is nothing to
+upload.
 
 The draft PR already exists, opened in Execution step 7, and its body already
 carries the section in its pre-upload degraded form. That is the sequencing:

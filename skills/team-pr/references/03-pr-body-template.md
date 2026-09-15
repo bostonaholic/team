@@ -132,10 +132,16 @@ following it is expected, not a violation.
 ### Screenshots section rendering
 
 The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
-(written by ux-reviewer during Implement):
+(written by ux-reviewer during Implement, or by the capture step 4 runs when
+that manifest is absent for a UI-impacted branch):
 
-- **Manifest absent → omit the section entirely.** Non-UI changes are never
-  forced to include screenshots.
+- **UI impact decides the section, never the manifest's presence.** Apply the
+  [ux reviewer brief](../code-review/references/ux-reviewer.md) UI-impact gate
+  to the full branch diff. A branch that does not impact a UI omits the
+  section entirely — non-UI changes are never forced to include screenshots. A
+  branch that does impact a UI always carries the section, and the capture
+  runs before it renders when the manifest is absent or unusable (see
+  Screenshot Upload).
 - **Manifest `status` is any `skipped-*` value, or the manifest is
   malformed**, with unparseable frontmatter or body → render a one-line
   capture-failure note naming the reason, nothing more. Never block or
