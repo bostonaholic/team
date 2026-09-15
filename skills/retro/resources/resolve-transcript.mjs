@@ -139,7 +139,7 @@ export function detectHost(env) {
   const candidates = [];
   // CODEX_THREAD_ID names this thread's own rollout. CODEX_SESSION_ID names the
   // root thread, which is the same file for the top-level session a user invokes
-  // reflect from; the header check below rejects it when it is not.
+  // retro from; the header check below rejects it when it is not.
   if (codex) candidates.push({ host: "codex", sessionId: codexId });
   if (claude) candidates.push({ host: "claude-code", sessionId: claudeId || null });
   return candidates;
@@ -654,7 +654,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
 
   const FAILURE_NOTES = {
     "unsupported-host":
-      "reflect reads Claude Code and Codex session stores; Conductor is supported through whichever of those it runs, and its Cursor Agent and OpenCode backends are not",
+      "retro reads Claude Code and Codex session stores; Conductor is supported through whichever of those it runs, and its Cursor Agent and OpenCode backends are not",
     "ambiguous-host":
       "two agents' session variables are set in one process and the marker settled neither transcript",
     "unsupported-format": "the resolved file holds no records a supported host writes",

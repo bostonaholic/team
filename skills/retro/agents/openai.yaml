@@ -1,7 +1,7 @@
 interface:
-  display_name: "Reflect"
+  display_name: "Retro"
   short_description: "Mine this session for durable learnings"
-  default_prompt: "Use $reflect to mine this session for durable learnings."
+  default_prompt: "Use $retro to mine this session for durable learnings."
 
 policy:
   allow_implicit_invocation: false

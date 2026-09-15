@@ -137,8 +137,8 @@ describe("Canonical discovery preserves host configuration and rejects invalid c
     const f = make("complete", "full");
     const config = await load(f);
     assertCompleteCatalog(f, config);
-    expect(config.command?.reflect?.description?.toLowerCase()).toContain("opencode");
-    expect(config.command?.reflect?.description?.toLowerCase()).toMatch(/unsupported|not support|unavailable/);
+    expect(config.command?.retro?.description?.toLowerCase()).toContain("opencode");
+    expect(config.command?.retro?.description?.toLowerCase()).toMatch(/unsupported|not support|unavailable/);
     expectStatus(run(f, "install"), 0);
   });
 
@@ -157,11 +157,11 @@ describe("Canonical discovery preserves host configuration and rejects invalid c
   test("frontmatter guards determine discovery regardless of command name or user visibility", async () => {
     const f = make();
     skill(f, "sample", "name: sample\ndescription: Guarded sample\ndisable-model-invocation: true");
-    skill(f, "reflect", "name: reflect\ndescription: Reflect fixture\ndisable-model-invocation: false");
+    skill(f, "retro", "name: retro\ndescription: Retro fixture\ndisable-model-invocation: false");
     skill(f, "method", "name: method\ndescription: Internal methodology\nuser-invocable: false");
     const config = await load(f, { skills: { paths: [join(f.checkout, "skills/sample")] } });
-    expect(Object.keys(config.command ?? {}).sort()).toEqual(["method", "reflect", "sample"]);
-    expect(config.skills?.paths).toEqual([join(f.checkout, "skills/sample"), join(f.checkout, "skills/method"), join(f.checkout, "skills/reflect")]);
+    expect(Object.keys(config.command ?? {}).sort()).toEqual(["method", "retro", "sample"]);
+    expect(config.skills?.paths).toEqual([join(f.checkout, "skills/sample"), join(f.checkout, "skills/method"), join(f.checkout, "skills/retro")]);
   });
 
   test.each([['single quotes', "'It''s a quoted: description'", "It's a quoted: description"], ['double quotes', '"A quoted: description"', "A quoted: description"]])("accepts %s and decodes the description", async (_, value, expected) => {

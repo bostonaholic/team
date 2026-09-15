@@ -35,7 +35,7 @@
 // team-pr is demoted; no protocol.test.ts sentinel, that convention is for
 // the pipeline-skill demotions):
 //   shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer,
-//   groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect,
+//   groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, retro,
 //   no-comments
 
 import { describe, expect, test } from "bun:test";
@@ -650,25 +650,25 @@ describe("L2 coverage: pr-rebase (executable utility, not L5)", () => {
   });
 });
 
-// `reflect` reads the invoking session's own transcript, files issues against a
+// `retro` reads the invoking session's own transcript, files issues against a
 // live tracker, and runs the repo's own check after it writes — heavy external
 // state it cannot be handed synthetically, the same reason `pr-rebase` and
 // `shipit` are demoted. An L5 eval would also have to produce a real session to
-// reflect on. Its behavioral contract is pinned by its dedicated L2 tripwire,
-// tests/reflect-skill.test.ts, whose L1 half additionally covers the two
+// mine. Its behavioral contract is pinned by its dedicated L2 tripwire,
+// tests/retro-skill.test.ts, whose L1 half additionally covers the two
 // bundled scripts directly.
 
-describe("L2 coverage: reflect (executable utility, not L5)", () => {
-  test("reflect has no evals/fixtures/reflect/ directory (no L5 eval)", () => {
-    expect(existsSync(fixtureDir("reflect"))).toBe(false);
+describe("L2 coverage: retro (executable utility, not L5)", () => {
+  test("retro has no evals/fixtures/retro/ directory (no L5 eval)", () => {
+    expect(existsSync(fixtureDir("retro"))).toBe(false);
   });
 
-  test("reflect has no tests/reflect.evals.ts file (no L5 eval)", () => {
-    expect(existsSync(evalsFilePath("reflect"))).toBe(false);
+  test("retro has no tests/retro.evals.ts file (no L5 eval)", () => {
+    expect(existsSync(evalsFilePath("retro"))).toBe(false);
   });
 
-  test("reflect is pinned by its dedicated L2 tripwire tests/reflect-skill.test.ts", () => {
-    expect(existsSync(join(TESTS_ROOT, "reflect-skill.test.ts"))).toBe(true);
+  test("retro is pinned by its dedicated L2 tripwire tests/retro-skill.test.ts", () => {
+    expect(existsSync(join(TESTS_ROOT, "retro-skill.test.ts"))).toBe(true);
   });
 });
 
@@ -707,7 +707,7 @@ const UTILITY_SKILLS = [
   "pr-verify",
   "pr-screenshots",
   "pr-rebase",
-  "reflect",
+  "retro",
   "no-comments",
 ] as const;
 

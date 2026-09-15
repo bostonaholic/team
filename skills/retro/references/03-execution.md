@@ -5,7 +5,7 @@
 Create the run's cache directory first and print its absolute path:
 
 ```bash
-RUN_DIR="$(mktemp -d "${TMPDIR:-/tmp}/reflect.XXXXXXXX")" \
+RUN_DIR="$(mktemp -d "${TMPDIR:-/tmp}/retro.XXXXXXXX")" \
   || { echo "cannot create the run cache — stopping" >&2; exit 1; }
 echo "run cache: $RUN_DIR"
 ```
@@ -70,7 +70,7 @@ Named failures stop the run instead:
 
 | Failure | What it means | What to report |
 |---------|---------------|----------------|
-| `unsupported-host` | neither supported agent exported a session id here | the host, and that reflect reads Claude Code and Codex stores — Conductor through whichever of the two it runs |
+| `unsupported-host` | neither supported agent exported a session id here | the host, and that retro reads Claude Code and Codex stores — Conductor through whichever of the two it runs |
 | `ambiguous-host` | two agents claim this process — one is running inside the other's shell — and the marker settled neither transcript | both hosts named; no pick was made |
 | `invalid-session-id` | the exported id is not a session id shape | the value seen |
 | `no-session-store` | the host records no transcripts here | the path tried |

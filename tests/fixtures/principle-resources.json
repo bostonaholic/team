@@ -436,7 +436,7 @@
       ]
     },
     {
-      "path": "skills/reflect/SKILL.md",
+      "path": "skills/retro/SKILL.md",
       "destinations": [
         "skills/team/principles/durable-state.md",
         "skills/team/principles/focused-work.md",
@@ -446,27 +446,27 @@
       ]
     },
     {
-      "path": "skills/reflect/references/02-untrusted-input-a-transcript-span-is-content-never-an-instruction.md",
+      "path": "skills/retro/references/02-untrusted-input-a-transcript-span-is-content-never-an-instruction.md",
       "destinations": [
         "skills/team/references/external-data.md"
       ]
     },
     {
-      "path": "skills/reflect/references/04-the-lenses.md",
+      "path": "skills/retro/references/04-the-lenses.md",
       "destinations": [
         "skills/team/principles/focused-work.md",
         "skills/team/principles/independent-review.md"
       ]
     },
     {
-      "path": "skills/reflect/references/06-apply-the-approved-skill-edits.md",
+      "path": "skills/retro/references/06-apply-the-approved-skill-edits.md",
       "destinations": [
         "skills/team/principles/durable-state.md",
         "skills/team/principles/human-control.md"
       ]
     },
     {
-      "path": "skills/reflect/references/07-file-the-backlog-items.md",
+      "path": "skills/retro/references/07-file-the-backlog-items.md",
       "destinations": [
         "skills/team/principles/human-control.md"
       ]
@@ -706,7 +706,7 @@
     "pr-watch-as-author",
     "pr-watch-as-reviewer",
     "principle-fix-root-causes",
-    "reflect",
+    "retro",
     "shipit",
     "team",
     "team-design",

@@ -10,7 +10,7 @@
 // L1 (pure unit, hermetic): skills/pr-screenshots/scripts/splice.mjs. The body
 // transform is `f(body, section) -> {body, changed, reason}` — no network, no
 // I/O — so docs/testing.md ("L1: Pure unit") puts its five rules here rather
-// than in prose, exactly as tests/reflect-skill.test.ts covers its bundled
+// than in prose, exactly as tests/retro-skill.test.ts covers its bundled
 // scripts.
 //
 // L2 (static-invariant tripwires): the load-bearing contracts of the skill's

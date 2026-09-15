@@ -534,13 +534,13 @@ a file, and installing from a URL clones fresh so the socket never exists.
 probe (taken when the plugin shipped 54 skills, two of which set the key) had
 the agent list 52 of them. The two missing ones were exactly `pr-rebase` and
 `pr-watch-as-reviewer` — the skills that set the key **as of that probe**. The
-guarded set has since grown to four: `reflect` and `no-comments` set it too, so
+guarded set has since grown to four: `retro` and `no-comments` set it too, so
 this host withholds both as well. This host therefore keeps every guarded skill
 out of the model's reach on its own, and it is why Team's install for this host
 withholds nothing.
 
 Codex reaches the same end through its own key rather than this one:
-`no-comments`, `pr-rebase`, `pr-watch-as-reviewer`, and `reflect` each declare
+`no-comments`, `pr-rebase`, `pr-watch-as-reviewer`, and `retro` each declare
 `policy.allow_implicit_invocation: false` in their `agents/openai.yaml`.
 OpenAI [documents](https://learn.chatgpt.com/docs/build-skills) that key as
 blocking implicit invocation while leaving explicit `$skill` invocation
@@ -614,7 +614,7 @@ a filesystem read, resolves relative references against the canonical base, and
 supplies `$ARGUMENTS`. It embeds no skill body and sets no model or agent override.
 This preserves literal shell examples and argument references inside canonical
 skill content. Even the guarded `disable-model-invocation: true` skills appear
-in the command menu. Commands include `/reflect`, whose description states that OpenCode
+in the command menu. Commands include `/retro`, whose description states that OpenCode
 session reflection is unsupported: its transcript resolver supports Claude Code
 and Codex only.
 
@@ -668,7 +668,7 @@ Native discovery was observed on OpenCode 1.18.20. Support covers registration,
 skill/command discovery, and the developer lifecycle. Full QRSPI execution,
 specialist/nested-agent dispatch, translated reviewer permissions, and runtime
 hooks remain unverified. No provider, credentials, model-tier translation, or
-model-quality guarantee is installed. `/reflect` cannot process OpenCode sessions.
+model-quality guarantee is installed. `/retro` cannot process OpenCode sessions.
 
 ## Out of scope
 

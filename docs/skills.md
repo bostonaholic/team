@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, reflect, why, how, no-comments), each with the skills it loads."
+description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, retro, why, how, no-comments), each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -214,7 +214,7 @@ Rebases a branch onto its base.
 
 **Uses:** `pr-cleanup`
 
-### [reflect](https://github.com/bostonaholic/team/blob/main/skills/reflect/SKILL.md)
+### [retro](https://github.com/bostonaholic/team/blob/main/skills/retro/SKILL.md)
 
 Mines a session for durable learnings.
 

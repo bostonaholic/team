@@ -328,7 +328,7 @@ describe("effort tiering", () => {
     "pr-verify": "high",
     "pr-watch-as-author": "medium",
     "pr-watch-as-reviewer": "medium",
-    reflect: "high",
+    retro: "high",
     shipit: "medium",
     team: "high",
     "team-design": "medium",
