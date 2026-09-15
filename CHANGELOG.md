@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.114.0] - 2026-09-15
+
+### Fixed
+
+- Fixed the weekly `unslop` live-model eval failures. The writing standards now protect modal verbs and defer to a brief's terminal-verdict contract, so pipeline prose keeps `may`/`should` and design reviews end with their verdict instead of leading with it. The eval harness no longer fails on valid paraphrases, or on a note that quotes discarded evidence to mark it inert.
+
 ## [0.113.0] - 2026-09-15
 
 ### Added
@@ -1031,7 +1037,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.113.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.114.0...HEAD
+[0.114.0]: https://github.com/bostonaholic/team/compare/v0.113.0...v0.114.0
 [0.113.0]: https://github.com/bostonaholic/team/compare/v0.112.0...v0.113.0
 [0.112.0]: https://github.com/bostonaholic/team/compare/v0.111.0...v0.112.0
 [0.111.0]: https://github.com/bostonaholic/team/compare/v0.110.0...v0.111.0

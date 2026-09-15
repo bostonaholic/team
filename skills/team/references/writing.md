@@ -19,7 +19,9 @@ current activity, completion, duration, or event order. Change these forms only
 when the resulting claim has the same meaning.
 
 Exact-text contracts take first precedence. This semantic guard takes second.
-Style edits take third.
+Style edits take third. The Simplified Technical English substitution table is
+a style edit and never overrides this guard: keep the modal when it carries
+normative force, permission, or possibility.
 
 ## Compose prose methods in this order
 
@@ -62,7 +64,9 @@ sentence length, filler, and consistent names follow.
 - Prefer `is`, `has`, or the concrete action over inflated substitutes.
 - Remove contrast frames such as "not only X, but also Y" when two direct facts
   say the same thing.
-- Do not force facts into groups of three. Use the number the subject requires.
+- Do not force facts into groups of three or any rhetorical list of attributes.
+  Use the number the subject requires, including none: if the sentence states
+  the fact without the list, remove the list.
 - Use "from X to Y" only for actual endpoints on one scale. Otherwise name the
   topics separately.
 - Replace supporting adverbs with a measured result or a precise verb.
@@ -113,7 +117,9 @@ Kenneth Roman and Joel Raphaelson wrote *Writing That Works: How to Communicate
 Effectively in Business* about memos and proposals. A pull request description
 is the same job: one busy reader, one decision, no time. So are a design
 summary, a changelog entry, a review comment, and a status report. Apply these
-rules to any text that asks a reader to decide or act.
+rules to any text that asks a reader to decide or act. A consuming skill's
+format contract outranks them: when a brief requires the verdict or decision as
+the terminal line, keep the supporting detail above it.
 
 - **Lead with the recommendation.** Put the recommendation, the finding, or the
   request in the first sentence. Support follows it. A reader who stops after
@@ -213,8 +219,6 @@ non-approved words that appear most often in software documentation:
 | via | through |
 | however | but |
 | therefore | thus, as a result |
-| should, shall | must |
-| may | can |
 | enable X to | let X |
 | appropriate, suitable | applicable, correct |
 | required | necessary |
@@ -244,6 +248,10 @@ non-approved words that appear most often in software documentation:
 | kick off | start |
 | tear down | remove |
 | ramp up | increase |
+
+Modals are not substitutions: `must`, `shall`, `should`, `may`, `might`, and
+`could` are governed by [Preserve meaning](#preserve-meaning), never by this
+table. Keep the modal the sentence requires.
 
 Restricted meanings writers commonly get wrong:
 

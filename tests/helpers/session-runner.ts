@@ -12,7 +12,7 @@
 //                         conditionally produce output
 
 import { spawn, type ChildProcess } from "node:child_process";
-import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -60,6 +60,15 @@ export interface RunAgentTestOptions {
   disallowedTools?: string[];
 }
 
+function canonicalPath(path: string): string {
+  const resolved = resolve(path);
+  try {
+    return realpathSync(resolved);
+  } catch {
+    return resolved;
+  }
+}
+
 export function successfullyReadEveryPath(
   toolCalls: ToolCall[],
   paths: string[],
@@ -72,9 +81,13 @@ export function successfullyReadEveryPath(
       const fields = input as Record<string, unknown>;
       if ("offset" in fields || "limit" in fields) return null;
       const readPath = typeof fields.file_path === "string" ? fields.file_path : fields.file;
-      return typeof readPath === "string" ? resolve(workingDirectory, readPath) : null;
+      return typeof readPath === "string"
+        ? canonicalPath(resolve(workingDirectory, readPath))
+        : null;
     });
-  return paths.every((path) => successfulReads.includes(resolve(workingDirectory, path)));
+  return paths.every((path) =>
+    successfulReads.includes(canonicalPath(resolve(workingDirectory, path))),
+  );
 }
 
 // Matches what plugin users get: the shipped agents use floating aliases,
