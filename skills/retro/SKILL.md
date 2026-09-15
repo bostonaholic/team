@@ -1,19 +1,19 @@
 ---
-name: reflect
-description: 'Mines a session for durable learnings. Trigger on "reflect on this session" or "/reflect" only; never infer intent from session end or friction.'
+name: retro
+description: 'Mines a session for durable learnings. Trigger on "run a retro" or "/retro" only; never infer intent from session end or friction.'
 effort: high
 argument-hint: "[skill-name]"
 disable-model-invocation: true
 ---
 
-# reflect — turn a finished session into durable learnings
+# retro — turn a finished session into durable learnings
 
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 A long session teaches things that die with it: the guidance that was missing,
 the command that cost four retries, the thing you did that no skill describes.
-`/reflect` reads the transcript of the session it was invoked from and proposes
+`/retro` reads the transcript of the session it was invoked from and proposes
 each durable learning as a change someone can accept or reject. Three things
 make it more than "summarize this session":
 

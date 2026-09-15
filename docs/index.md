@@ -316,7 +316,7 @@ separate command and nothing to reinstall.
 
 **Supported:** native registration, skill discovery, canonical file-reading
 commands, and this lifecycle. Full QRSPI execution, specialist/nested dispatch,
-reviewer isolation, and hook behavior on OpenCode remain unverified. `/reflect`
+reviewer isolation, and hook behavior on OpenCode remain unverified. `/retro`
 appears in the command menu but OpenCode session reflection is unsupported.
 Methodology skills marked `user-invocable: false` also appear as commands.
 See [OpenCode support](cross-host-portability.md#opencode) for command permissions, native argument preprocessing,

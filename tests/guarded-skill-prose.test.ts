@@ -35,7 +35,7 @@ const SURFACES = [
 // The guarded set as a deliberate list. This is the creep fence: a new
 // skill setting the flag is a decision that must update this list, and
 // updating it forces every surface below to name the new skill.
-const EXPECTED_GUARDED = ["no-comments", "pr-rebase", "pr-watch-as-reviewer", "principle-fix-root-causes", "reflect"];
+const EXPECTED_GUARDED = ["no-comments", "pr-rebase", "pr-watch-as-reviewer", "principle-fix-root-causes", "retro"];
 
 // Defensive read: a missing file reads as "" so assertions FAIL, never throw.
 function surface(relative: string): string {
@@ -60,7 +60,7 @@ function guardedSkills(): string[] {
 }
 
 // Guarded names the text never mentions. Whole-token match, so the prose word
-// "reflects" cannot stand in for the skill named `reflect` — the way a
+// "retrospective" cannot stand in for the skill named `retro` — the way a
 // substring check would pass for the wrong reason.
 function missingMentions(text: string, names: string[]): string[] {
   return names.filter((name) => !new RegExp(`\\b${name}\\b`).test(text));
@@ -102,9 +102,9 @@ describe("the sweep can see a positive", () => {
 
   test("the whole-token matcher does not accept a longer word as a mention", () => {
     // The exact false pass a substring check would give: prose that says
-    // "reflects the host's behavior" is not a mention of the `reflect` skill.
-    expect(missingMentions("this reflects the host's behavior", ["reflect"])).toEqual([
-      "reflect",
+    // "retrospective" is not a mention of the `retro` skill.
+    expect(missingMentions("run a retrospective", ["retro"])).toEqual([
+      "retro",
     ]);
   });
 });

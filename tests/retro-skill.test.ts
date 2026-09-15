@@ -1,12 +1,12 @@
-// tests/reflect-skill.test.ts
+// tests/retro-skill.test.ts
 //
-// Acceptance tests for the `reflect` RUNTIME skill, skills/reflect/. Two
+// Acceptance tests for the `retro` RUNTIME skill, skills/retro/. Two
 // layers, one file, grouped by slice so a single slice runs in isolation:
 //
-//     bun test tests/reflect-skill.test.ts -t "Slice 1"
+//     bun test tests/retro-skill.test.ts -t "Slice 1"
 //
 // L1 (pure unit, hermetic): the two bundled scripts,
-// skills/reflect/resources/resolve-transcript.mjs and skills/reflect/resources/write-target.mjs.
+// skills/retro/resources/resolve-transcript.mjs and skills/retro/resources/write-target.mjs.
 // Host detection, resolution, record classification, the byte/record bounds,
 // the untrusted name pattern, <repo> containment, and the two-root tie-break are
 // all `f(input) -> output`, so docs/testing.md ("L1: Pure unit") puts them here
@@ -16,7 +16,7 @@
 // ~/.claude/projects/ or ~/.codex/sessions/, and no test spawns an agent.
 //
 // L2 (static-invariant tripwires): the load-bearing rules of
-// skills/reflect/SKILL.md. These assert CONTRACTS — frontmatter keys and
+// skills/retro/SKILL.md. These assert CONTRACTS — frontmatter keys and
 // values, commands and flags the skill tells the model to emit, section
 // placement, file cross-references, and the ABSENCE of a forbidden identifier.
 // A prose rewrite that keeps the contracts intact stays green.
@@ -52,18 +52,18 @@ import {
   resolveSession,
   resolveTranscript,
   storeRootFor,
-} from "../skills/reflect/resources/resolve-transcript.mjs";
+} from "../skills/retro/resources/resolve-transcript.mjs";
 import {
   hasPluginMarker,
   isInsideRepo,
   isValidSkillName,
   preferredEditRoot,
-} from "../skills/reflect/resources/write-target.mjs";
+} from "../skills/retro/resources/write-target.mjs";
 
 const REPO_ROOT = process.cwd();
-// reflect is a RUNTIME skill — under skills/ (distributed), not .claude/.
-const SKILL = join(REPO_ROOT, "skills", "reflect", "SKILL.md");
-const REFERENCES = join(REPO_ROOT, "skills", "reflect", "references");
+// retro is a RUNTIME skill — under skills/ (distributed), not .claude/.
+const SKILL = join(REPO_ROOT, "skills", "retro", "SKILL.md");
+const REFERENCES = join(REPO_ROOT, "skills", "retro", "references");
 
 // ---------------------------------------------------------------------------
 // Temp-dir plumbing. Every L1 test builds its own tree, so the suite passes in
@@ -73,7 +73,7 @@ const REFERENCES = join(REPO_ROOT, "skills", "reflect", "references");
 const scratchDirs: string[] = [];
 
 function scratch(label: string): string {
-  const dir = mkdtempSync(join(tmpdir(), `reflect-${label}-${process.pid}-${Date.now()}-`));
+  const dir = mkdtempSync(join(tmpdir(), `retro-${label}-${process.pid}-${Date.now()}-`));
   scratchDirs.push(dir);
   // Realpath so macOS's /var -> /private/var symlink cannot masquerade as an
   // escape in the containment assertions below.
@@ -346,10 +346,10 @@ function fencedLines(): string[] {
 
 describe("Slice 1 — L1: Claude Code sessions resolve by marker", () => {
   test("a project file holding the marker resolves to that absolute path", () => {
-    const marker = "/tmp/reflect-cache-a1b2c3";
+    const marker = "/tmp/retro-cache-a1b2c3";
     const projectsRoot = tree("resolve-hit", {
       "-Users-dev-team/session-one.jsonl": jsonl(
-        userPrompt("reflect on this session"),
+        userPrompt("retro on this session"),
         toolResult(marker),
       ),
       "-Users-dev-other/session-two.jsonl": jsonl(userPrompt("unrelated work")),
@@ -363,11 +363,11 @@ describe("Slice 1 — L1: Claude Code sessions resolve by marker", () => {
 
   test("no file holding the marker is a named no-match failure, not a pick", () => {
     const projectsRoot = tree("resolve-miss", {
-      "-Users-dev-team/session-one.jsonl": jsonl(userPrompt("reflect on this session")),
+      "-Users-dev-team/session-one.jsonl": jsonl(userPrompt("retro on this session")),
     });
 
     const result = resolveClaude({
-      marker: "/tmp/reflect-cache-never-written",
+      marker: "/tmp/retro-cache-never-written",
       projectsRoot,
       retryDelayMs: 0,
     });
@@ -377,7 +377,7 @@ describe("Slice 1 — L1: Claude Code sessions resolve by marker", () => {
   });
 
   test("two files holding the marker raise the invariant failure and pick neither", () => {
-    const marker = "/tmp/reflect-cache-d4e5f6";
+    const marker = "/tmp/retro-cache-d4e5f6";
     const projectsRoot = tree("resolve-ambiguous", {
       "-Users-dev-team/session-one.jsonl": jsonl(toolResult(marker)),
       "-Users-dev-team-worktrees-x/session-two.jsonl": jsonl(toolResult(marker)),
@@ -390,13 +390,13 @@ describe("Slice 1 — L1: Claude Code sessions resolve by marker", () => {
   });
 
   test("a marker holding regex metacharacters matches only the literal string", () => {
-    // `/tmp/reflect.a+b[1]` read as a regex also matches "reflectXaab1", which
+    // `/tmp/retro.a+b[1]` read as a regex also matches "retroXaab1", which
     // would turn one true match into an ambiguity failure. Fixed-string search
     // resolves the real file and ignores the decoy.
-    const marker = "/tmp/reflect.a+b[1]";
+    const marker = "/tmp/retro.a+b[1]";
     const projectsRoot = tree("resolve-metachars", {
       "-Users-dev-team/session-one.jsonl": jsonl(toolResult(marker)),
-      "-Users-dev-other/session-two.jsonl": jsonl(toolResult("/tmp/reflectXaab1")),
+      "-Users-dev-other/session-two.jsonl": jsonl(toolResult("/tmp/retroXaab1")),
     });
 
     const result = resolveClaude({ marker, projectsRoot });
@@ -409,8 +409,8 @@ describe("Slice 1 — L1: Claude Code sessions resolve by marker", () => {
     // The search globs are top level by construction, so a subagent transcript
     // is out of reach. A recursive search would hand three lenses a file this
     // run never printed its marker into.
-    const topLevelMarker = "/tmp/reflect-cache-top-level";
-    const subagentMarker = "/tmp/reflect-cache-subagent";
+    const topLevelMarker = "/tmp/retro-cache-top-level";
+    const subagentMarker = "/tmp/retro-cache-subagent";
     const projectsRoot = tree("resolve-subagents", {
       "-Users-dev-team/9aec38dc.jsonl": jsonl(toolResult(topLevelMarker)),
       "-Users-dev-team/9aec38dc/subagents/agent-explore.jsonl": jsonl(toolResult(subagentMarker)),
@@ -432,8 +432,8 @@ describe("Slice 1 — L1: Claude Code sessions resolve by marker", () => {
     // source of session friction AND the likeliest to carry tokens, customer
     // data, and file contents. They are out of scope for exactly that reason:
     // the resolver never opens one.
-    const topLevelMarker = "/tmp/reflect-cache-top-level";
-    const sidecarMarker = "/tmp/reflect-cache-sidecar";
+    const topLevelMarker = "/tmp/retro-cache-top-level";
+    const sidecarMarker = "/tmp/retro-cache-sidecar";
     const projectsRoot = tree("resolve-sidecars", {
       "-Users-dev-team/9aec38dc.jsonl": jsonl(toolResult(topLevelMarker)),
       "-Users-dev-team/9aec38dc/tool-results/bash-out.txt": `${sidecarMarker}\n`,
@@ -457,7 +457,7 @@ describe("Slice 1 — L1: Claude Code sessions resolve by marker", () => {
     const missingRoot = join(scratch("resolve-no-root"), "claude-projects-absent");
 
     const result = resolveClaude({
-      marker: "/tmp/reflect-cache-a1b2c3",
+      marker: "/tmp/retro-cache-a1b2c3",
       projectsRoot: missingRoot,
       retryDelayMs: 0,
     });
@@ -470,10 +470,10 @@ describe("Slice 1 — L1: Claude Code sessions resolve by marker", () => {
     // Nothing in resolution may depend on a `timestamp` key: the last line of
     // a real transcript is a control record that carries none. This fixture
     // carries none on ANY record, so a timestamp-dependent resolver fails it.
-    const marker = "/tmp/reflect-cache-987fed";
+    const marker = "/tmp/retro-cache-987fed";
     const projectsRoot = tree("resolve-control-tail", {
       "-Users-dev-team/session-one.jsonl": jsonl(
-        userPrompt("reflect on this session"),
+        userPrompt("retro on this session"),
         toolResult(marker),
         controlTail,
       ),
@@ -526,7 +526,7 @@ describe("Slice 1 — L1: detectHost names every host claiming this process", ()
     expect(detectHost({ ...conductor, CODEX_THREAD_ID: "01a07c7b" })).toEqual([
       { host: "codex", sessionId: "01a07c7b" },
     ]);
-    // A Conductor workspace running a backend reflect cannot read resolves to
+    // A Conductor workspace running a backend retro cannot read resolves to
     // no host at all, rather than to whichever store happens to exist.
     expect(detectHost(conductor)).toEqual([]);
   });
@@ -551,7 +551,7 @@ describe("Slice 1 — L1: detectHost names every host claiming this process", ()
 describe("Slice 1 — L1: the session id the host exported resolves the transcript", () => {
   test("Claude Code resolves <session-id>.jsonl without searching content", () => {
     const projectsRoot = tree("id-claude", {
-      "-Users-dev-team/df48a6dc-3bfa-4bc1-94b5-799582807858.jsonl": jsonl(userPrompt("reflect on this session")),
+      "-Users-dev-team/df48a6dc-3bfa-4bc1-94b5-799582807858.jsonl": jsonl(userPrompt("retro on this session")),
       "-Users-dev-other/9aec38dc-0000-4000-8000-000000000002.jsonl": jsonl(userPrompt("unrelated work")),
     });
 
@@ -565,7 +565,7 @@ describe("Slice 1 — L1: the session id the host exported resolves the transcri
   test("Codex resolves rollout-<timestamp>-<thread-id>.jsonl three levels down", () => {
     const id = "01a07c7b-16e9-73a2-8f5b-7638fd286088";
     const store = tree("id-codex", {
-      [rolloutPath(id)]: jsonl(codexMeta(id), codexUser("reflect on this session")),
+      [rolloutPath(id)]: jsonl(codexMeta(id), codexUser("retro on this session")),
       [rolloutPath("01a07c68-3b6a-7f31-85dd-9c4b6e04b97c", "06")]: jsonl(
         codexMeta("01a07c68-3b6a-7f31-85dd-9c4b6e04b97c"),
         codexUser("unrelated work"),
@@ -606,7 +606,7 @@ describe("Slice 1 — L1: the session id the host exported resolves the transcri
     // Falling back to the marker here would search on behalf of an id already
     // known to be authoritative, and could land on any session that happens to
     // mention the run cache path.
-    const marker = "/tmp/reflect-cache-a1b2c3";
+    const marker = "/tmp/retro-cache-a1b2c3";
     const projectsRoot = tree("id-claude-miss", {
       "-Users-dev-other/9aec38dc-0000-4000-8000-000000000002.jsonl": jsonl(toolResult(marker)),
     });
@@ -632,7 +632,7 @@ describe("Slice 1 — L1: the session id the host exported resolves the transcri
     expect(resolveIn("codex", store, { marker: "" }).path).toBeUndefined();
   });
 
-  test("a host reflect cannot read is a named failure, never a resolved transcript", () => {
+  test("a host retro cannot read is a named failure, never a resolved transcript", () => {
     const store = tree("unsupported", { "sessions/whatever.jsonl": jsonl(userPrompt("hi")) });
 
     expect(resolveIn("cursor-agent", store, { marker: "/tmp/x" }).failure).toBe("unsupported-host");
@@ -648,7 +648,7 @@ describe("Slice 1 — L1: concurrent sessions in one workspace never cross", () 
     const mine = "df48a6dc-3bfa-4bc1-94b5-799582807858";
     const theirs = "9aec38dc-0000-4000-8000-000000000002";
     const projectsRoot = tree("concurrent-claude", {
-      [`-Users-dev-team/${mine}.jsonl`]: jsonl(userPrompt("reflect on this session")),
+      [`-Users-dev-team/${mine}.jsonl`]: jsonl(userPrompt("retro on this session")),
       [`-Users-dev-team/${theirs}.jsonl`]: jsonl(userPrompt("a different session, same workspace")),
     });
 
@@ -664,7 +664,7 @@ describe("Slice 1 — L1: concurrent sessions in one workspace never cross", () 
     const mine = "01a07c7b-16e9-73a2-8f5b-7638fd286088";
     const theirs = "01a07c68-3b6a-7f31-85dd-9c4b6e04b97c";
     const store = tree("concurrent-codex", {
-      [rolloutPath(mine)]: jsonl(codexMeta(mine), codexUser("reflect on this session")),
+      [rolloutPath(mine)]: jsonl(codexMeta(mine), codexUser("retro on this session")),
       [rolloutPath(theirs)]: jsonl(codexMeta(theirs), codexUser("a different session, same workspace")),
     });
 
@@ -676,7 +676,7 @@ describe("Slice 1 — L1: concurrent sessions in one workspace never cross", () 
     // Two sessions in one workspace can both name the same path — one printed
     // it, the other read the report. The id is what decides, and where there is
     // no id, two marker hits are an ambiguity failure rather than a pick.
-    const marker = "/tmp/reflect.A0DYJB9o";
+    const marker = "/tmp/retro.A0DYJB9o";
     const mine = "df48a6dc-3bfa-4bc1-94b5-799582807858";
     const projectsRoot = tree("concurrent-mention", {
       [`-Users-dev-team/${mine}.jsonl`]: jsonl(toolResult(`run cache: ${marker}`)),
@@ -697,7 +697,7 @@ describe("Slice 1 — L1: concurrent sessions in one workspace never cross", () 
     const parent = "01a0676d-0eca-7791-b069-436d26e7eec8";
     const child = "01a06c22-7c2a-73d2-b559-bc5ba98ea18c";
     const store = tree("codex-subagent", {
-      [rolloutPath(parent)]: jsonl(codexMeta(parent), codexUser("reflect on this session")),
+      [rolloutPath(parent)]: jsonl(codexMeta(parent), codexUser("retro on this session")),
       [rolloutPath(child)]: jsonl(
         codexMeta(child, { session_id: parent, parent_thread_id: parent, thread_source: "subagent" }),
         codexUser("scout the callers"),
@@ -720,14 +720,14 @@ describe("Slice 1 — L1: resolveSession breaks a two-host tie on evidence", () 
   function twoStores(label: string, options: { markerInClaude: boolean; markerInCodex: boolean; marker: string }) {
     const claudeRoot = tree(`${label}-claude`, {
       [`-Users-dev-team/${claudeId}.jsonl`]: jsonl(
-        userPrompt("reflect on this session"),
+        userPrompt("retro on this session"),
         ...(options.markerInClaude ? [toolResult(`run cache: ${options.marker}`)] : []),
       ),
     });
     const codexRoot = tree(`${label}-codex`, {
       [rolloutPath(codexId)]: jsonl(
         codexMeta(codexId),
-        codexUser("reflect on this session"),
+        codexUser("retro on this session"),
         ...(options.markerInCodex ? [codexToolOutput(`run cache: ${options.marker}`)] : []),
       ),
     });
@@ -735,7 +735,7 @@ describe("Slice 1 — L1: resolveSession breaks a two-host tie on evidence", () 
   }
 
   test("the host whose transcript carries this run's marker wins", () => {
-    const marker = "/tmp/reflect.Vl7d3fCN";
+    const marker = "/tmp/retro.Vl7d3fCN";
     const { codexRoot, storeRootOf } = twoStores("tie-codex", { marker, markerInCodex: true, markerInClaude: false });
 
     const result = resolveSession({ candidates: bothHosts, storeRootOf, marker, retryDelayMs: 0 });
@@ -747,7 +747,7 @@ describe("Slice 1 — L1: resolveSession breaks a two-host tie on evidence", () 
   });
 
   test("the tie-break is symmetric — the inherited variable does not win by order", () => {
-    const marker = "/tmp/reflect.A0DYJB9o";
+    const marker = "/tmp/retro.A0DYJB9o";
     const { claudeRoot, storeRootOf } = twoStores("tie-claude", { marker, markerInCodex: false, markerInClaude: true });
 
     const result = resolveSession({ candidates: bothHosts, storeRootOf, marker, retryDelayMs: 0 });
@@ -757,7 +757,7 @@ describe("Slice 1 — L1: resolveSession breaks a two-host tie on evidence", () 
   });
 
   test("a marker in neither transcript is ambiguous-host, and picks neither", () => {
-    const marker = "/tmp/reflect.NotFlushedYet";
+    const marker = "/tmp/retro.NotFlushedYet";
     const { storeRootOf } = twoStores("tie-none", { marker, markerInCodex: false, markerInClaude: false });
 
     const result = resolveSession({ candidates: bothHosts, storeRootOf, marker, retryDelayMs: 0 });
@@ -769,7 +769,7 @@ describe("Slice 1 — L1: resolveSession breaks a two-host tie on evidence", () 
   });
 
   test("a marker in both transcripts is ambiguous-host, and picks neither", () => {
-    const marker = "/tmp/reflect.InBoth";
+    const marker = "/tmp/retro.InBoth";
     const { storeRootOf } = twoStores("tie-both", { marker, markerInCodex: true, markerInClaude: true });
 
     expect(resolveSession({ candidates: bothHosts, storeRootOf, marker, retryDelayMs: 0 }).failure).toBe(
@@ -778,7 +778,7 @@ describe("Slice 1 — L1: resolveSession breaks a two-host tie on evidence", () 
   });
 
   test("one candidate resolves directly, and no candidate is unsupported-host", () => {
-    const marker = "/tmp/reflect.Solo";
+    const marker = "/tmp/retro.Solo";
     const { codexRoot, storeRootOf } = twoStores("tie-solo", { marker, markerInCodex: true, markerInClaude: false });
 
     const single = resolveSession({
@@ -810,13 +810,13 @@ describe("Slice 1 — L1: normalizeTranscript classifies records and bounds the 
     // `toolUseResult`, so "the last user message" is not a prompt
     // classifier. The positive case is asserted
     // first, so a classifier that answers false to everything cannot pass.
-    expect(isUserTurn(userPrompt("reflect on this session"))).toBe(true);
+    expect(isUserTurn(userPrompt("retro on this session"))).toBe(true);
     expect(isUserTurn(toolResult("/var/folders/zz/T/out.txt"))).toBe(false);
   });
 
   test("a host-injected <local-command-stdout> record is not a user turn", () => {
     expect(
-      isUserTurn(userPrompt("<local-command-stdout>/tmp/reflect-cache-a1b2c3</local-command-stdout>")),
+      isUserTurn(userPrompt("<local-command-stdout>/tmp/retro-cache-a1b2c3</local-command-stdout>")),
     ).toBe(false);
   });
 
@@ -839,7 +839,7 @@ describe("Slice 1 — L1: normalizeTranscript classifies records and bounds the 
     // per-type counts.
     const normalized = normalizeTranscript(
       jsonl(
-        userPrompt("reflect on this session"),
+        userPrompt("retro on this session"),
         { type: "attachment", id: "att-1" },
         { type: "pr-link", url: "https://example.invalid/pull/1" },
         { type: "system", subtype: "init" },
@@ -901,7 +901,7 @@ describe("Slice 1 — L1: normalizeTranscript classifies records and bounds the 
 
   test("a malformed line is skipped and counted, and the valid records survive", () => {
     const normalized = normalizeTranscript(
-      `${JSON.stringify(userPrompt("reflect on this session"))}\n{"type":"user",\n${JSON.stringify(assistantText("three lenses"))}\n`,
+      `${JSON.stringify(userPrompt("retro on this session"))}\n{"type":"user",\n${JSON.stringify(assistantText("three lenses"))}\n`,
     );
 
     expect(normalized.malformedLines).toBe(1);
@@ -918,7 +918,7 @@ describe("Slice 1 — L1: a Codex rollout normalizes into the same record shape"
     const normalized = normalizeTranscript(
       jsonl(
         codexMeta("01a07c7b-16e9-73a2-8f5b-7638fd286088"),
-        codexUser("reflect on this session"),
+        codexUser("retro on this session"),
         codexToolCall("exec", 'text(await tools.exec_command({cmd:"bun test"}));'),
         codexToolOutput("Script completed\nOutput:\n42 pass"),
         codexAssistant("every check is green"),
@@ -928,7 +928,7 @@ describe("Slice 1 — L1: a Codex rollout normalizes into the same record shape"
     expect(normalized.format).toBe("codex");
     expect(normalized.records.map((record) => record.type)).toEqual(["user", "assistant", "user", "assistant"]);
     expect(normalized.records[0]?.isUserTurn).toBe(true);
-    expect(normalized.records[0]?.text).toBe("reflect on this session");
+    expect(normalized.records[0]?.text).toBe("retro on this session");
     // The tooling lens's evidence is the invocation, so the tool's name and its
     // arguments both have to reach the normalized file.
     expect(normalized.records[1]?.text).toContain("exec");
@@ -978,7 +978,7 @@ describe("Slice 1 — L1: a Codex rollout normalizes into the same record shape"
     // Codex delivers project instructions and Conductor's own preamble as
     // role: "user" messages. Counting those as prompts would make every session
     // look like it opened with three turns nobody typed.
-    expect(isUserTurn(codexUser("reflect on this session"))).toBe(true);
+    expect(isUserTurn(codexUser("retro on this session"))).toBe(true);
     expect(isUserTurn(codexUser("# AGENTS.md instructions for /w/repo\n\n<INSTRUCTIONS>"))).toBe(false);
     expect(isUserTurn(codexUser("\n<system_instruction>\nYou are working inside Conductor"))).toBe(false);
     expect(isUserTurn(codexUser("<recommended_plugins>\nHere is a list of plugins"))).toBe(false);
@@ -999,7 +999,7 @@ describe("Slice 1 — L1: a Codex rollout normalizes into the same record shape"
     expect(bounded.droppedForCeiling).toBe(1);
 
     const malformed = normalizeTranscript(
-      `${JSON.stringify(codexUser("reflect"))}\n{"type":"response_item",\n${JSON.stringify(codexAssistant("ok"))}\n`,
+      `${JSON.stringify(codexUser("retro"))}\n{"type":"response_item",\n${JSON.stringify(codexAssistant("ok"))}\n`,
     );
     expect(malformed.malformedLines).toBe(1);
     expect(malformed.records.length).toBe(2);
@@ -1059,18 +1059,18 @@ describe("Slice 1 — L1: a Codex rollout normalizes into the same record shape"
 // Slice 1 — L2: the reporting pass
 // ===========================================================================
 
-describe("Slice 1 — L2: reflect's frontmatter and invocation surface", () => {
+describe("Slice 1 — L2: retro's frontmatter and invocation surface", () => {
   test("the skill file lives under runtime skills/ (distributed)", () => {
     expect(existsSync(SKILL)).toBe(true);
   });
 
-  test("frontmatter declares name: reflect", () => {
-    expect(/^name:\s*reflect\s*$/m.test(fm())).toBe(true);
+  test("frontmatter declares name: retro", () => {
+    expect(/^name:\s*retro\s*$/m.test(fm())).toBe(true);
   });
 
   test("frontmatter sets disable-model-invocation: true (user-invocable only)", () => {
     // It writes SKILL.md files and creates public issues, so only a deliberate
-    // invocation starts the run. This is also what puts reflect in the guarded
+    // invocation starts the run. This is also what puts retro in the guarded
     // set that tests/guarded-skill-prose.test.ts sweeps.
     expect(/^disable-model-invocation:\s*true\s*$/m.test(fm())).toBe(true);
   });
@@ -1099,7 +1099,7 @@ describe("Slice 1 — L2: reflect's frontmatter and invocation surface", () => {
   });
 });
 
-describe("Slice 1 — L2: reflect's three reporting lenses", () => {
+describe("Slice 1 — L2: retro's three reporting lenses", () => {
   test("the body names all three lenses", () => {
     const lenses = section(LENSES);
     expect(lenses.length).toBeGreaterThan(0);
@@ -1160,10 +1160,10 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
   });
 
   test("the dispatch target's own frontmatter grants neither Bash nor Write", () => {
-    // The assertion above pins reflect's CHOICE of target; this pins the fact
+    // The assertion above pins retro's CHOICE of target; this pins the fact
     // that choice rests on. `agents/file-finder.md` is a separate file with its
     // own reasons to change, and granting it `Bash` for any of them would
-    // remove reflect's only barrier between an imperative inside a transcript
+    // remove retro's only barrier between an imperative inside a transcript
     // span and a command sink — with this suite green. Same shape as the
     // researcher's tools-line assertion in tests/nested-agents.test.ts.
     const front = frontmatter(read(join(REPO_ROOT, "agents", "file-finder.md")));
@@ -1277,7 +1277,7 @@ describe("Slice 1 — L2: reflect's three reporting lenses", () => {
     // A drift tripwire between the script and the prose that tells the model
     // what to report. A new failure name that reaches a user with no entry here
     // stops a run with a word nothing explains.
-    const script = read(join(REPO_ROOT, "skills", "reflect", "resources", "resolve-transcript.mjs"));
+    const script = read(join(REPO_ROOT, "skills", "retro", "resources", "resolve-transcript.mjs"));
     const failures = [...script.matchAll(/failure:\s*"([a-z-]+)"/g)].map((match) => match[1]);
     const unique = [...new Set(failures)].sort();
 
@@ -1320,7 +1320,7 @@ describe("Slice 2 — L1: write-target rejects an untrusted skill name", () => {
   test("a lowercase hyphenated name is accepted", () => {
     // The positive control: every skill on disk matches this shape, so a
     // validator that rejects everything cannot pass the rejections below.
-    expect(isValidSkillName("reflect")).toBe(true);
+    expect(isValidSkillName("retro")).toBe(true);
     expect(isValidSkillName("pr-watch-as-reviewer")).toBe(true);
   });
 
@@ -1372,8 +1372,8 @@ describe("Slice 2 — L1: write-target's two-root tie-break follows the plugin m
   test("a repo carrying a plugin marker resolves edits to <repo>/skills", () => {
     const repoRoot = tree("tiebreak-plugin", {
       ".claude-plugin/plugin.json": '{"name":"team"}\n',
-      "skills/reflect/SKILL.md": "---\nname: reflect\n---\n",
-      ".claude/skills/reflect/SKILL.md": "---\nname: reflect\n---\n",
+      "skills/retro/SKILL.md": "---\nname: retro\n---\n",
+      ".claude/skills/retro/SKILL.md": "---\nname: retro\n---\n",
     });
 
     expect(
@@ -1383,8 +1383,8 @@ describe("Slice 2 — L1: write-target's two-root tie-break follows the plugin m
 
   test("a repo carrying no plugin marker resolves edits to <repo>/.claude/skills", () => {
     const repoRoot = tree("tiebreak-plain", {
-      "skills/reflect/SKILL.md": "---\nname: reflect\n---\n",
-      ".claude/skills/reflect/SKILL.md": "---\nname: reflect\n---\n",
+      "skills/retro/SKILL.md": "---\nname: retro\n---\n",
+      ".claude/skills/retro/SKILL.md": "---\nname: retro\n---\n",
     });
 
     expect(
@@ -1397,7 +1397,7 @@ describe("Slice 2 — L1: write-target's two-root tie-break follows the plugin m
 // Slice 2 — L2: the apply turn
 // ===========================================================================
 
-describe("Slice 2 — L2: reflect's apply turn is fenced by a clean-and-tracked precondition", () => {
+describe("Slice 2 — L2: retro's apply turn is fenced by a clean-and-tracked precondition", () => {
   test("both git preconditions are the commands the apply turn runs", () => {
     // These two are the premise that makes `git restore` a true undo: an
     // untracked or already-dirty target cannot be restored to a known state.
@@ -1447,7 +1447,7 @@ describe("Slice 2 — L2: reflect's apply turn is fenced by a clean-and-tracked 
 
   test("the authoring route probes three tiers and falls back to a fixed contract", () => {
     // A miss at every tier is not an error, so the fallback contract must be
-    // stated in reflect's own body — .claude/skills/create-team-skill/ does
+    // stated in retro's own body — .claude/skills/create-team-skill/ does
     // not ship to a consumer repo.
     const apply = section(APPLY);
     expect(apply.length).toBeGreaterThan(0);
@@ -1466,7 +1466,7 @@ describe("Slice 2 — L2: reflect's apply turn is fenced by a clean-and-tracked 
   });
 
   test("a plan path this conversation did not print is refused", () => {
-    // Approval is not idempotent and two reflect runs can sit on one repo, so
+    // Approval is not idempotent and two retro runs can sit on one repo, so
     // reading a plan file from a directory this conversation never printed
     // applies a stranger run's edits. With no printed path the turn stops and
     // asks for one rather than guessing.
@@ -1505,7 +1505,7 @@ describe("Slice 2 — L2: reflect's apply turn is fenced by a clean-and-tracked 
 // Slice 3 — L2: backlog routing
 // ===========================================================================
 
-describe("Slice 3 — L2: reflect files demoted findings to whatever tracker the repo names", () => {
+describe("Slice 3 — L2: retro files demoted findings to whatever tracker the repo names", () => {
   test("tracker resolution runs three tiers, the repo router first", () => {
     // Ordering tripwire: probing `gh` before the router fixes every repo to
     // GitHub issues even when its router names another tracker.

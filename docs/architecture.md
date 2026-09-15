@@ -999,7 +999,7 @@ the lifecycle lock are unsupported.
 
 This adapter establishes discovery and lifecycle support. Full QRSPI execution,
 specialist/nested dispatch, reviewer isolation, and hooks on OpenCode remain
-unverified. `/reflect` stays guarded and discoverable but cannot process OpenCode
+unverified. `/retro` stays guarded and discoverable but cannot process OpenCode
 sessions because its mandatory transcript resolver supports Claude Code/Codex.
 
 ## 7. Hooks

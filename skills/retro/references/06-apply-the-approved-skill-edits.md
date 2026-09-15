@@ -14,9 +14,9 @@ The gate is [human control rules](../team/principles/human-control.md): the ask 
 act are separate turns, and the executing turn re-reads the plan from disk.
 
 One question for the class is enough **because of the precondition below**, not
-instead of it. Every write is either a file reflect created — undone by
+instead of it. Every write is either a file retro created — undone by
 deleting the named path — or an edit to a file that was tracked and clean when
-reflect wrote it, undone by `git restore -- <path>`. Neither undo can reach
+retro wrote it, undone by `git restore -- <path>`. Neither undo can reach
 work of the user's own. A tracker issue is not in this class: it is public and
 irreversible, so it takes its own question per issue.
 
@@ -24,7 +24,7 @@ irreversible, so it takes its own question per issue.
 
 Apply the plan file in the run cache whose absolute path **this conversation
 printed**. Never read a plan file from a directory this conversation did not
-print: two reflect runs can sit on one repo, approval is not idempotent, and a
+print: two retro runs can sit on one repo, approval is not idempotent, and a
 stranger run's plan applies edits nobody approved. With no printed path — a
 fresh session, or a compaction that lost it — stop and fire `AskUserQuestion`
 for the absolute plan path rather than guessing at one.
@@ -56,7 +56,7 @@ some other way.
 definition and has no pre-image — the fence above would therefore skip every
 creation ever proposed, and the comparison would have nothing to compare. Its
 precondition is that absence itself: the named path must not exist. A path that
-does exist skips that item and reports it, because reflect overwrites nothing it
+does exist skips that item and reports it, because retro overwrites nothing it
 did not create. Its undo is deleting the named path, which is safe for exactly
 that reason.
 

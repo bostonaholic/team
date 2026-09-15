@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.112.0] - 2026-09-15
+
+### Changed
+
+- **The `/reflect` skill is renamed to `/retro`.** Same procedure, same user-invoked-only guard, same bundled scripts; only the name changes. **What this asks of you:** invoke `/retro` where you used to invoke `/reflect`.
+
 ## [0.111.0] - 2026-09-15
 
 ### Changed
@@ -1015,7 +1021,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.111.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.112.0...HEAD
+[0.112.0]: https://github.com/bostonaholic/team/compare/v0.111.0...v0.112.0
 [0.111.0]: https://github.com/bostonaholic/team/compare/v0.110.0...v0.111.0
 [0.110.0]: https://github.com/bostonaholic/team/compare/v0.109.0...v0.110.0
 [0.109.0]: https://github.com/bostonaholic/team/compare/v0.108.1...v0.109.0
