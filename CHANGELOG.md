@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.116.0] - 2026-09-15
+
 ### Fixed
 
 - **A PR that changes what a user sees now always carries screenshots, whichever path opened it, and an uncertain call defaults to including them.** `/team-pr` decided the `## Screenshots` section from `ux-reviewer`'s capture manifest and treated a missing manifest as a non-UI change, so a standalone `/team-pr` or a `/team-fix` PR could ship a UI change with no screenshots. The ux-reviewer brief's UI-impact gate now counts any substantial interface change, including a backend, data, or configuration change that alters rendered output, and it captures when the impact is uncertain. `/team-pr` computes that gate from the full branch diff: when it holds and no captured manifest exists, it captures per the brief, then attaches through `/pr-screenshots`. Non-UI changes still omit the section, and a capture that cannot run still degrades to the note instead of blocking the PR. **What this asks of you:** nothing.
@@ -1051,7 +1053,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.115.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.116.0...HEAD
+[0.116.0]: https://github.com/bostonaholic/team/compare/v0.115.0...v0.116.0
 [0.115.0]: https://github.com/bostonaholic/team/compare/v0.114.0...v0.115.0
 [0.114.0]: https://github.com/bostonaholic/team/compare/v0.113.0...v0.114.0
 [0.113.0]: https://github.com/bostonaholic/team/compare/v0.112.0...v0.113.0
