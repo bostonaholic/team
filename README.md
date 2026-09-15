@@ -296,6 +296,32 @@ or multi-repo setup.
 Each downstream command takes the artifact directory `docs/plans/<id>/` as
 its argument.
 
+## Configuration
+
+Team reads one optional project-local file, `.team/models.json`, at the home
+project root. It overrides the bundled model selections used to dispatch
+body-loaded agents on Codex CLI and Antigravity CLI; Claude Code's named-agent
+dispatch ignores it.
+
+```json
+{
+  "codex": {
+    "sonnet": { "model": "gpt-5.6-terra", "reasoning_effort": "medium" }
+  },
+  "antigravity": {
+    "sonnet": { "model": "flash" }
+  }
+}
+```
+
+Only the `codex` and `antigravity` hosts, the `opus`/`sonnet`/`haiku` tiers, and
+the `model` (required) and `reasoning_effort` (Codex only) fields are accepted.
+Overrides replace individual bundled selections. Team validates each selection
+against the running host's capabilities and fails on an unknown, unavailable, or
+unsupported value rather than falling back to a default. See
+[docs/configuration.md](docs/configuration.md) for the full schema and
+validation rules.
+
 ## The governance stack
 
 Every team you have worked on had rules that made its output trustworthy: an author does not approve their own pull request, a design gets challenged before it is built, security reads the change before it ships. Team ships those rules as machinery rather than as manners.
