@@ -29,6 +29,7 @@ Run the PR phase. Two modes:
 4. In multi-repo mode, open one draft PR per repo and add `## Companion PRs` links.
 5. Read [tracking rules](references/tracking.md) for the in-review transition and the multi-repo home-only closing rule.
 6. After each push, refresh the body. Re-emit exactly one closing line: never duplicated, never dropped.
+7. **A branch that impacts a UI always carries screenshots.** Apply the ux-reviewer brief's UI-impact gate to the full branch diff. When it holds and no captured manifest exists, capture before rendering the section.
 
 ## PR Body Template
 

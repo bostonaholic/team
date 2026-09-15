@@ -16,12 +16,25 @@
 3. **Resume path** — `$ARGUMENTS/1-task.md` exists: read `ticketId` from
    its frontmatter. Read `$ARGUMENTS/6-design.md` for the "why" behind the
    changes.
-4. **Read the screenshot manifest** (resume mode only). Check for
-   `$ARGUMENTS/screenshots/manifest.md`, written by ux-reviewer during
-   Implement. If the manifest is absent, the PR body carries no
-   Screenshots section — non-UI changes are never forced to include one.
-   If present, parse its frontmatter and `## Captured` / `## Skipped`
-   body for the Screenshots section (see PR Body Template below).
+4. **Decide UI impact and resolve the screenshot manifest.** Read the
+   [ux reviewer brief](../code-review/references/ux-reviewer.md) and apply its
+   `## Screenshot Capture (UI projects)` UI-impact gate to the full branch
+   diff, never this round's delta. A backend change that alters the interface
+   counts. When UI impact is uncertain, capture. Only a branch that does not
+   change the interface omits the section — non-UI changes are never forced to
+   include one. When the branch does change the interface, the PR must carry
+   the section, so capture when needed:
+   - `$ARGUMENTS/screenshots/manifest.md` holding `## Captured` entries whose
+     PNGs exist on disk is the manifest to render. Parse its frontmatter and
+     `## Captured` / `## Skipped` body for the Screenshots section (see PR
+     Body Template below).
+   - Any other manifest state — absent, malformed, `status` any `skipped-*`
+     value, or every listed PNG missing — is a capture gap, not a non-UI
+     change. Run the brief's capture procedure now and render the manifest
+     it writes.
+   In standalone mode no artifact directory exists, so capture into a
+   run-scoped `$(mktemp -d)` directory and bind that directory as `$ARGUMENTS`
+   for the capture and upload steps.
 5. **Standalone path** — no matching artifact directory:
    - Verify the branch has commits ahead of the base, or uncommitted
      changes worth shipping. If neither, report "Nothing to ship." and

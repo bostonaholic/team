@@ -73,14 +73,31 @@ describe("ux-reviewer screenshot capture (slice 1)", () => {
     const t = flat(body());
     // Never commit screenshots — to any branch or worktree.
     expect(/any branch or worktree/i.test(t)).toBe(true);
-    // UI-impact gate is two conditions: UI project type AND a diff touching
-    // UI-rendering surfaces (components/templates/pages/routes/styles).
+    // UI-rendering surfaces stay named.
     const surfaces =
       /components[^.]{0,40}templates[^.]{0,40}pages[^.]{0,40}routes[^.]{0,40}styles/i.test(t);
     expect(surfaces).toBe(true);
-    const conjunction =
-      /UI\b[^.]{0,120}\band\b[^.]{0,160}(touch|diff|commit)/i.test(t) ||
-      /both[^.]{0,60}(hold|conditions|must)/i.test(t);
-    expect(conjunction).toBe(true);
+  });
+
+  test("ux-reviewer prompt captures a backend change that alters the interface", () => {
+    const t = flat(body());
+    // A backend, data, or configuration change that changes what renders counts.
+    const backendCounts =
+      /(backend|data|configuration)[^.]{0,80}(interface|rendered|output|navigation)/i.test(t);
+    expect(backendCounts).toBe(true);
+    // The detector fires on a planted positive.
+    expect(
+      /(backend|data|configuration)[^.]{0,80}(interface|rendered|output|navigation)/i.test(
+        "a backend change that alters rendered output",
+      ),
+    ).toBe(true);
+  });
+
+  test("ux-reviewer prompt defaults to capture when UI impact is uncertain", () => {
+    const t = flat(body());
+    const defaultsToCapture = /uncertain[^.]{0,120}captur/i.test(t) || /default[^.]{0,80}captur/i.test(t);
+    expect(defaultsToCapture).toBe(true);
+    // The detector fires on a planted positive.
+    expect(/uncertain[^.]{0,120}captur/i.test("When UI impact is uncertain, capture.")).toBe(true);
   });
 });

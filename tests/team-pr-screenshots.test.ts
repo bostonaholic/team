@@ -103,6 +103,18 @@ function multiRepoBlock(): string {
   return [lines[start], ...rest.slice(0, end === -1 ? rest.length : end)].join("\n");
 }
 
+// The `### Screenshots section rendering` block in the body template: from its
+// heading to the next `## ` heading or EOF. "" when absent, so a renamed
+// heading fails the length guard rather than vacuously passing the sweeps.
+function screenshotsRenderingSection(): string {
+  const lines = templateRef().split("\n");
+  const start = lines.findIndex((line) => /^#+\s*Screenshots section rendering/i.test(line));
+  if (start === -1) return "";
+  const rest = lines.slice(start + 1);
+  const end = rest.findIndex((line) => /^##\s/.test(line));
+  return [lines[start], ...rest.slice(0, end === -1 ? rest.length : end)].join("\n");
+}
+
 // The number of Skill-tool loads of `name` in `text`. A count, not a boolean,
 // because "one call, never one per repo" is a countable contract. Mirrors the
 // clause walk in tests/helpers/skill-refs.ts.
@@ -140,6 +152,73 @@ describe("team-pr Screenshots refresh on every push", () => {
   test("a UI-changing push defers re-capture to the ux-reviewer brief", () => {
     // Re-capture is ux-reviewer's procedure — read, not restated.
     expect(body()).toContain("code-review/references/ux-reviewer.md");
+  });
+});
+
+describe("UI impact, not manifest presence, decides the Screenshots section", () => {
+  // The bug: the rendering rules dropped the section whenever the manifest was
+  // absent, which treated a missing manifest as a non-UI change. UI impact from
+  // the full branch diff decides now, and a missing manifest triggers capture.
+  test("the rendering rules key omission on UI impact, never on manifest absence", () => {
+    const section = screenshotsRenderingSection();
+    // Guard: a renamed heading must fail, not vacuous-pass the negative sweep.
+    expect(section.length).toBeGreaterThan(0);
+    // The brief's UI-impact gate is the authority for whether a UI is impacted.
+    expect(section).toContain("code-review/references/ux-reviewer.md");
+    // The old rule dropped the section whenever the manifest was absent.
+    expect(section).not.toContain("Manifest absent");
+    // The detector fires on a planted positive.
+    expect("**Manifest absent → omit the section entirely.**".includes("Manifest absent")).toBe(true);
+  });
+
+  test("a UI-impacted branch with no manifest captures before rendering", () => {
+    const section = screenshotsRenderingSection();
+    expect(section.length).toBeGreaterThan(0);
+    expect(/UI[- ]impact/i.test(section)).toBe(true);
+    expect(/captur/i.test(section)).toBe(true);
+    // The detector fires on a planted positive.
+    expect(/UI-impact gate/.test("Apply the UI-impact gate.")).toBe(true);
+  });
+
+  test("the execution step captures when a UI branch has no manifest", () => {
+    const exec = fileOr(join(REFERENCES, "02-execution.md"));
+    expect(exec.length).toBeGreaterThan(0);
+    expect(exec).toContain("code-review/references/ux-reviewer.md");
+    expect(/UI[- ]impact/i.test(exec)).toBe(true);
+    expect(/captur/i.test(exec)).toBe(true);
+  });
+
+  test("a backend UI-affecting change counts, and uncertainty defaults to capture", () => {
+    // team-pr delegates the gate to the brief, but its own policy repeats the
+    // two edges the brief carries: a backend change can impact the UI, and an
+    // uncertain call resolves toward capture.
+    const exec = fileOr(join(REFERENCES, "02-execution.md"));
+    const section = screenshotsRenderingSection();
+    expect(exec.length).toBeGreaterThan(0);
+    expect(section.length).toBeGreaterThan(0);
+    for (const text of [exec, section]) {
+      expect(/backend/i.test(text)).toBe(true);
+      expect(/uncertain/i.test(text)).toBe(true);
+    }
+  });
+});
+
+describe("team-fix ship carries the broadened UI-impact gate", () => {
+  test("ship captures a backend UI-affecting fix and defaults to capture", () => {
+    const ship = fileOr(join(REPO_ROOT, "skills", "team-fix", "references", "07-ship.md"));
+    expect(ship.length).toBeGreaterThan(0);
+    expect(/backend/i.test(ship)).toBe(true);
+    expect(/uncertain/i.test(ship)).toBe(true);
+  });
+});
+
+describe("team-fix ship attaches screenshots for a UI-impacting fix", () => {
+  test("ship applies the UI-impact gate and loads pr-screenshots", () => {
+    const ship = fileOr(join(REPO_ROOT, "skills", "team-fix", "references", "07-ship.md"));
+    // Guard: a missing file must fail, not vacuously pass.
+    expect(ship.length).toBeGreaterThan(0);
+    expect(ship).toContain("code-review/references/ux-reviewer.md");
+    expect(loadsSkill(ship, "pr-screenshots")).toBe(true);
   });
 });
 

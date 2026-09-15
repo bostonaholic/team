@@ -328,11 +328,13 @@ frontmatter.
 Update CHANGELOG.md (filter for user-facing commits since last release),
 push the branch, and open a draft PR automatically with
 `gh pr create --draft`. The PR phase never waits for approval. Then
-surface the tracking ticket, if `1-task.md` carries `ticketId`. When a
-capture manifest exists (`docs/plans/<id>/screenshots/`, see the
-artifact-layout note in section 2), the PR body also gets a
-`## Screenshots` section, populated by one delegated call to the
-`pr-screenshots` skill, which attaches the PNGs and rewrites the body.
+surface the tracking ticket, if `1-task.md` carries `ticketId`. When the
+branch impacts a UI, the PR body also gets a `## Screenshots` section,
+populated by one delegated call to the `pr-screenshots` skill, which attaches
+the PNGs and rewrites the body. UI impact is decided from the full branch diff;
+when ux-reviewer produced no capture manifest (`docs/plans/<id>/screenshots/`,
+see the artifact-layout note in section 2), the PR phase captures per the
+ux-reviewer brief before rendering the section.
 When `docs/plans/<id>/cross-model-notes.md` exists, its body (frontmatter stripped) is copied into the PR's
 `## Review notes` section, replacing the final round's inline disposition
 block so every round appears exactly once. The worktree stays in place
