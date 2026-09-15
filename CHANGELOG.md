@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.113.0] - 2026-09-15
+
+### Added
+
+- A `UserPromptSubmit` hook validates `.team/config.json` before a prompt is processed. When the file is present and invalid — unreadable, malformed JSON, or failing the schema — the prompt is blocked with exit 2 and the reason is shown; an absent file stays valid. The schema is shared with the model resolver, so the two cannot drift.
+
+### Changed
+
+- Local model-selection overrides now live in `.team/config.json` instead of `.team/models.json`. The resolver reads the new filename.
+
 ## [0.112.0] - 2026-09-15
 
 ### Changed
@@ -1021,7 +1031,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.112.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.113.0...HEAD
+[0.113.0]: https://github.com/bostonaholic/team/compare/v0.112.0...v0.113.0
 [0.112.0]: https://github.com/bostonaholic/team/compare/v0.111.0...v0.112.0
 [0.111.0]: https://github.com/bostonaholic/team/compare/v0.110.0...v0.111.0
 [0.110.0]: https://github.com/bostonaholic/team/compare/v0.109.0...v0.110.0

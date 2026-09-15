@@ -77,13 +77,14 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Some of th
 
 ## Hooks
 
-**Runtime** (3, distributed with plugin):
+**Runtime** (4, distributed with plugin):
 
 | Hook | Event | Purpose |
 |------|-------|---------|
 | `pre-compact-anchor.mjs` | PreCompact | Scan docs/plans/ for active topic, inject phase anchor before compaction |
 | `session-start-recover.mjs` | SessionStart | Scan docs/plans/ for active topic, surface phase + suggested next command |
 | `post-write-validate.mjs` | PostToolUse(Write\|Edit) | Structural validation of plugin files |
+| `validate-team-config.mjs` | UserPromptSubmit | Validate `.team/config.json`; block the prompt (exit 2) when absent-or-invalid |
 
 **Development** (in `.claude/hooks/`):
 

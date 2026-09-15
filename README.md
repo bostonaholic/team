@@ -296,6 +296,32 @@ or multi-repo setup.
 Each downstream command takes the artifact directory `docs/plans/<id>/` as
 its argument.
 
+## Configuration
+
+Team reads one optional project-local file, `.team/config.json`, at the home
+project root. It overrides the bundled model selections used to dispatch
+body-loaded agents on Codex CLI and Antigravity CLI; Claude Code's named-agent
+dispatch ignores it.
+
+```json
+{
+  "codex": {
+    "sonnet": { "model": "gpt-5.6-terra", "reasoning_effort": "medium" }
+  },
+  "antigravity": {
+    "sonnet": { "model": "flash" }
+  }
+}
+```
+
+Only the `codex` and `antigravity` hosts, the `opus`/`sonnet`/`haiku` tiers, and
+the `model` (required) and `reasoning_effort` (Codex only) fields are accepted.
+Overrides replace individual bundled selections. Team validates each selection
+against the running host's capabilities and fails on an unknown, unavailable, or
+unsupported value rather than falling back to a default. See
+[docs/configuration.md](docs/configuration.md) for the full schema and
+validation rules.
+
 ## The governance stack
 
 Every team you have worked on had rules that made its output trustworthy: an author does not approve their own pull request, a design gets challenged before it is built, security reads the change before it ships. Team ships those rules as machinery rather than as manners.
@@ -338,7 +364,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
 - **Entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, `/pr-screenshots`, `/pr-rebase`, `/retro`, `/why`, and `/how` utilities, and shared methodologies
-- **3 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience and plugin-file validation
+- **4 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience, plugin-file validation, and a pre-prompt `.team/config.json` guard
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
 
