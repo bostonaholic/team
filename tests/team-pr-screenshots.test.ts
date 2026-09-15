@@ -187,6 +187,29 @@ describe("UI impact, not manifest presence, decides the Screenshots section", ()
     expect(/UI[- ]impact/i.test(exec)).toBe(true);
     expect(/captur/i.test(exec)).toBe(true);
   });
+
+  test("a backend UI-affecting change counts, and uncertainty defaults to capture", () => {
+    // team-pr delegates the gate to the brief, but its own policy repeats the
+    // two edges the brief carries: a backend change can impact the UI, and an
+    // uncertain call resolves toward capture.
+    const exec = fileOr(join(REFERENCES, "02-execution.md"));
+    const section = screenshotsRenderingSection();
+    expect(exec.length).toBeGreaterThan(0);
+    expect(section.length).toBeGreaterThan(0);
+    for (const text of [exec, section]) {
+      expect(/backend/i.test(text)).toBe(true);
+      expect(/uncertain/i.test(text)).toBe(true);
+    }
+  });
+});
+
+describe("team-fix ship carries the broadened UI-impact gate", () => {
+  test("ship captures a backend UI-affecting fix and defaults to capture", () => {
+    const ship = fileOr(join(REPO_ROOT, "skills", "team-fix", "references", "07-ship.md"));
+    expect(ship.length).toBeGreaterThan(0);
+    expect(/backend/i.test(ship)).toBe(true);
+    expect(/uncertain/i.test(ship)).toBe(true);
+  });
 });
 
 describe("team-fix ship attaches screenshots for a UI-impacting fix", () => {
