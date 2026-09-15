@@ -78,16 +78,19 @@ function pluginRelativePath(filePath, projectRoot) {
   return PLUGIN_DIRS.some((dir) => relativePath.startsWith(dir)) ? relativePath : null;
 }
 
+// An ADDED file is not on disk yet, so its patch body is always staged to a
+// temp dir and validated against the staged path. Validating the project path
+// would run the shared rules against a file that does not exist, which can
+// either swallow the failure or report a misleading reason. Update/other kinds
+// read the file that is already on disk.
 async function collectReasons(file, relativePath, projectRoot, stagingRoot) {
-  try {
-    return await validatePluginFile(relativePath, resolve(projectRoot, relativePath));
-  } catch {
-    if (file.kind !== "Add" || file.added.length === 0) return [];
+  if (file.kind === "Add") {
     const stagedPath = join(stagingRoot, relativePath);
     await mkdir(dirname(stagedPath), { recursive: true });
     await writeFile(stagedPath, `${file.added.join("\n")}\n`);
     return await validatePluginFile(relativePath, stagedPath);
   }
+  return await validatePluginFile(relativePath, resolve(projectRoot, relativePath));
 }
 
 function block(relativePath, reason) {

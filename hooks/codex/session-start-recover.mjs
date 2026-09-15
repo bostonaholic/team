@@ -3,7 +3,7 @@
  *
  * Host: Codex CLI. Event: SessionStart.
  * Mirrors the canonical hooks/session-start-recover.mjs inference logic. The
- * The shared inference region is byte-identical across
+ * shared inference region is byte-identical across
  * hooks/session-start-recover.mjs, hooks/pre-compact-anchor.mjs,
  * hooks/codex/session-start-recover.mjs, and hooks/codex/pre-compact-anchor.mjs.
  *

@@ -49,7 +49,7 @@ nav_label: portability
 ## Current state
 
 Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), skills
-(`skills/*/SKILL.md` + `registry.json`), and 8 hook programs (`hooks/*.mjs`,
+(`skills/*/SKILL.md` + `registry.json`), and 8 hook programs (`hooks/**/*.mjs`,
 counting the `hooks/codex/` and `hooks/antigravity/` duplicates) plus three
 `opencode/team.js` adapters. Claude registers through
 `.claude-plugin/plugin.json`, Codex through `hooks/hooks.json`, and Antigravity

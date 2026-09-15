@@ -80,6 +80,22 @@ describe("codex post-write-validate", () => {
     expect(result.stderr).toContain("Invalid JSON");
   });
 
+  test("blocks an added hook with invalid syntax with exit 2", () => {
+    const dir = project();
+    const result = runPatch(dir, patch(...addedFile("hooks/broken.mjs", "export const = ;")));
+    expect(result.status).toBe(2);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("hooks/broken.mjs");
+    expect(result.stderr).toContain("Syntax error");
+  });
+
+  test("accepts a well-formed added hook file", () => {
+    const dir = project();
+    const result = runPatch(dir, patch(...addedFile("hooks/ok.mjs", "export const ok = true;")));
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+  });
+
   test("accepts a well-formed added agent file", () => {
     const dir = project();
     const result = runPatch(dir, patch(...addedFile("agents/good.md", "---\nname: good\n---\nBody")));
@@ -139,7 +155,7 @@ describe("codex hook registration", () => {
     expect(post.some((hook: { command: string }) => hook.command.includes("hooks/codex/post-write-validate.mjs"))).toBe(true);
     expect(hooks.PostToolUse.some((entry: { matcher?: string }) => entry.matcher === "apply_patch")).toBe(true);
     const prompt = hooks.UserPromptSubmit.flatMap((entry: { hooks: { command: string }[] }) => entry.hooks);
-    expect(prompt.some((hook: { command: string }) => hook.command === "node hooks/validate-team-config.mjs")).toBe(true);
+    expect(prompt.some((hook: { command: string }) => hook.command === "node \"${PLUGIN_ROOT}/hooks/validate-team-config.mjs\"")).toBe(true);
   });
 
   test("the reused config guard blocks an invalid config with exit 2", () => {

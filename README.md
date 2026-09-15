@@ -140,6 +140,10 @@ Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex
 budgets its skill catalog, so it shortens the longest descriptions; the skills
 still work.
 
+Project-local hooks load only when the directory is trusted; an untrusted
+directory skips them without warning. See
+[docs/hooks-portability.md](docs/hooks-portability.md).
+
 Developing Team itself? Run the loop Codex documents for local plugins:
 
 ```bash

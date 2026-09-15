@@ -8,10 +8,9 @@
  * filesystem-error semantics.
  */
 
-import { realpathSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { basename, extname } from "node:path";
-import { pathToFileURL } from "node:url";
 
 export const PLUGIN_DIRS = ["agents/", "skills/", "hooks/", ".claude-plugin/"];
 
@@ -42,33 +41,22 @@ function validatePluginJson(filePath, content, reasons) {
   }
 }
 
-// Node reports a parse failure as SyntaxError. Bun reports it as BuildMessage,
-// or as ERR_MODULE_NOT_FOUND for the file itself once a sibling in the same
-// directory has already loaded. All three mean the file cannot load. The Bun
-// branch is gated so Node behavior is unchanged.
-function isSyntaxError(err, absolutePath) {
-  if (err?.name === "SyntaxError" || err?.name === "BuildMessage") return true;
-  if (Array.isArray(err?.errors) && err.errors.some((entry) => isSyntaxError(entry, absolutePath))) return true;
-  if (typeof Bun !== "undefined" && err?.code === "ERR_MODULE_NOT_FOUND") {
-    const missing = err.message?.match(/Cannot find module '([^']+)'/)?.[1];
-    if (!missing) return false;
-    try {
-      return realpathSync(missing) === realpathSync(absolutePath);
-    } catch {
-      return missing === absolutePath;
-    }
-  }
-  return false;
-}
-
-async function validateHookSyntax(filePath, absolutePath, reasons) {
+// Parse only. `node --check` compiles the file without evaluating its top-level
+// code, so an agent-induced write of `hooks/x.mjs` cannot execute in the hook's
+// unsandboxed process. A non-zero status or a spawn error is a syntax failure;
+// the compiler's stderr is the reason.
+function validateHookSyntax(filePath, absolutePath, reasons) {
   if (extname(filePath) !== ".mjs") return;
-  try {
-    await import(pathToFileURL(absolutePath).href);
-  } catch (err) {
-    if (isSyntaxError(err, absolutePath)) {
-      reasons.push(`Syntax error — ${err.message}`);
-    }
+  const result = spawnSync(process.execPath, ["--check", absolutePath], {
+    stdio: ["ignore", "ignore", "pipe"],
+  });
+  if (result.error) {
+    reasons.push(`Syntax error — ${result.error.message}`);
+    return;
+  }
+  if (result.status !== 0) {
+    const detail = result.stderr?.toString().trim() || "node --check failed";
+    reasons.push(`Syntax error — ${detail}`);
   }
 }
 
@@ -86,7 +74,7 @@ export async function validatePluginFile(relativePath, absolutePath) {
 
   const validate = VALIDATORS[pluginDir];
   if (pluginDir === "hooks/") {
-    await validate(relativePath, absolutePath, reasons);
+    validate(relativePath, absolutePath, reasons);
     return reasons;
   }
 

@@ -73,7 +73,9 @@ function missingFromDoc(doc: string, paths: string[]): string[] {
 
 // Matrix data rows: table lines between `## Matrix` and the next `## ` heading,
 // excluding the header row and the `|---|` separator.
-const STATUS = /^(verified|unverified|gap)\b/;
+// A bare `verified` is not in the vocabulary: a cell must say what was
+// verified, and every verified cell is program-contract only, never host-firing.
+const STATUS = /^(verified \(program\)|unverified|gap)(?=[;\s]|$)/;
 
 function matrixRows(doc: string): string[] {
   const section = doc.split(/^## Matrix$/m)[1]?.split(/^## /m)[0] ?? "";
@@ -141,6 +143,15 @@ describe("hooks-portability.md covers every hook copy", () => {
     const planted = [...requiredHookPaths(), "hooks/fake-host/phantom.mjs"];
     expect(planted.length).toBeGreaterThan(requiredHookPaths().length);
     expect(missingFromDoc(doc, planted)).toEqual(["hooks/fake-host/phantom.mjs"]);
+  });
+
+  test("positive control: a bare `verified` status turns the check red", () => {
+    const rows = matrixRows(doc);
+    const cellsOfFirst = cells(rows[0]!);
+    const bare = `| ${cellsOfFirst.map((cell, index) => (index === 6 ? "verified" : cell)).join(" | ")} |`;
+    const planted = doc.replace(rows[0]!, bare);
+    expect(planted).not.toBe(doc);
+    expect(rowsMissingStatus(planted)).toEqual([bare]);
   });
 
   test("positive control: a planted blank status turns the check red", () => {

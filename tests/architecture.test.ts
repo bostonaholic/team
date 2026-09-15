@@ -641,6 +641,16 @@ describe("worktree-first pipeline", () => {
     const file = JSON.parse(read(join(REPO_ROOT, "hooks", "hooks.json")));
     expect(file.hooks.SessionStart[0].hooks[0].command).toContain("hooks/codex/session-start-recover.mjs");
     expect(file.hooks.PreCompact[0].hooks[0].command).toContain("hooks/codex/pre-compact-anchor.mjs");
+    // Every Codex command must resolve through the plugin root, never cwd. A
+    // user project shipping its own hooks/codex/*.mjs must not be executed.
+    const commands = Object.values(file.hooks)
+      .flatMap((entries: unknown) => entries as { hooks: { command: string }[] }[])
+      .flatMap((entry) => entry.hooks.map((hook) => hook.command));
+    expect(commands.length).toBeGreaterThan(0);
+    for (const command of commands) {
+      expect(command).toContain("${PLUGIN_ROOT}/hooks/");
+      expect(command).not.toMatch(/^node hooks\//);
+    }
     const manifest = JSON.parse(read(join(REPO_ROOT, ".codex-plugin", "plugin.json")));
     expect(manifest.hooks).toBe("./hooks/hooks.json");
   });
