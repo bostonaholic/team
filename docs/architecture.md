@@ -1011,6 +1011,7 @@ Runtime hooks (`hooks/`, distributed with the plugin):
 | `pre-compact-anchor.mjs`   | PreCompact               | Scan docs/plans/<id>/ for active topic. Inject a 4-line anchor. |
 | `session-start-recover.mjs`| SessionStart             | Scan docs/plans/<id>/ for active topic. Emit a recovery notice. |
 | `post-write-validate.mjs`  | PostToolUse(Write\|Edit) | Structural validation of plugin component files            |
+| `validate-team-config.mjs` | UserPromptSubmit         | Validate `.team/config.json`. Block the prompt (exit 2) while it is invalid. |
 
 Both `pre-compact-anchor.mjs` and `session-start-recover.mjs` work the
 same way. They list `docs/plans/*/` directories. They pick the most
@@ -1019,6 +1020,12 @@ infer the current phase from artifact presence and frontmatter. They then
 emit a short context message that names the phase, `<id>`, and the
 suggested next `/team-*` command. Both are stateless, exit 0 on any
 error, and return within the 5000ms hook budget.
+
+`validate-team-config.mjs` is the odd one out: it is a guard, not a notice. It
+reads `<project>/.team/config.json`, validates it through the same schema owner
+the resolver uses (`skills/team/references/model-config.mjs`), and blocks the
+prompt with exit 2 while the file is invalid. An absent file is valid — the
+overrides are optional. A hook bug exits 0 rather than stranding the session.
 
 Development hooks (`.claude/hooks/`, not distributed):
 

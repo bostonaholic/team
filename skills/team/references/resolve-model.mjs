@@ -3,45 +3,7 @@ import { readFileSync, realpathSync, statSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const HOSTS = ["codex", "antigravity"];
-const TIERS = ["opus", "sonnet", "haiku"];
-const EFFORTS = ["low", "medium", "high", "xhigh", "max", "ultra"];
-const ANTIGRAVITY_MODELS = ["inherit", "flash_lite", "flash", "pro"];
-
-function object(value, name) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new Error(`${name} must be an object`);
-  }
-}
-
-function validateConfig(config) {
-  object(config, "model config");
-  for (const [host, tiers] of Object.entries(config)) {
-    if (!HOSTS.includes(host)) throw new Error(`unsupported host: ${host}`);
-    object(tiers, host);
-    for (const [tier, selection] of Object.entries(tiers)) {
-      if (!TIERS.includes(tier)) throw new Error(`unsupported tier: ${host}.${tier}`);
-      object(selection, `${host}.${tier}`);
-      const keys = host === "codex" ? ["model", "reasoning_effort"] : ["model"];
-      for (const key of Object.keys(selection)) {
-        if (!keys.includes(key)) throw new Error(`unknown field: ${host}.${tier}.${key}`);
-      }
-      const { model, reasoning_effort: effort } = selection;
-      if (typeof model !== "string" || !model.trim() || model !== model.trim()) {
-        throw new Error(`invalid model: ${host}.${tier}`);
-      }
-      if (host === "antigravity" && !ANTIGRAVITY_MODELS.includes(model)) {
-        throw new Error(`invalid Antigravity model tier: ${model}`);
-      }
-      if (host === "codex" && [...TIERS, "fable", "inherit"].includes(model)) {
-        throw new Error(`Codex needs a concrete model ID: ${model}`);
-      }
-      if (Object.hasOwn(selection, "reasoning_effort") && !EFFORTS.includes(effort)) {
-        throw new Error(`unsupported effort: ${effort}`);
-      }
-    }
-  }
-}
+import { CONFIG_DIR, CONFIG_FILE, EFFORTS, HOSTS, TIERS, object, validateConfig } from "./model-config.mjs";
 
 function readJson(path) {
   try {
@@ -90,7 +52,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
       throw new Error("projectRoot must be an absolute path");
     }
     if (!statSync(request.projectRoot).isDirectory()) throw new Error("projectRoot must be a directory");
-    const configPath = join(request.projectRoot, ".team", "config.json");
+    const configPath = join(request.projectRoot, CONFIG_DIR, CONFIG_FILE);
     let overrides;
     try {
       overrides = readJson(configPath);

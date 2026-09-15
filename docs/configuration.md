@@ -91,3 +91,16 @@ only — it does not query a provider or spawn an agent.
 For the dispatch procedure and the full validation contract, see
 [model selection](../skills/team/references/model-selection.md) and
 [cross-host portability](cross-host-portability.md#model-selection).
+
+## The pre-prompt guard
+
+A `UserPromptSubmit` hook validates `.team/config.json` before a prompt reaches
+the model. An absent file is valid. A present file that cannot be read, is not
+valid JSON, or fails the schema above blocks the prompt with exit 2 and shows
+the reason, so a config the resolver would reject is caught before any work
+starts rather than at dispatch time. Availability against the running host is
+still checked at dispatch; the guard covers syntax and schema only.
+
+The guard is registered on Claude Code today. Codex CLI and Antigravity CLI
+receive the same file but no guard hook yet, because runtime hook parity is
+still open work.

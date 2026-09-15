@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A `UserPromptSubmit` hook validates `.team/config.json` before a prompt is processed. When the file is present and invalid — unreadable, malformed JSON, or failing the schema — the prompt is blocked with exit 2 and the reason is shown; an absent file stays valid. The schema is shared with the model resolver, so the two cannot drift.
+
 ### Changed
 
 - Local model-selection overrides now live in `.team/config.json` instead of `.team/models.json`. The resolver reads the new filename.

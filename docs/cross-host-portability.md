@@ -49,7 +49,7 @@ nav_label: portability
 ## Current state
 
 Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), skills
-(`skills/*/SKILL.md` + `registry.json`), and 3 hooks (`hooks/*.mjs`). They
+(`skills/*/SKILL.md` + `registry.json`), and 4 hooks (`hooks/*.mjs`). They
 register through `.claude-plugin/plugin.json`. The orchestrator walks the QRSPI
 phase table (`skills/team/SKILL.md`). It persists state as artifact files under
 `docs/plans/<id>/`. It coordinates agents through the Task tool and `SendMessage`
