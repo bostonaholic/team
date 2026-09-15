@@ -92,6 +92,12 @@ A claimed race is proven by a test that reproduces it, and it must fail before t
 
 Detect blocking by whether the second side completes within a timeout. Engine lock tables report only your own transactions without elevated privileges, so an empty result there is not evidence that nothing is locked.
 
+## Prove a coverage gap by mutation
+
+To show a suite does not cover a behavior, delete the code implementing it and run the suite. Green has proven the gap, and that is the evidence a missing-coverage claim needs. Restore immediately.
+
+A mutation that reddens many tests has proven nothing specific. The discriminating result is one mutation failing exactly the test that claims the behavior and no others.
+
 ## Fidelity ladder: real > fake > mock
 
 Wrap vendor types behind owned interfaces. Reserve E2E for critical user journeys; when behavior overlaps an existing feature, add a cross-feature interaction test.
