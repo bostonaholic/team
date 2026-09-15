@@ -105,3 +105,37 @@ describe("opencode recovery and compaction adapters", () => {
     expect(output.context).toEqual(["base"]);
   });
 });
+
+describe("opencode write validation adapter", () => {
+  test("registers the write-validation adapter", async () => {
+    const hooks = await mount(make());
+    expect(typeof hooks["tool.execute.after"]).toBe("function");
+  });
+
+  test("throws on a malformed plugin file", async () => {
+    const f = make();
+    const file = join(f.root, "skills", "broken", "SKILL.md");
+    mkdirSync(join(f.root, "skills", "broken"), { recursive: true });
+    writeFileSync(file, "# no frontmatter\n");
+    const hooks = await mount(f);
+    await expect(
+      (hooks["tool.execute.after"] as Function)({ tool: "write", args: { filePath: file } }, {}),
+    ).rejects.toThrow(/SKILL\.md/);
+  });
+
+  test("skips a path outside the project", async () => {
+    const f = make();
+    const outside = join(f.root, "..", "outside-project", "SKILL.md");
+    mkdirSync(join(f.root, "..", "outside-project"), { recursive: true });
+    writeFileSync(outside, "# no frontmatter\n");
+    const hooks = await mount(f);
+    await (hooks["tool.execute.after"] as Function)({ tool: "write", args: { filePath: outside } }, {});
+  });
+
+  test("ignores non-plugin writes and non-write tools", async () => {
+    const f = make();
+    const hooks = await mount(f);
+    await (hooks["tool.execute.after"] as Function)({ tool: "write", args: { filePath: join(f.root, "notes.txt") } }, {});
+    await (hooks["tool.execute.after"] as Function)({ tool: "read", args: { filePath: join(f.root, "skills", "x", "SKILL.md") } }, {});
+  });
+});

@@ -58,7 +58,7 @@ export async function load(f: Fixture, config: Config = {}, entry = join(f.check
   expect(plugins.length, "native entry point must export exactly one plugin function").toBe(1);
   expect(Object.keys(module).length, "native entry point exports no catalog helpers").toBe(1);
   const hooks = await plugins[0]!({ directory: f.root, worktree: f.root });
-  expect(Object.keys(hooks)).toEqual(["config", "experimental.chat.system.transform", "experimental.session.compacting"]);
+  expect(Object.keys(hooks)).toEqual(["config", "experimental.chat.system.transform", "experimental.session.compacting", "tool.execute.after"]);
   await hooks.config(config);
   return config;
 }

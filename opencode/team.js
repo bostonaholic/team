@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { realpathSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Spawn a canonical recovery hook with the user's project as cwd. The hooks
@@ -49,6 +49,7 @@ export default async function TeamPlugin(input) {
   const projectRoot = input?.directory ?? process.cwd();
   const { loadCatalog } = await import(pathToFileURL(join(root, "opencode/catalog.mjs")).href);
   const catalog = loadCatalog(root);
+  const { validatePluginFile } = await import(pathToFileURL(join(root, "hooks/lib/validate-plugin-file.mjs")).href);
   // The host rebuilds `output.system` on every call, so the recovered string is
   // cached per session and re-appended rather than re-scanned.
   const recovered = new Map();
@@ -84,6 +85,23 @@ export default async function TeamPlugin(input) {
       if (!Array.isArray(output?.context)) return;
       const context = recoveryContext(root, "hooks/pre-compact-anchor.mjs", projectRoot);
       if (typeof context === "string") output.context.push(context);
+    },
+    async "tool.execute.after"(input) {
+      if (input?.tool !== "write" && input?.tool !== "edit") return;
+      const writtenPath = input?.args?.filePath;
+      if (typeof writtenPath !== "string") return;
+      const absolutePath = resolve(projectRoot, writtenPath);
+      const relativePath = relative(projectRoot, absolutePath);
+      if (relativePath.startsWith("..")) return;
+      let reasons;
+      try {
+        reasons = await validatePluginFile(relativePath, absolutePath);
+      } catch {
+        return;
+      }
+      if (reasons.length > 0) {
+        throw new Error(`Plugin file validation failed for ${relativePath}: ${reasons.join("; ")}. Fix the issue before proceeding.`);
+      }
     },
   };
 }
