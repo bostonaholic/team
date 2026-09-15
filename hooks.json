@@ -1,0 +1,11 @@
+{
+  "team": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "node hooks/antigravity/validate-team-config.mjs",
+        "timeout": 30
+      }
+    ]
+  }
+}
