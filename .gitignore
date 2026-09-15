@@ -4,7 +4,7 @@
 # dev CLI
 .dev/
 
-# Team pipeline state
+# Local Team model-selection overrides (.team/models.json)
 .team/
 
 # Pipeline artifacts — per-run scratch, and excluded from the docs site

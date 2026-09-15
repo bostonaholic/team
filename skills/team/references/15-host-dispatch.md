@@ -31,6 +31,8 @@ Resolve every dispatch in this order:
 1. **Named agent.** If the host resolves Team agents by name (Claude Code
    registers `team:<name>`), dispatch the named agent. This is preferred: the
    host applies the definition's tool and permission restrictions directly.
+   Codex and Antigravity use the body-load path so their explicit model
+   selections are applied at spawn instead of reading Claude frontmatter.
 2. **Body-load subagent.** Otherwise, read `agents/<name>.md`, strip the YAML
    frontmatter, and spawn a fresh subagent of the host's general-purpose type
    with the body as its role instructions, plus the same artifact-path payload
@@ -44,10 +46,11 @@ Resolve every dispatch in this order:
 
 Capability mapping for the body-load path:
 
-- **Model tier.** `model:` is a tier key (`opus`, `sonnet`, `haiku`), not a
-  literal model name. Resolve it through the host's tier map when one exists
-  (`.team/config.json` carries the host-neutral map); otherwise use the host's
-  default model and record the substitution in the run report.
+- **Model selection.** Before stripping frontmatter or spawning on Codex or
+  Antigravity, follow [model selection](model-selection.md): run the installed
+  resolver, apply its host arguments, and report runtime resolution separately
+  from the requested tier. Claude named agents retain their native frontmatter.
+  Other hosts use their default model and record the substitution.
 - **Tools.** Grant the subagent only the tools named in the definition's
   `tools:`. Reviewers receive no `Write` or `Edit` tool and no shell mutation
   ([independent review rules](principles/independent-review.md)).

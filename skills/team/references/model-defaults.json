@@ -1,0 +1,12 @@
+{
+  "codex": {
+    "opus": { "model": "gpt-6-astra" },
+    "sonnet": { "model": "gpt-5.6-sol" },
+    "haiku": { "model": "gpt-5.6-luna" }
+  },
+  "antigravity": {
+    "opus": { "model": "pro" },
+    "sonnet": { "model": "flash" },
+    "haiku": { "model": "flash_lite" }
+  }
+}

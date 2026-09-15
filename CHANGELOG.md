@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.110.0] - 2026-09-15
+
+### Added
+
+- Explicit model selections for body-loaded Codex and Antigravity agents, with optional `.team/models.json` overrides, validation against host capabilities, and separate requested/resolved model reporting. Claude agent frontmatter is unchanged.
+
 ## [0.109.0] - 2026-09-14
 
 ### Added
@@ -1003,7 +1009,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.109.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.110.0...HEAD
+[0.110.0]: https://github.com/bostonaholic/team/compare/v0.109.0...v0.110.0
 [0.109.0]: https://github.com/bostonaholic/team/compare/v0.108.1...v0.109.0
 [0.108.1]: https://github.com/bostonaholic/team/compare/v0.108.0...v0.108.1
 [0.108.0]: https://github.com/bostonaholic/team/compare/v0.107.0...v0.108.0
