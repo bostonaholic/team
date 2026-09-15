@@ -20,5 +20,28 @@
         }
       ]
     }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "apply_patch",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node hooks/codex/post-write-validate.mjs",
+          "timeout": 15000
+        }
+      ]
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "node hooks/validate-team-config.mjs",
+          "timeout": 5000
+        }
+      ]
+    }
   ]
 }
