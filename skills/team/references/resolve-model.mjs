@@ -90,7 +90,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.ar
       throw new Error("projectRoot must be an absolute path");
     }
     if (!statSync(request.projectRoot).isDirectory()) throw new Error("projectRoot must be a directory");
-    const configPath = join(request.projectRoot, ".team", "models.json");
+    const configPath = join(request.projectRoot, ".team", "config.json");
     let overrides;
     try {
       overrides = readJson(configPath);

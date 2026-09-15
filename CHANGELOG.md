@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Local model-selection overrides now live in `.team/config.json` instead of `.team/models.json`. The resolver reads the new filename.
+
 ## [0.112.0] - 2026-09-15
 
 ### Changed

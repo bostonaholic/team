@@ -328,6 +328,6 @@ external skill sources, and discovery diagnostics.
 - **[Ethos](ethos.md)**: the principles that make the autonomous middle trustworthy.
 - **[Architecture](architecture.md)**: full design, artifact frontmatter, phase-inference rules.
 - **[Skills](skills.md)**: all skills, each with the skills it mentions.
-- **[Configuration](configuration.md)**: the optional `.team/models.json` model overrides.
+- **[Configuration](configuration.md)**: the optional `.team/config.json` model overrides.
 - **[Cross-host portability](cross-host-portability.md)**: the capability matrix for Codex CLI, the Antigravity CLI host facts, and the chosen portability strategy.
 - **[GitHub repository](https://github.com/bostonaholic/team)**: source, agents, skills.

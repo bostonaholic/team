@@ -85,7 +85,7 @@ describe("installed resolver CLI", () => {
     expect(f.run().status).toBe(0);
     expect(JSON.parse(f.run().stdout).source).toBe("bundled");
     mkdirSync(join(f.projectRoot, ".team"));
-    writeFileSync(join(f.projectRoot, ".team/models.json"), JSON.stringify({ codex: { opus: { model: "gpt-5.6-sol" } } }));
+    writeFileSync(join(f.projectRoot, ".team/config.json"), JSON.stringify({ codex: { opus: { model: "gpt-5.6-sol" } } }));
     const result = f.run();
     expect(result.status).toBe(0);
     expect(JSON.parse(result.stdout).spawn.model).toBe("gpt-5.6-sol");
@@ -94,7 +94,7 @@ describe("installed resolver CLI", () => {
   test("malformed config, missing defaults, and invalid project roots fail with no selection", () => {
     const f = fixture();
     mkdirSync(join(f.projectRoot, ".team"));
-    const config = join(f.projectRoot, ".team/models.json");
+    const config = join(f.projectRoot, ".team/config.json");
     writeFileSync(config, "{");
     expect(f.run().status).toBe(1);
     expect(f.run().stdout).toBe("");

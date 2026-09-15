@@ -298,7 +298,7 @@ its argument.
 
 ## Configuration
 
-Team reads one optional project-local file, `.team/models.json`, at the home
+Team reads one optional project-local file, `.team/config.json`, at the home
 project root. It overrides the bundled model selections used to dispatch
 body-loaded agents on Codex CLI and Antigravity CLI; Claude Code's named-agent
 dispatch ignores it.

@@ -119,11 +119,11 @@ core or binding-shim layer was needed for those installs. Body-loaded dispatch
 uses the shared agent body. OpenCode separately ships its discovery adapter.
 Hook and permission parity remain host work owned by #56 and #57.
 
-The earlier proposal required `.team/config.json` for models, host selection,
-parallelism, and repositories. Model resolution does not justify that combined
-configuration. Only optional `.team/models.json` overrides ship, consumed by the
-installed resolver before body-loaded dispatch. Agent frontmatter stays native
-to Claude. The remaining parity target covers the three runtime hook events,
+The earlier proposal required one `.team/config.json` for models, host
+selection, parallelism, and repositories. Model resolution does not justify
+that combined configuration. Only optional model overrides ship, in
+`.team/config.json`, consumed by the installed resolver before body-loaded
+dispatch. Agent frontmatter stays native to Claude. The remaining parity target covers the three runtime hook events,
 parallel and nested subagents, and structured returns.
 
 ### Model selection
@@ -140,7 +140,7 @@ validation contract. [Bundled selections](../skills/team/references/model-defaul
 
 Codex preserves each agent's effort unless an override specifies
 `reasoning_effort`. Antigravity's invocation tier selects its effort; there is
-no separate effort argument. The optional `<home-project>/.team/models.json`
+no separate effort argument. The optional `<home-project>/.team/config.json`
 replaces individual selections, for example:
 
 ```json
@@ -266,7 +266,7 @@ facility, so the design must work around it.
 | MCP prompts-as-slash-commands | native | **hard gap**: MCP prompts unsupported client-side, so route through Skills |
 | MCP resources | native | native (`read_mcp_resource`/`list_mcp_resources`) |
 | Manifest / binding format | `.claude-plugin/plugin.json` | `.codex-plugin/plugin.json` + `.agents/plugins/marketplace.json` for the package; `config.toml`/`hooks.json` + `.codex/` for hooks and agents |
-| Model-selection overrides | Native agent frontmatter; no Team config needed | Optional `.team/models.json` |
+| Model-selection overrides | Native agent frontmatter; no Team config needed | Optional `.team/config.json` |
 | Agent tier → host model | Native Claude alias | Installed resolver emits explicit model ID and effort |
 
 Antigravity CLI is not a third column. Only some of these rows are settled for
@@ -372,7 +372,7 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
    #57 builds against" below.
 
 6. **Model configuration is limited to model selection.** Optional
-   `.team/models.json` overrides bundled host mappings. The installed resolver
+   `.team/config.json` overrides bundled host mappings. The installed resolver
    validates them against the active host's capabilities; dispatch applies the
    resulting arguments. Claude aliases and native dispatch stay unchanged.
    Host selection, concurrency limits, and repository lists are not part of this
@@ -463,7 +463,7 @@ full parity. It starts from the matrix and works around the named gaps.
   (`PostToolUse`/`SessionStart`/`PreCompact`).
 - Slash entry points → Codex Skills, not MCP (gap 1).
 - Env: resolve through `.codex/` trust + config.toml.
-- Models: use the installed resolver and optional `.team/models.json` overrides.
+- Models: use the installed resolver and optional `.team/config.json` overrides.
   Apply its explicit model and effort to fresh children; verify runtime metadata.
   Parallelism stays in native host configuration.
 - **Known hazards to track:**

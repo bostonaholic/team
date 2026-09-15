@@ -13,7 +13,7 @@ entries in [bundled model selections](model-defaults.json) on other hosts.
 
 Use the home project root established at run entry, including for later slice
 worktrees and companion repositories. Read only that root's optional
-`.team/models.json`; do not search ancestors or create the file automatically.
+`.team/config.json`; do not search ancestors or create the file automatically.
 Its entries replace individual bundled selections, not the whole map:
 
 ```json

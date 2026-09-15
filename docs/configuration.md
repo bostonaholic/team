@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: "Team's project-local configuration: the optional .team/models.json file that overrides bundled model selections for body-loaded agents on Codex CLI and Antigravity CLI."
+description: "Team's project-local configuration: the optional .team/config.json file that overrides bundled model selections for body-loaded agents on Codex CLI and Antigravity CLI."
 audience: [user, developer]
 nav_order: 6
 nav_label: configuration
@@ -8,14 +8,14 @@ nav_label: configuration
 
 # Configuration
 
-> **What this is.** Team reads one optional project-local file, `.team/models.json`.
+> **What this is.** Team reads one optional project-local file, `.team/config.json`.
 > It overrides the bundled model selections used to dispatch body-loaded agents
 > on Codex CLI and Antigravity CLI. Every other setting lives in the host's own
 > plugin configuration.
 
 ## Where it lives
 
-`.team/models.json` sits at the **home project root** — the project Team was
+`.team/config.json` sits at the **home project root** — the project Team was
 pointed at when the run began. The same root is used for later slice worktrees
 and companion repositories. Team reads only that root's file: it does not search
 ancestor directories and never creates the file for you.
