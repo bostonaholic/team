@@ -1,6 +1,6 @@
 {
   "name": "team",
-  "version": "0.114.0",
+  "version": "0.115.0",
   "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
   "author": {
     "name": "Matthew Boston",
@@ -8,6 +8,7 @@
   },
   "homepage": "https://team.bostonaholic.dev",
   "license": "MIT",
+  "hooks": "./hooks/hooks.json",
   "keywords": [
     "agents",
     "orchestration",

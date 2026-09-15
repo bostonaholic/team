@@ -49,8 +49,12 @@ nav_label: portability
 ## Current state
 
 Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), skills
-(`skills/*/SKILL.md` + `registry.json`), and 4 hooks (`hooks/*.mjs`). They
-register through `.claude-plugin/plugin.json`. The orchestrator walks the QRSPI
+(`skills/*/SKILL.md` + `registry.json`), and 8 hook programs (the four canonical
+`hooks/*.mjs` plus the `hooks/codex/` and `hooks/antigravity/` copies) plus three
+`opencode/team.js` adapters. Claude registers through
+`.claude-plugin/plugin.json`, Codex through `hooks/hooks.json`, and Antigravity
+through the root `hooks.json`; see [hooks-portability.md](hooks-portability.md).
+The orchestrator walks the QRSPI
 phase table (`skills/team/SKILL.md`). It persists state as artifact files under
 `docs/plans/<id>/`. It coordinates agents through the Task tool and `SendMessage`
 resume.
@@ -123,7 +127,7 @@ The earlier proposal required one `.team/config.json` for models, host
 selection, parallelism, and repositories. Model resolution does not justify
 that combined configuration. Only optional model overrides ship, in
 `.team/config.json`, consumed by the installed resolver before body-loaded
-dispatch. Agent frontmatter stays native to Claude. The remaining parity target covers the three runtime hook events,
+dispatch. Agent frontmatter stays native to Claude. The remaining parity target covers the four runtime hooks,
 parallel and nested subagents, and structured returns.
 
 ### Model selection
@@ -259,7 +263,7 @@ facility, so the design must work around it.
 | `PostToolUse` hook | native | native (`PostToolUse`) |
 | `SessionStart` hook | native | native (`SessionStart`) |
 | `PreCompact` hook | native | native (`PreCompact`, + `PostCompact`) |
-| Hook stdin/stdout JSON contract | native (Claude schema) | workaround: own schema, mirrors Claude closely (`permissionDecision:"deny"`/exit 2) |
+| Hook stdin/stdout JSON contract | native (Claude schema) | workaround: own schema. A plugin hook file is a `HooksFile` (`{"hooks": {…}}`, `deny_unknown_fields`); events mirror Claude and exit 2 blocks. Team ships `hooks/codex/` duplicates plus one reused canonical guard |
 | Plugin-root / project-dir env vars | native (`${CLAUDE_PLUGIN_ROOT}`, `CLAUDE_PROJECT_DIR`) | workaround: no equivalent, so resolve through `.codex/` trust + config |
 | Always-on project context | native (CLAUDE.md) | native (AGENTS.md) |
 | MCP tools | native | native (stdio/HTTP, OAuth, per-tool approval) |
@@ -365,7 +369,7 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
    the option without coupling the strategy to it.
 
 5. **Parity target for #57: full hook and subagent parity**, not MVP-first.
-   The epic targets all three runtime hook events, parallel **and** nested subagents, and
+   The epic targets all four runtime hooks, parallel **and** nested subagents, and
    structured returns before it declares the work done. This raises the bar
    against the young-API and open-bug risk. The design thus confronts those risks
    directly rather than defer them by a cut in scope. See the risks and "what
@@ -457,10 +461,13 @@ full parity. It starts from the matrix and works around the named gaps.
 
   Verified on codex-cli 0.153.4, 2026-09-10. The only real fix is a Codex
   feature (honoring `user-invocable`, or a `policy.allow_explicit_invocation`).
-- Hooks: reuse the 3 `.mjs` files. The shim adapts to Codex
-  `hooks.json`/`[hooks]`, whose schema mirrors Claude closely
-  (`permissionDecision:"deny"`/exit 2). Events map nearly 1:1
-  (`PostToolUse`/`SessionStart`/`PreCompact`).
+- Hooks: three host-native duplicates (`hooks/codex/session-start-recover.mjs`,
+  `hooks/codex/pre-compact-anchor.mjs`, `hooks/codex/post-write-validate.mjs`)
+  plus the canonical `hooks/validate-team-config.mjs` reused unchanged. No shim:
+  Codex's `HooksFile` envelope and `apply_patch` stdin differ enough that a
+  readable duplicate beats schema translation. Codex blocks with exit 2.
+  `PLUGIN_ROOT`/`PLUGIN_DATA` (and their `CLAUDE_` aliases) are injected into a
+  plugin hook command's environment, though no Team hook depends on them.
 - Slash entry points → Codex Skills, not MCP (gap 1).
 - Env: resolve through `.codex/` trust + config.toml.
 - Models: use the installed resolver and optional `.team/config.json` overrides.
@@ -529,6 +536,11 @@ a file, and installing from a URL clones fresh so the socket never exists.
   `hooks.json`. `agents/` is discovered, and discovery is not dispatch — whether
   `agy` can dispatch an agent, and whether a structured return survives, has not
   been tested, which is why Team claims no pipeline support here.
+- Only `PreInvocation` has a Team binding. It cannot block, so the
+  `.team/config.json` guard injects an ephemeral message and the prompt proceeds.
+  There is no `SessionStart`, `PreCompact`, or blocking `PostToolUse`, so three
+  of the four hooks are named gaps in
+  [hooks-portability.md](hooks-portability.md).
 
 **`disable-model-invocation` is honored.** With the plugin installed, the
 probe (taken when the plugin shipped 54 skills, two of which set the key) had
@@ -665,10 +677,13 @@ current checkout content. No generated catalog, cache copy, provider call, or
 persistent Team process is introduced.
 
 Native discovery was observed on OpenCode 1.18.20. Support covers registration,
-skill/command discovery, and the developer lifecycle. Full QRSPI execution,
-specialist/nested-agent dispatch, translated reviewer permissions, and runtime
-hooks remain unverified. No provider, credentials, model-tier translation, or
-model-quality guarantee is installed. `/retro` cannot process OpenCode sessions.
+skill/command discovery, and the developer lifecycle. Three runtime hooks are
+bound in `opencode/team.js` — recovery, compaction, and write validation — and
+their program contracts are probed; the prompt-block `.team/config.json` guard
+is a named gap. Full QRSPI execution, specialist/nested-agent dispatch,
+translated reviewer permissions, and live host-firing of the adapters remain
+unverified. No provider, credentials, model-tier translation, or model-quality
+guarantee is installed. `/retro` cannot process OpenCode sessions.
 
 ## Out of scope
 

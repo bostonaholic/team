@@ -270,6 +270,30 @@ describe("Slice 3: topic recovery and verdict parsing", () => {
     });
   });
 
+  // The Codex copies move the envelope to stdout and set hookEventName, so the
+  // Claude stderr assertions in `recover` do not apply. Assert the stdout wire.
+  const CODEX_HOOKS = [
+    ["session-start-recover.mjs", "SessionStart"],
+    ["pre-compact-anchor.mjs", "PreCompact"],
+  ] as const;
+
+  describe.each(CODEX_HOOKS)("codex %s", (hook, event) => {
+    test("emits a stdout envelope with hookEventName and exits 0", () => {
+      seed("codex stdout envelope", "one researched topic",
+        [{ id: "GH-369-codex", through: "research", mtime: 1767225600 }]);
+
+      const result = observe("codex recovery envelope", "node",
+        [join(ROOT, "hooks", "codex", hook)], JSON.stringify({ cwd: consumer }), { status: 0 });
+
+      expect(result.stderr).toBe("");
+      expect(result.stdout.length).toBeGreaterThan(0);
+      const parsed = JSON.parse(result.stdout);
+      expect(parsed.hookSpecificOutput.hookEventName).toBe(event);
+      expect(parsed.hookSpecificOutput.additionalContext).toContain("Phase: DESIGN");
+      expect(parsed.hookSpecificOutput.additionalContext).toContain("Id: GH-369-codex");
+    }, 30_000);
+  });
+
   describe.each(BOUNDARY_CASES)("$scenario", ({ scenario, body, selected }) => {
     test("Parser boundaries preserve documented exceptions", () => {
       seed("Parser boundaries preserve documented exceptions", scenario, [{ id: "GH-369-boundary", through: "design", mtime: 1767225600 }], { "design-review-1.md": body });

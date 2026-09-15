@@ -998,20 +998,35 @@ live checkout edits. Concurrent checkout edits or external replacement without
 the lifecycle lock are unsupported.
 
 This adapter establishes discovery and lifecycle support. Full QRSPI execution,
-specialist/nested dispatch, reviewer isolation, and hooks on OpenCode remain
-unverified. `/retro` stays guarded and discoverable but cannot process OpenCode
+specialist/nested dispatch, reviewer isolation, and hook host-firing on OpenCode
+remain unverified; the hook adapter programs were probed by direct invocation
+(program contract verified, host-firing unverified — see
+[hooks-portability.md](hooks-portability.md)). `/retro` stays guarded and discoverable but cannot process OpenCode
 sessions because its mandatory transcript resolver supports Claude Code/Codex.
 
 ## 7. Hooks
 
-Runtime hooks (`hooks/`, distributed with the plugin):
+Runtime hooks (`hooks/`, distributed with the plugin): eight hook programs — four
+canonical, three Codex duplicates under `hooks/codex/`, and one Antigravity copy
+under `hooks/antigravity/` — plus three OpenCode adapters in `opencode/team.js`.
+The complete hook × host matrix is
+[hooks-portability.md](hooks-portability.md).
 
-| Hook                       | Event                    | Purpose                                                    |
-|----------------------------|--------------------------|------------------------------------------------------------|
-| `pre-compact-anchor.mjs`   | PreCompact               | Scan docs/plans/<id>/ for active topic. Inject a 4-line anchor. |
-| `session-start-recover.mjs`| SessionStart             | Scan docs/plans/<id>/ for active topic. Emit a recovery notice. |
-| `post-write-validate.mjs`  | PostToolUse(Write\|Edit) | Structural validation of plugin component files            |
-| `validate-team-config.mjs` | UserPromptSubmit         | Validate `.team/config.json`. Block the prompt (exit 2) while it is invalid. |
+| Hook                       | Event                    | Registers on                                                | Purpose                                                    |
+|----------------------------|--------------------------|-------------------------------------------------------------|------------------------------------------------------------|
+| `pre-compact-anchor.mjs`   | PreCompact               | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy → stdout); OpenCode `experimental.session.compacting` | Scan docs/plans/<id>/ for active topic. Inject a 4-line anchor. |
+| `session-start-recover.mjs`| SessionStart             | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy → stdout); OpenCode `experimental.chat.system.transform` | Scan docs/plans/<id>/ for active topic. Emit a recovery notice. |
+| `post-write-validate.mjs`  | PostToolUse(Write\|Edit) | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy, matcher `apply_patch`, exit 2); OpenCode `tool.execute.after` | Structural validation of plugin component files            |
+| `validate-team-config.mjs` | UserPromptSubmit         | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (reused canonical); Antigravity root `hooks.json` (`hooks/antigravity/` copy at `PreInvocation`, inject-only) | Validate `.team/config.json`. Block the prompt (exit 2) while it is invalid. |
+
+The Codex copies move the recovery envelope to stdout with `hookEventName`, parse
+`apply_patch` stdin, and block with exit 2; the canonical config guard is reused
+unchanged because its stdin and exit-2 contract already match. Antigravity
+exposes only `PreInvocation`, which cannot block, so its config binding injects
+an ephemeral message and the prompt proceeds; the other three Antigravity events
+are named gaps. OpenCode drives the canonical recovery files through its plugin
+adapters. See [hooks-portability.md](hooks-portability.md) for the verified vs.
+unverified cells.
 
 Both `pre-compact-anchor.mjs` and `session-start-recover.mjs` work the
 same way. They list `docs/plans/*/` directories. They pick the most

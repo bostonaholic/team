@@ -140,6 +140,11 @@ Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex
 budgets its skill catalog, so it shortens the longest descriptions; the skills
 still work.
 
+Project-local hooks in a `.codex/` config load only when the directory is
+trusted; an untrusted directory skips them without warning. This gate applies to
+`.codex/` config hooks, not the plugin hooks installed above, and skills bypass
+it entirely. See [docs/hooks-portability.md](docs/hooks-portability.md).
+
 Developing Team itself? Run the loop Codex documents for local plugins:
 
 ```bash
@@ -364,7 +369,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
 - **Entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, `/pr-screenshots`, `/pr-rebase`, `/retro`, `/why`, and `/how` utilities, and shared methodologies
-- **4 hooks** in `hooks/`: `docs/plans/`-aware compaction resilience, plugin-file validation, and a pre-prompt `.team/config.json` guard
+- **8 hook programs** in `hooks/` (4 canonical, 3 Codex duplicates, 1 Antigravity) plus 3 OpenCode adapters in `opencode/team.js`: `docs/plans/`-aware compaction resilience, plugin-file validation, and a `.team/config.json` guard. See [docs/hooks-portability.md](docs/hooks-portability.md)
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
 

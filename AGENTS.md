@@ -77,14 +77,16 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Some of th
 
 ## Hooks
 
-**Runtime** (4, distributed with plugin):
+**Runtime** (8 hook programs distributed with the plugin — 4 canonical, 3 Codex duplicates under `hooks/codex/`, 1 Antigravity copy under `hooks/antigravity/` — plus 3 OpenCode adapters in `opencode/team.js`). Full matrix and per-host notes: [docs/hooks-portability.md](docs/hooks-portability.md).
 
-| Hook | Event | Purpose |
-|------|-------|---------|
-| `pre-compact-anchor.mjs` | PreCompact | Scan docs/plans/ for active topic, inject phase anchor before compaction |
-| `session-start-recover.mjs` | SessionStart | Scan docs/plans/ for active topic, surface phase + suggested next command |
-| `post-write-validate.mjs` | PostToolUse(Write\|Edit) | Structural validation of plugin files |
-| `validate-team-config.mjs` | UserPromptSubmit | Validate `.team/config.json`; block the prompt (exit 2) when absent-or-invalid |
+| Hook | Event | Registers on | Purpose |
+|------|-------|--------------|---------|
+| `pre-compact-anchor.mjs` | PreCompact | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy → stdout); OpenCode adapter `experimental.session.compacting` | Scan docs/plans/ for active topic, inject phase anchor before compaction |
+| `session-start-recover.mjs` | SessionStart | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy → stdout); OpenCode adapter `experimental.chat.system.transform` | Scan docs/plans/ for active topic, surface phase + suggested next command |
+| `post-write-validate.mjs` | PostToolUse(Write\|Edit) | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy, matcher `apply_patch`, exit 2); OpenCode adapter `tool.execute.after` | Structural validation of plugin files |
+| `validate-team-config.mjs` | UserPromptSubmit | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (reused canonical); Antigravity root `hooks.json` (`hooks/antigravity/` copy at `PreInvocation`, inject-only) | Validate `.team/config.json`; block the prompt (exit 2) when present and invalid on Claude/Codex |
+
+Antigravity has no `SessionStart` or `PreCompact` and its `PostToolUse` cannot block, so three of the four hooks are named gaps there. OpenCode has no prompt-block hook, so the config guard is a gap. Neither is stubbed silently.
 
 **Development** (in `.claude/hooks/`):
 

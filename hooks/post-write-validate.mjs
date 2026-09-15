@@ -10,11 +10,8 @@
  * Blocks on validation failure (exit 1) to enforce structural quality.
  */
 
-import { readFile } from "node:fs/promises";
-import { resolve, relative, extname, basename } from "node:path";
-import { pathToFileURL } from "node:url";
-
-const PLUGIN_DIRS = ["agents/", "skills/", "hooks/", ".claude-plugin/"];
+import { relative, resolve } from "node:path";
+import { validatePluginFile } from "./lib/validate-plugin-file.mjs";
 
 async function readStdin() {
   const chunks = [];
@@ -24,10 +21,7 @@ async function readStdin() {
   return Buffer.concat(chunks).toString("utf-8");
 }
 
-let hasFailure = false;
-
 function warn(filePath, reason) {
-  hasFailure = true;
   const payload = JSON.stringify({
     hookSpecificOutput: {
       additionalContext: `BLOCKED: Plugin file validation failed for ${filePath}: ${reason}. Fix the issue before proceeding.`,
@@ -35,51 +29,6 @@ function warn(filePath, reason) {
   });
   process.stderr.write(payload);
 }
-
-function findPluginDir(relativePath) {
-  return PLUGIN_DIRS.find((dir) => relativePath.startsWith(dir));
-}
-
-async function validateAgentMarkdown(filePath, content) {
-  if (extname(filePath) !== ".md") return;
-  if (!content.startsWith("---")) {
-    warn(filePath, "Agent .md file must start with YAML frontmatter (---)");
-  }
-}
-
-async function validateSkillMarkdown(filePath, content) {
-  if (basename(filePath) !== "SKILL.md") return;
-  if (!content.startsWith("---")) {
-    warn(filePath, "SKILL.md must start with YAML frontmatter (---)");
-  }
-}
-
-async function validatePluginJson(filePath, content) {
-  if (extname(filePath) !== ".json") return;
-  try {
-    JSON.parse(content);
-  } catch (err) {
-    warn(filePath, `Invalid JSON — ${err.message}`);
-  }
-}
-
-async function validateHookSyntax(filePath, absolutePath) {
-  if (extname(filePath) !== ".mjs") return;
-  try {
-    await import(pathToFileURL(absolutePath).href);
-  } catch (err) {
-    if (err instanceof SyntaxError) {
-      warn(filePath, `Syntax error — ${err.message}`);
-    }
-  }
-}
-
-const VALIDATORS = {
-  "agents/": validateAgentMarkdown,
-  "skills/": validateSkillMarkdown,
-  ".claude-plugin/": validatePluginJson,
-  "hooks/": validateHookSyntax,
-};
 
 async function main() {
   let input;
@@ -108,27 +57,19 @@ async function main() {
     process.exit(0);
   }
 
-  const pluginDir = findPluginDir(relativePath);
-  if (!pluginDir) {
+  let reasons;
+  try {
+    reasons = await validatePluginFile(relativePath, absolutePath);
+  } catch (err) {
+    warn(relativePath, `Could not read file — ${err.message}`);
     process.exit(0);
   }
 
-  const validate = VALIDATORS[pluginDir];
-
-  if (pluginDir === "hooks/") {
-    await validate(relativePath, absolutePath);
-  } else {
-    let content;
-    try {
-      content = await readFile(absolutePath, "utf-8");
-    } catch (err) {
-      warn(relativePath, `Could not read file — ${err.message}`);
-      process.exit(0);
-    }
-    await validate(relativePath, content);
+  for (const reason of reasons) {
+    warn(relativePath, reason);
   }
 
-  process.exit(hasFailure ? 1 : 0);
+  process.exit(reasons.length > 0 ? 1 : 0);
 }
 
 main().catch(() => process.exit(0));

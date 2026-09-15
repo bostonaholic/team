@@ -101,6 +101,17 @@ the reason, so a config the resolver would reject is caught before any work
 starts rather than at dispatch time. Availability against the running host is
 still checked at dispatch; the guard covers syntax and schema only.
 
-The guard is registered on Claude Code today. Codex CLI and Antigravity CLI
-receive the same file but no guard hook yet, because runtime hook parity is
-still open work.
+The guard runs on every host that can express it, and each host names its own
+failure channel:
+
+- **Claude Code** — `.claude-plugin/plugin.json`, `UserPromptSubmit`, exit 2.
+- **Codex CLI** — `hooks/hooks.json`, `UserPromptSubmit`, exit 2, reusing the
+  canonical `hooks/validate-team-config.mjs` unchanged.
+- **Antigravity CLI** — root `hooks.json`, `PreInvocation`, **inject-only**. That
+  host cannot block a prompt, so an invalid config surfaces an `injectSteps`
+  ephemeral message and the prompt proceeds.
+- **OpenCode** — a named gap: there is no prompt-block hook, and the nearest
+  candidate is unprobed.
+
+The full matrix, with each cell's verification status, is
+[hooks-portability.md](hooks-portability.md).

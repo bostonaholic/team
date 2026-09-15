@@ -1,18 +1,19 @@
 /**
- * SessionStart hook — detects an active Team pipeline and prompts recovery.
+ * Codex CLI SessionStart hook — detects an active Team pipeline and prompts recovery.
  *
- * Scans the home docs/plans/<id>/ subdirectories plus every git worktree's
- * docs/plans/<id>/ for the most recent active topic, infers the current phase
- * from artifact presence + git signals (a leading WORKTREE state when a
- * worktree exists with no 1-task.md yet; IMPLEMENT once >=1 commit lands on the
- * <id> branch), and injects a recovery notice into additionalContext so the
- * agent suggests re-invoking any /team-* command bare — discovery
- * auto-resolves the directory (an explicit docs/plans/<id>/ is still accepted).
+ * Host: Codex CLI. Event: SessionStart.
+ * Mirrors the canonical hooks/session-start-recover.mjs inference logic. The
+ * shared inference region is byte-identical across
+ * hooks/session-start-recover.mjs, hooks/pre-compact-anchor.mjs,
+ * hooks/codex/session-start-recover.mjs, and hooks/codex/pre-compact-anchor.mjs.
+ *
+ * Divergence from the canonical Claude copies: Codex schema-checks stdout, so
+ * this copy writes the envelope to stdout with hookEventName set; the canonical
+ * copies write the same additionalContext to stderr without hookEventName.
  *
  * Contract: always exits 0. Missing or unparseable artifacts are not an error;
  * every git call is wrapped so git-absent / not-a-repo degrades to a home scan.
  */
-
 import { execFileSync } from "node:child_process";
 import { readFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
@@ -239,7 +240,7 @@ async function main() {
   if (LIMITED_ROUTES.has(route)) {
     const complete = task.routeStatus === "complete";
     const ctx = limitedScopeContext(route, active, complete);
-    process.stderr.write(JSON.stringify({ hookSpecificOutput: { additionalContext: ctx } }) + "\n");
+    process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: ctx } }) + "\n");
     process.exit(0);
   }
   const phase = await inferPhase(active.dir, rootDir, active.id, hasWorktree);
@@ -250,7 +251,7 @@ async function main() {
     `Artifact directory: ${active.dir}`,
     `To continue: re-invoke /team to resume from the detected phase (it reads the artifacts at the path above).`,
   ].join("\n");
-  process.stderr.write(JSON.stringify({ hookSpecificOutput: { additionalContext: ctx } }) + "\n");
+  process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: ctx } }) + "\n");
   process.exit(0);
 }
 

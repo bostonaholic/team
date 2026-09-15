@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
 import { frontmatter, read } from "./helpers/text";
@@ -584,9 +585,9 @@ describe("worktree-first pipeline", () => {
   }
 
   // ---- Slice 4: hook shared-region byte-identity --------------------------
-  // Locks the Slice 2 invariant. Extract the shared region from each hook —
-  // from the `const ID_RE` line up to (not including) `async function main(` —
-  // and assert the two extracted substrings are === equal.
+  // Locks the Slice 2 invariant. Extract the shared region from each recovery
+  // copy — from the `const ID_RE` line up to (not including) `async function
+  // main(` — and assert every extracted substring is === equal.
   function sharedRegion(src: string): string {
     const start = src.indexOf("const ID_RE");
     const end = src.indexOf("async function main(");
@@ -596,10 +597,62 @@ describe("worktree-first pipeline", () => {
     return src.slice(start, end);
   }
 
-  test("hooks share a byte-identical inference region", () => {
-    const a = sharedRegion(read(join(REPO_ROOT, "hooks", "session-start-recover.mjs")));
-    const b = sharedRegion(read(join(REPO_ROOT, "hooks", "pre-compact-anchor.mjs")));
-    expect(a).toBe(b);
+  const RECOVERY_COPIES = [
+    join("hooks", "session-start-recover.mjs"),
+    join("hooks", "pre-compact-anchor.mjs"),
+    join("hooks", "codex", "session-start-recover.mjs"),
+    join("hooks", "codex", "pre-compact-anchor.mjs"),
+  ];
+
+  function regionsDiffer(files: string[]): boolean {
+    const regions = files.map((file) => sharedRegion(read(file)));
+    return new Set(regions).size !== 1;
+  }
+
+  const RECOVERY_FILES = RECOVERY_COPIES.map((path) => join(REPO_ROOT, path));
+
+  test("all four recovery copies share a byte-identical inference region", () => {
+    expect(RECOVERY_FILES.every((file) => sharedRegion(read(file)).length > 0)).toBe(true);
+    expect(regionsDiffer(RECOVERY_FILES)).toBe(false);
+  });
+
+  // Planted-drift positive: mutate one copy's region in a temp file and prove
+  // the same comparison reports a mismatch. A clean result from a check that
+  // cannot fail says nothing.
+  test("the byte-identity check catches planted drift", () => {
+    const drift = mkdtempSync(join(tmpdir(), `team-drift-${process.pid}-`));
+    try {
+      const source = read(RECOVERY_FILES[0]!);
+      const region = sharedRegion(source);
+      writeFileSync(join(drift, "drifted.mjs"), source.replace(region, region.replace("const ID_RE", "const ID_RE_DRIFTED")));
+      const regions = [
+        ...RECOVERY_FILES.slice(1),
+        join(drift, "drifted.mjs"),
+      ];
+      expect(regionsDiffer(regions)).toBe(true);
+    } finally {
+      rmSync(drift, { recursive: true, force: true });
+    }
+  });
+
+  test("Codex registers the recovery hooks and the manifest points at the config", () => {
+    // Codex's `HooksFile` wraps the event map in a top-level `hooks` object
+    // (codex-rs/config/src/hook_config.rs), unlike Claude's inline event map.
+    const file = JSON.parse(read(join(REPO_ROOT, "hooks", "hooks.json")));
+    expect(file.hooks.SessionStart[0].hooks[0].command).toContain("hooks/codex/session-start-recover.mjs");
+    expect(file.hooks.PreCompact[0].hooks[0].command).toContain("hooks/codex/pre-compact-anchor.mjs");
+    // Every Codex command must resolve through the plugin root, never cwd. A
+    // user project shipping its own hooks/codex/*.mjs must not be executed.
+    const commands = Object.values(file.hooks)
+      .flatMap((entries: unknown) => entries as { hooks: { command: string }[] }[])
+      .flatMap((entry) => entry.hooks.map((hook) => hook.command));
+    expect(commands.length).toBeGreaterThan(0);
+    for (const command of commands) {
+      expect(command).toContain("${PLUGIN_ROOT}/hooks/");
+      expect(command).not.toMatch(/^node hooks\//);
+    }
+    const manifest = JSON.parse(read(join(REPO_ROOT, ".codex-plugin", "plugin.json")));
+    expect(manifest.hooks).toBe("./hooks/hooks.json");
   });
 
   // ---- Slice 5: registry WORKTREE-first -----------------------------------

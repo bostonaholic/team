@@ -51,6 +51,7 @@ function installation(): Fixture & { installed: string } {
   mkdirSync(installed, { recursive: true });
   cpSync(join(item.checkout, "skills"), join(installed, "skills"), { recursive: true });
   cpSync(join(item.checkout, "opencode"), join(installed, "opencode"), { recursive: true });
+  cpSync(join(item.checkout, "hooks"), join(installed, "hooks"), { recursive: true });
   return { ...item, installed };
 }
 
