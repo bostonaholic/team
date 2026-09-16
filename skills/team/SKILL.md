@@ -86,5 +86,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 ## Applied principles
 
 Read and apply: [focused work rules](principles/focused-work.md), [verified results rules](principles/verified-results.md),
-[durable state rules](principles/durable-state.md), and
+[durable state rules](principles/durable-state.md), [boil the ocean rules](principles/boil-the-ocean.md), and
 [execution rules](references/execution.md).

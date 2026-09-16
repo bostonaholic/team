@@ -8,8 +8,8 @@ import { loadedSkills, skillNames } from "./helpers/skill-refs";
 
 const ROOT = resolve(import.meta.dir, "..");
 const PRINCIPLES = [
-  "durable-state.md", "focused-work.md", "human-control.md",
-  "independent-review.md", "verified-results.md",
+  "boil-the-ocean.md", "durable-state.md", "focused-work.md",
+  "human-control.md", "independent-review.md", "verified-results.md",
 ];
 const RESOURCES = [...new Set([...contract.dispositions.map(({ destination }) => destination), ...contract.resources])];
 const fixtures: Fixture[] = [];
@@ -66,7 +66,7 @@ describe("Principle disposition", () => {
     expect(config.command?.team).toBeDefined();
   });
 
-  test("exactly five ordinary principle documents remain", () => {
+  test("exactly six ordinary principle documents remain", () => {
     expect(principleFiles()).toEqual(PRINCIPLES);
   });
 

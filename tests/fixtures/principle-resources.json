@@ -99,6 +99,7 @@
   ],
   "resources": [
     "skills/principle-fix-root-causes/SKILL.md",
+    "skills/team/principles/boil-the-ocean.md",
     "skills/team-fix/playbooks/bug-fix.md"
   ],
   "callers": [
@@ -118,6 +119,7 @@
     {
       "path": "agents/implementer.md",
       "destinations": [
+        "skills/team/principles/boil-the-ocean.md",
         "skills/team/references/execution.md"
       ]
     },
@@ -519,6 +521,7 @@
     {
       "path": "skills/team/SKILL.md",
       "destinations": [
+        "skills/team/principles/boil-the-ocean.md",
         "skills/team/principles/durable-state.md",
         "skills/team/principles/focused-work.md",
         "skills/team/principles/verified-results.md",
@@ -680,6 +683,7 @@
       "path": "skills/team/playbooks/implement.md",
       "destinations": [
         "skills/team-fix/playbooks/bug-fix.md",
+        "skills/team/principles/boil-the-ocean.md",
         "skills/team/principles/focused-work.md",
         "skills/team/principles/human-control.md",
         "skills/team/principles/verified-results.md"

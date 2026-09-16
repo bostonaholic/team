@@ -75,6 +75,7 @@ Then run the full suite, resolve every failure type from the round, and report e
 ### TDD and scope invariants
 
 - Write only minimal code exercised by the current slice's tests. Do not preempt later slices; do not optimize/refactor before green. Stop if code has no test.
+- Apply [boil the ocean rules](principles/boil-the-ocean.md): finish the authorized slice completely, with the cause fixed, tests passing, and behavior documented, and no dangling thread left behind.
 - Apply [focused work rules](principles/focused-work.md): remove what the slice replaces before adding its replacement, and add no guard its tests do not exercise.
 - Apply [human control rules](principles/human-control.md): the plan authorizes exactly its named changes. Do NOT change acceptance tests or invent files/directories absent from the plan. Record concerns but satisfy tests as written.
 

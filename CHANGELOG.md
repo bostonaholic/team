@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.119.0] - 2026-09-16
+
+### Added
+
+- **A sixth shared principle, `boil-the-ocean`, makes completeness part of the implement contract.** The marginal cost of completeness is near zero, so the implementer and the `team` orchestrator now read a rule set that forbids the partial solve: fix the cause, not the symptom; ship tests and docs, not just compiling code; return the finished product, not a plan to finish it. Completeness is scoped to the authorized work, so adjacent defects and unapproved features are still recorded rather than folded in. **What this asks of you:** nothing.
+
 ## [0.118.0] - 2026-09-15
 
 ### Added
@@ -1067,7 +1073,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.118.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.119.0...HEAD
+[0.119.0]: https://github.com/bostonaholic/team/compare/v0.118.0...v0.119.0
 [0.118.0]: https://github.com/bostonaholic/team/compare/v0.117.0...v0.118.0
 [0.117.0]: https://github.com/bostonaholic/team/compare/v0.116.0...v0.117.0
 [0.116.0]: https://github.com/bostonaholic/team/compare/v0.115.0...v0.116.0

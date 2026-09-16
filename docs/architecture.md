@@ -740,7 +740,7 @@ path's rename-detection, and it is strictly stronger — it catches a rename
 *and* a typo, where a path assertion only ever confirmed a string was
 present. `skills/git-commmit/SKILL.md` passed the old check.
 
-Shared principles use five ordinary documents under `skills/team/principles/`. Artifact and operational rules use scoped references, outside registration.
+Shared principles use six ordinary documents under `skills/team/principles/`. Artifact and operational rules use scoped references, outside registration.
 Consumers explicitly read their installed paths before work; missing files stop the consuming operation with the resolved path.
 The [dispatch contract](https://github.com/bostonaholic/team/blob/main/skills/team/references/15-host-dispatch.md) supplies definition and resource paths for named, body-loaded, and standalone agents.
 
@@ -925,7 +925,7 @@ entry points. Descriptions are at most 200 characters, or 150 for methodology.
    that is only meaningful inside one consumer's procedure, a
    **procedure fragment**, stays inline in that consumer.
 
-3. **Shared principles:** five ordinary documents define human control, durable state, verified results, independent review, and focused work.
+3. **Shared principles:** six ordinary documents define human control, durable state, verified results, independent review, focused work, and boil the ocean.
    Execution, external-data, decisions, and bug-fix resources own the remaining operational rules.
    Question, Research, Design, Structure, Plan, and Implement procedures live in playbooks with shared templates and dependency, testing, and diagnosis references.
    Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
