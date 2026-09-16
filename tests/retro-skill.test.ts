@@ -28,6 +28,7 @@
 // (docs/testing.md, "Prove a negative check can find a positive").
 
 import { afterAll, describe, expect, test } from "bun:test";
+import { spawnSync } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -40,6 +41,8 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { pathToFileURL } from "node:url";
 
 import { frontmatter, read } from "./helpers/text";
 import {
@@ -48,7 +51,9 @@ import {
   PER_SPAN_BYTE_CAP,
   detectHost,
   isUserTurn,
+  normalizeOpencode,
   normalizeTranscript,
+  resolveOpencodeSession,
   resolveSession,
   resolveTranscript,
   storeRootFor,
@@ -633,10 +638,12 @@ describe("Slice 1 — L1: the session id the host exported resolves the transcri
   });
 
   test("a host retro cannot read is a named failure, never a resolved transcript", () => {
+    // OpenCode is no longer in this set — it resolves through the SQLite host
+    // covered under "Slice 1 — L1: OpenCode host detection and store root".
+    // Cursor Agent and the empty-candidate case stay unsupported.
     const store = tree("unsupported", { "sessions/whatever.jsonl": jsonl(userPrompt("hi")) });
 
     expect(resolveIn("cursor-agent", store, { marker: "/tmp/x" }).failure).toBe("unsupported-host");
-    expect(resolveIn("opencode", store, { marker: "/tmp/x" }).failure).toBe("unsupported-host");
     expect(resolveTranscript({ host: null, storeRoot: store, marker: "/tmp/x" }).failure).toBe("unsupported-host");
   });
 });
@@ -1577,5 +1584,692 @@ describe("Slice 3 — L2: retro files demoted findings to whatever tracker the r
     expect((text.match(/disqualified/g) ?? []).length).toBeGreaterThanOrEqual(2);
     expect(text).toContain("run cache path");
     expect(text).toContain("plan file");
+  });
+});
+
+// ===========================================================================
+// OpenCode (SQLite) fixtures. Same temp-dir discipline as the JSONL fixtures:
+// every store is synthetic, built at test time, and removed by the shared
+// afterAll. Schema, column names, and the JSON shapes mirror the observed
+// OpenCode 1.18.29 tables in 1-task.md.
+// ===========================================================================
+
+const RESOLVER = join(REPO_ROOT, "skills", "retro", "resources", "resolve-transcript.mjs");
+
+type OpencodePart = { id: string; data: string };
+type OpencodeMessage = { id: string; data: string; timeCreated?: number; parts: OpencodePart[] };
+type OpencodeSession = { id: string; parentId?: string | null; directory?: string | null; messages: OpencodeMessage[] };
+
+function opencodeStore(label: string, sessions: OpencodeSession[]): string {
+  const dbPath = join(scratch(label), "opencode.db");
+  const db = new DatabaseSync(dbPath);
+  db.exec(
+    "CREATE TABLE session (id TEXT PRIMARY KEY, parent_id TEXT, directory TEXT, time_created INTEGER, time_updated INTEGER, time_archived INTEGER)",
+  );
+  db.exec(
+    "CREATE TABLE message (id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, time_updated INTEGER, data TEXT)",
+  );
+  db.exec(
+    "CREATE TABLE part (id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT, time_created INTEGER, time_updated INTEGER, data TEXT)",
+  );
+  const addSession = db.prepare("INSERT INTO session VALUES (?, ?, ?, ?, ?, ?)");
+  const addMessage = db.prepare("INSERT INTO message VALUES (?, ?, ?, ?, ?)");
+  const addPart = db.prepare("INSERT INTO part VALUES (?, ?, ?, ?, ?, ?)");
+  // Message and part ids are unique per database and `time_created` increases
+  // with insertion order, so the resolver's `(time_created, id)` ordering
+  // reproduces the order a test declared regardless of the id strings.
+  let sequence = 0;
+  // One explicit transaction for the whole fixture: autocommit fsyncs per row,
+  // which makes the multi-thousand-message ceiling fixture slow enough to time
+  // out on a slow CI runner.
+  db.exec("BEGIN");
+  for (const session of sessions) {
+    addSession.run(session.id, session.parentId ?? null, session.directory ?? null, 1, 1, null);
+    for (const message of session.messages) {
+      const createdAt = message.timeCreated ?? sequence;
+      const messageId = `${message.id}@${sequence}`;
+      addMessage.run(messageId, session.id, createdAt, createdAt, message.data);
+      for (const part of message.parts) {
+        addPart.run(`${part.id}@${sequence}`, messageId, session.id, createdAt, createdAt, part.data);
+      }
+      sequence += 1;
+    }
+  }
+  db.exec("COMMIT");
+  db.close();
+  return dbPath;
+}
+
+// A store whose named tables carry exactly these column lists, for the schema
+// failure cases. `tables` is table name -> column definitions.
+function opencodeStoreWithSchema(label: string, tables: Record<string, string>): string {
+  const dbPath = join(scratch(label), "opencode.db");
+  const db = new DatabaseSync(dbPath);
+  for (const [name, columns] of Object.entries(tables)) db.exec(`CREATE TABLE ${name} (${columns})`);
+  db.close();
+  return dbPath;
+}
+
+const messageData = (role: string) => JSON.stringify({ role, modelID: "claude-sonnet-4", providerID: "anthropic" });
+const textPart = (text: string) => JSON.stringify({ type: "text", text });
+const toolPart = (tool: string, input: unknown) =>
+  JSON.stringify({ type: "tool", tool, callID: "call_1", state: { status: "completed", input } });
+const reasoningPart = () => JSON.stringify({ type: "reasoning", text: "thinking" });
+const stepStartPart = () => JSON.stringify({ type: "step-start" });
+const stepFinishPart = () => JSON.stringify({ type: "step-finish" });
+const patchPart = () => JSON.stringify({ type: "patch", hash: "deadbeef" });
+
+const userMessage = (parts: OpencodePart[], id = "msg_user"): OpencodeMessage => ({
+  id,
+  data: messageData("user"),
+  parts,
+});
+const assistantMessage = (parts: OpencodePart[], id = "msg_assistant"): OpencodeMessage => ({
+  id,
+  data: messageData("assistant"),
+  parts,
+});
+const childlessSession = (
+  id: string,
+  messages: OpencodeMessage[],
+  directory: string | null = "/w/repo",
+): OpencodeSession => ({ id, parentId: null, directory, messages });
+
+// A session of `count` assistant messages, each holding one text part.
+function opencodeMessageStream(id: string, count: number, spanText: string): OpencodeSession {
+  const messages = Array.from({ length: count }, (_, index) =>
+    assistantMessage([{ id: `prt_${index}`, data: textPart(spanText) }], `msg_${index}`),
+  );
+  return childlessSession(id, messages);
+}
+
+// ===========================================================================
+// Slice 1 — L1: OpenCode host detection and store root
+// ===========================================================================
+
+describe("Slice 1 — L1: OpenCode host detection and store root", () => {
+  test("detectHost names the OpenCode host with no exported session id", () => {
+    expect(detectHost({ OPENCODE: "1" })).toEqual([{ host: "opencode", sessionId: null }]);
+  });
+
+  test("storeRootFor returns OPENCODE_DB when the host sets it", () => {
+    expect(storeRootFor("opencode", { HOME: "/home/dev", OPENCODE_DB: "/custom/opencode.db" })).toBe(
+      "/custom/opencode.db",
+    );
+  });
+
+  test("storeRootFor falls back to XDG_DATA_HOME, then the home default", () => {
+    expect(storeRootFor("opencode", { HOME: "/home/dev", XDG_DATA_HOME: "/home/dev/.local/share/xdg" })).toBe(
+      join("/home/dev/.local/share/xdg", "opencode", "opencode.db"),
+    );
+    expect(storeRootFor("opencode", { HOME: "/home/dev" })).toBe(
+      join("/home/dev", ".local", "share", "opencode", "opencode.db"),
+    );
+  });
+
+  test("resolveTranscript routes an OpenCode host through the sqlite resolver", () => {
+    const marker = "/tmp/retro.opencode.dispatch";
+    const dbPath = opencodeStore("opencode-dispatch", [
+      childlessSession("ses_dispatch000001", [
+        userMessage([{ id: "prt_1", data: textPart(`run cache: ${marker}`) }]),
+      ]),
+    ]);
+
+    const result = resolveTranscript({ host: "opencode", storeRoot: dbPath, marker, retryDelayMs: 0 });
+
+    expect(result.ok).toBe(true);
+    expect(result.host).toBe("opencode");
+    expect(result.via).toBe("marker");
+    expect(result.sessionId).toBe("ses_dispatch000001");
+    expect(result.path).toBeUndefined();
+  });
+});
+
+// ===========================================================================
+// Slice 1 — L1: resolveOpencodeSession resolves and names failures
+// ===========================================================================
+
+describe("Slice 1 — L1: resolveOpencodeSession resolves and names failures", () => {
+  test("one childless session carrying the marker resolves", () => {
+    const marker = "/tmp/retro.opencode.unique";
+    const dbPath = opencodeStore("opencode-unique", [
+      childlessSession("ses_unique0000001", [
+        userMessage([{ id: "prt_1", data: textPart(`run cache: ${marker}`) }]),
+      ]),
+      childlessSession("ses_other00000002", [userMessage([{ id: "prt_2", data: textPart("unrelated work") }])]),
+    ]);
+
+    const result = resolveOpencodeSession({ dbPath, marker, retryDelayMs: 0 });
+
+    expect(result.ok).toBe(true);
+    expect(result.host).toBe("opencode");
+    expect(result.via).toBe("marker");
+    expect(result.sessionId).toBe("ses_unique0000001");
+  });
+
+  test("a duplicate marker in another directory refuses as ambiguous-session", () => {
+    const marker = "/tmp/retro.opencode.dup";
+    const dbPath = opencodeStore("opencode-ambiguous", [
+      childlessSession(
+        "ses_first00000001",
+        [userMessage([{ id: "prt_1", data: textPart(`run cache: ${marker}`) }])],
+        "/w/one",
+      ),
+      childlessSession(
+        "ses_second00000002",
+        [userMessage([{ id: "prt_2", data: textPart(`run cache: ${marker}`) }])],
+        "/w/two",
+      ),
+    ]);
+
+    const result = resolveOpencodeSession({ dbPath, marker, retryDelayMs: 0 });
+
+    expect(result.failure).toBe("ambiguous-session");
+    expect((result.tried ?? []).join(" ")).toContain("ses_first00000001");
+    expect((result.tried ?? []).join(" ")).toContain("ses_second00000002");
+  });
+
+  test("a duplicate marker in a session the transform hook never touched also refuses", () => {
+    // The marker is the only uniqueness guarantee: a second childless session
+    // that recorded it, even one the transform hook never ran in, is still a
+    // duplicate the run must refuse rather than pick the matched one.
+    const marker = "/tmp/retro.opencode.dup.hookless";
+    const dbPath = opencodeStore("opencode-ambiguous-hookless", [
+      childlessSession(
+        "ses_live0000000001",
+        [userMessage([{ id: "prt_1", data: textPart(`run cache: ${marker}`) }])],
+        "/w/repo",
+      ),
+      childlessSession(
+        "ses_stale00000002",
+        [userMessage([{ id: "prt_2", data: textPart(`run cache: ${marker}`) }])],
+        null,
+      ),
+    ]);
+
+    expect(resolveOpencodeSession({ dbPath, marker, retryDelayMs: 0 }).failure).toBe("ambiguous-session");
+  });
+
+  test("a marker in no childless session is no-match after the retry", () => {
+    const dbPath = opencodeStore("opencode-no-match", [
+      childlessSession("ses_none000000001", [userMessage([{ id: "prt_1", data: textPart("other work") }])]),
+    ]);
+
+    expect(resolveOpencodeSession({ dbPath, marker: "/tmp/retro.absent", retryDelayMs: 0 }).failure).toBe("no-match");
+  });
+
+  test("an empty marker is no-match, never every session", () => {
+    // `instr(X, '')` matches every row, so without this guard an empty marker
+    // would resolve one arbitrary childless session.
+    const dbPath = opencodeStore("opencode-empty-marker", [
+      childlessSession("ses_any0000000001", [userMessage([{ id: "prt_1", data: textPart("anything") }])]),
+    ]);
+
+    expect(resolveOpencodeSession({ dbPath, marker: "", retryDelayMs: 0 }).failure).toBe("no-match");
+  });
+
+  test("a missing store is no-session-store before the empty-marker guard", () => {
+    // Guard order matches resolveTranscript: the store path is checked first,
+    // so a missing store reports the path it tried, not "no-match" for a marker
+    // that was never searched.
+    const missing = join(scratch("opencode-missing"), "absent.db");
+
+    const result = resolveOpencodeSession({ dbPath: missing, marker: "", retryDelayMs: 0 });
+
+    expect(result.failure).toBe("no-session-store");
+    expect((result.tried ?? []).join(" ")).toContain(missing);
+  });
+
+  test("a child session carrying the marker is never the match", () => {
+    const marker = "/tmp/retro.opencode.child";
+    const siblingMarker = "/tmp/retro.opencode.sibling";
+    const dbPath = opencodeStore("opencode-child", [
+      childlessSession("ses_root0000000001", [userMessage([{ id: "prt_root", data: textPart("the parent turn") }])]),
+      {
+        id: "ses_child0000000002",
+        parentId: "ses_root0000000001",
+        directory: "/w/repo",
+        messages: [userMessage([{ id: "prt_child", data: textPart(`run cache: ${marker}`) }])],
+      },
+      childlessSession("ses_sibling0000003", [
+        userMessage([{ id: "prt_sibling", data: textPart(`run cache: ${siblingMarker}`) }]),
+      ]),
+    ]);
+
+    // Positive control: the sibling marker resolves in the same store, so a
+    // resolver that matches nothing cannot pass the child exclusion below.
+    expect(resolveOpencodeSession({ dbPath, marker: siblingMarker, retryDelayMs: 0 }).ok).toBe(true);
+    expect(resolveOpencodeSession({ dbPath, marker, retryDelayMs: 0 }).failure).toBe("no-match");
+  });
+
+  test("a store missing a required table is unreadable-session-store", () => {
+    const dbPath = opencodeStoreWithSchema("opencode-no-part-table", {
+      session: "id TEXT PRIMARY KEY, parent_id TEXT",
+      message: "id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT",
+    });
+
+    expect(resolveOpencodeSession({ dbPath, marker: "/tmp/x", retryDelayMs: 0 }).failure).toBe(
+      "unreadable-session-store",
+    );
+  });
+
+  test("a session table missing parent_id is unreadable-session-store", () => {
+    const dbPath = opencodeStoreWithSchema("opencode-no-parent-id", {
+      session: "id TEXT PRIMARY KEY, directory TEXT",
+      message: "id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT",
+      part: "id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT, time_created INTEGER, data TEXT",
+    });
+
+    expect(resolveOpencodeSession({ dbPath, marker: "/tmp/x", retryDelayMs: 0 }).failure).toBe(
+      "unreadable-session-store",
+    );
+  });
+
+  test("a message table missing data is unreadable-session-store", () => {
+    const dbPath = opencodeStoreWithSchema("opencode-no-message-data", {
+      session: "id TEXT PRIMARY KEY, parent_id TEXT",
+      message: "id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER",
+      part: "id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT, time_created INTEGER, data TEXT",
+    });
+
+    expect(resolveOpencodeSession({ dbPath, marker: "/tmp/x", retryDelayMs: 0 }).failure).toBe(
+      "unreadable-session-store",
+    );
+  });
+
+  test("a part table missing data is unreadable-session-store", () => {
+    const dbPath = opencodeStoreWithSchema("opencode-no-part-data", {
+      session: "id TEXT PRIMARY KEY, parent_id TEXT",
+      message: "id TEXT PRIMARY KEY, session_id TEXT, time_created INTEGER, data TEXT",
+      part: "id TEXT PRIMARY KEY, message_id TEXT, session_id TEXT, time_created INTEGER",
+    });
+
+    expect(resolveOpencodeSession({ dbPath, marker: "/tmp/x", retryDelayMs: 0 }).failure).toBe(
+      "unreadable-session-store",
+    );
+  });
+
+  test("a store that is not a database is unreadable-session-store", () => {
+    const dbPath = join(scratch("opencode-garbage"), "opencode.db");
+    writeFileSync(dbPath, "this is not a sqlite database", "utf8");
+
+    expect(resolveOpencodeSession({ dbPath, marker: "/tmp/x", retryDelayMs: 0 }).failure).toBe(
+      "unreadable-session-store",
+    );
+  });
+
+  test("a matched session id that is not a session id shape is unreadable-session-store", () => {
+    const marker = "/tmp/retro.opencode.badid";
+    const dbPath = opencodeStore("opencode-bad-id", [
+      {
+        id: "bad id",
+        parentId: null,
+        directory: "/w/repo",
+        messages: [userMessage([{ id: "prt_1", data: textPart(`run cache: ${marker}`) }])],
+      },
+    ]);
+
+    expect(resolveOpencodeSession({ dbPath, marker, retryDelayMs: 0 }).failure).toBe("unreadable-session-store");
+  });
+
+  test("a node:sqlite that cannot load is sqlite-unavailable", () => {
+    // node:sqlite is a built-in, so the only faithful way to reproduce its
+    // absence is Node's own disable flag in a child process. A mock.module
+    // would not intercept the resolver's createRequire.
+    const marker = "/tmp/retro.opencode.no-sqlite";
+    const dbPath = opencodeStore("opencode-no-sqlite", [
+      childlessSession("ses_nosqlite000001", [
+        userMessage([{ id: "prt_1", data: textPart(`run cache: ${marker}`) }]),
+      ]),
+    ]);
+    const script =
+      "import(process.env.RESOLVER).then((m) => { process.stdout.write(JSON.stringify(m.resolveOpencodeSession({ dbPath: process.env.DB, marker: process.env.MARKER, retryDelayMs: 0 }))); }).catch((error) => { process.stdout.write(String(error && error.message)); });";
+
+    const result = spawnSync("node", ["--no-experimental-sqlite", "--input-type=module", "-e", script], {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        RESOLVER: pathToFileURL(RESOLVER).href,
+        DB: dbPath,
+        MARKER: marker,
+      },
+    });
+
+    expect(result.stdout).toContain("sqlite-unavailable");
+  });
+});
+
+// ===========================================================================
+// Slice 1 — L1: normalizeOpencode maps a session into the record stream
+// ===========================================================================
+
+describe("Slice 1 — L1: normalizeOpencode maps a session into the record stream", () => {
+  test("a message's role routes it to the same user/assistant record shape", () => {
+    const dbPath = opencodeStore("opencode-roles", [
+      childlessSession("ses_roles00000001", [
+        userMessage([{ id: "prt_1", data: textPart("retro on this session") }]),
+        assistantMessage([{ id: "prt_2", data: textPart("every check is green") }]),
+      ]),
+    ]);
+
+    const normalized = normalizeOpencode({ dbPath, sessionId: "ses_roles00000001" });
+
+    expect(normalized.format).toBe("opencode");
+    expect(normalized.records.map((record) => record.type)).toEqual(["user", "assistant"]);
+    expect(normalized.records[0]?.isUserTurn).toBe(true);
+  });
+
+  test("a text part becomes the record's span text", () => {
+    const dbPath = opencodeStore("opencode-text", [
+      childlessSession("ses_text000000001", [
+        userMessage([{ id: "prt_1", data: textPart("retro on this session") }]),
+      ]),
+    ]);
+
+    const normalized = normalizeOpencode({ dbPath, sessionId: "ses_text000000001" });
+
+    expect(normalized.records[0]?.text).toBe("retro on this session");
+  });
+
+  test("a tool part keeps the tool name and its invocation", () => {
+    const dbPath = opencodeStore("opencode-tool", [
+      childlessSession("ses_tool000000001", [
+        assistantMessage([{ id: "prt_1", data: toolPart("bash", { command: "bun test" }) }]),
+      ]),
+    ]);
+
+    const normalized = normalizeOpencode({ dbPath, sessionId: "ses_tool000000001" });
+    const text = normalized.records[0]?.text ?? "";
+
+    expect(text).toContain("bash");
+    expect(text).toContain("bun test");
+  });
+
+  test("reasoning, step, patch, and unlisted parts are dropped and counted per type", () => {
+    const dbPath = opencodeStore("opencode-dropped-parts", [
+      childlessSession("ses_parts000000001", [
+        assistantMessage([
+          { id: "prt_1", data: reasoningPart() },
+          { id: "prt_2", data: textPart("the answer") },
+          { id: "prt_3", data: stepStartPart() },
+          { id: "prt_4", data: stepFinishPart() },
+          { id: "prt_5", data: patchPart() },
+          { id: "prt_6", data: JSON.stringify({ type: "snapshot" }) },
+        ]),
+      ]),
+    ]);
+
+    const normalized = normalizeOpencode({ dbPath, sessionId: "ses_parts000000001" });
+
+    expect(normalized.droppedByType).toEqual({
+      "part:reasoning": 1,
+      "part:step-start": 1,
+      "part:step-finish": 1,
+      "part:patch": 1,
+      "part:snapshot": 1,
+    });
+    expect(normalized.records.length).toBe(1);
+    expect(normalized.records[0]?.text).toBe("the answer");
+  });
+
+  test("a user message carrying a host injection is not a user turn", () => {
+    const dbPath = opencodeStore("opencode-injection", [
+      childlessSession("ses_inject00000001", [
+        userMessage([{ id: "prt_1", data: textPart("retro on this session") }], "msg_prompt"),
+        userMessage(
+          [{ id: "prt_2", data: textPart("<local-command-stdout>/tmp/retro-cache</local-command-stdout>") }],
+          "msg_injected",
+        ),
+      ]),
+    ]);
+
+    const normalized = normalizeOpencode({ dbPath, sessionId: "ses_inject00000001" });
+
+    expect(normalized.records[0]?.isUserTurn).toBe(true);
+    expect(normalized.records[1]?.isUserTurn).toBe(false);
+  });
+
+  test("a message whose data is not JSON drops that message and the session continues", () => {
+    const dbPath = opencodeStore("opencode-malformed-message", [
+      childlessSession("ses_malmsg0000001", [
+        { id: "msg_bad", data: "{not json", parts: [{ id: "prt_1", data: textPart("lost") }] },
+        userMessage([{ id: "prt_2", data: textPart("retro on this session") }], "msg_good"),
+      ]),
+    ]);
+
+    const normalized = normalizeOpencode({ dbPath, sessionId: "ses_malmsg0000001" });
+
+    expect(normalized.malformedLines).toBe(1);
+    expect(normalized.records.length).toBe(1);
+    expect(normalized.records[0]?.text).toBe("retro on this session");
+  });
+
+  test("a part whose data is not JSON drops that part and counts it malformed", () => {
+    const dbPath = opencodeStore("opencode-malformed-part", [
+      childlessSession("ses_malpart0000001", [
+        userMessage(
+          [
+            { id: "prt_ok", data: textPart("kept") },
+            { id: "prt_bad", data: "{not json" },
+          ],
+          "msg_user",
+        ),
+      ]),
+    ]);
+
+    const normalized = normalizeOpencode({ dbPath, sessionId: "ses_malpart0000001" });
+
+    expect(normalized.malformedLines).toBe(1);
+    expect(normalized.records.length).toBe(1);
+    expect(normalized.records[0]?.text).toBe("kept");
+  });
+
+  test("a long text followed by a tool part loses the tool part at the span cap", () => {
+    const dbPath = opencodeStore("opencode-joined-cap", [
+      childlessSession("ses_joincap00000001", [
+        assistantMessage([
+          { id: "prt_text", data: textPart("y".repeat(5000)) },
+          { id: "prt_tool", data: toolPart("bash", { command: "bun test" }) },
+        ]),
+      ]),
+    ]);
+
+    const normalized = normalizeOpencode({ dbPath, sessionId: "ses_joincap00000001" });
+    const text = normalized.records[0]?.text ?? "";
+
+    expect(text.length).toBe(PER_SPAN_BYTE_CAP);
+    expect(text).not.toContain("bash");
+    expect(normalized.truncatedSpans).toBe(1);
+  });
+
+  test("a session past 2,000 messages keeps the newest and reports the drop", () => {
+    const dbPath = opencodeStore("opencode-record-ceiling", [
+      opencodeMessageStream("ses_ceiling0000001", MAX_RECORDS + 1, "turn"),
+    ]);
+
+    const normalized = normalizeOpencode({ dbPath, sessionId: "ses_ceiling0000001" });
+
+    expect(normalized.records.length).toBe(MAX_RECORDS);
+    expect(normalized.droppedForCeiling).toBe(1);
+  });
+
+  test("a session past 4 MB is bounded to the byte ceiling and reports the drop", () => {
+    const dbPath = opencodeStore("opencode-byte-ceiling", [
+      opencodeMessageStream("ses_bytes000000001", 1500, "y".repeat(4000)),
+    ]);
+
+    const normalized = normalizeOpencode({ dbPath, sessionId: "ses_bytes000000001" });
+
+    expect(normalized.droppedForCeiling).toBeGreaterThan(0);
+    expect(totalSpanBytes(normalized.records)).toBeLessThanOrEqual(MAX_TOTAL_BYTES);
+  });
+
+  test("the CLI writes transcript.jsonl for an OpenCode run with no unsupported-host", () => {
+    // L3 subprocess: the CLI is the surface the skill body actually runs, and
+    // its OpenCode branch skips readFileSync in favor of normalizeOpencode.
+    const runDir = scratch("opencode-cli-run");
+    const dbPath = opencodeStore("opencode-cli", [
+      childlessSession("ses_cli00000000001", [
+        userMessage([{ id: "prt_1", data: textPart(`run cache: ${runDir}`) }]),
+      ]),
+    ]);
+
+    const result = spawnSync("node", [RESOLVER, runDir, dbPath], {
+      encoding: "utf8",
+      env: { ...process.env, OPENCODE: "1", OPENCODE_DB: dbPath },
+    });
+
+    expect(result.stderr).not.toContain("unsupported-host");
+    expect(result.stdout).toContain("host: opencode");
+    expect(result.stdout).toContain("format: opencode");
+    expect(existsSync(join(runDir, "transcript.jsonl"))).toBe(true);
+  });
+});
+
+// ===========================================================================
+// Slice 2 — L1: the two-host tie-break with an OpenCode candidate
+// ===========================================================================
+
+describe("Slice 2 — L1: the two-host tie-break with an OpenCode candidate", () => {
+  const codexId = "01a07c7b-16e9-73a2-8f5b-7638fd286088";
+
+  function codexStore(label: string, marker: string, carriesMarker: boolean): string {
+    const output = carriesMarker
+      ? [codexToolOutput(`run cache: ${marker}`)]
+      : [];
+    return tree(label, {
+      [rolloutPath(codexId)]: jsonl(codexMeta(codexId), codexUser("retro on this session"), ...output),
+    });
+  }
+
+  test("a duplicate OpenCode marker stops the tie even when a Codex transcript resolves", () => {
+    const marker = "/tmp/retro.tie.opencode.dup";
+    const opencodeDb = opencodeStore("tie-opencode-dup", [
+      childlessSession(
+        "ses_tiedup00000001",
+        [userMessage([{ id: "prt_1", data: textPart(`run cache: ${marker}`) }])],
+        "/w/one",
+      ),
+      childlessSession(
+        "ses_tiedup00000002",
+        [userMessage([{ id: "prt_2", data: textPart(`run cache: ${marker}`) }])],
+        "/w/two",
+      ),
+    ]);
+    const codexRoot = codexStore("tie-codex-sibling", marker, true);
+    const candidates = [
+      { host: "opencode", sessionId: null },
+      { host: "codex", sessionId: codexId },
+    ] as const;
+    const storeRootOf = (host: string) => (host === "opencode" ? opencodeDb : codexRoot);
+
+    const result = resolveSession({ candidates, storeRootOf, marker, retryDelayMs: 0 });
+
+    expect(result.failure).toBe("ambiguous-session");
+  });
+
+  test("OpenCode store failures and a malformed inherited Claude id leave Codex resolving", () => {
+    const marker = "/tmp/retro.tie.codex.wins";
+    const codexRoot = codexStore("tie-codex-wins", marker, true);
+    const missingDb = join(scratch("tie-opencode-missing"), "absent.db");
+    // A process carrying all three: an unreadable OpenCode store, a malformed
+    // inherited Claude id, and a Codex thread whose transcript records the
+    // marker. Only the store failures stay in the dropped set, so Codex still
+    // resolves exactly as it did before this feature.
+    const candidates = [
+      { host: "opencode", sessionId: null },
+      { host: "claude-code", sessionId: "../../etc/passwd" },
+      { host: "codex", sessionId: codexId },
+    ] as const;
+    const storeRootOf = (host: string) =>
+      host === "opencode" ? missingDb : host === "claude-code" ? scratch("tie-bad-claude-id") : codexRoot;
+
+    // The OpenCode candidate fails by its own name, not as unsupported-host.
+    expect(resolveTranscript({ host: "opencode", storeRoot: missingDb, marker, retryDelayMs: 0 }).failure).toBe(
+      "no-session-store",
+    );
+
+    const result = resolveSession({ candidates, storeRootOf, marker, retryDelayMs: 0 });
+
+    expect(result.ok).toBe(true);
+    expect(result.host).toBe("codex");
+  });
+
+  test("a two-candidate tie that lands on OpenCode reports via marker", () => {
+    const marker = "/tmp/retro.tie.opencode.only";
+    const opencodeDb = opencodeStore("tie-opencode-wins", [
+      childlessSession("ses_tiewin00000001", [
+        userMessage([{ id: "prt_1", data: textPart(`run cache: ${marker}`) }]),
+      ]),
+    ]);
+    // The Codex transcript resolves by session id but never recorded the
+    // marker, so only the OpenCode candidate is marker-confirmed.
+    const codexRoot = codexStore("tie-codex-no-marker", marker, false);
+    const candidates = [
+      { host: "opencode", sessionId: null },
+      { host: "codex", sessionId: codexId },
+    ] as const;
+    const storeRootOf = (host: string) => (host === "opencode" ? opencodeDb : codexRoot);
+
+    const result = resolveSession({ candidates, storeRootOf, marker, retryDelayMs: 0 });
+
+    expect(result.ok).toBe(true);
+    expect(result.host).toBe("opencode");
+    expect(result.via).toBe("marker");
+  });
+});
+
+// ===========================================================================
+// Slice 3 — L2: the OpenCode unsupported claim is absent and pinned
+// ===========================================================================
+
+const OPENCODE_UNSUPPORTED_CLAIM = /session reflection is unsupported|cannot process OpenCode/i;
+
+const CURRENT_STATE_SURFACES = [
+  "skills/retro/SKILL.md",
+  "skills/retro/references/03-execution.md",
+  "docs/cross-host-portability.md",
+  "docs/index.md",
+  "docs/architecture.md",
+  "README.md",
+  "opencode/team.js",
+] as const;
+
+// A missing surface reads as "" so the length guard fails it rather than
+// throwing, and absence checks cannot pass on an empty haystack.
+function currentStateProse(): { path: string; text: string }[] {
+  return CURRENT_STATE_SURFACES.map((relative) => {
+    const absolute = join(REPO_ROOT, relative);
+    return { path: relative, text: existsSync(absolute) ? read(absolute) : "" };
+  });
+}
+
+// The dated release history records what shipped, so it is not a current
+// claim. Only the `[Unreleased]` block is in scope (6-design.md Decision 10).
+function changelogUnreleased(): string {
+  const path = join(REPO_ROOT, "CHANGELOG.md");
+  if (!existsSync(path)) return "";
+  const match = read(path).match(/^##\s+\[Unreleased\][\s\S]*?(?=\n##\s+\[)/m);
+  return match ? match[0] : "";
+}
+
+describe("Slice 3 — L2: no current-state surface claims OpenCode is unsupported", () => {
+  test("the OpenCode unsupported claim is absent from every current-state surface", () => {
+    const surfaces = currentStateProse();
+
+    // Length guard: a missing or emptied surface must fail here, not pass the
+    // absence check vacuously (docs/testing.md, "Prove a negative check can
+    // find a positive").
+    expect(surfaces.filter((surface) => surface.text.length === 0).map((surface) => surface.path)).toEqual([]);
+
+    // Positive control: the same matcher fires on the claim it bans, so a
+    // clean sweep distinguishes absent from blind.
+    expect(OPENCODE_UNSUPPORTED_CLAIM.test("OpenCode session reflection is unsupported.")).toBe(true);
+    expect(OPENCODE_UNSUPPORTED_CLAIM.test("`/retro` cannot process OpenCode sessions.")).toBe(true);
+
+    expect(
+      surfaces.filter((surface) => OPENCODE_UNSUPPORTED_CLAIM.test(surface.text)).map((surface) => surface.path),
+    ).toEqual([]);
+    expect(OPENCODE_UNSUPPORTED_CLAIM.test(changelogUnreleased())).toBe(false);
   });
 });

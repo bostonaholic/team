@@ -626,9 +626,8 @@ a filesystem read, resolves relative references against the canonical base, and
 supplies `$ARGUMENTS`. It embeds no skill body and sets no model or agent override.
 This preserves literal shell examples and argument references inside canonical
 skill content. Even the guarded `disable-model-invocation: true` skills appear
-in the command menu. Commands include `/retro`, whose description states that OpenCode
-session reflection is unsupported: its transcript resolver supports Claude Code
-and Codex only.
+in the command menu. Commands include `/retro`, whose transcript resolver supports
+Claude Code, Codex, and OpenCode.
 
 `disable-model-invocation: true` excludes a directory from **Team's added
 `skills.paths` only**. Other paths retain their order and exact duplicates are
@@ -683,7 +682,8 @@ their program contracts are probed; the prompt-block `.team/config.json` guard
 is a named gap. Full QRSPI execution, specialist/nested-agent dispatch,
 translated reviewer permissions, and live host-firing of the adapters remain
 unverified. No provider, credentials, model-tier translation, or model-quality
-guarantee is installed. `/retro` cannot process OpenCode sessions.
+guarantee is installed. `/retro` resolves OpenCode sessions from the host's
+SQLite store.
 
 ## Out of scope
 

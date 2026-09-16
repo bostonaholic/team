@@ -20,8 +20,9 @@ make it more than "summarize this session":
 - **It reads the session, not its own memory.** Compaction has already
   discarded the early turns from context, and those turns are where the
   corrections live. So the run resolves the session's transcript on disk and
-  works from that file — its own, identified by the id the host exported,
-  whether that host is Claude Code or Codex and whether either runs inside
+  works from that file — its own, identified by the id the host exported or,
+  where the host exports none, by the run cache path — whether that host is
+  Claude Code, Codex, or OpenCode and whether any of those runs inside
   Conductor. What the file does not carry is reported as missing, never
   filled in from memory.
 - **Three lenses, then one list.** The lenses look for different things and

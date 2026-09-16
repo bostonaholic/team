@@ -50,12 +50,14 @@ transcript's own directory level into a `subagents/` or `tool-results/` sidecar.
 **Which store it reads.** Claude Code keeps `<session-id>.jsonl` under
 `~/.claude/projects/<project-slug>/`; Codex keeps
 `rollout-<timestamp>-<thread-id>.jsonl` under
-`${CODEX_HOME:-~/.codex}/sessions/<YYYY>/<MM>/<DD>/`. **Conductor is not a
+`${CODEX_HOME:-~/.codex}/sessions/<YYYY>/<MM>/<DD>/`; OpenCode keeps its
+sessions in a SQLite database at `$OPENCODE_DB`, defaulting to
+`${XDG_DATA_HOME:-~/.local/share}/opencode/opencode.db`. **Conductor is not a
 store.** It runs Claude Code, Codex, Cursor Agent, or OpenCode inside a
 worktree, and the backend writes its transcript in its own place unchanged — so
-a Conductor session resolves as whichever backend it runs, and the two backends
-this skill cannot read fail as `unsupported-host` rather than as something
-plausible.
+a Conductor session resolves as whichever backend it runs, and Cursor Agent,
+which this skill does not read, fails as `unsupported-host` rather than as
+something plausible.
 
 **How the session is identified.** The host's own exported id first
 (`CLAUDE_CODE_SESSION_ID`, `CODEX_THREAD_ID`), which names the file directly and
@@ -70,13 +72,16 @@ Named failures stop the run instead:
 
 | Failure | What it means | What to report |
 |---------|---------------|----------------|
-| `unsupported-host` | neither supported agent exported a session id here | the host, and that retro reads Claude Code and Codex stores — Conductor through whichever of the two it runs |
+| `unsupported-host` | neither supported agent exported a session id here | the host, and that retro reads Claude Code, Codex, and OpenCode stores — Conductor through whichever of those it runs |
 | `ambiguous-host` | two agents claim this process — one is running inside the other's shell — and the marker settled neither transcript | both hosts named; no pick was made |
+| `ambiguous-session` | more than one childless OpenCode session carries this run's marker | every session id matched, and no pick |
 | `invalid-session-id` | the exported id is not a session id shape | the value seen |
 | `no-session-store` | the host records no transcripts here | the path tried |
-| `no-match` | neither the session id nor the marker reached disk after one retry | every pattern tried |
+| `no-match` | neither the session id nor the marker reached the store after one retry | every pattern tried |
 | `multiple-matches` | an invariant violation, since both signals are unique to this run | every path matched, and no pick |
-| `unsupported-format` | the resolved file holds no records any supported host writes | the path, and the unrecognized-record count |
+| `sqlite-unavailable` | this runtime cannot load the built-in `node:sqlite` module | the database path tried |
+| `unreadable-session-store` | the OpenCode store lacks a required table or column, or a read of it failed | the database path tried |
+| `unsupported-format` | the resolved store holds no records any supported host writes | the store, and the unrecognized-record count |
 
 Read the script's counts into the report: the host and whether the session was
 resolved by id or by marker, the format, records kept, records dropped per

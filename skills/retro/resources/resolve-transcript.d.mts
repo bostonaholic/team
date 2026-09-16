@@ -13,10 +13,10 @@ export const MAX_RECORDS: number;
 export const MAX_TOTAL_BYTES: number;
 
 /** The hosts whose session stores this script reads, keyed by host name. */
-export const HOSTS: Record<string, { depth: number; suffixed: boolean }>;
+export const HOSTS: Record<string, { kind: "file" | "sqlite"; depth?: number; suffixed?: boolean }>;
 
 /** A supported host's name, or null when this process is on neither. */
-export type HostName = "claude-code" | "codex";
+export type HostName = "claude-code" | "codex" | "opencode";
 
 /** One normalized record: an allowlisted span the lenses may read. */
 export interface NormalizedRecord {
@@ -78,16 +78,29 @@ export interface ResolveOptions {
 export interface ResolveResult {
   ok: boolean;
   path?: string;
+  /** The resolved OpenCode session id. OpenCode results carry no `path`. */
+  sessionId?: string | null;
   host?: HostName | null;
   /** "session-id" when the host named the session, "marker" otherwise. */
   via?: string;
   /**
    * "unsupported-host" | "ambiguous-host" | "invalid-session-id" |
-   * "no-session-store" | "no-match" | "multiple-matches" when ok is false.
+   * "no-session-store" | "no-match" | "multiple-matches" |
+   * "ambiguous-session" | "sqlite-unavailable" | "unreadable-session-store"
+   * when ok is false.
    */
   failure?: string;
   /** The globs or paths tried, for the failure message. */
   tried?: string[];
+}
+
+export interface ResolveOpencodeOptions {
+  /** The OpenCode SQLite store path to read. */
+  dbPath: string;
+  /** The unguessable run-cache path this run printed. Matched fixed-string. */
+  marker?: string;
+  /** Retry delay before the second scan, injectable so tests never sleep. */
+  retryDelayMs?: number;
 }
 
 export interface ResolveSessionOptions {
@@ -117,3 +130,9 @@ export function declaredSessionId(headText: string): string | null;
 export function priorHistoryOf(record: unknown): string | null;
 
 export function isUserTurn(record: unknown): boolean;
+
+export function openOpencodeDb(dbPath: string): unknown;
+
+export function resolveOpencodeSession(options: ResolveOpencodeOptions): ResolveResult;
+
+export function normalizeOpencode(options: { dbPath: string; sessionId: string }): NormalizedTranscript;

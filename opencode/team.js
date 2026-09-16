@@ -30,7 +30,7 @@ function objectField(value, field) {
 
 function command(skill, root) {
   return {
-    description: skill.description + (skill.name === "retro" ? " OpenCode session reflection is unsupported." : ""),
+    description: skill.description,
     template: [
       `The user explicitly invoked /${skill.name}.`,
       `Read the canonical skill file ${JSON.stringify(skill.file)} using the filesystem read tool, then follow its instructions.`,

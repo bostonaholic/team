@@ -6,16 +6,17 @@
  *
  *     node "<skill-dir>/resolve-transcript.mjs" <run-cache-dir> [store-root]
  *
- * TWO HOSTS, ONE CONTRACT. Claude Code and Codex CLI each keep their own
- * session store in their own record format. Everything downstream — the lenses,
- * the plan, the report — reads the single normalized shape this file emits, so
- * a host is added here and nowhere else.
+ * THREE HOSTS, ONE CONTRACT. Claude Code and Codex CLI each keep their own
+ * session store in their own record format; OpenCode keeps its sessions in a
+ * SQLite database. Everything downstream — the lenses, the plan, the report —
+ * reads the single normalized shape this file emits, so a host is added here
+ * and nowhere else.
  *
  * CONDUCTOR IS NOT A HOST HERE. Conductor runs Claude Code, Codex, Cursor
  * Agent, or OpenCode inside a git worktree; the backend agent writes the
  * transcript in its own store, unchanged. So a Conductor session resolves as
- * whichever backend it runs, and the two backends this file cannot read fail by
- * name rather than resolving to something plausible.
+ * whichever backend it runs, and Cursor Agent, which this file does not read,
+ * fails by name rather than resolving to something plausible.
  *
  * HOW THE SESSION IS IDENTIFIED, IN ORDER.
  *
@@ -41,6 +42,7 @@
 
 import { spawnSync } from "node:child_process";
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -57,16 +59,19 @@ export const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
 /**
  * The hosts whose stores this file can read, and the shape of each store.
  *
- * `depth` is the number of directory levels between the store root and a
- * transcript, and it is exact. Claude Code keeps `<project-slug>/<id>.jsonl`;
- * Codex keeps `<YYYY>/<MM>/<DD>/rollout-<timestamp>-<thread-id>.jsonl`. Walking
- * to exactly that depth is what keeps a session's `subagents/*.jsonl` and its
+ * `kind` is how the store is read. A `file` store's `depth` is the number of
+ * directory levels between the store root and a transcript, and it is exact.
+ * Claude Code keeps `<project-slug>/<id>.jsonl`; Codex keeps
+ * `<YYYY>/<MM>/<DD>/rollout-<timestamp>-<thread-id>.jsonl`. Walking to exactly
+ * that depth is what keeps a session's `subagents/*.jsonl` and its
  * `tool-results/*.txt` sidecars out of reach by construction rather than by a
- * filter someone can drop.
+ * filter someone can drop. An `sqlite` store is read through the host's own
+ * database instead, so it carries neither `depth` nor `suffixed`.
  */
 export const HOSTS = {
-  "claude-code": { depth: 1, suffixed: false },
-  codex: { depth: 3, suffixed: true },
+  "claude-code": { kind: "file", depth: 1, suffixed: false },
+  codex: { kind: "file", depth: 3, suffixed: true },
+  opencode: { kind: "sqlite" },
 };
 
 /** Host injections that arrive as a Claude `type: "user"` record but are not prompts. */
@@ -142,6 +147,9 @@ export function detectHost(env) {
   // retro from; the header check below rejects it when it is not.
   if (codex) candidates.push({ host: "codex", sessionId: codexId });
   if (claude) candidates.push({ host: "claude-code", sessionId: claudeId || null });
+  // OpenCode exports no session id into the shell, so the candidate carries
+  // none and resolution falls back to the run marker.
+  if (environment.OPENCODE === "1") candidates.push({ host: "opencode", sessionId: null });
   return candidates;
 }
 
@@ -151,6 +159,10 @@ export function storeRootFor(host, env) {
   const home = environment.HOME || homedir();
   if (host === "codex") return join(environment.CODEX_HOME || join(home, ".codex"), "sessions");
   if (host === "claude-code") return join(environment.CLAUDE_CONFIG_DIR || join(home, ".claude"), "projects");
+  if (host === "opencode") {
+    const dataHome = environment.XDG_DATA_HOME || join(home, ".local", "share");
+    return environment.OPENCODE_DB || join(dataHome, "opencode", "opencode.db");
+  }
   return "";
 }
 
@@ -299,6 +311,11 @@ export function resolveTranscript(options) {
   if (sessionId && !SESSION_ID_PATTERN.test(String(sessionId))) {
     return { ok: false, failure: "invalid-session-id", tried: [String(sessionId)] };
   }
+  // An sqlite store delegates to its own resolver, which repeats the store-path
+  // and empty-marker guards, so `resolveSession` and the CLI share one path.
+  if (HOSTS[host].kind === "sqlite") {
+    return resolveOpencodeSession({ dbPath: storeRoot, marker, retryDelayMs });
+  }
   if (!storeRoot || !existsSync(storeRoot)) {
     return { ok: false, failure: "no-session-store", tried: [String(storeRoot)] };
   }
@@ -333,6 +350,19 @@ export function resolveTranscript(options) {
 }
 
 /**
+ * True when `result` authoritatively carries this run's marker. A file result
+ * is confirmed by searching its file, because a session id alone names the
+ * session without proving the run reached it. An OpenCode result is confirmed
+ * by construction: its resolution matched the marker across every childless
+ * session before it accepted.
+ */
+function carriesMarker(result, marker) {
+  if (result.host === "opencode") return true;
+  if (!result.path) return false;
+  return filesContaining([result.path], marker).length > 0;
+}
+
+/**
  * The invoking session's transcript, across every host that claims this process.
  *
  * One candidate is the normal case and resolves directly. Two means one agent
@@ -341,6 +371,9 @@ export function resolveTranscript(options) {
  * of the session that is asking and in no other file on disk. A tie the marker
  * does not settle — neither transcript carries it, or somehow both do — is
  * `ambiguous-host`, because picking either would read a stranger's session.
+ * A duplicate marker in one host is `ambiguous-session`, which is conflicting
+ * evidence about which session this run is, so it stops the run even when a
+ * sibling host resolves.
  */
 export function resolveSession(options) {
   const { candidates, storeRootOf, marker, slug, retryDelayMs } = options ?? {};
@@ -363,6 +396,12 @@ export function resolveSession(options) {
 
   if (list.length === 1) return resolved[0].result;
 
+  // A duplicate marker is a conflict, not a store that could not be read, so it
+  // refuses before the `ok` filter. Every other failure stays in the dropped
+  // set: it reports a host that does not authoritatively hold this session.
+  const conflict = resolved.find(({ result }) => result.failure === "ambiguous-session");
+  if (conflict) return conflict.result;
+
   const found = resolved.filter(({ result }) => result.ok);
   if (found.length === 0) {
     return {
@@ -372,23 +411,23 @@ export function resolveSession(options) {
     };
   }
 
-  const paths = found.map(({ result }) => result.path);
-  let carrying = filesContaining(paths, marker);
+  const confirmed = () => found.filter(({ result }) => carriesMarker(result, marker));
+  let carrying = confirmed();
   if (carrying.length === 0) {
     // The marker reaches a transcript only once the host has flushed the record
     // that carries it, so one retry covers a write still in flight.
     sleepSync(retryDelayMs ?? DEFAULT_RETRY_DELAY_MS);
-    carrying = filesContaining(paths, marker);
+    carrying = confirmed();
   }
 
   if (carrying.length === 1) {
-    const pick = found.find(({ result }) => result.path === carrying[0]);
-    return { ...pick.result, via: "session-id+marker" };
+    const pick = carrying[0];
+    return { ...pick.result, via: pick.result.host === "opencode" ? "marker" : "session-id+marker" };
   }
   return {
     ok: false,
     failure: "ambiguous-host",
-    tried: found.map(({ candidate, result }) => `${candidate.host}: ${result.path}`),
+    tried: found.map(({ candidate, result }) => `${candidate.host}: ${result.path ?? result.sessionId}`),
   };
 }
 
@@ -641,6 +680,233 @@ function boundStream(records) {
   return { records: kept, droppedForCeiling: records.length - kept.length };
 }
 
+// ---------------------------------------------------------------------------
+// OpenCode (SQLite) host. The store is a live database the host keeps under
+// WAL; this file opens it read-only and never writes to it.
+// ---------------------------------------------------------------------------
+
+/** Raised when the runtime cannot load the built-in SQLite module. */
+class SqliteUnavailableError extends Error {}
+
+/** Every table and column resolution or normalization reads. */
+const OPENCODE_REQUIRED_COLUMNS = {
+  session: ["id", "parent_id"],
+  message: ["id", "session_id", "time_created", "data"],
+  part: ["id", "message_id", "session_id", "time_created", "data"],
+};
+
+const require = createRequire(import.meta.url);
+
+let sqliteWarningFilterInstalled = false;
+
+/**
+ * Suppress the one `ExperimentalWarning` `node:sqlite` writes on load, then
+ * hand the original warning listeners back on the next tick. The restore removes
+ * only this filter and re-adds the saved listeners that are absent, so a
+ * listener another importer adds during the tick survives.
+ */
+function suppressSqliteWarning() {
+  if (sqliteWarningFilterInstalled) return;
+  const saved = process.listeners("warning");
+  process.removeAllListeners("warning");
+  const filter = (warning) => {
+    if (warning?.name === "ExperimentalWarning" && /SQLite/i.test(String(warning.message ?? ""))) return;
+    for (const listener of saved) listener(warning);
+  };
+  process.on("warning", filter);
+  sqliteWarningFilterInstalled = true;
+  setImmediate(() => {
+    process.removeListener("warning", filter);
+    const current = process.listeners("warning");
+    for (const listener of saved) {
+      if (!current.includes(listener)) process.on("warning", listener);
+    }
+    sqliteWarningFilterInstalled = false;
+  });
+}
+
+function requireNodeSqlite() {
+  suppressSqliteWarning();
+  try {
+    return require("node:sqlite");
+  } catch {
+    throw new SqliteUnavailableError("this runtime cannot load node:sqlite");
+  }
+}
+
+/** Open the OpenCode store read-only. The caller closes it. */
+export function openOpencodeDb(dbPath) {
+  const { DatabaseSync } = requireNodeSqlite();
+  return new DatabaseSync(dbPath, { readOnly: true });
+}
+
+/**
+ * Throw unless the store carries every table and column this file reads. The
+ * SQLite schema is undocumented, so a missing column must fail by name rather
+ * than let a query read wrong rows or an empty result.
+ */
+function assertOpencodeSchema(db) {
+  const tables = new Set(
+    db.prepare("SELECT name FROM sqlite_master WHERE type = 'table'").all().map((row) => row.name),
+  );
+  for (const [table, columns] of Object.entries(OPENCODE_REQUIRED_COLUMNS)) {
+    if (!tables.has(table)) throw new Error(`opencode store has no ${table} table`);
+    const present = new Set(db.prepare(`PRAGMA table_info(${table})`).all().map((row) => row.name));
+    for (const column of columns) {
+      if (!present.has(column)) throw new Error(`opencode ${table} table has no ${column} column`);
+    }
+  }
+}
+
+/** Childless sessions whose parts carry `marker`, fixed-string, sorted for determinism. */
+function matchingOpencodeSessions(db, marker) {
+  const rows = db
+    .prepare(
+      "SELECT DISTINCT p.session_id AS sessionId FROM part p JOIN session s ON s.id = p.session_id " +
+        "WHERE s.parent_id IS NULL AND instr(p.data, ?) > 0",
+    )
+    .all(marker);
+  return rows.map((row) => String(row.sessionId)).sort();
+}
+
+/**
+ * One OpenCode session whose parts carry the run marker, or a named failure.
+ * More than one match is `ambiguous-session`: the marker is the sole uniqueness
+ * guarantee, so a duplicate refuses rather than picking the first.
+ */
+export function resolveOpencodeSession(options) {
+  const { dbPath, marker, retryDelayMs } = options ?? {};
+
+  if (!dbPath || !existsSync(dbPath)) {
+    return { ok: false, host: "opencode", failure: "no-session-store", tried: [String(dbPath ?? "")] };
+  }
+  // `instr(X, '')` matches every row, so an empty marker would resolve an
+  // arbitrary childless session rather than fail.
+  if (!marker) {
+    return { ok: false, host: "opencode", failure: "no-match", tried: ["no marker"] };
+  }
+
+  let db;
+  try {
+    db = openOpencodeDb(dbPath);
+  } catch (error) {
+    const failure = error instanceof SqliteUnavailableError ? "sqlite-unavailable" : "unreadable-session-store";
+    return { ok: false, host: "opencode", failure, tried: [String(dbPath)] };
+  }
+
+  try {
+    assertOpencodeSchema(db);
+    let matches = matchingOpencodeSessions(db, marker);
+    if (matches.length === 0) {
+      // The marker reaches the database only once the host has flushed its
+      // write, so one retry covers a write still in flight.
+      sleepSync(retryDelayMs ?? DEFAULT_RETRY_DELAY_MS);
+      matches = matchingOpencodeSessions(db, marker);
+    }
+    if (matches.length === 0) return { ok: false, host: "opencode", failure: "no-match", tried: [String(dbPath)] };
+    if (matches.length > 1) return { ok: false, host: "opencode", failure: "ambiguous-session", tried: matches };
+    const [sessionId] = matches;
+    if (!SESSION_ID_PATTERN.test(sessionId)) {
+      return { ok: false, host: "opencode", failure: "unreadable-session-store", tried: [sessionId] };
+    }
+    return { ok: true, host: "opencode", sessionId, via: "marker" };
+  } catch {
+    return { ok: false, host: "opencode", failure: "unreadable-session-store", tried: [String(dbPath)] };
+  } finally {
+    try {
+      db.close();
+    } catch {
+      // A close failure changes nothing after the read is done.
+    }
+  }
+}
+
+/** `text` as parsed JSON, or undefined when it is not JSON. */
+function parseOpencodeJson(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * One OpenCode session mapped into the shared `{ type, isUserTurn, text }`
+ * record shape. One message yields one record, its kept parts joined in order.
+ */
+export function normalizeOpencode({ dbPath, sessionId }) {
+  const db = openOpencodeDb(dbPath);
+  const droppedByType = {};
+  let malformedLines = 0;
+  let truncatedSpans = 0;
+  const records = [];
+
+  try {
+    const messages = db
+      .prepare("SELECT id, data FROM message WHERE session_id = ? ORDER BY time_created, id")
+      .all(sessionId);
+
+    for (const message of messages) {
+      const messageData = parseOpencodeJson(message.data);
+      if (messageData === undefined) {
+        malformedLines++;
+        continue;
+      }
+      const role = typeof messageData?.role === "string" ? messageData.role : "unknown";
+      if (role !== "user" && role !== "assistant") {
+        droppedByType[`message:${role}`] = (droppedByType[`message:${role}`] ?? 0) + 1;
+        continue;
+      }
+
+      const parts = db
+        .prepare("SELECT data FROM part WHERE message_id = ? ORDER BY time_created, id")
+        .all(message.id);
+      const kept = [];
+      for (const part of parts) {
+        const partData = parseOpencodeJson(part.data);
+        if (partData === undefined) {
+          malformedLines++;
+          continue;
+        }
+        const type = typeof partData?.type === "string" ? partData.type : "unknown";
+        if (type === "text") {
+          if (typeof partData.text === "string") kept.push(partData.text);
+          continue;
+        }
+        if (type === "tool") {
+          kept.push(toolUseText(partData.tool, partData.state?.input));
+          continue;
+        }
+        droppedByType[`part:${type}`] = (droppedByType[`part:${type}`] ?? 0) + 1;
+      }
+
+      let text = kept.join("\n");
+      if (text.length > PER_SPAN_BYTE_CAP) {
+        text = text.slice(0, PER_SPAN_BYTE_CAP);
+        truncatedSpans++;
+      }
+      const isUserTurn = role === "user" && !CLAUDE_INJECTION_TAGS.some((tag) => text.includes(tag));
+      records.push({ type: role, isUserTurn, text });
+    }
+  } finally {
+    try {
+      db.close();
+    } catch {
+      // A close failure changes nothing after the read is done.
+    }
+  }
+
+  return {
+    ...boundStream(records),
+    format: "opencode",
+    droppedByType,
+    malformedLines,
+    truncatedSpans,
+    unrecognizedRecords: 0,
+    priorHistory: null,
+  };
+}
+
 // CLI entry point — runs only when executed directly, never on import, so a
 // test import has no side effects (the supports-nesting.mjs shape).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -654,9 +920,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
 
   const FAILURE_NOTES = {
     "unsupported-host":
-      "retro reads Claude Code and Codex session stores; Conductor is supported through whichever of those it runs, and its Cursor Agent and OpenCode backends are not",
+      "retro reads Claude Code, Codex, and OpenCode session stores; Conductor is supported through whichever of those it runs, and its Cursor Agent backend is not",
     "ambiguous-host":
       "two agents' session variables are set in one process and the marker settled neither transcript",
+    "ambiguous-session":
+      "more than one childless OpenCode session carries this run's marker, so the run cannot tell which session is its own",
+    "sqlite-unavailable": "this runtime cannot load the built-in node:sqlite module that reads the OpenCode store",
+    "unreadable-session-store":
+      "the OpenCode store lacks a required table or column, or a read of it failed",
     "unsupported-format": "the resolved file holds no records a supported host writes",
   };
 
@@ -679,10 +950,30 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
   if (!resolved.ok) fail(resolved.failure, resolved.tried, FAILURE_NOTES[resolved.failure]);
 
-  const raw = readFileSync(resolved.path, "utf8");
-  const normalized = normalizeTranscript(raw);
+  // The file hosts report a resolved path and its raw character count; OpenCode
+  // reports its database and session id, and the UTF-8 byte count of the
+  // normalized text it kept. The two byte measures are per-host signals, never
+  // compared across hosts.
+  let normalized;
+  let transcriptLabel;
+  let bytes;
+  if (resolved.host === "opencode") {
+    const dbPath = storeOverride || storeRootFor("opencode", process.env);
+    try {
+      normalized = normalizeOpencode({ dbPath, sessionId: resolved.sessionId });
+    } catch {
+      fail("unreadable-session-store", [dbPath], FAILURE_NOTES["unreadable-session-store"]);
+    }
+    transcriptLabel = `${dbPath}#${resolved.sessionId}`;
+    bytes = normalized.records.reduce((sum, record) => sum + Buffer.byteLength(record.text, "utf8"), 0);
+  } else {
+    const raw = readFileSync(resolved.path, "utf8");
+    normalized = normalizeTranscript(raw);
+    transcriptLabel = resolved.path;
+    bytes = raw.length;
+  }
   if (normalized.format === "unknown" || normalized.format === "mixed") {
-    fail("unsupported-format", [resolved.path], `${FAILURE_NOTES["unsupported-format"]} (format: ${normalized.format}, unrecognized records: ${normalized.unrecognizedRecords})`);
+    fail("unsupported-format", [transcriptLabel], `${FAILURE_NOTES["unsupported-format"]} (format: ${normalized.format}, unrecognized records: ${normalized.unrecognizedRecords})`);
   }
 
   mkdirSync(runDir, { recursive: true });
@@ -692,8 +983,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   process.stdout.write(`host: ${resolved.host}\n`);
   process.stdout.write(`resolved by: ${resolved.via}\n`);
   process.stdout.write(`format: ${normalized.format}\n`);
-  process.stdout.write(`transcript: ${resolved.path}\n`);
-  process.stdout.write(`bytes: ${raw.length}\n`);
+  process.stdout.write(`transcript: ${transcriptLabel}\n`);
+  process.stdout.write(`bytes: ${bytes}\n`);
   process.stdout.write(`normalized: ${outPath}\n`);
   process.stdout.write(`records: ${normalized.records.length}\n`);
   process.stdout.write(`user turns: ${normalized.records.filter((r) => r.isUserTurn).length}\n`);
