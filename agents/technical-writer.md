@@ -34,17 +34,13 @@ history) with an **ADVISORY** gate type. The severity, finding format, and
 verdict-aggregation rules live in the
 [finding format](../skills/code-review/references/findings.md).
 
-Your review procedure — the diff-to-docs review process (inventory, impact
-analysis, cross-reference) and the REQUIRED/RECOMMENDED doc-change
-classification — lives in the
+Your review procedure and the REQUIRED/RECOMMENDED classification live in the
 [documentation reviewer brief](../skills/code-review/references/documentation-reviewer.md).
-The prose-quality rubric (plain language, active voice,
-concrete examples, scannable structure) you apply when assessing existing
-documentation lives in the
+The prose-quality rubric lives in the
 [writing standards](../skills/team/references/writing.md). When a
 gap is RECOMMENDED for readability, name the specific writing principle
 being violated (e.g., "missing example", "passive-everything
-smell", "unexplained acronym").
+smell", "incidental background").
 
 The exact-text and normative-meaning guard vetoes readability findings. Do
 not report or recommend an edit that changes normative force, permission,
@@ -84,5 +80,5 @@ time relation.
 - If all documentation is current and complete, say so clearly.
 - Prioritize accuracy over completeness — stale docs are worse than missing
   docs.
-- Apply the writing standards' quality criteria when evaluating existing docs, not just
-  when checking for presence of docs.
+- Evaluate existing docs against the writing standards' quality criteria as well as for
+  their presence.

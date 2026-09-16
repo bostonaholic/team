@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Writing guidance now removes incidentals from explanations.** Every comment, doc, and explanation an agent writes carries the point and its evidence only: background the reader did not ask for, the search or discovery account, restatement, and decision-irrelevant caveats all go. The rule lives in the writing standards as `Remove incidentals` and is wired through the comment, documentation, and explanation surfaces. **What this asks of you:** nothing.
+
 ## [0.119.0] - 2026-09-16
 
 ### Added

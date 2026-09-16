@@ -1,6 +1,7 @@
 ## Output format
 
-Keep the confidence separation intact — it is the product.
+Keep the confidence separation intact — it is the product. Every line is a
+claim with a citation or a named gap; remove narrative that carries no claim.
 
 - **The Question** — one or two sentences restating what was asked.
 - **The Code in Question** — file paths, line ranges, key symbols.
