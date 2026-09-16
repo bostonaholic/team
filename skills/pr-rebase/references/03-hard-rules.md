@@ -24,8 +24,7 @@
    a valid resolution exactly when it does that — when one side's change is
    literally contained in the other. A generated file reconciles to a
    minimal diff against stage `:2:`, never by picking a side (step 5).
-   `git checkout --ours`
-   and `--theirs` are reserved for generated files, and even there the
+   `git checkout --ours` and `--theirs` are never a valid resolution; the
    correct action is to restore and reconcile, not to pick.
 5. **Never touch uncommitted tracked work.** A dirty tree stops the run
    before the rebase starts (step 1). Do not stash on the user's behalf.

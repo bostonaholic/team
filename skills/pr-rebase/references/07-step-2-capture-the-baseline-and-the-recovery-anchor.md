@@ -42,15 +42,22 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    run that check before declaring the baseline. Probe the live process, not
    the lock file: a stale lock file with no holder must not stop the run.
 
-   Scope both probes to this project so an unrelated dev server cannot match:
-   target `lsof` at the project's own lock path, and anchor the `pgrep` match
-   to the project root rather than a bare command name. An explicit
-   `if … then … exit 1; fi` is required — an `A || B && C` chain parses as
-   `(A || B) && C`, so the free path's `pgrep` failure becomes the whole
-   command's non-zero status.
+   Scope both probes to this project so an unrelated dev server cannot match,
+   and treat them as best-effort detection of the project's own dev/build
+   lock, not a complete check. A build cache like `.next` is a directory, so
+   the `lsof` arm searches it recursively (`lsof +D`) and tests for *output*,
+   not exit status: a flat `lsof -- <dir>/.next` exits non-zero with no output
+   even while a process holds files inside it, and `lsof +D` itself returns
+   non-zero even when it lists a holder, so only its listing is trustworthy.
+   A missing build directory lists no holder and reads as free. The `pgrep`
+   arm matches only a process's argv, not its working directory, so a dev
+   server launched from elsewhere whose argv omits the project root can escape
+   it. An explicit `if … then … exit 1; fi` is required — an `A || B && C`
+   chain parses as `(A || B) && C`, so the free path's non-match becomes the
+   whole command's non-zero status.
 
    ```sh
-   if lsof -- "<project-root>/<lock-path>" >/dev/null 2>&1 \
+   if [ -n "$(lsof +D "<project-root>/<build-dir>" 2>/dev/null)" ] \
       || pgrep -f "<project-root>/.*<dev-or-build-command>" >/dev/null 2>&1; then
      echo "stop: a live process holds this project's dev/build lock — free it and re-run" >&2
      exit 1

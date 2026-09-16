@@ -94,10 +94,6 @@ function fencedBlocksOf(text: string): string[][] {
   return blocks;
 }
 
-function fencedBlocks(): string[][] {
-  return fencedBlocksOf(body());
-}
-
 describe("pr-rebase skill: frontmatter and invocation surface", () => {
   test("skill file lives under runtime skills/ (distributed)", () => {
     expect(existsSync(PR_REBASE_SKILL)).toBe(true);
