@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.117.0] - 2026-09-15
+
+### Fixed
+
+- **`pr-rebase` now stops instead of quietly dropping its strongest check when a local dev server holds the project's build lock.** A check that could not run because the project's own dev/build lock was held (for example a `next dev` server holding `.next`) was classified `UNKNOWN`, so the run published without the check that verifies the rebase. The run now stops and asks you to free the lock, or verifies that check before the rebase starts; `UNKNOWN` stays reserved for genuinely unavailable tooling. **What this asks of you:** stop the dev server before rebasing.
+
+- **`pr-rebase` now reconciles a conflicted generated file to the smallest correct change.** A lockfile, `structure.sql`, or compiled asset that conflicts during the rebase is restored from the rebase's current copy and given only the direct change, or regenerated with the project's own frozen/consistent command, and the result is checked for a minimal diff. A non-frozen install that re-resolves unrelated entries is no longer the path. **What this asks of you:** nothing.
+
 ## [0.116.0] - 2026-09-15
 
 ### Fixed
@@ -1053,7 +1061,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.116.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.117.0...HEAD
+[0.117.0]: https://github.com/bostonaholic/team/compare/v0.116.0...v0.117.0
 [0.116.0]: https://github.com/bostonaholic/team/compare/v0.115.0...v0.116.0
 [0.115.0]: https://github.com/bostonaholic/team/compare/v0.114.0...v0.115.0
 [0.114.0]: https://github.com/bostonaholic/team/compare/v0.113.0...v0.114.0
