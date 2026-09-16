@@ -1003,8 +1003,8 @@ This adapter establishes discovery and lifecycle support. Full QRSPI execution,
 specialist/nested dispatch, reviewer isolation, and hook host-firing on OpenCode
 remain unverified; the hook adapter programs were probed by direct invocation
 (program contract verified, host-firing unverified — see
-[hooks-portability.md](hooks-portability.md)). `/retro` stays guarded and discoverable but cannot process OpenCode
-sessions because its mandatory transcript resolver supports Claude Code/Codex.
+[hooks-portability.md](hooks-portability.md)). `/retro` stays guarded and discoverable and resolves OpenCode
+sessions from the host's SQLite store.
 
 ## 7. Hooks
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`/retro` now reads an OpenCode session, not only Claude Code and Codex.** The transcript resolver gains OpenCode as a third host: it detects `OPENCODE=1`, opens the host's SQLite store read-only, and resolves the one childless session whose parts carry the run's cache-path marker. A duplicate marker fails as `ambiguous-session` rather than picking a session. **What this asks of you:** nothing.
+
 ## [0.117.0] - 2026-09-15
 
 ### Fixed

@@ -2214,3 +2214,57 @@ describe("Slice 2 — L1: the two-host tie-break with an OpenCode candidate", ()
   });
 });
 
+// ===========================================================================
+// Slice 3 — L2: the OpenCode unsupported claim is absent and pinned
+// ===========================================================================
+
+const OPENCODE_UNSUPPORTED_CLAIM = /session reflection is unsupported|cannot process OpenCode/i;
+
+const CURRENT_STATE_SURFACES = [
+  "skills/retro/SKILL.md",
+  "skills/retro/references/03-execution.md",
+  "docs/cross-host-portability.md",
+  "docs/index.md",
+  "docs/architecture.md",
+  "README.md",
+  "opencode/team.js",
+] as const;
+
+// A missing surface reads as "" so the length guard fails it rather than
+// throwing, and absence checks cannot pass on an empty haystack.
+function currentStateProse(): { path: string; text: string }[] {
+  return CURRENT_STATE_SURFACES.map((relative) => {
+    const absolute = join(REPO_ROOT, relative);
+    return { path: relative, text: existsSync(absolute) ? read(absolute) : "" };
+  });
+}
+
+// The dated release history records what shipped, so it is not a current
+// claim. Only the `[Unreleased]` block is in scope (6-design.md Decision 10).
+function changelogUnreleased(): string {
+  const path = join(REPO_ROOT, "CHANGELOG.md");
+  if (!existsSync(path)) return "";
+  const match = read(path).match(/^##\s+\[Unreleased\][\s\S]*?(?=\n##\s+\[)/m);
+  return match ? match[0] : "";
+}
+
+describe("Slice 3 — L2: no current-state surface claims OpenCode is unsupported", () => {
+  test("the OpenCode unsupported claim is absent from every current-state surface", () => {
+    const surfaces = currentStateProse();
+
+    // Length guard: a missing or emptied surface must fail here, not pass the
+    // absence check vacuously (docs/testing.md, "Prove a negative check can
+    // find a positive").
+    expect(surfaces.filter((surface) => surface.text.length === 0).map((surface) => surface.path)).toEqual([]);
+
+    // Positive control: the same matcher fires on the claim it bans, so a
+    // clean sweep distinguishes absent from blind.
+    expect(OPENCODE_UNSUPPORTED_CLAIM.test("OpenCode session reflection is unsupported.")).toBe(true);
+    expect(OPENCODE_UNSUPPORTED_CLAIM.test("`/retro` cannot process OpenCode sessions.")).toBe(true);
+
+    expect(
+      surfaces.filter((surface) => OPENCODE_UNSUPPORTED_CLAIM.test(surface.text)).map((surface) => surface.path),
+    ).toEqual([]);
+    expect(OPENCODE_UNSUPPORTED_CLAIM.test(changelogUnreleased())).toBe(false);
+  });
+});

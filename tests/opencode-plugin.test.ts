@@ -137,8 +137,11 @@ describe("Canonical discovery preserves host configuration and rejects invalid c
     const f = make("complete", "full");
     const config = await load(f);
     assertCompleteCatalog(f, config);
-    expect(config.command?.retro?.description?.toLowerCase()).toContain("opencode");
-    expect(config.command?.retro?.description?.toLowerCase()).toMatch(/unsupported|not support|unavailable/);
+    const retroDescription = config.command?.retro?.description ?? "";
+    // Guard: an empty description must fail here, not pass the absence below
+    // vacuously (docs/testing.md, "Prove a negative check can find a positive").
+    expect(retroDescription.length).toBeGreaterThan(0);
+    expect(retroDescription.toLowerCase()).not.toMatch(/unsupported|not support|unavailable/);
     expectStatus(run(f, "install"), 0);
   });
 
