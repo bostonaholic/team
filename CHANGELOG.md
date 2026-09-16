@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.118.0] - 2026-09-15
+
 ### Added
 
 - **`/retro` now reads an OpenCode session, not only Claude Code and Codex.** The transcript resolver gains OpenCode as a third host: it detects `OPENCODE=1`, opens the host's SQLite store read-only, and resolves the one childless session whose parts carry the run's cache-path marker. A duplicate marker fails as `ambiguous-session` rather than picking a session. **What this asks of you:** nothing.
@@ -1065,7 +1067,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.117.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.118.0...HEAD
+[0.118.0]: https://github.com/bostonaholic/team/compare/v0.117.0...v0.118.0
 [0.117.0]: https://github.com/bostonaholic/team/compare/v0.116.0...v0.117.0
 [0.116.0]: https://github.com/bostonaholic/team/compare/v0.115.0...v0.116.0
 [0.115.0]: https://github.com/bostonaholic/team/compare/v0.114.0...v0.115.0
