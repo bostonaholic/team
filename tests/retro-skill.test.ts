@@ -1619,6 +1619,10 @@ function opencodeStore(label: string, sessions: OpencodeSession[]): string {
   // with insertion order, so the resolver's `(time_created, id)` ordering
   // reproduces the order a test declared regardless of the id strings.
   let sequence = 0;
+  // One explicit transaction for the whole fixture: autocommit fsyncs per row,
+  // which makes the multi-thousand-message ceiling fixture slow enough to time
+  // out on a slow CI runner.
+  db.exec("BEGIN");
   for (const session of sessions) {
     addSession.run(session.id, session.parentId ?? null, session.directory ?? null, 1, 1, null);
     for (const message of session.messages) {
@@ -1631,6 +1635,7 @@ function opencodeStore(label: string, sessions: OpencodeSession[]): string {
       sequence += 1;
     }
   }
+  db.exec("COMMIT");
   db.close();
   return dbPath;
 }
