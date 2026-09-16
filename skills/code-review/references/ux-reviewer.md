@@ -24,6 +24,18 @@ the orchestrator applies. Do not change code or test unrelated behavior.
 Determine the project type by inspecting configuration files, then exercise the
 matching surface. No screenshot requirement applies to nonvisual work.
 
+A UI project is **browser** or **native**. Detect native by project markers:
+`ios/` holding an `.xcodeproj` or `.xcworkspace`, `android/` holding a
+`build.gradle` or `gradlew`, a `react-native.config.js`, an `expo` key in
+`app.json`, or `react-native` / `expo` in the `package.json` dependencies. A
+bare `app.json` without an `expo` key is not a marker; a project with no marker
+is browser.
+
+- A **native-only** project enters at build/install/launch and skips HTTP steps
+  1-4: no HTTP response renders a native app.
+- A **marker-matched** project that can also render web keeps the browser
+  checks whenever the diff reaches a web surface.
+
 | Project type | Exercise | Evidence |
 | --- | --- | --- |
 | UI | start the dev server, fetch changed routes, interact, capture screenshots | status codes, rendered HTML, interaction outcomes, PNGs |
@@ -36,6 +48,10 @@ screenshot. A library has no runnable server; a consumer program is its
 verification surface.
 
 ## UI Project Verification
+
+Two entry paths, selected in `## Detection and surface`.
+
+**Browser path — steps 1-6.** A project that renders web keeps the HTTP checks:
 
 1. **Start the dev server.** Find the applicable start command from
    `package.json` scripts, `Makefile`, or equivalent. Run it in the
@@ -56,6 +72,34 @@ verification surface.
    `## Screenshot Capture (UI projects)` below.
 
 6. **Stop the dev server** when verification is complete.
+
+**Native path — build, install, launch.** A native-only project skips HTTP
+steps 1-4, because no HTTP response renders the app. Run, in order:
+
+1. **Start the JavaScript bundler** for a React Native debug build: Metro
+   serves the JavaScript bundle, so it starts before launch and stops after
+   capture. A project whose app bundles its own JavaScript names that and
+   skips Metro.
+
+2. **Build and install, then reverse the ports, then launch.** Android:
+   `./gradlew :app:installDebug`, then `adb reverse tcp:8081 tcp:8081` (plus
+   any service port the app needs), then `adb shell am start`. iOS:
+   `xcodebuild -scheme <scheme> -destination <destination> build`, then
+   `xcrun simctl install <device> <path-to-app>`, then
+   `xcrun simctl launch <device> <bundle-id>`. Launching before the reverse
+   tunnel renders a Metro connection error, so the reverse step sits between
+   install and launch.
+
+3. **Prerequisites are capability-decides, never version-pinned**:
+   `ANDROID_HOME` / `ANDROID_SDK_ROOT` for the Android SDK, `adb` on PATH, the
+   project's Gradle wrapper, and CocoaPods/Xcode for iOS. A missing
+   prerequisite is a Could-Improve note, not a failure.
+
+4. **Deadlines.** Device boot has a 120-second bound; the native build has a
+   600-second bound, or the project's own bound when it names one. Both sit
+   outside the capture budget, which starts when the app is foregrounded.
+
+Then follow `## Screenshot Capture (UI projects)` below.
 
 ## API Project Verification
 
@@ -117,12 +161,32 @@ so for the complete set — never a delta. `<artifact-dir>` is the
 capture anyway — set `seeded: false` in the manifest and add a one-line
 `seed_note`.
 
-**Capture.** Use the Playwright CLI through Bash (e.g. `npx playwright
+**Capture — browser.** Use the Playwright CLI through Bash (e.g. `npx playwright
 screenshot`). Take viewport-size shots, not full-page — GitHub's 10MB
 attachment bound. Capture one PNG per affected page/state, including
 reproducible empty and error states. Name files
 `<NN>-<route-slug>-<state>.png`, zero-padded so listing order is stable, and
 write them to `<artifact-dir>/screenshots/`.
+
+**Locator scope (advisory).** The Playwright CLI cannot run programmatic
+locators; when the caller drives Playwright through a runner the project
+already has, scope by role with an exact accessible name —
+`getByRole("checkbox", { name: "Privacy", exact: true })` — and drive a
+checkbox with `.check()`, which asserts the checked state. A substring match
+such as `Privacy` also matches `Privacy Policy`, so pass `exact`.
+
+**Capture — native.** Android: `adb exec-out screencap -p > <path>`. iOS:
+`xcrun simctl io <device> screenshot <path>`. Capture one PNG per affected
+screen/state, under the same 10-shot, 5-minute, 30-second caps.
+
+**Locate and tap (native).** Android can locate a control through the
+accessibility tree: `adb shell uiautomator dump` writes the tree, then
+`adb shell input tap <x> <y>` drives it. iOS has no equivalent tree dump, so
+iOS capture is screenshot-only and programmatic interaction is deferred.
+
+**Device shutdown.** Shut down only the simulator or emulator this review
+booted: `xcrun simctl shutdown <device>`, `adb emu kill`. A device another
+process already booted stays running.
 
 **Data caution.** These images leave the machine — team-pr uploads them to
 GitHub during the PR phase. Do not capture routes or states that render
@@ -185,3 +249,25 @@ means every planned shot is present. `partial` means some were skipped.
   [system dependency lens](../team/references/dependencies.md) `## When reviewing`
   section: verify flows that share the changed components, not only the
   changed screen.
+
+## Surfaces
+
+Two entry modes, selected by project marker in `## Detection and surface`.
+
+| Safeguard | Browser UI (web) | Native UI (iOS/Android) |
+| --- | --- | --- |
+| Entry | steps 1-6: dev server, `curl` route checks, screenshots | build, install, launch, screenshots |
+| Capture | Playwright CLI | `adb exec-out screencap`; `xcrun simctl io ... screenshot` |
+| Locate and tap | Playwright locators | Android `uiautomator` + `input tap`; iOS screenshot-only |
+| Bundler | the dev server serves the app | Metro for RN debug builds: start before launch, stop after capture |
+| Shutdown | stop the dev server | `xcrun simctl shutdown` / `adb emu kill`, only devices this review booted |
+
+A native-only project reaches capture without the dev server, so it names its
+own bundler, build, launch, and shutdown.
+
+**Failure severity.** A build failure caused by the branch is Broken — a
+REQUEST CHANGES verdict. An unavailable toolchain is Could Improve, never
+Broken; screenshot or capture failure stays Could Improve like any other
+capture miss. When a native-only run produces no PNGs because build, boot, or
+capture failed, record manifest `status: partial` and list each failure under
+`## Skipped`, so team-pr does not re-run the same failing build.

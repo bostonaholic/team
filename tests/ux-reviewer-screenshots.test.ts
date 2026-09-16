@@ -101,3 +101,46 @@ describe("ux-reviewer screenshot capture (slice 1)", () => {
     expect(/uncertain[^.]{0,120}captur/i.test("When UI impact is uncertain, capture.")).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Slice 3 (pr-rebase-ux-reviewer-fixes): native iOS/Android capture and
+// Playwright locator scoping.
+// ---------------------------------------------------------------------------
+describe("ux-reviewer native capture and locator scope (slice 3)", () => {
+  test("the brief documents the native capture and locator command tokens", () => {
+    const t = flat(body());
+    expect(t).toContain("xcrun simctl");
+    expect(t).toContain("xcrun simctl io");
+    expect(t).toContain("adb reverse");
+    expect(t).toContain("adb exec-out screencap");
+    expect(t).toContain("adb shell input tap");
+    expect(t).toContain("uiautomator");
+    expect(t).toContain("ANDROID_HOME");
+    expect(t).toContain("ANDROID_SDK_ROOT");
+    expect(t).toContain("getByRole");
+    expect(t).toContain("exact");
+    expect(t).toContain(".check()");
+  });
+
+  test("a Surfaces section records both entry modes and keeps curl in the browser path", () => {
+    const t = flat(body());
+    const surfaces = t.indexOf("## Surfaces");
+    expect(surfaces).toBeGreaterThan(-1);
+    const after = t.slice(surfaces);
+    // The browser path keeps its HTTP probe; the native path records its tools.
+    expect(after).toContain("curl");
+    expect(after).toMatch(/\b(?:xcrun|adb)\b/);
+  });
+
+  test("the Surfaces section splits native failure severity and names the zero-shot status", () => {
+    const t = flat(body());
+    const surfaces = t.indexOf("## Surfaces");
+    expect(surfaces).toBeGreaterThan(-1);
+    const after = t.slice(surfaces);
+    // A branch-caused build failure is Broken; an unavailable toolchain is a note.
+    expect(after).toContain("Broken");
+    expect(after).toMatch(/Could[-\s]Improve/);
+    // The zero-shot case records the manifest status that stops team-pr's recapture.
+    expect(after).toContain("status: partial");
+  });
+});
