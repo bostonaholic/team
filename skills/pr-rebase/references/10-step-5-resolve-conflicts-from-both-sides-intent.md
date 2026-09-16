@@ -73,12 +73,39 @@ For each conflicted path:
 
 2. **Resolve so both intents survive.** Taking one side whole is a valid
    resolution exactly where that side's change is literally contained in the
-   other (Hard Rule 4). A generated file is resolved a third way, and
-   regenerating was never side-picking: a lockfile, a
-   `structure.sql`, a compiled asset, or any other artifact with a
-   regeneration command is resolved by **regenerating it** after the source
-   conflicts are settled — not by `--ours` / `--theirs`, which produces a
-   file consistent with neither side's inputs.
+   other (Hard Rule 4).
+
+   **A generated file reconciles to a minimal diff, never by side-picking.**
+   A lockfile, a `structure.sql`, a compiled asset, or any other generated
+   artifact is resolved at each conflicted commit by restoring stage `:2:`
+   — the base side by the rebase inversion above, which already carries
+   every earlier replayed commit — and applying only this commit's direct
+   change. `--ours` / `--theirs` stay reserved and forbidden as
+   instructions here: they produce a file consistent with neither side's
+   inputs.
+
+   Path A, a direct change with no dependency graph to re-resolve:
+
+   ```sh
+   git show ":2:<path>" > "<path>"   # the rebase's current copy
+   # apply only this commit's direct change, then confirm the diff is minimal
+   git diff :2: -- "<path>"
+   ```
+
+   Path B, a dependency-graph change (a lockfile): restore the same `:2:`
+   copy first, reconcile with a targeted update, then validate with the
+   frozen install:
+
+   ```sh
+   git show ":2:<path>" > "<path>"
+   bun install "<pkg>@<version>"   # the one direct dependency change
+   bun install --frozen-lockfile   # validates; never re-resolves
+   ```
+
+   A non-frozen install that re-resolves unrelated transitive entries is
+   forbidden. When stage `:2:` is absent — a delete/modify where the base
+   deleted the generated file — neither path applies; defer to the existing
+   modify/delete decision above (step 5.1).
 
 3. **Delegate a large conflicted file to a subagent.** For a conflicted file
    beyond a few hundred lines, dispatch a read-only subagent with the three

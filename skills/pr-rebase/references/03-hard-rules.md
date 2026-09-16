@@ -22,9 +22,11 @@
    A conflict is resolved or the rebase is aborted; it is never skipped.
 4. **Every resolution keeps both sides' intent.** Taking one side whole is
    a valid resolution exactly when it does that — when one side's change is
-   literally contained in the other. `git checkout --ours`
+   literally contained in the other. A generated file reconciles to a
+   minimal diff against stage `:2:`, never by picking a side (step 5).
+   `git checkout --ours`
    and `--theirs` are reserved for generated files, and even there the
-   correct action is to regenerate, not to pick (step 5).
+   correct action is to restore and reconcile, not to pick.
 5. **Never touch uncommitted tracked work.** A dirty tree stops the run
    before the rebase starts (step 1). Do not stash on the user's behalf.
 6. **Never rebase a protected branch.** The default branch, `master`,
