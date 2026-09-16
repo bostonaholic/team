@@ -350,6 +350,19 @@ export function resolveTranscript(options) {
 }
 
 /**
+ * True when `result` authoritatively carries this run's marker. A file result
+ * is confirmed by searching its file, because a session id alone names the
+ * session without proving the run reached it. An OpenCode result is confirmed
+ * by construction: its resolution matched the marker across every childless
+ * session before it accepted.
+ */
+function carriesMarker(result, marker) {
+  if (result.host === "opencode") return true;
+  if (!result.path) return false;
+  return filesContaining([result.path], marker).length > 0;
+}
+
+/**
  * The invoking session's transcript, across every host that claims this process.
  *
  * One candidate is the normal case and resolves directly. Two means one agent
@@ -358,6 +371,9 @@ export function resolveTranscript(options) {
  * of the session that is asking and in no other file on disk. A tie the marker
  * does not settle — neither transcript carries it, or somehow both do — is
  * `ambiguous-host`, because picking either would read a stranger's session.
+ * A duplicate marker in one host is `ambiguous-session`, which is conflicting
+ * evidence about which session this run is, so it stops the run even when a
+ * sibling host resolves.
  */
 export function resolveSession(options) {
   const { candidates, storeRootOf, marker, slug, retryDelayMs } = options ?? {};
@@ -380,6 +396,12 @@ export function resolveSession(options) {
 
   if (list.length === 1) return resolved[0].result;
 
+  // A duplicate marker is a conflict, not a store that could not be read, so it
+  // refuses before the `ok` filter. Every other failure stays in the dropped
+  // set: it reports a host that does not authoritatively hold this session.
+  const conflict = resolved.find(({ result }) => result.failure === "ambiguous-session");
+  if (conflict) return conflict.result;
+
   const found = resolved.filter(({ result }) => result.ok);
   if (found.length === 0) {
     return {
@@ -389,27 +411,23 @@ export function resolveSession(options) {
     };
   }
 
-  // An OpenCode result carries a session id and no path, so it has no file for
-  // the marker check below to open. Slice 2 replaces this guard with a
-  // per-result marker confirmation.
-  const fileResults = found.filter(({ result }) => result.path !== undefined);
-  const paths = fileResults.map(({ result }) => result.path);
-  let carrying = paths.length > 0 ? filesContaining(paths, marker) : [];
+  const confirmed = () => found.filter(({ result }) => carriesMarker(result, marker));
+  let carrying = confirmed();
   if (carrying.length === 0) {
     // The marker reaches a transcript only once the host has flushed the record
     // that carries it, so one retry covers a write still in flight.
     sleepSync(retryDelayMs ?? DEFAULT_RETRY_DELAY_MS);
-    carrying = paths.length > 0 ? filesContaining(paths, marker) : [];
+    carrying = confirmed();
   }
 
   if (carrying.length === 1) {
-    const pick = fileResults.find(({ result }) => result.path === carrying[0]);
-    return { ...pick.result, via: "session-id+marker" };
+    const pick = carrying[0];
+    return { ...pick.result, via: pick.result.host === "opencode" ? "marker" : "session-id+marker" };
   }
   return {
     ok: false,
     failure: "ambiguous-host",
-    tried: found.map(({ candidate, result }) => `${candidate.host}: ${result.path}`),
+    tried: found.map(({ candidate, result }) => `${candidate.host}: ${result.path ?? result.sessionId}`),
   };
 }
 

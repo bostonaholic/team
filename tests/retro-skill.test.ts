@@ -2121,3 +2121,96 @@ describe("Slice 1 — L1: normalizeOpencode maps a session into the record strea
   });
 });
 
+// ===========================================================================
+// Slice 2 — L1: the two-host tie-break with an OpenCode candidate
+// ===========================================================================
+
+describe("Slice 2 — L1: the two-host tie-break with an OpenCode candidate", () => {
+  const codexId = "01a07c7b-16e9-73a2-8f5b-7638fd286088";
+
+  function codexStore(label: string, marker: string, carriesMarker: boolean): string {
+    const output = carriesMarker
+      ? [codexToolOutput(`run cache: ${marker}`)]
+      : [];
+    return tree(label, {
+      [rolloutPath(codexId)]: jsonl(codexMeta(codexId), codexUser("retro on this session"), ...output),
+    });
+  }
+
+  test("a duplicate OpenCode marker stops the tie even when a Codex transcript resolves", () => {
+    const marker = "/tmp/retro.tie.opencode.dup";
+    const opencodeDb = opencodeStore("tie-opencode-dup", [
+      childlessSession(
+        "ses_tiedup00000001",
+        [userMessage([{ id: "prt_1", data: textPart(`run cache: ${marker}`) }])],
+        "/w/one",
+      ),
+      childlessSession(
+        "ses_tiedup00000002",
+        [userMessage([{ id: "prt_2", data: textPart(`run cache: ${marker}`) }])],
+        "/w/two",
+      ),
+    ]);
+    const codexRoot = codexStore("tie-codex-sibling", marker, true);
+    const candidates = [
+      { host: "opencode", sessionId: null },
+      { host: "codex", sessionId: codexId },
+    ] as const;
+    const storeRootOf = (host: string) => (host === "opencode" ? opencodeDb : codexRoot);
+
+    const result = resolveSession({ candidates, storeRootOf, marker, retryDelayMs: 0 });
+
+    expect(result.failure).toBe("ambiguous-session");
+  });
+
+  test("OpenCode store failures and a malformed inherited Claude id leave Codex resolving", () => {
+    const marker = "/tmp/retro.tie.codex.wins";
+    const codexRoot = codexStore("tie-codex-wins", marker, true);
+    const missingDb = join(scratch("tie-opencode-missing"), "absent.db");
+    // A process carrying all three: an unreadable OpenCode store, a malformed
+    // inherited Claude id, and a Codex thread whose transcript records the
+    // marker. Only the store failures stay in the dropped set, so Codex still
+    // resolves exactly as it did before this feature.
+    const candidates = [
+      { host: "opencode", sessionId: null },
+      { host: "claude-code", sessionId: "../../etc/passwd" },
+      { host: "codex", sessionId: codexId },
+    ] as const;
+    const storeRootOf = (host: string) =>
+      host === "opencode" ? missingDb : host === "claude-code" ? scratch("tie-bad-claude-id") : codexRoot;
+
+    // The OpenCode candidate fails by its own name, not as unsupported-host.
+    expect(resolveTranscript({ host: "opencode", storeRoot: missingDb, marker, retryDelayMs: 0 }).failure).toBe(
+      "no-session-store",
+    );
+
+    const result = resolveSession({ candidates, storeRootOf, marker, retryDelayMs: 0 });
+
+    expect(result.ok).toBe(true);
+    expect(result.host).toBe("codex");
+  });
+
+  test("a two-candidate tie that lands on OpenCode reports via marker", () => {
+    const marker = "/tmp/retro.tie.opencode.only";
+    const opencodeDb = opencodeStore("tie-opencode-wins", [
+      childlessSession("ses_tiewin00000001", [
+        userMessage([{ id: "prt_1", data: textPart(`run cache: ${marker}`) }]),
+      ]),
+    ]);
+    // The Codex transcript resolves by session id but never recorded the
+    // marker, so only the OpenCode candidate is marker-confirmed.
+    const codexRoot = codexStore("tie-codex-no-marker", marker, false);
+    const candidates = [
+      { host: "opencode", sessionId: null },
+      { host: "codex", sessionId: codexId },
+    ] as const;
+    const storeRootOf = (host: string) => (host === "opencode" ? opencodeDb : codexRoot);
+
+    const result = resolveSession({ candidates, storeRootOf, marker, retryDelayMs: 0 });
+
+    expect(result.ok).toBe(true);
+    expect(result.host).toBe("opencode");
+    expect(result.via).toBe("marker");
+  });
+});
+
