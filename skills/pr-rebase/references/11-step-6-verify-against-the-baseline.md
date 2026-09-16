@@ -9,6 +9,20 @@ skipped — the verdict table maps it to `UNKNOWN` whatever it returns now,
 so re-running it can produce no evidence either way. Report it `UNKNOWN`
 in the table regardless.
 
+**A held dev/build lock is a step-specific stop here.** When a re-run cannot
+execute because the project's own dev/build lock is held (a local `next dev`
+holding `.next`), free the lock and re-run the same checks. If the user
+declines, restore the pre-rebase branch. The run stops before step 7 and
+repeats the recovery anchor:
+
+```sh
+git reset --hard "${ORIG_SHA:?}"
+```
+
+`UNKNOWN` stays reserved for unavailable tooling — a missing dependency or a
+command not found. A lock the project's own dev/build process holds is a
+stop, never `UNKNOWN`.
+
 Classify each check by comparing `AFTER` to `BASELINE`:
 
 | BASELINE | AFTER | Verdict |

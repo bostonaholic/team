@@ -34,11 +34,13 @@
    reported at every stop (step 2). A run that leaves the user unable to say
    `git reset --hard <sha>` has failed even if the rebase succeeded.
 9. **A check with no baseline proves nothing after.** A check that could not
-   run before the rebase is reported `UNKNOWN`, never counted as evidence
-   that behavior was preserved (step 2). When *every* check is `UNKNOWN`, the
-   run verified nothing at all: the publish proceeds on the invocation's
-   authority, but it is reported as unverified in exactly those words —
-   never as checks matching a baseline (step 7).
+   run before the rebase because its tooling is unavailable is reported
+   `UNKNOWN`, never counted as evidence that behavior was preserved (step 2).
+   A check blocked by the project's own dev/build lock is a stop, not
+   `UNKNOWN` (step 2). When *every* check is `UNKNOWN`, the run verified
+   nothing at all: the publish proceeds on the invocation's authority, but it
+   is reported as unverified in exactly those words — never as checks
+   matching a baseline (step 7).
    Rules 8 and 9 are [durable state rules](../team/principles/durable-state.md): capture
    the baseline and the recovery anchor before anything is rewritten.
 10. **No destructive command relies on a variable set in an earlier Bash

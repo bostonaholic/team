@@ -34,11 +34,25 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    [execution rules](../team/references/execution.md): one backgrounded call the harness reports
    on, never a foreground `sleep` sized to just miss the turn ceiling.
 
+   **A check blocked by the project's own dev/build lock is a stop, not
+   `UNKNOWN`.** When a local `next dev` holds `.next` (or the project's
+   equivalent build cache), the check cannot execute, but that is a state the
+   user can free in seconds — classifying it `UNKNOWN` silently disables the
+   strongest check. Stop, name the holder, and ask the user to free it; or
+   run that check before declaring the baseline. Probe the live process, not
+   the lock file: a stale lock file with no holder must not stop the run.
+
+   ```sh
+   lsof -- "<lock-path>" >/dev/null 2>&1 || pgrep -f "<dev-or-build-command>" >/dev/null 2>&1 \
+     && { echo "stop: a live process holds the dev/build lock — free it and re-run" >&2; exit 1; }
+   ```
+
 3. Classify each check `PASS`, `FAIL`, or `UNKNOWN`. `UNKNOWN` is for a
-   check that could not execute at all — missing dependencies, a command not
-   found, a service it needs is down. A `FAIL` baseline is fine and does not
-   stop the rebase. An `UNKNOWN` baseline permanently disables that check as
-   evidence (Hard Rule 9).
+   check that could not execute because tooling is unavailable — a missing
+   dependency, a command not found. A held dev/build lock is a stop (above),
+   never `UNKNOWN`. A `FAIL` baseline is fine and does not stop the rebase.
+   An `UNKNOWN` baseline permanently disables that check as evidence (Hard
+   Rule 9).
 
 4. Write it all to the rebase log, and keep the log as the working record
    for the rest of the run so none of it has to stay resident in context:

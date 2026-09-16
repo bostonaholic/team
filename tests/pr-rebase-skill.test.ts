@@ -65,6 +65,25 @@ function fencedIndex(re: RegExp): number {
   return fencedLines().findIndex((line) => re.test(line));
 }
 
+/** Fenced code blocks as arrays of lines — keeps each block's boundary. */
+function fencedBlocks(): string[][] {
+  const blocks: string[][] = [];
+  let current: string[] | null = null;
+  for (const line of body().split("\n")) {
+    if (/^\s*```/.test(line)) {
+      if (current === null) {
+        current = [];
+      } else {
+        blocks.push(current);
+        current = null;
+      }
+      continue;
+    }
+    if (current) current.push(line);
+  }
+  return blocks;
+}
+
 describe("pr-rebase skill: frontmatter and invocation surface", () => {
   test("skill file lives under runtime skills/ (distributed)", () => {
     expect(existsSync(PR_REBASE_SKILL)).toBe(true);
@@ -454,5 +473,56 @@ describe("pr-rebase skill: the publisher is detected, never assumed to be git", 
     expect(draftAfter).toBeGreaterThan(-1);
     expect(publisher).toBeGreaterThan(draftAfter);
     expect(text.lastIndexOf("publish happened")).toBeGreaterThan(publisher);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Slice 1 (pr-rebase-ux-reviewer-fixes): a check blocked by the project's own
+// dev/build lock is a stop, not a silent UNKNOWN.
+// ---------------------------------------------------------------------------
+describe("pr-rebase skill: a held dev/build lock stops the run (slice 1)", () => {
+  test("the lock probe names a determinate executable and its guard exits non-zero", () => {
+    // The guard is a runnable fenced command, not advisory prose: it probes the
+    // live process (lsof/pgrep), and the block that holds it stops with exit 1.
+    const probeBlocks = fencedBlocks().filter((block) =>
+      block.some((line) => /\b(?:lsof|pgrep)\b/.test(line)),
+    );
+    expect(probeBlocks.length).toBeGreaterThan(0);
+    expect(probeBlocks.flat().join("\n")).toContain("exit 1");
+  });
+
+  test("step 6 names the recovery anchor git reset --hard \"${ORIG_SHA:?}\"", () => {
+    expect(fencedLines().join("\n")).toContain('git reset --hard "${ORIG_SHA:?}"');
+  });
+
+  test("UNKNOWN narrows to unavailable tooling across the references", () => {
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).toContain("UNKNOWN");
+    expect(t).toContain("tooling");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Slice 2 (pr-rebase-ux-reviewer-fixes): a generated-file conflict reconciles
+// to the direct change, never a non-frozen install.
+// ---------------------------------------------------------------------------
+describe("pr-rebase skill: a generated-file conflict reconciles minimally (slice 2)", () => {
+  test("path A restores stage :2: and checks the diff against stage 2", () => {
+    const lines = fencedLines().join("\n");
+    expect(lines).toContain('git show ":2:<path>" > "<path>"');
+    expect(lines).toContain('git diff :2: -- "<path>"');
+  });
+
+  test("path B reconciles with a targeted update then a frozen validation", () => {
+    const lines = fencedLines().join("\n");
+    expect(lines).toContain('bun install "<pkg>@<version>"');
+    expect(lines).toContain("--frozen-lockfile");
+  });
+
+  test("an absent :2: stage defers to the modify/delete decision", () => {
+    const t = body();
+    expect(t.length).toBeGreaterThan(0);
+    expect(t).toContain("modify/delete decision");
   });
 });
