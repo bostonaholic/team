@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A sixth shared principle, `boil-the-ocean`, makes completeness part of the implement contract.** The marginal cost of completeness is near zero, so the implementer and the `team` orchestrator now read a rule set that forbids the partial solve: fix the cause, not the symptom; ship tests and docs, not just compiling code; return the finished product, not a plan to finish it. Completeness is scoped to the authorized work, so adjacent defects and unapproved features are still recorded rather than folded in. **What this asks of you:** nothing.
+
 ## [0.118.0] - 2026-09-15
 
 ### Added

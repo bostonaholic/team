@@ -12,8 +12,9 @@ permissionMode: acceptEdits
 
 ## Installed resources
 
-Before work, read [execution rules](../skills/team/references/execution.md) and
-[agent dispatch](../skills/team/references/agent-dispatch.md).
+Before work, read [execution rules](../skills/team/references/execution.md),
+[agent dispatch](../skills/team/references/agent-dispatch.md), and
+[boil the ocean rules](../skills/team/principles/boil-the-ocean.md).
 Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Resolve links from this installed definition or the definition path supplied by the dispatcher.
 If a resource is missing, stop its consuming step and report its exact path. Never use checkout fallback.

@@ -41,7 +41,7 @@ This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 26 registered skills, all commands. The five shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 26 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 ## Entry-point skills
@@ -310,6 +310,7 @@ Read these ordinary documents at their consuming step. They add no registrations
 
 - [bug fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/playbooks/bug-fix.md)
 - [bug diagnosis](https://github.com/bostonaholic/team/blob/main/skills/team-fix/references/diagnosis.md)
+- [boil the ocean](https://github.com/bostonaholic/team/blob/main/skills/team/principles/boil-the-ocean.md)
 - [durable state](https://github.com/bostonaholic/team/blob/main/skills/team/principles/durable-state.md)
 - [focused work](https://github.com/bostonaholic/team/blob/main/skills/team/principles/focused-work.md)
 - [human control](https://github.com/bostonaholic/team/blob/main/skills/team/principles/human-control.md)
