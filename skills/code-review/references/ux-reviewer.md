@@ -270,4 +270,6 @@ REQUEST CHANGES verdict. An unavailable toolchain is Could Improve, never
 Broken; screenshot or capture failure stays Could Improve like any other
 capture miss. When a native-only run produces no PNGs because build, boot, or
 capture failed, record manifest `status: partial` and list each failure under
-`## Skipped`, so team-pr does not re-run the same failing build.
+`## Skipped`. team-pr treats a manifest with no captured PNGs on disk as a
+capture gap — it re-runs capture — so `partial` records the miss for the
+reader; it does not suppress the next attempt.

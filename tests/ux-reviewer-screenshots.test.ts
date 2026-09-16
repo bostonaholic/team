@@ -140,7 +140,9 @@ describe("ux-reviewer native capture and locator scope (slice 3)", () => {
     // A branch-caused build failure is Broken; an unavailable toolchain is a note.
     expect(after).toContain("Broken");
     expect(after).toMatch(/Could[-\s]Improve/);
-    // The zero-shot case records the manifest status that stops team-pr's recapture.
+    // The zero-shot case records `status: partial` and lists each failure under
+    // `## Skipped`; team-pr still treats a no-PNG manifest as a capture gap.
     expect(after).toContain("status: partial");
+    expect(after).toContain("## Skipped");
   });
 });

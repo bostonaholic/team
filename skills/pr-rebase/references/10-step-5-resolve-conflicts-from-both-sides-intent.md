@@ -89,12 +89,18 @@ For each conflicted path:
    ```sh
    git show ":2:<path>" > "<path>"   # the rebase's current copy
    # apply only this commit's direct change, then confirm the diff is minimal
-   git diff :2: -- "<path>"
+   git show ":2:<path>" | diff - "<path>"
    ```
+
+   `git diff :2: -- "<path>"` is **not** valid: `:2:` is an index stage
+   selector, not a revision, and the command dies with
+   `fatal: bad revision ':2:'`. Compare through the stage read instead — the
+   pipe form above, or `git diff --no-index <(git show ":2:<path>") "<path>"`.
 
    Path B, a dependency-graph change (a lockfile): restore the same `:2:`
    copy first, reconcile with a targeted update, then validate with the
-   frozen install:
+   project's own frozen install. The commands below are for example in a Bun
+   project; substitute the project's package manager:
 
    ```sh
    git show ":2:<path>" > "<path>"

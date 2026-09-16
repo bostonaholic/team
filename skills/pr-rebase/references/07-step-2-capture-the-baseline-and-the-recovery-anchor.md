@@ -42,9 +42,19 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    run that check before declaring the baseline. Probe the live process, not
    the lock file: a stale lock file with no holder must not stop the run.
 
+   Scope both probes to this project so an unrelated dev server cannot match:
+   target `lsof` at the project's own lock path, and anchor the `pgrep` match
+   to the project root rather than a bare command name. An explicit
+   `if … then … exit 1; fi` is required — an `A || B && C` chain parses as
+   `(A || B) && C`, so the free path's `pgrep` failure becomes the whole
+   command's non-zero status.
+
    ```sh
-   lsof -- "<lock-path>" >/dev/null 2>&1 || pgrep -f "<dev-or-build-command>" >/dev/null 2>&1 \
-     && { echo "stop: a live process holds the dev/build lock — free it and re-run" >&2; exit 1; }
+   if lsof -- "<project-root>/<lock-path>" >/dev/null 2>&1 \
+      || pgrep -f "<project-root>/.*<dev-or-build-command>" >/dev/null 2>&1; then
+     echo "stop: a live process holds this project's dev/build lock — free it and re-run" >&2
+     exit 1
+   fi
    ```
 
 3. Classify each check `PASS`, `FAIL`, or `UNKNOWN`. `UNKNOWN` is for a

@@ -11,13 +11,22 @@ in the table regardless.
 
 **A held dev/build lock is a step-specific stop here.** When a re-run cannot
 execute because the project's own dev/build lock is held (a local `next dev`
-holding `.next`), free the lock and re-run the same checks. If the user
-declines, restore the pre-rebase branch. The run stops before step 7 and
-repeats the recovery anchor:
+holding `.next`), probe the live process — a stale lock file with no holder
+must not stop the run — and stop before step 7:
 
 ```sh
-git reset --hard "${ORIG_SHA:?}"
+if lsof -- "<project-root>/<lock-path>" >/dev/null 2>&1 \
+   || pgrep -f "<project-root>/.*<dev-or-build-command>" >/dev/null 2>&1; then
+  echo "stop: a live process holds this project's dev/build lock — free it and re-run" >&2
+  exit 1
+fi
 ```
+
+Free the lock and re-run the same checks. If the user declines, report the
+recovery anchor `git reset --hard "${ORIG_SHA:?}"` to restore the pre-rebase
+branch (Hard Rule 8). The anchor is reported inline, never run from a bare
+fence: Hard Rule 10 requires any executed `git reset --hard` to re-derive
+`$ORIG_SHA` from the rebase log in the same invocation.
 
 `UNKNOWN` stays reserved for unavailable tooling — a missing dependency or a
 command not found. A lock the project's own dev/build process holds is a

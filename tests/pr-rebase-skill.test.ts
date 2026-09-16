@@ -46,11 +46,17 @@ function fm(): string {
   return existsSync(PR_REBASE_SKILL) ? frontmatter(read(PR_REBASE_SKILL)) : "";
 }
 
+/** The raw text of one numbered reference file, or "" when absent. */
+function reference(name: string): string {
+  const path = join(REFERENCES, name);
+  return existsSync(path) ? read(path) : "";
+}
+
 /** Every line inside a fenced code block — what the model is told to RUN. */
-function fencedLines(): string[] {
+function fencedLinesOf(text: string): string[] {
   const out: string[] = [];
   let inFence = false;
-  for (const line of body().split("\n")) {
+  for (const line of text.split("\n")) {
     if (/^\s*```/.test(line)) {
       inFence = !inFence;
       continue;
@@ -60,16 +66,20 @@ function fencedLines(): string[] {
   return out;
 }
 
+function fencedLines(): string[] {
+  return fencedLinesOf(body());
+}
+
 /** Index of the first fenced line matching `re`, or -1. Used for ordering. */
 function fencedIndex(re: RegExp): number {
   return fencedLines().findIndex((line) => re.test(line));
 }
 
 /** Fenced code blocks as arrays of lines — keeps each block's boundary. */
-function fencedBlocks(): string[][] {
+function fencedBlocksOf(text: string): string[][] {
   const blocks: string[][] = [];
   let current: string[] | null = null;
-  for (const line of body().split("\n")) {
+  for (const line of text.split("\n")) {
     if (/^\s*```/.test(line)) {
       if (current === null) {
         current = [];
@@ -82,6 +92,10 @@ function fencedBlocks(): string[][] {
     if (current) current.push(line);
   }
   return blocks;
+}
+
+function fencedBlocks(): string[][] {
+  return fencedBlocksOf(body());
 }
 
 describe("pr-rebase skill: frontmatter and invocation surface", () => {
@@ -484,15 +498,36 @@ describe("pr-rebase skill: a held dev/build lock stops the run (slice 1)", () =>
   test("the lock probe names a determinate executable and its guard exits non-zero", () => {
     // The guard is a runnable fenced command, not advisory prose: it probes the
     // live process (lsof/pgrep), and the block that holds it stops with exit 1.
-    const probeBlocks = fencedBlocks().filter((block) =>
-      block.some((line) => /\b(?:lsof|pgrep)\b/.test(line)),
-    );
-    expect(probeBlocks.length).toBeGreaterThan(0);
-    expect(probeBlocks.flat().join("\n")).toContain("exit 1");
+    // Scoped per step — BOTH step 2 and step 6 must carry the guard — so this
+    // cannot pass on a single matching block anywhere in the joined body.
+    const steps = [
+      "07-step-2-capture-the-baseline-and-the-recovery-anchor.md",
+      "11-step-6-verify-against-the-baseline.md",
+    ];
+    for (const name of steps) {
+      const text = reference(name);
+      expect(text.length).toBeGreaterThan(0);
+      const guardBlocks = fencedBlocksOf(text).filter((block) =>
+        block.some((line) => /\b(?:lsof|pgrep|fuser)\b/.test(line)),
+      );
+      expect(guardBlocks.length).toBeGreaterThan(0);
+      // The probe and the stop share one block: a probe that cannot reach the
+      // `exit 1` is advisory prose, not a guard.
+      expect(
+        guardBlocks.some((block) => block.some((line) => /\bexit 1\b/.test(line))),
+      ).toBe(true);
+    }
   });
 
   test("step 6 names the recovery anchor git reset --hard \"${ORIG_SHA:?}\"", () => {
-    expect(fencedLines().join("\n")).toContain('git reset --hard "${ORIG_SHA:?}"');
+    // The anchor is REPORTED inline, never a bare runnable fence: Hard Rule 10
+    // requires any executed `git reset --hard` to re-derive $ORIG_SHA in the
+    // same invocation, and the skill's convention is to report it.
+    expect(body()).toContain('git reset --hard "${ORIG_SHA:?}"');
+    const step6 = fencedLinesOf(
+      reference("11-step-6-verify-against-the-baseline.md"),
+    ).join("\n");
+    expect(step6).not.toContain('git reset --hard "${ORIG_SHA:?}"');
   });
 
   test("UNKNOWN narrows to unavailable tooling across the references", () => {
@@ -511,7 +546,10 @@ describe("pr-rebase skill: a generated-file conflict reconciles minimally (slice
   test("path A restores stage :2: and checks the diff against stage 2", () => {
     const lines = fencedLines().join("\n");
     expect(lines).toContain('git show ":2:<path>" > "<path>"');
-    expect(lines).toContain('git diff :2: -- "<path>"');
+    expect(lines).toContain('git show ":2:<path>" | diff - "<path>"');
+    // `:2:` is an index stage selector, not a revision; `git diff :2: -- <path>`
+    // dies with `fatal: bad revision ':2:'`.
+    expect(lines).not.toContain('git diff :2: -- "<path>"');
   });
 
   test("path B reconciles with a targeted update then a frozen validation", () => {
