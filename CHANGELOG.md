@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.120.0] - 2026-09-16
+
+### Changed
+
+- **Writing guidance now removes incidentals from explanations.** Every comment, doc, and explanation an agent writes carries the point and its evidence only: background the reader did not ask for, the search or discovery account, restatement, and decision-irrelevant caveats all go. The rule lives in the writing standards as `Remove incidentals` and is wired through the comment, documentation, and explanation surfaces. **What this asks of you:** nothing.
+
 ## [0.119.0] - 2026-09-16
 
 ### Added
@@ -1073,7 +1079,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.119.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.120.0...HEAD
+[0.120.0]: https://github.com/bostonaholic/team/compare/v0.119.0...v0.120.0
 [0.119.0]: https://github.com/bostonaholic/team/compare/v0.118.0...v0.119.0
 [0.118.0]: https://github.com/bostonaholic/team/compare/v0.117.0...v0.118.0
 [0.117.0]: https://github.com/bostonaholic/team/compare/v0.116.0...v0.117.0

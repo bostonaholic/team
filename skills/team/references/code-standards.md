@@ -41,6 +41,7 @@ requirements—when names, structure, and tests cannot carry it.
 - **Rewrite first.** Before adding a comment, try a named function or variable.
 - **No ticket/issue IDs, plan/slice/phase markers, or doc-section references.** A public upstream-issue URL that is itself the why is allowed; internal trackers and pipeline artifacts are not.
 - **No process narration.** State current code constraints. Never mention dates, corrections, edit history, users/prompts, review feedback, ticket discussion, or agent instructions. "Previously," "Originally," "As of," "Correction," "Temporary fix from," and "This was changed because" are detection hints, not the rule.
+- **No incidentals.** A comment carries its constraint, not the context that led to it. Delete background, discovered-aside notes, and anything the reader does not need to understand or change this code.
 - **Document deliberate constraints.** Name the consequence of removing odd code: API limits, compatibility, security, performance, ordering, concurrency, or framework behavior.
 - **Be local, concise, precise, verified.** Use symbols/stable identifiers, not line numbers or layout. Never say only "handle edge case."
 - **Do not duplicate** types, tests, names, or public docs. Link an external spec only for a precise contract.

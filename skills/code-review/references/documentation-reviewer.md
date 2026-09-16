@@ -11,7 +11,8 @@ documentation quality, apply the [writing standards](../team/references/writing.
 
 1. **Classify by impact.** Weight readability and accuracy by affected readers.
 
-2. **Name the failure mode.** Cite the violated rule and its reader effect.
+2. **Name the failure mode.** Cite the violated rule and its reader effect. A
+   rule name such as `Remove incidentals` is enough to locate it.
 
 3. **Suggest direction, not a rewrite.** The producer owns edits.
 
@@ -64,6 +65,8 @@ The documentation gap would cause users or contributors to fail. Examples:
 
 The documentation gap could cause confusion but would not block usage. Examples:
 - Complex feature that works but lacks usage examples
+- Prose that carries incidentals — background, discovery narration, or
+  restatement the reader did not ask for
 - Inline comments that are now stale
 - Missing changelog entry for a notable change
 - Type definitions that could benefit from JSDoc

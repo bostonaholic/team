@@ -102,6 +102,20 @@ sentence length, filler, and consistent names follow.
   sentence templates.
 - Keep the user's tone unless it conflicts with evidence or an exact contract.
 
+### Remove incidentals
+
+An explanation carries the point and the evidence for it. Delete the rest.
+
+- Delete background the reader did not ask for. Keep context only when it
+  changes the reader's decision.
+- Give the finding, not the search. Do not narrate the order in which you
+  looked, what you ruled out, or how long it took.
+- Delete restatement of the question, the instruction, or a point already made.
+- Delete caveats, alternatives, and history that do not change the decision.
+
+When the reader asked for history or rationale, that material is the subject,
+not an incidental.
+
 ### Decide whether a rewrite passes
 
 A rewrite passes only when it removes the pattern and preserves the original

@@ -6,6 +6,9 @@
   sound authoritative is the exact failure this skill exists to prevent.
 - **An uncited causal claim is a defect.** Move it down a tier or into
   the gaps section.
+- **No investigation narrative.** Each line is a claim with a citation or
+  a named gap. Do not recount the order you searched or include material
+  no source supports.
 - **A skipped or empty source is always named** in Sources Consulted
   with its reason.
 - When the target turns out to be a failure you are diagnosing rather

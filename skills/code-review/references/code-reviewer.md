@@ -112,9 +112,7 @@ that pass did not run.>
   that reaches you drops a heading, adds one this template does not list, or
   reorders them, pass it on as it arrived and name the deviation on its own
   line. This binds every surface named above — the relay after a direct
-  invocation, and a dispatcher folding in what a subagent returned. A
-  receiver that quietly reshapes a report becomes a second place the shape
-  is decided, and then it is no longer one shape.
+  invocation, and a dispatcher folding in what a subagent returned.
 
 ## Gate Types and Severity Tiers
 
@@ -164,8 +162,7 @@ multiple tests:
 **Flaky-test red flags (always blocking).** Distinct from the style flags
 above. Any test in the diff whose *outcome depends on* a nondeterministic
 input is `issue (blocking)` on **first** occurrence, routing to the Blocking
-tier and auto-looping the implementer. A single time-bomb ships a guaranteed
-future CI failure, and flakiness erodes the "green means safe" signal. The
+tier and auto-looping the implementer. The
 rule keys to outcome-dependence, not token presence: a `Date.now()` in a log
 line does not flag; one feeding an assertion does. Outcome-dependence covers
 the whole suite — state or resources left behind flag because a *later* test's
@@ -184,7 +181,8 @@ regimes apply:
   comments the diff introduces. These checks are mechanical and
   judgment-free, and the references rot.
 - **Style escalation** — comments restating WHAT the code does, wordy or
-  narrating comments, commented-out code, process narration, comments far
+  narrating comments, incidental context the code does not need,
+  commented-out code, process narration, comments far
   from the code they explain, vague language ("handle edge case"),
   speculation, duplication of what types/tests/names/docs already carry,
   fragile positional references, style diverging from the repo convention,

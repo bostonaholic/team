@@ -106,6 +106,9 @@ test("Team rule groups cover evidence, directness, concrete language, format, an
   expect(rules).toContain("Name the concrete subject");
   expect(rules).toContain("Format only for structure");
   expect(rules).toContain("Remove assistant mannerisms");
+  expect(rules).toContain("Remove incidentals");
+  expect(rules).toMatch(/background the reader did not ask for/i);
+  expect(rules).toMatch(/finding, not the search/i);
   expect(rules).toMatch(/evidence does not support/i);
   expect(rules).toMatch(/name the source/i);
   expect(rules).toMatch(/real uncertainty/i);

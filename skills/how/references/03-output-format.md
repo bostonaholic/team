@@ -1,6 +1,8 @@
 ## Output format
 
-Adapt to the question — not every section is needed every time.
+Adapt to the question — not every section is needed every time. Omit
+incidentals: no account of how you explored, no background the question did
+not raise, no restatement.
 
 - **Overview** — one or two paragraphs: what it is, what it does, why it
   exists. Enough to decide whether to keep reading.
