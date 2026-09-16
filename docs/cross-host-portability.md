@@ -321,7 +321,7 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
    path, so no methodology registration remains for Codex to list. The principle
    tier is returning as guarded `disable-model-invocation` skills, kept out of
    Codex's implicit catalog by `allow_implicit_invocation: false`; the `$`
-   picker shows the 26 commands. See
+   picker shows the 27 commands. See
    [the divergence note](#57-codex-port) for the historical evidence.
 
 3. **Recency risk.** This is cross-cutting rather than a primitive gap. Codex's
@@ -438,7 +438,7 @@ full parity. It starts from the matrix and works around the named gaps.
   equivalent — `policy.allow_implicit_invocation: false` in each skill's
   `agents/openai.yaml` — keeps all five out of the implicit catalog. The
   divergence is deliberate and the validator finding is expected.
-- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 26 entry commands remain in the picker. Principles are guarded `disable-model-invocation` skills read by installed path, so they add no implicit-invocation entries.
+- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 27 entry commands remain in the picker. Principles are guarded `disable-model-invocation` skills read by installed path, so they add no implicit-invocation entries.
   Historical probe evidence: the `$` picker was fed by the `skills/list` app-server method, which returned all
   100 Team skills with `enabled: true`, `team:principle-fix-root-causes` among
   them. Its `SkillMetadata` payload carries nine fields — `dependencies`,
