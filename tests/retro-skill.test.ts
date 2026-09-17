@@ -46,9 +46,6 @@ import { pathToFileURL } from "node:url";
 
 import { frontmatter, read } from "./helpers/text";
 import {
-  MAX_RECORDS,
-  MAX_TOTAL_BYTES,
-  PER_SPAN_BYTE_CAP,
   detectHost,
   isUserTurn,
   normalizeOpencode,
@@ -151,8 +148,7 @@ function promptStream(count: number): string {
 }
 
 // A stream of `count` assistant records whose spans are each exactly
-// `spanBytes` ASCII bytes — so the aggregate byte ceiling, not the record
-// ceiling, is what bounds it.
+// `spanBytes` ASCII bytes.
 function assistantStream(count: number, spanBytes: number): string {
   const records = Array.from({ length: count }, () => assistantText("x".repeat(spanBytes)));
   return jsonl(...records);
@@ -805,13 +801,7 @@ describe("Slice 1 — L1: resolveSession breaks a two-host tie on evidence", () 
 // Slice 1 — L1: normalization
 // ===========================================================================
 
-describe("Slice 1 — L1: normalizeTranscript classifies records and bounds the stream", () => {
-  test("the bounds are the pinned values: 4,000 bytes per span, 2,000 records, 4 MB", () => {
-    expect(PER_SPAN_BYTE_CAP).toBe(4000);
-    expect(MAX_RECORDS).toBe(2000);
-    expect(MAX_TOTAL_BYTES).toBe(4 * 1024 * 1024);
-  });
-
+describe("Slice 1 — L1: normalizeTranscript classifies records and preserves the full stream", () => {
   test("a plain prompt is a user turn and a tool-result record is not", () => {
     // 63 of 71 `type: "user"` records in a measured transcript carry
     // `toolUseResult`, so "the last user message" is not a prompt
@@ -870,7 +860,7 @@ describe("Slice 1 — L1: normalizeTranscript classifies records and bounds the 
     // The tooling lens's evidence IS the repeated invocation, and it reads only
     // the normalized file. A block carrying neither `text` nor `content` that
     // normalized to "" would erase exactly that evidence and still spend a
-    // record of the stream budget on a blank line.
+    // record on a blank line.
     const normalized = normalizeTranscript(
       jsonl(assistantToolUse("Bash", { command: "bun test" })),
     );
@@ -880,30 +870,26 @@ describe("Slice 1 — L1: normalizeTranscript classifies records and bounds the 
     expect(text).toContain("bun test");
   });
 
-  test("a span over the per-span cap is truncated to 4,000 bytes and counted", () => {
-    // Single lines in a real transcript pass 60,000 bytes, so the cap runs as
-    // code before any lens sees the span. ASCII fixture: one char, one byte.
+  test("a long span is retained in full", () => {
     const normalized = normalizeTranscript(jsonl(assistantText("y".repeat(10_000))));
 
-    expect((normalized.records[0]?.text ?? "").length).toBe(4000);
-    expect(normalized.truncatedSpans).toBe(1);
+    expect((normalized.records[0]?.text ?? "").length).toBe(10_000);
+    expect(normalized.truncatedSpans).toBe(0);
   });
 
-  test("a stream past 2,000 records keeps the newest 2,000 and reports the drop", () => {
+  test("a stream past 2,000 records retains its earliest record too", () => {
     const normalized = normalizeTranscript(promptStream(2001));
 
-    expect(normalized.records.length).toBe(2000);
-    expect(normalized.droppedForCeiling).toBe(1);
-    expect(normalized.records[0]?.text ?? "").toContain("turn-0001");
+    expect(normalized.records.length).toBe(2001);
+    expect(normalized.droppedForCeiling).toBe(0);
+    expect(normalized.records[0]?.text ?? "").toContain("turn-0000");
   });
 
-  test("a stream past 4 MB is bounded to the byte ceiling and reports the drop", () => {
-    // 1,500 records is under the record ceiling, so the byte ceiling is the
-    // only bound that can fire here.
+  test("a stream past 4 MB retains all text", () => {
     const normalized = normalizeTranscript(assistantStream(1500, 4000));
 
-    expect(normalized.droppedForCeiling).toBeGreaterThan(0);
-    expect(totalSpanBytes(normalized.records)).toBeLessThanOrEqual(4 * 1024 * 1024);
+    expect(normalized.droppedForCeiling).toBe(0);
+    expect(totalSpanBytes(normalized.records)).toBe(1500 * 4000);
   });
 
   test("a malformed line is skipped and counted, and the valid records survive", () => {
@@ -917,7 +903,7 @@ describe("Slice 1 — L1: normalizeTranscript classifies records and bounds the 
 });
 
 // ===========================================================================
-// Slice 1 — L1: Codex normalization into the same bounded contract
+// Slice 1 — L1: Codex normalization into the same complete contract
 // ===========================================================================
 
 describe("Slice 1 — L1: a Codex rollout normalizes into the same record shape", () => {
@@ -994,16 +980,18 @@ describe("Slice 1 — L1: a Codex rollout normalizes into the same record shape"
     expect(isUserTurn(codexUser("why does <system_instruction> show up in the transcript?"))).toBe(true);
   });
 
-  test("the byte cap, record ceiling, and malformed-line count apply to Codex too", () => {
-    const capped = normalizeTranscript(jsonl(codexAssistant("y".repeat(10_000))));
-    expect((capped.records[0]?.text ?? "").length).toBe(PER_SPAN_BYTE_CAP);
-    expect(capped.truncatedSpans).toBe(1);
+  test("Codex retains long spans and every record while counting malformed lines", () => {
+    const longSpan = normalizeTranscript(jsonl(codexAssistant("y".repeat(10_000))));
+    expect((longSpan.records[0]?.text ?? "").length).toBe(10_000);
+    expect(longSpan.truncatedSpans).toBe(0);
 
-    const bounded = normalizeTranscript(
-      jsonl(...Array.from({ length: MAX_RECORDS + 1 }, (_, index) => codexUser(`turn-${index}`))),
+    const fullStream = normalizeTranscript(
+      jsonl(...Array.from({ length: 2001 }, (_, index) => codexUser(`turn-${index}`))),
     );
-    expect(bounded.records.length).toBe(MAX_RECORDS);
-    expect(bounded.droppedForCeiling).toBe(1);
+    expect(fullStream.records.length).toBe(2001);
+    expect(fullStream.records[0]?.text).toBe("turn-0");
+    expect(fullStream.records[2000]?.text).toBe("turn-2000");
+    expect(fullStream.droppedForCeiling).toBe(0);
 
     const malformed = normalizeTranscript(
       `${JSON.stringify(codexUser("retro"))}\n{"type":"response_item",\n${JSON.stringify(codexAssistant("ok"))}\n`,
@@ -1127,8 +1115,8 @@ describe("Slice 1 — L2: retro's three reporting lenses", () => {
   });
 
   test("each lens caps its own reply at 30 lines", () => {
-    // The per-span byte cap bounds what a lens READS; this bounds what it
-    // WRITES back. The cap stays advisory because no code reads a model's
+    // The lens reads the full transcript. This bounds only its reply.
+    // The cap stays advisory because no code reads a model's
     // draft, so the number itself is the only thing that can be pinned.
     const lenses = flat(section(LENSES));
     expect(lenses.length).toBeGreaterThan(0);
@@ -1301,7 +1289,7 @@ describe("Slice 1 — L2: retro's three reporting lenses", () => {
     expect(documented).toContain("`unsupported-format`");
   });
 
-  test("a bounded or missing read is reported, never filled in from memory", () => {
+  test("a partial or missing read is reported, never filled in from memory", () => {
     // The whole reason the run reads a file is that context already lost the
     // early turns. A partial read that gets topped up from memory reintroduces
     // exactly the source the skill exists to avoid.
@@ -1620,7 +1608,7 @@ function opencodeStore(label: string, sessions: OpencodeSession[]): string {
   // reproduces the order a test declared regardless of the id strings.
   let sequence = 0;
   // One explicit transaction for the whole fixture: autocommit fsyncs per row,
-  // which makes the multi-thousand-message ceiling fixture slow enough to time
+  // which makes the multi-thousand-message fixture slow enough to time
   // out on a slow CI runner.
   db.exec("BEGIN");
   for (const session of sessions) {
@@ -2064,7 +2052,7 @@ describe("Slice 1 — L1: normalizeOpencode maps a session into the record strea
     expect(normalized.records[0]?.text).toBe("kept");
   });
 
-  test("a long text followed by a tool part loses the tool part at the span cap", () => {
+  test("a long text followed by a tool part retains both parts", () => {
     const dbPath = opencodeStore("opencode-joined-cap", [
       childlessSession("ses_joincap00000001", [
         assistantMessage([
@@ -2077,31 +2065,31 @@ describe("Slice 1 — L1: normalizeOpencode maps a session into the record strea
     const normalized = normalizeOpencode({ dbPath, sessionId: "ses_joincap00000001" });
     const text = normalized.records[0]?.text ?? "";
 
-    expect(text.length).toBe(PER_SPAN_BYTE_CAP);
-    expect(text).not.toContain("bash");
-    expect(normalized.truncatedSpans).toBe(1);
+    expect(text).toContain("y".repeat(5000));
+    expect(text).toContain("bash");
+    expect(normalized.truncatedSpans).toBe(0);
   });
 
-  test("a session past 2,000 messages keeps the newest and reports the drop", () => {
+  test("a session past 2,000 messages retains every message", () => {
     const dbPath = opencodeStore("opencode-record-ceiling", [
-      opencodeMessageStream("ses_ceiling0000001", MAX_RECORDS + 1, "turn"),
+      opencodeMessageStream("ses_ceiling0000001", 2001, "turn"),
     ]);
 
     const normalized = normalizeOpencode({ dbPath, sessionId: "ses_ceiling0000001" });
 
-    expect(normalized.records.length).toBe(MAX_RECORDS);
-    expect(normalized.droppedForCeiling).toBe(1);
+    expect(normalized.records.length).toBe(2001);
+    expect(normalized.droppedForCeiling).toBe(0);
   });
 
-  test("a session past 4 MB is bounded to the byte ceiling and reports the drop", () => {
+  test("a session past 4 MB retains every message in full", () => {
     const dbPath = opencodeStore("opencode-byte-ceiling", [
       opencodeMessageStream("ses_bytes000000001", 1500, "y".repeat(4000)),
     ]);
 
     const normalized = normalizeOpencode({ dbPath, sessionId: "ses_bytes000000001" });
 
-    expect(normalized.droppedForCeiling).toBeGreaterThan(0);
-    expect(totalSpanBytes(normalized.records)).toBeLessThanOrEqual(MAX_TOTAL_BYTES);
+    expect(normalized.droppedForCeiling).toBe(0);
+    expect(totalSpanBytes(normalized.records)).toBeGreaterThan(4 * 1024 * 1024);
   });
 
   test("the CLI writes transcript.jsonl for an OpenCode run with no unsupported-host", () => {

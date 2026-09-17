@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Retro preserves the full normalized session transcript, including long entries and early records, instead of applying per-entry, record-count, and total-size limits.
+
 ## [0.123.0] - 2026-09-17
 
 ### Changed
