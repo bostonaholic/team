@@ -106,7 +106,7 @@ export function resolveRuntime(resolverPath) {
     throw new Error(`${entrypoint}: packaged entrypoint differs from bundle; regenerate canonical source and reinstall`);
   }
   const temporary = realpathSync(tmpdir());
-  if (contains(projectRoot(), temporary) || contains(skillDirectory, temporary)) {
+  if (contains(projectRoot(), temporary) || contains(dirname(skillDirectory), temporary)) {
     throw new Error(`temporary runtime destination is inside the project or installation: ${temporary}`);
   }
   const root = mkdtempSync(join(temporary, "team-runtime-"));
