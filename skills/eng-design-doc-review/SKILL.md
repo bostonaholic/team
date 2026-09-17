@@ -122,8 +122,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
   pipeline gate runs the brief. The recovery hooks fail closed on anything
   but a recorded passing verdict. The skill itself writes no artifacts.
   The toolset, not the prose, is the guarantee for writes ([independent review rules](../team/principles/independent-review.md)).
-- Standalone use blocks nothing: users may run `/team-design` or
-  `/team-structure` without ever invoking this skill directly.
+- Standalone use blocks nothing: users may request `team-design` or
+  `team-structure` through the continuation choices without invoking this skill directly.
 
 Print the verdict and the count of issue / suggestion / nitpick findings.
 When any vendor CLI was unavailable during the cross-model pass, add one
@@ -135,11 +135,10 @@ DESIGN review gate writes the verdict artifact. `/team-structure` needs a
 recorded passing verdict before it slices a design.
 
 If the verdict is APPROVE or COMMENT, tell the user:
-**"To advance, run `/team-design docs/plans/<id>/` — with `6-design.md`
-already present it skips drafting and runs the review gate (skipping
-even that when the latest recorded verdict already passes — no
-redundant re-review), recording
-the verdict artifact — then proceed to `/team-structure`."**
+**"To advance, explicitly request `team-design` with arguments `docs/plans/<id>/` in this session.
+The existing `6-design.md` skips drafting. Its review gate records the verdict, unless a passing record already exists.
+After that gate passes, explicitly request `team-structure` with the same artifact directory."**
 If the verdict is REQUEST CHANGES, tell the user:
-**"Re-run `/team-design docs/plans/<id>/` with the findings above to
-re-dispatch `design-author` for a revision."**
+**"Explicitly request `team-design` with arguments `docs/plans/<id>/` and these findings in this session to revise the design."**
+For later slash invocation instead, offer the selected installation commands first:
+`npx skills add bostonaholic/team --skill team-design` or `npx skills add bostonaholic/team --skill team-structure`.
