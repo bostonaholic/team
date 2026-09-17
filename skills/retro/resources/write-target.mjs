@@ -76,9 +76,9 @@ export function hasPluginMarker(repoRoot) {
 /**
  * The skills root the running host actually loads, which is the copy an edit
  * has to reach to change anything. A repo carrying a plugin marker is a plugin
- * root, and its host reads `<repo>/skills/`; every other repo is a project, and
- * its host reads `<repo>/.claude/skills/`. The probe is injected so the
- * tie-break itself stays pure.
+ * root, and its host reads `<repo>/skills/`. Existing local `.claude/skills`
+ * targets take precedence over `.agents/skills`; an absent target defaults to
+ * `.claude/skills`. Injected probes keep this selection pure.
  *
  * This decides where an EDIT lands. Creation is not symmetrical: a new skill
  * only ever goes to `<repo>/.claude/skills/<name>/SKILL.md`, because adding a
@@ -86,9 +86,8 @@ export function hasPluginMarker(repoRoot) {
  */
 export function preferredEditRoot(query) {
   const repoRoot = query?.repoRoot ?? "";
-  return query?.hasPluginMarker
-    ? join(repoRoot, "skills")
-    : join(repoRoot, ".claude", "skills");
+  if (query?.hasPluginMarker) return join(repoRoot, "skills");
+  return join(repoRoot, !query?.hasClaudeSkill && query?.hasAgentsSkill ? ".agents" : ".claude", "skills");
 }
 
 // CLI entry point — runs only when executed directly, never on import, so a
@@ -107,7 +106,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(1);
   }
 
-  const editRoot = preferredEditRoot({ repoRoot, hasPluginMarker: hasPluginMarker(repoRoot) });
+  const editRoot = preferredEditRoot({
+    repoRoot,
+    hasPluginMarker: hasPluginMarker(repoRoot),
+    hasClaudeSkill: existsSync(join(repoRoot, ".claude", "skills", name, "SKILL.md")),
+    hasAgentsSkill: existsSync(join(repoRoot, ".agents", "skills", name, "SKILL.md")),
+  });
   const editTarget = join(editRoot, name, "SKILL.md");
   const createTarget = join(repoRoot, ".claude", "skills", name, "SKILL.md");
 

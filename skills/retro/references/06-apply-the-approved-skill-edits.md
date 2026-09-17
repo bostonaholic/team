@@ -98,10 +98,11 @@ back from an earlier block's variable.
   Native plugin source keeps its existing edit target.
 - **An edit** lands in the skills root the running host actually loads: a repo
   carrying a plugin marker (`.claude-plugin/plugin.json` or a root
-  `plugin.json`) is a plugin root and its host reads `<repo>/skills/`; every
-  other repo is a project and its host reads `<repo>/.claude/skills/`. When
-  both roots hold the same name, the plan names both paths and marks the
-  shadowed one untouched.
+  `plugin.json`) selects `<repo>/skills/` first.
+  Otherwise, select the existing local `.claude/skills/<name>/SKILL.md`, then `.agents/skills/<name>/SKILL.md`.
+  When both exist, keep `.claude` priority and leave the other untouched.
+  Check the selected local target for packaging.
+  If neither local target exists, search other installations before offering the `.claude/skills` fallback.
 - **A creation** only ever targets `.claude/skills/<name>/SKILL.md` under the
   repository, and only when that path does not exist. Adding a file to a
   distributed plugin's own `skills/` directory is a release decision, so it
