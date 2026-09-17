@@ -5,6 +5,10 @@ sections below, in this order, and replace every `<placeholder>`. Prefer the
 shortest prompt a competent agent can execute; delete any line that does not
 carry a fact.
 
+Write at the highest useful level. State one rule where several lines share a
+purpose, and name the target instead of describing it. Keep every path, command,
+identifier, and check. Elevation removes redundancy, never a fact.
+
 ## Title and one-line goal
 
 `<Imperative title>`. `<One sentence: the outcome, and for whom.>`
