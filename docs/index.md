@@ -115,6 +115,68 @@ The generated archives measure 490,692 bytes per dependent command and
 extraction. Repeated archives increase installation size and Git history.
 
 
+#### Selection and lifecycle
+
+The tested target names are `claude-code`, `codex`, `antigravity-cli`, and
+`opencode`. Use `antigravity-cli` for Antigravity CLI; `antigravity` selects the
+separate application. Install all commands, or choose project/global placement:
+
+```bash
+npx skills add bostonaholic/team --skill '*' --agent claude-code codex antigravity-cli opencode -y
+npx skills add bostonaholic/team --skill team --agent codex --copy --global -y
+npx skills list --agent codex --json
+npx skills list --agent codex --global --json
+```
+
+Without `--global`, installation and listing use the current project. With it,
+they use the user installation. Codex, Antigravity CLI, and OpenCode share canonical
+`.agents/skills` storage in that scope. Claude uses `.claude/skills`.
+The CLI supports copies and links: `--copy` requests copies. Multiple targets
+can create actual Claude links to canonical storage; a single target can copy
+by default. Upstream owns links, lockfiles, and installation metadata.
+
+To update a selection, rerun its original `npx skills add` command with the
+same scope and targets. Selected reinstall replaces that selection while keeping
+other commands and the other scope. This is the verified update path;
+`skills update` remains upstream-owned without extra Team guarantees.
+
+Skills CLI 1.6.0 has two removal limits. Unfiltered global removal can also
+delete a project selection. Target-only removal preserves canonical storage
+only when upstream detects another host that uses it. Without that detection,
+even a separately copied host selection can disappear.
+
+List affected installations and select agents explicitly for removal:
+
+```bash
+npx skills remove team --agent claude-code --yes
+npx skills remove team --agent codex --global --yes
+```
+
+The first command removes the project Claude selection. Preservation of a
+separate Codex selection requires upstream to detect Codex. The second targets
+global Codex without the unfiltered command's project cleanup.
+A canonical directory serves several universal targets, so they are not
+independent copies. Shared content can remain while another detected host uses it.
+Resolve those intended selections before expecting canonical storage to disappear.
+
+#### Switching Codex to native installation
+
+The native installer `script/dev-install-codex` refuses a real
+`~/.agents/skills/team` directory from global skills installation. It never
+replaces that directory automatically. List affected targets, remove the intended
+global selection through upstream, then run the native installer from a Team checkout.
+If another detected host retains the canonical directory, resolve its intended selection first:
+
+```bash
+npx skills list --global --json
+npx skills remove team --agent codex --global --yes
+script/dev-install codex
+```
+
+Remove other Team selections explicitly before choosing native setup for that
+host. Use explicit agent and scope flags. Native plugin commands
+and their host capability limits remain as documented below.
+
 ### Claude Code
 
 #### Native plugin installation

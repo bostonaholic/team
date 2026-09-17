@@ -816,3 +816,36 @@ Generated entrypoints and archives are not edit targets; local entrypoint change
 The generated archives measure 490,692 bytes per dependent command and
 12,757,992 bytes across 26 commands. Each decodes to 1,106,810 bytes before
 extraction. Repeated archives increase installation size and Git history.
+
+### Lifecycle and native migration
+
+Skills CLI 1.6.0 tests cover individual and wildcard selection, copy and actual
+symlink modes, project/global listing, selected reinstall, and agent-scoped removal on all four targets.
+The tests use isolated homes and local sources with network access disabled.
+Codex, Antigravity CLI, and OpenCode share canonical `.agents/skills` storage.
+Claude uses `.claude/skills`; copied Claude installations can remain independent.
+The upstream CLI owns installation metadata, links, and `skills update`.
+Selected reinstall with the original scope and targets is the verified update path.
+
+`script/dev-install-codex` refuses a real `~/.agents/skills/team` directory.
+Before switching from global skills to native Codex installation, list affected
+installations and remove the intended global selection with an explicit agent.
+If another detected universal host retains the canonical directory, resolve its intended selection before native setup:
+
+```bash
+npx skills list --global --json
+npx skills remove team --agent codex --global --yes
+script/dev-install codex
+```
+
+Remove other Team selections explicitly before native setup for that host.
+No automatic migration or directory replacement occurs. Native manifests,
+ownership guards, and OpenCode execution limits remain unchanged.
+
+Skills CLI 1.6.0 can delete a project selection during unfiltered global removal.
+Every removal example therefore names an agent. Canonical retention during
+target-only removal depends on upstream detecting the remaining host, not merely
+finding that host's copied skill. Without detection, removal can delete that
+other selection. With another detected universal host, shared canonical content
+can remain after agent-scoped removal. Do not assume independent storage or
+unconditional scope isolation from a successful exit code.

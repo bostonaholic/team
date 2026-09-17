@@ -51,6 +51,12 @@ Supported targets are `claude-code`, `codex`, `antigravity-cli`, and `opencode`.
 `Invoke Team skill` uses native registration in plugin mode and canonical bundled paths in skills mode.
 Recovery invocations appear as catalog edges. Continuation suggestions and self-resume guidance do not execute another command.
 Only selected entrypoints register. Bundled siblings retain their intent gates and standalone stops.
+Selection, copy/link mode, project/global listing, selected reinstall, and agent-scoped removal are upstream-owned.
+Use the tested lifecycle commands in the installation instructions. `skills update` has no additional Team guarantees.
+Codex native migration lists installations, removes the intended global selection with explicit `--agent codex`, then runs the native installer.
+It never replaces an existing `~/.agents/skills/team` directory automatically.
+CLI 1.6.0 unfiltered global removal can affect project selections. Canonical retention depends on detecting remaining hosts.
+Shared canonical content can remain while another detected host uses it; resolve those intended selections before native migration.
 Generated `runtime/` files belong to `bun run skills:build`; `bun run skills:check` detects stale outputs.
 Edit canonical source and reinstall. Local packaged entrypoint edits stop resolution, and `/retro` skips packaged edits.
 
