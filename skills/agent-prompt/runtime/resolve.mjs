@@ -116,9 +116,14 @@ export function resolveRuntime(resolverPath, consumerRoot) {
       let directory = root;
       for (const part of parents) {
         directory = join(directory, part);
-        if (!existsSync(directory)) mkdirSync(directory, { mode: 0o700 });
+        if (!existsSync(directory)) {
+          mkdirSync(directory, { mode: 0o700 });
+          chmodSync(directory, 0o700);
+        }
       }
-      writeFileSync(destination, record.text, { flag: "wx", mode: record.executable ? 0o700 : 0o600 });
+      const mode = record.executable ? 0o700 : 0o600;
+      writeFileSync(destination, record.text, { flag: "wx", mode });
+      chmodSync(destination, mode);
     }
   } catch (error) {
     rmSync(root, { recursive: true, force: true });
