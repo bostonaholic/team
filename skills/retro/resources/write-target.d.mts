@@ -23,7 +23,9 @@ export interface EditRootQuery {
   repoRoot: string;
   /** The plugin-marker probe result, injected so the tie-break stays pure. */
   hasPluginMarker: boolean;
+  hasClaudeSkill?: boolean;
+  hasAgentsSkill?: boolean;
 }
 
-/** The root the running host loads: <repo>/skills or <repo>/.claude/skills. */
+/** The root the running host loads: plugin skills or local .claude/.agents skills. */
 export function preferredEditRoot(query: EditRootQuery): string;
