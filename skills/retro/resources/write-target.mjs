@@ -4,7 +4,7 @@
  * Where an approved skill edit is allowed to land, and whether a proposed
  * skill name may be used at all.
  *
- *     node "<skill-dir>/resources/write-target.mjs" <repo-root> <skill-name>
+ *     node "<skill-dir>/resources/write-target.mjs" <repo-root> <skill-name> [edit|create]
  *
  * Every input here comes from transcript text, so it is untrusted. The three
  * checks below are `f(input) -> output`, which is why they are code rather
@@ -13,7 +13,7 @@
  * resolve-transcript.mjs — one job each.
  */
 
-import { existsSync, realpathSync } from "node:fs";
+import { existsSync, lstatSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -95,15 +95,35 @@ export function preferredEditRoot(query) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const repoRoot = process.argv[2] ?? "";
   const name = process.argv[3] ?? "";
+  const operation = process.argv[4] ?? "edit";
 
   if (!repoRoot || !name) {
-    process.stderr.write("usage: write-target.mjs <repo-root> <skill-name>\n");
+    process.stderr.write("usage: write-target.mjs <repo-root> <skill-name> [edit|create]\n");
     process.exit(1);
   }
 
   if (!isValidSkillName(name)) {
     process.stderr.write(`refusing: '${name}' is not a valid skill name\n`);
     process.exit(1);
+  }
+
+  if (operation !== "edit" && operation !== "create") {
+    process.stderr.write("refusing: operation must be edit or create\n");
+    process.exit(1);
+  }
+
+  const createTarget = join(repoRoot, ".claude", "skills", name, "SKILL.md");
+  if (operation === "create") {
+    if (lstatSync(createTarget, { throwIfNoEntry: false })) {
+      process.stderr.write(`refusing: create target already exists: ${createTarget}\n`);
+      process.exit(1);
+    }
+    if (!isInsideRepo({ candidatePath: createTarget, repoRoot })) {
+      process.stderr.write("refusing: create target resolves outside the repository\n");
+      process.exit(1);
+    }
+    process.stdout.write(`create target: ${createTarget}\n`);
+    process.exit(0);
   }
 
   const editRoot = preferredEditRoot({
@@ -113,7 +133,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     hasAgentsSkill: existsSync(join(repoRoot, ".agents", "skills", name, "SKILL.md")),
   });
   const editTarget = join(editRoot, name, "SKILL.md");
-  const createTarget = join(repoRoot, ".claude", "skills", name, "SKILL.md");
 
   if (!hasPluginMarker(repoRoot)) {
     const roots = existsSync(editTarget) ? [editRoot] : [

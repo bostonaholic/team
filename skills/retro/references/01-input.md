@@ -15,8 +15,8 @@ case "$FOCUS" in
   -*|*[!a-z0-9-]*)
     echo "refusing: a focus must be a skill name, lowercase and hyphenated" >&2; exit 1 ;;
   *)
-    ls -1d -- "skills/$FOCUS" ".claude/skills/$FOCUS" 2>/dev/null
-    ls -1 skills .claude/skills 2>/dev/null | sort -u ;;   # the candidate list
+    ls -1d -- "skills/$FOCUS" ".claude/skills/$FOCUS" ".agents/skills/$FOCUS" 2>/dev/null
+    ls -1 skills .claude/skills .agents/skills 2>/dev/null | sort -u ;;   # the candidate list
 esac
 ```
 
