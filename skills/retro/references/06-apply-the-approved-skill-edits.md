@@ -91,6 +91,9 @@ back from an earlier block's variable.
 - **A name** must match `^[a-z][a-z0-9-]*$`. `.hidden`, `foo.bar`, `.`, `..`,
   and an uppercase name each drop that one item, named in the summary, while
   the others proceed.
+- **Packaged installations** in project/global `.agents/skills` and `.claude/skills`, including links, are not editable targets.
+  The guard checks these locations before offering a fallback, and skips an item when a matching packaged installation exists.
+  Native plugin source keeps its existing edit target.
 - **An edit** lands in the skills root the running host actually loads: a repo
   carrying a plugin marker (`.claude-plugin/plugin.json` or a root
   `plugin.json`) is a plugin root and its host reads `<repo>/skills/`; every
@@ -104,7 +107,7 @@ back from an earlier block's variable.
   write.
 - **Every resolved real path must stay inside the repository**, so a symlinked
   directory cannot carry a write out of it.
-- **Never write** `~/.claude/**` (a plugin update overwrites cached skills), a
+- **Never write** `~/.agents/**` or `~/.claude/**` (updates overwrite installed skills), a
   sibling repository, or `agents/*.md` (agent frontmatter carries registry and
   tooling invariants).
 

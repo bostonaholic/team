@@ -14,6 +14,7 @@
  */
 
 import { existsSync, realpathSync } from "node:fs";
+import { homedir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -110,6 +111,20 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const editTarget = join(editRoot, name, "SKILL.md");
   const createTarget = join(repoRoot, ".claude", "skills", name, "SKILL.md");
 
+  if (!hasPluginMarker(repoRoot)) {
+    const roots = [
+      join(repoRoot, ".agents", "skills"),
+      join(repoRoot, ".claude", "skills"),
+      join(homedir(), ".agents", "skills"),
+      join(homedir(), ".claude", "skills"),
+    ];
+    const packaged = roots.find((root) => existsSync(join(root, name, "runtime/bundle.json")));
+    if (packaged) {
+      process.stderr.write(`skip: packaged skill target ${join(packaged, name, "SKILL.md")}; edit canonical source, regenerate, and reinstall when its source is known\n`);
+      process.exit(1);
+    }
+  }
+
   for (const [label, target] of [
     ["edit target", editTarget],
     ["create target", createTarget],
@@ -118,11 +133,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       process.stderr.write(`refusing: ${label} resolves outside the repository\n`);
       process.exit(1);
     }
-  }
-
-  if (!hasPluginMarker(repoRoot) && existsSync(join(dirname(editTarget), "runtime/bundle.json"))) {
-    process.stderr.write(`skip: packaged skill target ${editTarget}; edit canonical source, regenerate, and reinstall when its source is known\n`);
-    process.exit(1);
   }
 
   process.stdout.write(`edit root: ${editRoot}\n`);

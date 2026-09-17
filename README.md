@@ -32,9 +32,11 @@ through the shared dispatch contract with inherited arguments and authorization.
 A standalone command still stops at its own result. Explicitly request a bundled
 continuation in the same session, or install that command before later slash use.
 
-The host must supply the loaded skill's absolute base. Node runs the bundled
-resolver before workflow work. It validates the payload and creates a fresh
-private temporary runtime outside the project and installation. Native resolution
+The host must supply the loaded skill's absolute base and the absolute consumer
+project root. Missing root context stops startup. The resolver does not infer it
+from Git or the current directory. Node runs the bundled resolver before workflow
+work. It validates the payload and creates a fresh private temporary runtime
+outside the project and installation. Native resolution
 writes nothing. Successful temporary directories remain until operating-system
 cleanup so active agents can still read them. Failed initialization removes only
 its own directory and stops the command.
@@ -49,11 +51,13 @@ remain unverified. Packaging and lifecycle tests do not prove host execution.
 
 Edit canonical Team source, then run `bun run skills:build`, verify with
 `bun run skills:check`, and reinstall. Do not edit generated `runtime/` files.
-An edited packaged entrypoint fails before workflow work; `/retro` skips packaged
-edit targets. Each dependent command contains the complete compressed archive.
+Substantive packaged entrypoint edits fail before workflow work. Equivalent LF
+and CRLF entrypoints work without changing bundled canonical bytes. `/retro`
+skips packaged edit targets in project and global skills installations.
+Each dependent command contains the complete compressed archive.
 The dependency-free principle requires no runtime archive.
-The generated archives measure 490,860 bytes per dependent command and
-12,762,360 bytes across 26 commands. Each decodes to 1,107,450 bytes before
+The generated archives measure 491,128 bytes per dependent command and
+12,769,328 bytes across 26 commands. Each decodes to 1,108,126 bytes before
 extraction. Repeated archives increase installation size and Git history.
 
 
