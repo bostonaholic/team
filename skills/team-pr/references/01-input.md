@@ -9,9 +9,9 @@ Use the branch diff to establish what changed.
 
 In both resume and standalone modes, gather these inputs for each changed repository:
 
-- Read applicable `CONTEXT.md` or owning contexts linked from `CONTEXT-MAP.md` for established project terms.
+- Read existing project documentation for established project terms.
   Limit discovery to existing documentation relevant to the changed behavior.
-  If context is absent or unreadable, use repository docs, available artifacts, and current code.
+  If documentation is absent or unreadable, use available artifacts and current code.
   Preserve literal code identifiers. Disclose material stale-glossary conflicts without renaming terms or code.
 - Read available verifier and manual-check results, including their scope and limitations.
   If earlier results cannot be recovered, disclose the evidence gap.
