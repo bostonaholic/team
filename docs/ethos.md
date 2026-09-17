@@ -96,7 +96,7 @@ model's good behavior is not enforced at all.
 The corollary is layering: push every check to the cheapest, most deterministic
 layer that can catch it. A test at the wrong layer is worse than no test,
 because it is slow, flaky, or costs money to learn nothing.
-*(See [the testing guide](testing.md).)* Detect errors early, surface them
+Detect errors early, surface them
 loudly, never mask them silently.
 
 **Anti-patterns:**
@@ -211,4 +211,3 @@ The [shared principle resources](skills.md#shared-principle-resources) define th
 
 - **[Vision](vision.md)**: the loop-driven end state Team builds toward.
 - **[Architecture](architecture.md)**: how the pipeline turns these principles into a system.
-- **[Testing](testing.md)**: where each check belongs.

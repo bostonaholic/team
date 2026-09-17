@@ -19,7 +19,7 @@
  * the commit removes the coupling entirely. That read needs a trusted head:
  * a fork head is unreviewed code, and running its script would execute that
  * code locally, which this repo already refuses for fork PRs
- * (docs/testing.md) — so a fork whose script differs from this checkout's
+ * — so a fork whose script differs from this checkout's
  * denies instead.
  *
  * Failure direction: fail open only before jurisdiction is decided
@@ -59,7 +59,7 @@ const INVARIANT_SCRIPT = join(REPO_ROOT, ...INVARIANT_SCRIPT_PATH.split("/"));
 // slow chain of calls denies here instead of riding the registered timeout
 // into a harness kill (which would fail open). Per-call deadlines cannot give
 // that guarantee: their worst case sums past any registered timeout. The env
-// override exists for tests only (timer-knob rule, docs/testing.md) and is
+// override exists for tests only and is
 // clamped so it can only shrink the budget, never widen it.
 const DEFAULT_BUDGET_MS = 45_000;
 
@@ -1062,7 +1062,7 @@ function gate(mergeWords) {
   }
 
   // A fork head's script is unreviewed code, and this repo withholds trust from
-  // fork PRs by policy (docs/testing.md §5), so it is never executed. An
+  // fork PRs by policy, so it is never executed. An
   // identical copy is this checkout's own content and runs normally; a divergent
   // one denies and hands the operator the diff.
   if (isCrossRepository) {

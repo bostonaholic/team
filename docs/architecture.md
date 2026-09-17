@@ -378,8 +378,6 @@ holds both powers, and neither role can complete a review cycle alone.
 edit could fix the defect it found and then approve its own fix, which collapses
 the generator and the evaluator into one role. Read-only tool grants plus
 `permissionMode: plan` make that impossible at the harness layer.
-`tests/protocol.test.ts` pins both halves as an L2 tripwire, so a new reviewer
-that ships with `Write` fails CI.
 
 One path steps outside that enforcement: the cross-model pass
 (`skills/team/references/cross-model-review.md`) shells out to external vendor CLIs
@@ -390,9 +388,7 @@ that path the reviewer invariant is **trusted, not enforced**:
 flags in the repo cwd — unsandboxed, with the invoking user's permissions —
 and with a vendor CLI installed, diff and design-document content leaves
 the machine. What
-bounds the path is the pinned argv the bundled script hardcodes (the
-unsanctioned-flag tripwire in `tests/cross-model-review.test.ts` keeps
-every other bypass and escalation spelling out), the per-vendor
+bounds the path is the pinned argv the bundled script hardcodes, the per-vendor
 env allowlist, the machine-wide
 `TEAM_DISABLE_CROSS_MODEL` kill-switch that disables both paths
 when set, the untrusted-output rules on everything a vendor
@@ -421,9 +417,7 @@ The principle:
 **complex work runs on `opus`. Bounded judgment runs on `sonnet`.
 Mechanical checks run on `haiku`.** `fable` (Fable 5) is the tier above
 `opus`: an agent runs there on a demonstrated, concrete need `opus`
-cannot meet. The tier is empty, and `EXPECTED_MODELS`
-(`tests/architecture.test.ts`) pins all thirteen agents in both
-directions, so setting any agent to `model: fable` fails the build.
+cannot meet. The tier is empty.
 
 - **`opus` (complex work, the default):** `researcher`, `design-author`,
   `structure-planner`, `planner`, `test-architect`, `implementer`,
@@ -600,8 +594,7 @@ rungs), and `xhigh` (strategic artifact authors). The `xhigh` tier holds
 direction everything downstream inherits. The ladder runs alongside the
 model ladder rather than off it, so an agent on `sonnet` at `high` is
 inside the rule: `questioner` is the live case, doing judgment work in a
-bounded single pass. `EXPECTED_EFFORTS` (`tests/architecture.test.ts`)
-pins all thirteen values in both directions. Methodology skills carry no
+bounded single pass. Methodology skills carry no
 `effort`. They inherit it from the loading agent.
 
 User-facing skills use the same ladder. The full `/team` orchestrator runs at
@@ -609,8 +602,6 @@ User-facing skills use the same ladder. The full `/team` orchestrator runs at
 Single-phase orchestrators stay at `medium`; their specialist agents perform
 the complex work. Mechanical worktree setup runs at `low`, while entry points
 that directly perform complex analysis or conflict resolution run at `high`.
-`EXPECTED_SKILL_EFFORTS` (`tests/architecture.test.ts`) pins every user-facing
-skill in both directions.
 
 ## 5. Phase-table orchestrator
 
@@ -714,10 +705,10 @@ its `agents/openai.yaml` declares `allow_implicit_invocation: false` for Codex.
 **Two reference forms, and the form is the contract.** Every skill-to-skill
 reference is one of two kinds, and each has its own encoding:
 
-| Kind | Reads | Encoded as | Checked by |
-|------|-------|-----------|------------|
-| **Load** — the reader must go execute that skill | ``Call the Skill tool with `<name>` `` | bare name | `tests/skill-tool-invocation.test.ts` resolves the name against `skills/*/SKILL.md` |
-| **Citation** — a schema lookup, a "see also", a rule restated nearby | `skills/<name>/SKILL.md` | path | the path assertions in `tests/methodology.test.ts` and siblings |
+| Kind | Reads | Encoded as |
+|------|-------|-----------|
+| **Load** — the reader must go execute that skill | ``Call the Skill tool with `<name>` `` | bare name |
+| **Citation** — a schema lookup, a "see also", a rule restated nearby | `skills/<name>/SKILL.md` | path |
 
 The citation row splits. A reference to a skill's own `SKILL.md` is also an
 edge in the [`docs/skills.md`](skills.md) `Uses`/`Used by` graph — the consuming
@@ -751,13 +742,8 @@ and a slice of context on content nobody asked for. A citation to a skill's
 `SKILL.md` still draws a `Uses` edge — the procedure reads the skill — even
 though it is not a load.
 
-The sweep asserts the *reference*, not the sentence around it — the same
-thing the path assertions always asserted, which is why
-[testing.md](testing.md#a-tripwire-asserts-a-contract-never-a-wording)
-sanctions it ("File paths and cross-references. A renamed target must fail
-the build."). The phrase is load-bearing as the encoding, so it lives in one
-place: `PHRASE` in `tests/helpers/skill-refs.ts`. Changing the convention
-means changing it there, deliberately.
+The phrase is load-bearing as the encoding. Changing the convention means
+changing every reference that carries it, deliberately.
 
 Because they are reference material rather than user actions, methodology
 skills set `user-invocable: false` in their frontmatter. This keeps them
@@ -838,12 +824,9 @@ the worked example — it presents each irreversible close and waits.
 Setting `disable-model-invocation` is a further per-skill call with its
 own recorded reason, never a property of this class. An in-class skill
 stays listed as a command, and its routing-map line in `AGENTS.md` states
-the explicit intent, so the map never invites it on a plain request. A deterministic test
-in `tests/architecture.test.ts` enforces the phrase invariant with no
-opt-out; the slash-name check is prefix-safe, so `/team-research` cannot
-satisfy the `/team` requirement. The guard wording is NOT
-machine-checked — it is the author's and reviewer's responsibility, and
-its absence on a side-effecting skill is a review-blocking defect.
+the explicit intent, so the map never invites it on a plain request. The
+guard wording is the author's and reviewer's responsibility, and its absence
+on a side-effecting skill is a review-blocking defect.
 
 No methodology skill is user-invocable. When a methodology also wants a
 user-facing command, the answer is a **front door**, not an exception:
@@ -901,16 +884,12 @@ and test commands, numbers, names, paths, or behavior rather than prose wording.
 
 Source budgets remain 80 lines for methodology and 150 for
 entry points. Descriptions are at most 200 characters, or 150 for methodology.
-`tests/skill-budget.test.ts` enforces these limits. An overage requires a current
-`SKILL_BUDGET_REASONS` entry with its exact line count and reviewed reason.
+An overage requires a reviewed reason stating its exact line count.
 
 1. **Methodology skill load limit:** three methodology skills is what an
    agent gets without argument. **Every name in the agent's `skills:`
    block counts**, including the agent's own procedure skill. An agent that lists more than three carries one
-   recorded reason, and that record names the count it justifies. The
-   record is `PRELOAD_BUDGET_REASONS` in `tests/thin-agents.test.ts`,
-   keyed by agent; the reason is reviewed prose and the count is what the
-   machine holds, so a list that grows in silence reds the build. A fourth
+   recorded reason, and that record names the count it justifies. A fourth
    name still signals that the agent's responsibility can be too broad,
    and answering that is what the reason is for.
 
@@ -942,7 +921,7 @@ entry points. Descriptions are at most 200 characters, or 150 for methodology.
 Every skill under `skills/` carries `agents/openai.yaml`, the per-skill
 manifest Codex reads to build its catalog entry. Without one, Codex falls back
 to the directory name and a truncated `description:`. The file is optional
-upstream and mandatory here, gated by `tests/skill-openai-yaml.test.ts`.
+upstream and mandatory here.
 
 Three fields, each derived from the skill's own `SKILL.md` frontmatter rather
 than stored twice: `display_name` title-cases the kebab `name:` through two
@@ -1052,66 +1031,16 @@ Development hooks (`.claude/hooks/`, not distributed):
 | `pre-merge-guard.mjs`    | PreToolUse(Bash)         | Deny `gh pr merge` when the version-bump invariant fails             |
 
 Development scripts (`.claude/scripts/`, not distributed) house dev-only
-acceptance tooling run by plugin developers. `check-discovery-consistency.sh`
-is the committed consistency gate for the input-discovery feature. It executes
-the shared helper against explicit, discovered, empty, and review-gated
-fixtures; checks every consumer's predecessor and review flag; and preserves
-the research-isolation and standalone fallbacks.
+tooling run by plugin developers: version computation, the land-time
+version-consistency assertion, and project-board helpers.
 
-## 8. Behavioral evals
+## 8. Testing
 
-The behavioral regression harness defends pipeline agents against silent
-behavior drift across model upgrades. The implementation is TypeScript +
-Bun: harness code in `tests/`, fixtures/rubrics/results in `evals/`.
-Plugin-developer tooling, not distributed with the plugin. Three tiers:
-
-- **Gate** (free): `bun test`. Static schema validation on every
-  fixture and rubric plus unit tests for the harness helpers. No model
-  calls, no `EVALS_ANTHROPIC_API_KEY`. Runs in CI on every PR.
-- **E2E** (paid): `bun run test:evals` (needs `EVALS_ANTHROPIC_API_KEY`). Spawns `claude -p --output-format
-  stream-json` against a fixture, parses the NDJSON transcript, persists
-  a per-case result JSON with timing axes (`firstResponseMs`,
-  `maxInterTurnMs`).
-- **LLM-judge** (paid): deterministic-first regex / ground-truth checks
-  run cheap and gate the LLM call. Haiku for narrow rubrics, Sonnet for
-  nuanced ones. Untrusted agent output is wrapped in
-  `<<<UNTRUSTED_OUTPUT>>>` delimiters before reaching the judge.
-
-`EvalCollector` writes incrementally. It finds the previous run on the
-same branch and tier. It prints regressions and budget regressions. A
-budget regression is ≥2× growth in tool calls or turns without a verdict
-change. See
-[evals/README.md](https://github.com/bostonaholic/team/blob/main/evals/README.md)
-for fixture schema, rubric format, env-var knobs, and the rerun-on-base
-blame protocol.
-
-**CI wiring.** Two GitHub Actions workflows in `.github/workflows/`:
-`harness-checks.yml` runs the offline harness validation on every PR (no
-secrets, ~7s). `periodic-evals.yml` runs the live-agent regression check
-on a weekly cron (Monday 06:00 UTC) with `EVALS_ANTHROPIC_API_KEY`. That
-key is an **environment secret** scoped to the `evals` GitHub
-Environment. It needs a one-time Settings → Environments setup: create
-the `evals` environment and attach the secret. You can also set necessary
-reviewers or a main-only branch restriction. If the PR-eval workflow
-(`pr-evals.yml`) is active, the `evals` environment must **not** restrict
-deployment branches to `main`. PR head/merge refs are not `main`, so a
-main-only policy blocks the secret on PRs, and every gated eval fails at
-the deploy gate. Remove it through Settings → Environments → evals →
-Deployment branches → "No restriction", or
-`gh api -X DELETE repos/bostonaholic/team/environments/evals/deployment-branch-policies/<id>`.
-The job declares `environment: evals` and **fails closed** if the
-environment is absent: the secret simply resolves to empty, so no token
-spend leaks. `pull_request_target` is hard-banned for this and any
-secret-consuming / `claude`-spawning job, because it runs in base-repo
-context with secrets available, a base-repo-context exfiltration vector.
-The ban is enforced by a static tripwire in `tests/static-gate.test.ts`.
-Live jobs that run on `pull_request` events additionally gate on
-PR-author trust: only OWNER/MEMBER/COLLABORATOR authors may spend tokens,
-so untrusted PRs (forks, Dependabot, first-time contributors) never
-trigger paid execution.
-
-These three tiers are the paid frontier of Team's broader six-layer testing
-model. See [Testing](testing.md) for where every check belongs.
+Team currently has no test suite. The previous behavioral-eval harness
+(`tests/`, `evals/`, and its CI workflows) was removed so a new testing
+methodology can be designed from scratch. What remains is static: the dev
+hooks under `.claude/hooks/`, the version scripts under `.claude/scripts/`
+and `.github/scripts/`, and `claude plugin validate .`.
 
 ## 9. State management
 
@@ -1194,9 +1123,8 @@ all governed by `skills/team/references/agent-dispatch.md`:
 **Policy:**
 
 - The `Agent` tool is granted to exactly four agents: `researcher`,
-  `implementer`, `code-reviewer`, `security-reviewer`. The allowlist is
-  pinned by `tests/nested-agents.test.ts`, so any other agent gaining the
-  tool must be a deliberate decision that updates the tripwire.
+  `implementer`, `code-reviewer`, `security-reviewer`. Any other agent gaining the
+  tool must be a deliberate decision.
 - Nested helpers are read-only, never write under `docs/plans/`, and
   never pause for user input (see `skills/team/references/agent-dispatch.md`).
 - Depth budget: pipeline agents sit at depth 2 of 5 and may spawn at
@@ -1207,10 +1135,8 @@ all governed by `skills/team/references/agent-dispatch.md`:
   works inline. So does any read-only agent like `researcher` that has no
   `Bash`. Agents that also hold `Bash` additionally run the bundled
   deterministic check
-  `skills/team/references/supports-nesting.mjs "$(claude --version)"`. Its
-  pure comparison core is unit-tested at L1.
-  `tests/nested-agents.test.ts` pins the reference contract and the version
-  floor. The check is fail-closed: an older release, unrecognizable
+  `skills/team/references/supports-nesting.mjs "$(claude --version)"`.
+  The check is fail-closed: an older release, unrecognizable
   version output, or an environment where it cannot run all resolve to
   "unsupported," which routes the agent to its inline path.
 - **Optimization, never a dependency.** Every nested-dispatch section is
@@ -1277,7 +1203,6 @@ children are confirmed, and the depth cap is stable.
 ## See also
 
 - **[Skills](skills.md)**: the full per-skill reference for all skills.
-- **[Testing](testing.md)**: the six-layer test harness and which layer each check belongs at.
 - **[Vision](vision.md)**: the loop-driven end state this design builds toward.
 - **[Ethos](ethos.md)**: the principles behind the pipeline.
 - **[Overview](index.md)**: the landing page and pipeline overview.

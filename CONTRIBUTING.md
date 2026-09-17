@@ -7,8 +7,7 @@ expected to follow. It links out to the docs site rather than duplicating it.
 
 > The full documentation lives at **[team.bostonaholic.dev](https://team.bostonaholic.dev)**
 > (source under [`docs/`](docs/)). Before opening a pull request, read the
-> [Architecture](docs/architecture.md) overview and the [Testing](docs/testing.md)
-> strategy.
+> [Architecture](docs/architecture.md) overview.
 
 ## Start here
 
@@ -17,7 +16,6 @@ expected to follow. It links out to the docs site rather than duplicating it.
 | [Vision](docs/vision.md) | The loop-driven end state Team builds toward. |
 | [Ethos](docs/ethos.md) | Why the autonomous middle can be trusted: the principles behind every design choice. |
 | [Architecture](docs/architecture.md) | How Team is built: agents as microservices, the QRSPI pipeline, artifact frontmatter, phase inference. |
-| [Testing](docs/testing.md) | The six-layer test harness and which layer each check belongs at. **Read this before writing any test.** |
 | [Versioning](docs/versioning.md) | Land-time versioning and the release-on-merge flow. |
 | [Skills](docs/skills.md) | The full per-skill reference. |
 | [Project Tracking](docs/project-tracking.md) | The GitHub Project board and how cards move. |
@@ -54,11 +52,9 @@ label taxonomy.
 
 1. **Branch off the latest `main`.** Keep history linear: never commit directly
    to `main`, and never create merge commits (rebase, do not merge).
-2. **Follow the testing discipline.** Read [Testing](docs/testing.md) first, then
-   push every check to the cheapest, most deterministic layer that can catch it.
-   - `bun test`: the free static gate. Runs on every commit. No model, no money.
-   - `bun run test:evals`: the paid behavioral + LLM-judge tiers
-     (needs `EVALS_ANTHROPIC_API_KEY`).
+2. **Run the static checks.** `claude plugin validate .` and `git diff --check`
+   must pass. Team has no test suite at the moment: the previous harness was
+   removed and a new testing methodology is being designed from scratch.
 3. **Keep the agent registry in sync.** When you add or rename an agent, update
    both `agents/*.md` and `skills/team/registry.json` in the same commit. The
    dev hook `.claude/hooks/check-registry-sync.mjs` enforces this.
@@ -86,9 +82,6 @@ label taxonomy.
 ## Conventions in brief
 
 - **Clarity over cleverness.** Code is read far more often than it is written.
-- **A constraint that matters gets a tripwire.** When a comment says "never do
-  X," add the L2 test that fails the build when someone does. See
-  [Testing](docs/testing.md).
 - **Surgical changes.** Touch only what the task requires, and match the
   surrounding style.
 

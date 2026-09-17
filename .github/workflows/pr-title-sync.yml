@@ -12,8 +12,7 @@
 # bump that is later reverted in-branch leaves its now-wrong prefix in place
 # (cosmetic only).
 #
-# The decision logic lives in .github/scripts/pr-title-version.sh and is pinned
-# by tests/pr-title-version.test.ts (free, deterministic git-fixture tests).
+# The decision logic lives in .github/scripts/pr-title-version.sh.
 #
 # WHY plain `pull_request` (not pull_request_target): all PRs here come from
 # same-repo branches, where the default GITHUB_TOKEN honors

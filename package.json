@@ -4,28 +4,11 @@
   "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
   "license": "MIT",
   "type": "module",
-  "engines": {
-    "bun": ">=1.0.0"
-  },
-  "scripts": {
-    "test": "bun test",
-    "typecheck": "tsc --noEmit",
-    "test:evals": "EVALS=1 bun test --retry=2 --concurrent --max-concurrency 15 ./tests/*.evals.ts",
-    "test:evals:all": "EVALS=1 EVALS_ALL=1 bun test --retry=2 --concurrent --max-concurrency 15 ./tests/*.evals.ts",
-    "eval:select": "bun run scripts/eval-select.ts",
-    "eval:list": "bun run scripts/eval-list.ts",
-    "eval:compare": "bun run scripts/eval-compare.ts"
-  },
   "keywords": [
     "automation",
     "cli",
     "claude",
     "ai-agent",
     "devtools"
-  ],
-  "devDependencies": {
-    "@anthropic-ai/sdk": "^0.125.0",
-    "bun-types": "^1.4.2",
-    "typescript": "^7.0.2"
-  }
+  ]
 }

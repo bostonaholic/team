@@ -196,8 +196,7 @@ of the work.
 > [`/groom-backlog`](skills.md#groom-backlog) skill consumes this number. Its
 > promotion mode carries the same `5` as this repo's worked example, and it
 > swaps a card out rather than exceed the cap. A change here must thus change
-> there too. A tripwire in `tests/groom-backlog-skill.test.ts` pins the two
-> numerals together. This is the WIP-limited-kanban discipline that the
+> there too. This is the WIP-limited-kanban discipline that the
 > loop-driven controller in
 > [#90](https://github.com/bostonaholic/team/issues/90) builds on. Other columns
 > can carry their own limits under that model.

@@ -25,7 +25,7 @@ Preserve every command, number, path, name, authorization boundary, untrusted-in
 | Methodology | `user-invocable: false` | 80 lines |
 | Entry point | otherwise | 150 lines |
 
-An overage requires a current entry in `SKILL_BUDGET_REASONS` in `tests/skill-budget.test.ts`, keyed by skill and stating the exact line count and reason. A budget is a ceiling, not a target.
+An overage requires a reviewed reason stating the exact line count. A budget is a ceiling, not a target.
 
 ## The shared catalog
 
@@ -36,8 +36,6 @@ Team cannot see the other tenants and so can never verify that it fits. Be a goo
 - Pay for growth by compressing. A new skill or a longer description comes out of the fleet ceiling, never out of a raise to it.
 - Two trigger phrases, never three near-synonyms. Shortening cuts from the tail, so the discriminating words go first.
 - Keep names short. A name cannot be shortened, and it is charged twice — once as the name, once inside the path.
-
-`tests/codex-skill-catalog.test.ts` measures Team's footprint against ceilings that only ratchet down, and rejects headroom bought in advance.
 
 ## Classify
 
@@ -102,14 +100,9 @@ Never put `$` followed by a digit in `SKILL.md`; hosts may substitute it as an a
 
 ## Verify
 
-Read `docs/testing.md` before changing tests. Convert exact-heading or sentence assertions to command, number, name, path, ordering, occurrence, or behavioral checks. Run the narrowest relevant tests, then:
+Run the static checks:
 
 ```bash
-bun test tests/skill-budget.test.ts tests/codex-skill-catalog.test.ts tests/skill-openai-yaml.test.ts tests/docs-skills-catalog.test.ts
-bash .claude/scripts/check-discovery-consistency.sh
-bun run typecheck
-bun test
+claude plugin validate .
 git diff --check
 ```
-
-Run the skill's `tests/*.evals.ts` when one exists; `bun run test:evals` gates behavior-sensitive compression. Report unavailable credentials as `Not run: <reason>.`
