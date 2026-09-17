@@ -99,13 +99,13 @@ back from an earlier block's variable.
   An existing selected local edit target takes precedence over unrelated installations with the same name.
   Otherwise, the guard checks these locations before offering a fallback and skips matching packaged installations.
   Global Claude placement honors trimmed `CLAUDE_CONFIG_DIR`, defaulting to `~/.claude` when empty or absent.
-  Native plugin source keeps its existing edit target.
+  Canonical authored plugin source keeps its existing edit target. Packaged targets remain protected in repositories with plugin markers.
 - **An edit** lands in the skills root the running host actually loads: a repo
   carrying a plugin marker (`.claude-plugin/plugin.json` or a root
   `plugin.json`) selects `<repo>/skills/` first.
   Otherwise, select the existing local `.claude/skills/<name>/SKILL.md`, then `.agents/skills/<name>/SKILL.md`.
   When both exist, keep `.claude` priority and leave the other untouched.
-  Check the selected local target for packaging.
+  Resolve the selected existing target file before checking for packaging, including file and directory links.
   If neither local target exists, search other installations before offering the `.claude/skills` fallback.
 - **A creation** only ever targets `.claude/skills/<name>/SKILL.md` under the
   repository. An existing file, directory, or dangling symlink blocks creation.

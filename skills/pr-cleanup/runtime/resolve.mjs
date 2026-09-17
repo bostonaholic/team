@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, sep } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
 
 export const COMPRESSED_LIMIT = 2 * 1024 * 1024;
@@ -132,7 +132,7 @@ export function resolveRuntime(resolverPath, consumerRoot) {
   return { mode: "skills", root, skillPath: join(root, "skills", command, "SKILL.md") };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
+if (process.argv[1] && realpathSync(fileURLToPath(import.meta.url)) === realpathSync(process.argv[1])) {
   try {
     process.stdout.write(`${JSON.stringify(resolveRuntime(process.argv[1], process.argv[2]))}\n`);
   } catch (error) {

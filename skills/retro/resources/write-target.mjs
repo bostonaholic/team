@@ -134,18 +134,23 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
   const editTarget = join(editRoot, name, "SKILL.md");
 
-  if (!hasPluginMarker(repoRoot)) {
-    const roots = existsSync(editTarget) ? [editRoot] : [
-      join(repoRoot, ".agents", "skills"),
-      join(repoRoot, ".claude", "skills"),
-      join(homedir(), ".agents", "skills"),
-      join(process.env.CLAUDE_CONFIG_DIR?.trim() || join(homedir(), ".claude"), "skills"),
-    ];
-    const packaged = roots.find((root) => existsSync(join(root, name, "runtime/bundle.json")));
-    if (packaged) {
-      process.stderr.write(`skip: packaged skill target ${join(packaged, name, "SKILL.md")}; edit canonical source, regenerate, and reinstall when its source is known\n`);
-      process.exit(1);
-    }
+  const targets = existsSync(editTarget) ? [editTarget] : [
+    join(repoRoot, ".agents", "skills", name, "SKILL.md"),
+    join(repoRoot, ".claude", "skills", name, "SKILL.md"),
+    join(homedir(), ".agents", "skills", name, "SKILL.md"),
+    join(process.env.CLAUDE_CONFIG_DIR?.trim() || join(homedir(), ".claude"), "skills", name, "SKILL.md"),
+  ];
+  const packaged = targets.find((target) => {
+    const resolved = existsSync(target) ? realpathSync(target) : target;
+    if (!existsSync(join(dirname(resolved), "runtime/bundle.json"))) return false;
+    const canonicalSource = resolved === join(realpathSync(repoRoot), "skills", name, "SKILL.md") &&
+      existsSync(join(repoRoot, "scripts/build-skills-runtime.mjs")) &&
+      existsSync(join(repoRoot, "skills/team/registry.json"));
+    return !canonicalSource;
+  });
+  if (packaged) {
+    process.stderr.write(`skip: packaged skill target ${packaged}; edit canonical source, regenerate, and reinstall when its source is known\n`);
+    process.exit(1);
   }
 
   for (const [label, target] of [
