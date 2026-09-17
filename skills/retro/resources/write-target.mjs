@@ -112,11 +112,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const createTarget = join(repoRoot, ".claude", "skills", name, "SKILL.md");
 
   if (!hasPluginMarker(repoRoot)) {
-    const roots = [
+    const roots = existsSync(editTarget) ? [editRoot] : [
       join(repoRoot, ".agents", "skills"),
       join(repoRoot, ".claude", "skills"),
       join(homedir(), ".agents", "skills"),
-      join(homedir(), ".claude", "skills"),
+      join(process.env.CLAUDE_CONFIG_DIR?.trim() || join(homedir(), ".claude"), "skills"),
     ];
     const packaged = roots.find((root) => existsSync(join(root, name, "runtime/bundle.json")));
     if (packaged) {

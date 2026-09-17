@@ -94,7 +94,7 @@ The host must supply the loaded skill's absolute base and the absolute consumer
 project root. Missing root context stops startup. The resolver does not infer it
 from Git or the current directory. Node runs the bundled resolver before workflow
 work. It validates the payload and creates a fresh private temporary runtime
-outside the project and installation. Native resolution
+outside the project, linked installation directory, and canonical storage. Native resolution
 writes nothing. Successful temporary directories remain until operating-system
 cleanup so active agents can still read them. Failed initialization removes only
 its own directory and stops the command.
@@ -111,11 +111,11 @@ Edit canonical Team source, then run `bun run skills:build`, verify with
 `bun run skills:check`, and reinstall. Do not edit generated `runtime/` files.
 Substantive packaged entrypoint edits fail before workflow work. Equivalent LF
 and CRLF entrypoints work without changing bundled canonical bytes. `/retro`
-skips packaged edit targets in project and global skills installations.
+skips packaged targets while preserving existing ordinary local edit targets.
 Each dependent command contains the complete compressed archive.
 The dependency-free principle requires no runtime archive.
-The generated archives measure 491,128 bytes per dependent command and
-12,769,328 bytes across 26 commands. Each decodes to 1,108,126 bytes before
+The generated archives measure 491,352 bytes per dependent command and
+12,775,152 bytes across 26 commands. Each decodes to 1,108,449 bytes before
 extraction. Repeated archives increase installation size and Git history.
 
 
@@ -135,6 +135,7 @@ npx skills list --agent codex --global --json
 Without `--global`, installation and listing use the current project. With it,
 they use the user installation. Codex, Antigravity CLI, and OpenCode share canonical
 `.agents/skills` storage in that scope. Claude uses `.claude/skills`.
+For global Claude installs, a nonempty trimmed `CLAUDE_CONFIG_DIR` replaces `~/.claude`.
 The CLI supports copies and links: `--copy` requests copies. Multiple targets
 can create actual Claude links to canonical storage; a single target can copy
 by default. Upstream owns links, lockfiles, and installation metadata.

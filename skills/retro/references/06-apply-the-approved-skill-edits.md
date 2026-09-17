@@ -92,7 +92,9 @@ back from an earlier block's variable.
   and an uppercase name each drop that one item, named in the summary, while
   the others proceed.
 - **Packaged installations** in project/global `.agents/skills` and `.claude/skills`, including links, are not editable targets.
-  The guard checks these locations before offering a fallback, and skips an item when a matching packaged installation exists.
+  An existing selected local edit target takes precedence over unrelated installations with the same name.
+  Otherwise, the guard checks these locations before offering a fallback and skips matching packaged installations.
+  Global Claude placement honors trimmed `CLAUDE_CONFIG_DIR`, defaulting to `~/.claude` when empty or absent.
   Native plugin source keeps its existing edit target.
 - **An edit** lands in the skills root the running host actually loads: a repo
   carrying a plugin marker (`.claude-plugin/plugin.json` or a root
@@ -107,7 +109,7 @@ back from an earlier block's variable.
   write.
 - **Every resolved real path must stay inside the repository**, so a symlinked
   directory cannot carry a write out of it.
-- **Never write** `~/.agents/**` or `~/.claude/**` (updates overwrite installed skills), a
+- **Never write** global skills, including custom Claude configuration directories, `~/.agents/**`, or `~/.claude/**`, a
   sibling repository, or `agents/*.md` (agent frontmatter carries registry and
   tooling invariants).
 

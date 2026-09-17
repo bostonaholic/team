@@ -800,6 +800,7 @@ Pass the consumer root separately to the resolver. Missing root context stops st
 The resolver does not infer the root from Git or the current directory.
 Missing prerequisites stop before workflow work.
 The resolver validates the complete archive before extraction into a private temporary directory.
+It protects the explicit consumer root, invoked installation directory, and canonical storage.
 Successful directories stay readable until OS cleanup; failed initialization removes only its own directory.
 Native plugin resolution writes nothing. Read-only commands permit root initialization only; subagents inherit the prepared runtime.
 
@@ -815,11 +816,13 @@ Authors edit canonical sources and regenerate with `bun run skills:build`.
 The non-writing `bun run skills:check` checks generated paths, bytes, and decoded source records.
 Generated entrypoints and archives are not edit targets; substantive entrypoint changes fail before execution.
 Equivalent LF and CRLF entrypoints work. Extracted canonical resources retain their bundled bytes.
-`/retro` checks project/global `.agents/skills` and `.claude/skills`, including links, before offering an editable fallback.
+`/retro` preserves an existing selected ordinary local edit target.
+Before offering a fallback, it checks project/global `.agents/skills` and `.claude/skills`, including links.
+Global Claude detection honors trimmed `CLAUDE_CONFIG_DIR`, defaulting to `~/.claude` when empty or absent.
 It skips packaged targets and names source regeneration only when the source is known.
 
-The generated archives measure 491,128 bytes per dependent command and
-12,769,328 bytes across 26 commands. Each decodes to 1,108,126 bytes before
+The generated archives measure 491,352 bytes per dependent command and
+12,775,152 bytes across 26 commands. Each decodes to 1,108,449 bytes before
 extraction. Repeated archives increase installation size and Git history.
 
 ### Lifecycle and native migration
@@ -829,6 +832,7 @@ symlink modes, project/global listing, selected reinstall, and agent-scoped remo
 The tests use isolated homes and local sources with network access disabled.
 Codex, Antigravity CLI, and OpenCode share canonical `.agents/skills` storage.
 Claude uses `.claude/skills`; copied Claude installations can remain independent.
+For global Claude installs, a nonempty trimmed `CLAUDE_CONFIG_DIR` replaces `~/.claude`.
 The upstream CLI owns installation metadata, links, and `skills update`.
 Selected reinstall with the original scope and targets is the verified update path.
 
