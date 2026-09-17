@@ -68,6 +68,10 @@ command as a literal.** Write it into the run cache with the file-writing tool,
 then read it back and hold it to a character allowlist before it reaches
 anything else:
 
+Select the guard's final literal argument from the approved item's kind: `edit` for an edit, `create` for a creation.
+The example uses `edit`. For an approved creation, replace only that final literal with `create`.
+Never change the approved operation because edit-target resolution reports a packaged installation.
+
 ```sh
 NAME="$(cat "<run cache>/name-<n>.txt")"   # substitution output is not re-parsed
 LC_ALL=C                     # in a UTF-8 locale the bracket set is collation-dependent
@@ -76,7 +80,7 @@ case "$NAME" in
     echo "refusing: a proposed name must be a skill name, lowercase and hyphenated" >&2
     exit 1 ;;
 esac
-node "<skill-dir>/resources/write-target.mjs" "$(git rev-parse --show-toplevel)" "${NAME:?}"
+node "<skill-dir>/resources/write-target.mjs" "$(git rev-parse --show-toplevel)" "${NAME:?}" edit
 ```
 
 Pasted between double quotes, a name carrying `$(…)`, a backtick, or `${…}`
@@ -104,8 +108,9 @@ back from an earlier block's variable.
   Check the selected local target for packaging.
   If neither local target exists, search other installations before offering the `.claude/skills` fallback.
 - **A creation** only ever targets `.claude/skills/<name>/SKILL.md` under the
-  repository, and only when that path does not exist. Adding a file to a
-  distributed plugin's own `skills/` directory is a release decision, so it
+  repository. An existing file, directory, or dangling symlink blocks creation.
+  Explicit `create` validates only that target's absence and containment, without consulting unrelated packaged edit targets.
+  Adding a file to a distributed plugin's own `skills/` directory is a release decision, so it
   goes to Backlog instead. A missing parent directory is created as part of the
   write.
 - **Every resolved real path must stay inside the repository**, so a symlinked
