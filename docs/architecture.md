@@ -725,7 +725,6 @@ Native mode uses registered skill lookup. Skills mode reads the canonical
 `<root>/skills/<name>/SKILL.md` with inherited arguments and authorization.
 The bare name identifies the command; the dispatcher owns its installed path.
 
-
 Continuation suggestions preserve standalone stops and require explicit intent.
 For unselected siblings, they offer a same-session bundled request or selection
 through the upstream CLI before a later slash invocation. Self-resume retains

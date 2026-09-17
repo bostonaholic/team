@@ -9,6 +9,10 @@ export const COMPRESSED_LIMIT = 2 * 1024 * 1024;
 export const DECODED_LIMIT = 8 * 1024 * 1024;
 export const BOOTSTRAP = "<!-- team-runtime:start -->\nBefore workflow work, read [runtime startup](runtime/start.md).\n<!-- team-runtime:end -->\n";
 
+export function addBootstrap(text) {
+  return text.replace(/^(---\n[\s\S]*?\n---\n)/, `$1${BOOTSTRAP}`);
+}
+
 export function stripBootstrap(text) {
   return text.replace(/^<!-- team-runtime:start -->\n[^\n]*\n<!-- team-runtime:end -->\n/gm, "");
 }
@@ -99,8 +103,8 @@ export function resolveRuntime(resolverPath, consumerRoot) {
   }
   const entrypoint = join(skillDirectory, "SKILL.md");
   const canonical = records.find((record) => record.path === `skills/${command}/SKILL.md`);
-  const installed = stripBootstrap(readFileSync(entrypoint, "utf8").replace(/\r\n/g, "\n"));
-  if (!canonical || installed !== canonical.text.replace(/\r\n/g, "\n")) {
+  const installed = readFileSync(entrypoint, "utf8").replace(/\r\n/g, "\n");
+  if (!canonical || installed !== addBootstrap(canonical.text.replace(/\r\n/g, "\n"))) {
     throw new Error(`${entrypoint}: packaged entrypoint differs from bundle; regenerate canonical source and reinstall`);
   }
   const temporary = realpathSync(tmpdir());

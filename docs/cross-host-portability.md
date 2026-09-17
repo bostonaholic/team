@@ -810,7 +810,7 @@ If the active schema supports `effort`, dispatch passes it; otherwise effort inh
 Unobserved model or effort values remain `unverified`. Missing model selection or reviewer enforcement stops dispatch.
 Codex and Antigravity retain their existing model resolver and enforcement checks.
 OpenCode installation and discovery remain supported, with full QRSPI, specialist dispatch, reviewer isolation, and hooks unverified.
-Filesystem tests prove packaging and lifecycle behavior, not complete host execution.
+Packaging and lifecycle were verified before the test suite was removed; complete host execution remains unverified.
 
 Authors edit canonical sources and regenerate with `bun run skills:build`.
 The non-writing `bun run skills:check` checks generated paths, bytes, and decoded source records.
@@ -821,15 +821,15 @@ Before offering a fallback, it checks project/global `.agents/skills` and `.clau
 Global Claude detection honors trimmed `CLAUDE_CONFIG_DIR`, defaulting to `~/.claude` when empty or absent.
 It skips packaged targets and names source regeneration only when the source is known.
 
-The generated archives measure 493,932 bytes per dependent command and
-12,842,232 bytes across 26 commands. Each decodes to 1,113,814 bytes before
+The generated archives measure 493,820 bytes per dependent command and
+12,839,320 bytes across 26 commands. Each decodes to 1,113,693 bytes before
 extraction. Repeated archives increase installation size and Git history.
 
 ### Lifecycle and native migration
 
-Skills CLI 1.6.0 tests cover individual and wildcard selection, copy and actual
-symlink modes, project/global listing, selected reinstall, and agent-scoped removal on all four targets.
-The tests use isolated homes and local sources with network access disabled.
+Before test-suite removal, Skills CLI 1.6.0 verification covered individual and wildcard selection,
+copy and actual symlink modes, project/global listing, selected reinstall, and agent-scoped removal
+on all four targets, using isolated homes and local sources with network access disabled.
 Codex, Antigravity CLI, and OpenCode share canonical `.agents/skills` storage.
 Claude uses `.claude/skills`; copied Claude installations can remain independent.
 For global Claude installs, a nonempty trimmed `CLAUDE_CONFIG_DIR` replaces `~/.claude`.

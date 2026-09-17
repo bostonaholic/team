@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BOOTSTRAP, COMPRESSED_LIMIT, DECODED_LIMIT, stripBootstrap, validateEnvelope } from "./skills-runtime-resolver.mjs";
+import { addBootstrap, COMPRESSED_LIMIT, DECODED_LIMIT, stripBootstrap, validateEnvelope } from "./skills-runtime-resolver.mjs";
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const startup = `# Packaged runtime startup
@@ -87,7 +87,7 @@ function generate(check) {
       continue;
     }
     if (!/^---\n[\s\S]*?\n---\n/.test(canonical)) throw new Error(`missing frontmatter: ${entryPath}`);
-    expected.set(entryPath, canonical.replace(/^(---\n[\s\S]*?\n---\n)/, `$1${BOOTSTRAP}`));
+    expected.set(entryPath, addBootstrap(canonical));
     for (const [file, text] of [["resolve.mjs", resolver], ["start.md", startup], ["bundle.json", bundle]]) expected.set(`skills/${name}/runtime/${file}`, text);
   }
   const actualGenerated = generatedFiles(skills).filter((path) => /^[^/]+\/runtime\//.test(path)).map((path) => `skills/${path}`);
