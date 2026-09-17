@@ -1,4 +1,0 @@
-interface:
-  display_name: "Task Spec"
-  short_description: "Compose a work order for another agent"
-  default_prompt: "Use $task-spec to compose a work order for another agent."

@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, retro, why, how, no-comments, task-spec), each with the skills it loads."
+description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, retro, why, how, no-comments, agent-prompt), each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -254,9 +254,9 @@ Removes low-value source comments and encodes valid constraints.
 
 **Uses:** None
 
-### [task-spec](https://github.com/bostonaholic/team/blob/main/skills/task-spec/SKILL.md)
+### [agent-prompt](https://github.com/bostonaholic/team/blob/main/skills/agent-prompt/SKILL.md)
 
-Composes a self-contained work order for another coding agent.
+Composes an agent-optimized prompt for a task.
 
 **Used by:** None
 

@@ -1,10 +1,10 @@
-// tests/task-spec-skill.test.ts
+// tests/agent-prompt-skill.test.ts
 //
-// L2 tripwire (free, deterministic): fences the `task-spec` RUNTIME skill
-// (skills/task-spec/SKILL.md) — a standalone utility distributed to Team's
-// users. It composes a self-contained work order for another coding agent from
-// a short change description and an optional target repo, and emits text. It
-// dispatches nothing and runs nothing.
+// L2 tripwire (free, deterministic): fences the `agent-prompt` RUNTIME skill
+// (skills/agent-prompt/SKILL.md) — a standalone utility distributed to Team's
+// users. It composes an agent-optimized prompt for a task from a short
+// description and an optional target repo, and emits text. It dispatches
+// nothing and runs nothing.
 //
 // Every assertion is guarded so a not-yet-existing file yields a failed
 // expect(), never an uncaught ENOENT.
@@ -16,14 +16,14 @@ import { join } from "node:path";
 import { description, frontmatter, read } from "./helpers/text";
 
 const REPO_ROOT = process.cwd();
-// task-spec is a RUNTIME skill — under skills/ (distributed), not .claude/.
-const SKILL = join(REPO_ROOT, "skills", "task-spec", "SKILL.md");
+// agent-prompt is a RUNTIME skill — under skills/ (distributed), not .claude/.
+const SKILL = join(REPO_ROOT, "skills", "agent-prompt", "SKILL.md");
 const TEMPLATE = join(
   REPO_ROOT,
   "skills",
-  "task-spec",
+  "agent-prompt",
   "references",
-  "01-work-order-template.md",
+  "01-agent-prompt-template.md",
 );
 
 // Defensive reads: a missing file reads as "" so assertions FAIL, never throw.
@@ -36,9 +36,9 @@ function frontmatterKeys(fm: string): string[] {
   return [...fm.matchAll(/^([a-z-]+):/gm)].map((match) => match[1] as string).sort();
 }
 
-// The work-order sections the emitted text must carry. The template is the
-// schema a filling agent follows, so its headings are the machine-facing
-// contract, not prose wording.
+// The prompt sections the emitted text must carry. The template is the schema
+// a filling agent follows, so its headings are the machine-facing contract,
+// not prose wording.
 const SECTIONS = [
   "## Title and one-line goal",
   "## Repo and scope",
@@ -57,7 +57,7 @@ function missingSections(text: string, sections: string[]): string[] {
   return sections.filter((section) => !text.includes(section));
 }
 
-describe("task-spec skill: invocation surface", () => {
+describe("agent-prompt skill: invocation surface", () => {
   test("skill file lives under runtime skills/ (distributed)", () => {
     expect(existsSync(SKILL)).toBe(true);
   });
@@ -74,9 +74,9 @@ describe("task-spec skill: invocation surface", () => {
     ]);
   });
 
-  test("frontmatter declares name: task-spec and effort: medium", () => {
+  test("frontmatter declares name: agent-prompt and effort: medium", () => {
     const fm = frontmatter(source(SKILL));
-    expect(/^name:\s*task-spec\s*$/m.test(fm)).toBe(true);
+    expect(/^name:\s*agent-prompt\s*$/m.test(fm)).toBe(true);
     expect(/^effort:\s*medium\s*$/m.test(fm)).toBe(true);
   });
 
@@ -86,19 +86,19 @@ describe("task-spec skill: invocation surface", () => {
     expect(/^user-invocable:\s*false/m.test(fm)).toBe(false);
   });
 
-  test("description carries the literal /task-spec and a double-quoted trigger phrase", () => {
+  test("description carries the literal /agent-prompt and a double-quoted trigger phrase", () => {
     const text = description(source(SKILL));
     // Guard: a missing description must fail, not vacuously pass.
     expect(text.length).toBeGreaterThan(0);
-    expect(/\/task-spec(?![a-z0-9-])/.test(text)).toBe(true);
+    expect(/\/agent-prompt(?![a-z0-9-])/.test(text)).toBe(true);
     const phrases = [...text.matchAll(/"([^"]+)"/g)].map((match) => match[1] as string);
     expect(phrases.filter((phrase) => !phrase.startsWith("/")).length).toBeGreaterThan(0);
   });
 });
 
-describe("task-spec skill: work-order template", () => {
+describe("agent-prompt skill: prompt template", () => {
   test("SKILL.md links the template at its reference path", () => {
-    const link = "references/01-work-order-template.md";
+    const link = "references/01-agent-prompt-template.md";
     expect(source(SKILL)).toContain(link);
   });
 
@@ -106,7 +106,7 @@ describe("task-spec skill: work-order template", () => {
     expect(existsSync(TEMPLATE)).toBe(true);
   });
 
-  test("the template carries every work-order section", () => {
+  test("the template carries every prompt section", () => {
     const text = source(TEMPLATE);
     // Guard: a missing or renamed file must fail, not pass the sweep vacuously.
     expect(text.length).toBeGreaterThan(0);
@@ -119,7 +119,7 @@ describe("task-spec skill: work-order template", () => {
   });
 });
 
-describe("task-spec skill: produces text only", () => {
+describe("agent-prompt skill: produces text only", () => {
   test("never dispatches, pushes, or opens a PR", () => {
     const text = source(SKILL);
     // Guard: an empty body must fail, not vacuously pass the absence checks.

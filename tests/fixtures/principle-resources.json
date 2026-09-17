@@ -697,6 +697,7 @@
     }
   ],
   "registrations": [
+    "agent-prompt",
     "code-review",
     "eng-design-doc-review",
     "groom-backlog",
@@ -712,7 +713,6 @@
     "principle-fix-root-causes",
     "retro",
     "shipit",
-    "task-spec",
     "team",
     "team-design",
     "team-fix",

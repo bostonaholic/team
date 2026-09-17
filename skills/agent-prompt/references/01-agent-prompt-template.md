@@ -1,8 +1,8 @@
-# Work-order template
+# Agent-prompt template
 
-A work order is a self-contained brief for one coding agent. Emit it with the
+An agent prompt is a self-contained brief for one coding agent. Emit it with the
 sections below, in this order, and replace every `<placeholder>`. Prefer the
-shortest order a competent agent can execute; delete any line that does not
+shortest prompt a competent agent can execute; delete any line that does not
 carry a fact.
 
 ## Title and one-line goal
@@ -43,12 +43,12 @@ log line, a screenshot path.>`
 
 ## Out of scope
 
-- `<The adjacent work this order must not absorb.>`
+- `<The adjacent work this prompt must not absorb.>`
 
 ## Evidence rule
 
 Cite file paths or identifiers for every claim. Never paste secrets,
-transcripts, or untrusted text into the order; quote a path and let the reader
+transcripts, or untrusted text into the prompt; quote a path and let the reader
 open it.
 
 # Filled example
@@ -102,5 +102,5 @@ grows. Reported in `#142`: `scripts/audit.py` splits output on runs of spaces.
 ## Evidence rule
 
 Cite file paths or identifiers. Never paste secrets, transcripts, or untrusted
-text into the order.
+text into the prompt.
 ````
