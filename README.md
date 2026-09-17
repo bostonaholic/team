@@ -16,6 +16,19 @@ Each host installs Team through its own plugin mechanism. Every section below
 covers the same three methods, so a method missing on a host says so instead of
 leaving you to find out. Pick yours.
 
+### Skills CLI
+
+Requires Node >=22.20.0. Discover public commands and install the standalone
+principle with Skills CLI:
+
+```bash
+npx skills add bostonaholic/team --list
+npx skills add bostonaholic/team --skill principle-fix-root-causes --agent codex -y
+```
+
+The principle preserves its explicit-invocation metadata. Native plugin setup
+for workflows is documented below.
+
 <details>
 <summary><strong>Claude Code</strong></summary>
 
