@@ -54,7 +54,7 @@ slug is the `name` field from the matching entry in `4-repos.md`.
 Write no blank or separator lines. Emit a category heading only
 when that category has at least one finding. Write exactly one finding per
 line and never wrap a line. Descriptions stay factual and never state
-inferred intent. Return at most 40 physical lines, or 60 in multi-repo
+inferred intent. Return at most 80 physical lines, or 120 in multi-repo
 mode. Terminal empty or whitespace-only lines count toward the limit.
 
 ```
