@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md).
 
 Before this operation, read [artifact schema](../team/references/artifacts.md).
@@ -93,5 +95,5 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    source reviewer — never present them mid-run. Then:
    - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
      `/team` seeded it): do **not** end the turn. Proceed directly to the
-     PR phase — call the Skill tool with `team-pr` — in the same turn.
+     PR phase — Invoke Team skill `team-pr` — in the same turn.
    - **Standalone**: suggest `/team-pr`.

@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Standalone Mode Tradeoffs
 
 Standalone mode skips the Question/Research/Design/Structure/Plan
@@ -14,8 +16,8 @@ How the phase ends depends on how it was entered:
 
 - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
   `/team` seeded it): present all review verdicts, then continue straight
-  into the PR phase: call the Skill tool with `team-pr` — push the branch and
+  into the PR phase: Invoke Team skill `team-pr` — push the branch and
   open the draft PR in the same turn. Ending the turn with verdicts but
   no draft PR is a defect.
 - **Standalone**: present all review verdicts and tell the user:
-  **"Next: run `/team-pr docs/plans/<id>/`"**
+  **"Next: request `team-pr` with arguments `docs/plans/<id>/` using the continuation choices"**

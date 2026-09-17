@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Install selected Team commands through Skills CLI with complete bundled runtime resources, installation-aware dispatch, and preserved native plugin setup.
+
 ### Fixed
 
 - Pull-request feedback retrieval now includes top-level conversation comments, review-summary bodies, and inline review threads across `/pr-open-comments`, both PR watch skills, and `/why` without duplicate items.

@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Execution
 
 Read [bug-fix playbook](playbooks/bug-fix.md) before proceeding, and follow its
@@ -9,8 +11,7 @@ fix. The fix lands at the root, never at the symptom, per
 [bug fix rules](playbooks/bug-fix.md).
 
 When the buggy behavior looks deliberate — a guard, a threshold, a
-workaround, anything an author plausibly wrote on purpose — call the
-Skill tool with `why` on that code before changing it. A "bug" that was a
+workaround, anything an author plausibly wrote on purpose — Invoke Team skill `why` on that code before changing it. A "bug" that was a
 deliberate trade-off needs its constraint preserved, not deleted; the
 rationale findings become inputs to the minimal fix.
 

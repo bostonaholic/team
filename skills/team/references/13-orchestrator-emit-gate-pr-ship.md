@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ### Orchestrator-Emit Gate (PR / ship)
 
 When the aggregate gate passes:
@@ -15,8 +17,7 @@ When the aggregate gate passes:
    it is not a cue to bump now.
 3. **Open a draft PR automatically — do not stop to ask.** The PR phase
    never waits for approval. Push the branch and
-   open the PR as a **draft** (`gh pr create --draft`). Call the Skill tool
-   with `team-pr` for the canonical procedure.
+   open the PR as a **draft** (`gh pr create --draft`). Invoke Team skill `team-pr` for the canonical procedure.
 4. In multi-repo mode this opens
    **one draft PR per repo with commits ahead**. The PR bodies cross-link
    to each other, so reviewers can see the full change set.

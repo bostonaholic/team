@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Land sequence
 
 The steps below are the whole sequence, and they are **scriptable end to end**:
@@ -155,7 +157,7 @@ merge, that runs asynchronously after the merge. Point the operator at
 `gh run watch`, or `gh run list`, so they can observe it rather than assume it
 is already done.
 
-**On a merge that landed, run `/pr-cleanup`. Do not stop to recommend it.**
+**On a merge that landed, Invoke Team skill `pr-cleanup`. Do not stop to recommend it.**
 The merge already happened. A resync of the default branch and a delete of
 the merged branch carry no decision. `/pr-cleanup` **Mode A** verifies the
 merged PR first, by identity and by containment, before it deletes anything.

@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 Before this operation, read [external-data rules](../team/references/external-data.md).
 Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
 
@@ -62,7 +64,7 @@ one rewrites the document rather than filling a slot in it
 
 ### Call the skill
 
-Call the Skill tool with `pr-screenshots`, passing the PR's URL and
+Invoke Team skill `pr-screenshots`, passing the PR's URL and
 `--entries <path>` for the file just written. One call per run, on the home
 repository's PR.
 

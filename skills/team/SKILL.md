@@ -4,6 +4,9 @@ description: 'Runs the 8-phase QRSPI feature pipeline, or a leading-argument rou
 effort: high
 argument-hint: "<ticket id, issue URL, feature description, or leading-argument route (investigate|plan|prototype|feature|fix|refactor)>"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 # Team — Phase-Table Orchestrator
 

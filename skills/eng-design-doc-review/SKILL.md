@@ -4,6 +4,10 @@ description: 'Reviews a technical design document with fresh context. Trigger on
 effort: high
 argument-hint: "[docs/plans/<id>/]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 Before review dispatch, supply the installed plugin root and resolved `skills/eng-design-doc-review/references/design-reviewer.md` path.
 Pass the applicable resource paths and require reads before work.
@@ -12,17 +16,8 @@ If a required resource is missing, stop and report its resolved path; never use 
 # Engineering Design Doc Review — Independent Fresh-Context Audit
 Before dispatch, resolve [independent review](../team/principles/independent-review.md), [verified results](../team/principles/verified-results.md), [focused work](../team/principles/focused-work.md). Pass their absolute installed paths with the retained brief. The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
 Before each consuming step, read its linked shared rules from this installed skill directory. If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
-Adversarially review a design document with fresh context. The brief this
-skill dispatches lives in `skills/eng-design-doc-review/references/design-reviewer.md`, and the
-orchestrator loads the same brief for the DESIGN phase's adversarial
-review gate. Invoking this skill standalone remains supported whenever
-you want an independent, fresh-context audit of a design document.
-
-Write the prose this skill governs at a seventh-grade reading level, in
-STE-flavored mode — short sentences, common words, no unexplained jargon.
-Full methodology: the [writing standards](../team/references/writing.md). Before
-you finalize prose this skill governs, read the
-[writing standards](../team/references/writing.md) and apply its `## Self-lint` checklist.
+Review a design independently with the same brief as the adversarial review.
+Before finalizing prose, read [writing standards](../team/references/writing.md) and apply its `## Self-lint`.
 
 There is **no custom review agent**. This skill loads the review brief
 from `references/design-reviewer.md` and dispatches the built-in read-only
@@ -59,7 +54,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 - **If the command printed nothing** (tier 3 — no directory holds `6-design.md`),
   do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
   options:
-  - **Run the producer** — run `/team-design docs/plans/<id>/` to produce the
+  - **Run the producer** — Invoke Team skill `team-design` with arguments `docs/plans/<id>/` to produce the
     missing `6-design.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).

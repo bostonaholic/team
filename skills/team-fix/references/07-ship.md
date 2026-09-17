@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Ship
 
 1. Commit in two commits:
@@ -15,8 +17,7 @@
    diff. A backend fix that changes the interface counts. When UI impact is
    uncertain, capture. Only a fix that does not change the interface attaches
    nothing. When it does, run the brief's capture procedure into
-   `docs/plans/<id>/screenshots/`, then call
-   the Skill tool with `pr-screenshots` and attach the PNGs. Build the entries
+   `docs/plans/<id>/screenshots/`, then Invoke Team skill `pr-screenshots` and attach the PNGs. Build the entries
    file and read `result.json` per
    [Screenshot Upload](../team-pr/references/04-screenshot-upload.md), with the
    run's `docs/plans/<id>/` directory as the `$ARGUMENTS` that reference names.

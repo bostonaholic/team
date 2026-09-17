@@ -4,6 +4,9 @@ description: 'Verifies a PR test plan with evidence-rated verdicts. Trigger on "
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 # pr-verify — evidence-rated test-plan verification
 

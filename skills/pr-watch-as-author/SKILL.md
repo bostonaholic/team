@@ -4,6 +4,9 @@ description: 'Watches an authored PR for feedback. Trigger on "watch the PR" or 
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 # pr-watch-as-author — bounded PR review watch loop
 

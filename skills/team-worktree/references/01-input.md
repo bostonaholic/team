@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Input
 
 `$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`. If empty, the
@@ -20,7 +22,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 - **If the command printed nothing** (tier 3 — no directory holds `8-plan.md`),
   do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
   options:
-  - **Run the producer** — run `/team-plan docs/plans/<id>/` to produce the
+  - **Run the producer** — Invoke Team skill `team-plan` with arguments `docs/plans/<id>/` to produce the
     missing `8-plan.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).

@@ -1,9 +1,20 @@
 # Model selection for body-loaded agents
 
-Read this procedure for Codex and Antigravity body-loaded dispatch. Claude's
+Read this procedure for body-loaded dispatch, including skills-mode Claude. Claude's
 named-agent path keeps its native `model:` and `effort:` frontmatter unchanged.
 Other hosts retain their reported default-model substitution; these mappings
 make no claim about OpenCode model support.
+
+## Standalone Claude
+
+Read the definition's `model:` and `effort:` before stripping frontmatter.
+Pass `opus`, `sonnet`, or `haiku` unchanged as `Agent.model`.
+If the active Agent schema cannot select a model, stop the dispatch.
+Pass `effort` unchanged only when the active schema exposes that argument.
+Otherwise omit it and disclose session-inherited effort. Never change session settings or claim native effort parity.
+Record requested tier/effort, sent arguments, and observed runtime values separately under the report contract below.
+Use `unverified` for unobserved values. This mapping changes no tool grants or reviewer enforcement.
+Native Claude continues to use registered frontmatter. The resolver below remains specific to Codex and Antigravity.
 
 ## Resolve before spawning
 

@@ -4,6 +4,9 @@ description: 'Grooms a project backlog and proposes tracker changes. Trigger on 
 effort: high
 argument-hint: "[<project-number-or-url>] [--promote <issue-number>]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 Before this operation, read [external-data rules](../team/references/external-data.md).
 Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.

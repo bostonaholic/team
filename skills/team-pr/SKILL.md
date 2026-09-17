@@ -4,6 +4,10 @@ description: 'Opens PRs with project terms, evidence, and risk. Trigger on "open
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 # Team PR — Create the Pull Request
 
@@ -27,7 +31,7 @@ Run the PR phase. Two modes:
    root file is absent, leave it absent and report the skip unless the user
    explicitly requested a new changelog.
 2. **Open a draft PR automatically — do not stop to ask.** Push, then run `gh pr create --draft`.
-3. After creation, hand off to `/pr-watch-as-author`.
+3. After creation, offer `pr-watch-as-author` through the continuation choices, retaining its explicit watch-intent gate.
 4. In multi-repo mode, open one draft PR per repo and add `## Companion PRs` links.
 5. Read [tracking rules](references/tracking.md) for the in-review transition and the multi-repo home-only closing rule.
 6. After each push, refresh the body. Re-emit exactly one closing line: never duplicated, never dropped.

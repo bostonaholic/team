@@ -4,6 +4,9 @@ description: 'Prepares isolated git worktrees. Trigger on "set up the worktree",
 effort: low
 argument-hint: "[docs/plans/<id>/]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 # Team Worktree — Isolate the Implementation
 
