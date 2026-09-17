@@ -2,35 +2,68 @@
 
 ```
 ## Summary
-[2-3 bullets drawn from $ARGUMENTS/6-design.md — what and why]
+[Observable change, effect, and reason in project terms]
 
 ## Design Decisions
-[Key decisions reviewers should understand]
+[Conditional review-relevant tradeoff]
 
 ## Changes
-[Brief description, organized by component]
+[Conditional detail or representation that adds to Summary]
 
 ## Screenshots
-[Conditional — rendered from the capture manifest per the rules below;
-omitted entirely when no manifest exists]
+[Conditional on UI impact; use the existing capture and upload rules]
 
 ## How to Verify
-- [Automated verification command]
-- [Manual verification step]
+- [Command/action: observed result, scope, and limitations]
+
+## Merge risk
+[One-way door or two-way door: supporting facts and concrete recovery]
 
 ## Pre-merge
-[Conditional — actions that must complete before this PR merges; omitted
-entirely when there are none]
+[Conditional merge requirements]
 
 ## Review notes
-[Conditional — deferred findings for the human's PR review; see below]
+[Conditional deferred findings]
 
 ## References
-- Design: $ARGUMENTS/6-design.md
-- Plan:   $ARGUMENTS/8-plan.md
+- [Available, reviewer-accessible supporting references; omit unavailable artifacts]
 
 Closes #<n>
 ```
+
+### Explain the change
+
+Lead Summary with the observable change, its effect, and why it matters.
+Use the project vocabulary gathered through [Input](01-input.md).
+Keep detail proportional to the change. Include Design Decisions only for a review-relevant tradeoff.
+Omit Changes when it adds nothing beyond Summary.
+
+Place useful representations beside their explanation in Changes or Design Decisions.
+Choose pseudocode for logic, call trees for order, component trees for ownership, or shallow file trees for responsibilities.
+Use focused diffs for changed structure, or state tables and fenced Mermaid for relationships.
+Use complete small blocks when omitted context hides ownership or order.
+Omit representations that only repeat the prose. Fence code and component syntax.
+Do not add raw HTML, diagram uploads, or representations inside the uploader-owned Screenshots section.
+
+### Evidence and recovery
+
+Under How to Verify, use plain bullets for each command or manual action, observed result, scope, and limitations.
+Include short decisive output, result counts, or reliable evidence links when available.
+Distinguish completed, failed, skipped, timed-out, unavailable, and unrun checks.
+Never infer success from planned commands. State unrecoverable evidence gaps.
+Reuse available results. Do not rerun expensive checks solely for presentation.
+Exclude credentials, sensitive data, and irrelevant logs from excerpts.
+Include only existing, reviewer-accessible references. Never invent artifact links or reviewer findings.
+
+Place Merge risk after verification and before merge prerequisites.
+Use the one-way door and two-way door definitions in [Decisions](../team/references/decisions.md#decision-method).
+Classify the whole change, including data, deployments, dependencies, and external effects.
+State supporting facts and concrete recovery actions.
+A two-way door names the revert or redeploy action and why consequences remain contained.
+A one-way door names material consequences and what reversal cannot restore.
+If reversibility is unknown, use one-way door and name the missing fact.
+Put actual outstanding controls in Pre-merge once, with the responsible owner when known.
+This assessment describes recovery. It grants no authority to run recovery, change gates, or merge.
 
 **`## Pre-merge` (conditional):** this section carries only the actions that
 must complete *before* this PR merges. Four things qualify. (a) A dependency
@@ -48,9 +81,8 @@ belong here.
 `square-task-list-completed` bot: an unchecked box blocks merging until a human
 ticks it. So use `- [ ]` only for pre-merge actions, and plain `- ` bullets for
 anything informational or post-merge. This is why `## How to Verify` uses plain
-bullets — its steps report verification the author already ran, and a checkbox
-there would emit a PR the bot refuses to merge until someone ticks off
-finished work. Verification that truly must be re-run by a human before the
+bullets: they report results and gaps. A checkbox would make an informational
+report block merging. Verification that truly must be re-run by a human before the
 merge belongs in `## Pre-merge` instead. A checked box asserts the work is
 done, so tick only the boxes for items this run completed and verified
 itself, in the same turn it completed them; an item the user or a later

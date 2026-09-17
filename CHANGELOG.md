@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.123.0] - 2026-09-17
+
+### Changed
+
+- Team PR descriptions now use project terms, observed verification evidence, and merge-risk classifications with concrete recovery steps.
+
 ## [0.122.0] - 2026-09-17
 
 ### Added
@@ -1091,7 +1097,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.122.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.123.0...HEAD
+[0.123.0]: https://github.com/bostonaholic/team/compare/v0.122.0...v0.123.0
 [0.122.0]: https://github.com/bostonaholic/team/compare/v0.121.0...v0.122.0
 [0.121.0]: https://github.com/bostonaholic/team/compare/v0.120.0...v0.121.0
 [0.120.0]: https://github.com/bostonaholic/team/compare/v0.119.0...v0.120.0
