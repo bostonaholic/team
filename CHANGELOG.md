@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.124.0] - 2026-09-17
+
+### Fixed
+
+- Retro preserves the full normalized session transcript, including long entries and early records, instead of applying per-entry, record-count, and total-size limits.
+
 ## [0.123.0] - 2026-09-17
 
 ### Changed
@@ -1097,7 +1103,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.123.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.124.0...HEAD
+[0.124.0]: https://github.com/bostonaholic/team/compare/v0.123.0...v0.124.0
 [0.123.0]: https://github.com/bostonaholic/team/compare/v0.122.0...v0.123.0
 [0.122.0]: https://github.com/bostonaholic/team/compare/v0.121.0...v0.122.0
 [0.121.0]: https://github.com/bostonaholic/team/compare/v0.120.0...v0.121.0

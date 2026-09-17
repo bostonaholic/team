@@ -53,7 +53,10 @@ Supply the installed root, file-finder definition, and applicable resource paths
 Dispatch all three in parallel in a single message. Each prompt carries: the
 absolute path of the normalized transcript, the lens's own question, the
 untrusted-content and paraphrase-only rules verbatim, the focus scope when one
-resolved, and this bound — **return at most 30 reply lines, each finding one
+resolved, and instructions to read every normalized record in consecutive
+chunks, retaining the next unread position between chunks. Report any unread
+range rather than claiming a complete review. The output bound does not limit
+transcript reading: **return at most 30 reply lines, each finding one
 line carrying a file path or a turn index, and spawn no further agents**.
 
 **Inline fallback — a reduced-assurance mode.** Subagent dispatch follows the

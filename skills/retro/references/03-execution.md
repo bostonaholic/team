@@ -39,13 +39,15 @@ a command carrying it breaks on every other host.
 
 The script resolves one absolute transcript path or fails by name, and it
 writes `transcript.jsonl` into the run cache: one classified record per line,
-each span cut to the per-span byte cap. **The lenses read only that normalized
-file.** Every host's records land in the same shape — real user prompts,
-assistant replies, and tool calls rendered as the tool's name plus its
-invocation, which is what leaves the tooling lens an invocation to count. Four
-rules therefore run as code rather than as advice: the record classifier, the
-byte cap, the record and byte ceilings, and never descending past a
-transcript's own directory level into a `subagents/` or `tool-results/` sidecar.
+with every allowlisted record and its complete text preserved. **The lenses read
+only that normalized file**, in consecutive chunks until its end. Do not select
+only recent records or truncate long entries to fit a single tool response or
+context window. Track the last record read when continuing across chunks.
+Every host's records land in the same shape — real user prompts, assistant
+replies, and tool calls rendered as the tool's name plus its invocation.
+The record classifier and the prohibition on descending into `subagents/` or
+`tool-results/` sidecars remain enforced in code. There is no per-span,
+record-count, or aggregate-size limit on the normalized transcript.
 
 **Which store it reads.** Claude Code keeps `<session-id>.jsonl` under
 `~/.claude/projects/<project-slug>/`; Codex keeps
@@ -87,10 +89,10 @@ Read the script's counts into the report: the host and whether the session was
 resolved by id or by marker, the format, records kept, records dropped per
 type, records dropped to the aggregate ceiling, spans truncated, malformed
 lines skipped, unrecognized records, and any prior history the file does not
-carry. **A bounded or partial read is stated, never absorbed.** A session
-whose transcript hit a ceiling produced a partial read; a Codex thread forked
-from another one leaves its earlier turns in the parent's file, which this run
-does not read. Say so in the summary either way, and **never substitute your own
+carry. **A partial read is stated, never absorbed.** A Codex thread forked from
+another one leaves its earlier turns in the parent's file, which this run does
+not read. If a lens cannot finish reading, report its unread record range. Say
+so in the summary, and **never substitute your own
 memory of the session for the part the transcript did not carry** — that memory
 is what compaction already discarded, which is the reason the run reads a file
 at all.

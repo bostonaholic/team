@@ -2,7 +2,7 @@
 
 /**
  * Resolve the invoking session's transcript on whichever host is running, and
- * normalize it into one bounded record stream.
+ * normalize it into one complete record stream.
  *
  *     node "<skill-dir>/resolve-transcript.mjs" <run-cache-dir> [store-root]
  *
@@ -46,15 +46,6 @@ import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import { pathToFileURL } from "node:url";
-
-/** Per-span byte cap applied before any lens sees a span. */
-export const PER_SPAN_BYTE_CAP = 4000;
-
-/** Aggregate record ceiling on the normalized stream, newest kept. */
-export const MAX_RECORDS = 2000;
-
-/** Aggregate byte ceiling on the normalized stream, newest kept. */
-export const MAX_TOTAL_BYTES = 4 * 1024 * 1024;
 
 /**
  * The hosts whose stores this file can read, and the shape of each store.
@@ -469,7 +460,7 @@ function blockText(block) {
   return "";
 }
 
-/** A Claude record's span text: what a lens reads, before the per-span cap. */
+/** A Claude record's span text: the complete text a lens reads. */
 function spanText(record) {
   const content = record?.message?.content;
   if (typeof content === "string") return content;
@@ -605,7 +596,6 @@ export function normalizeTranscript(jsonlText) {
   const droppedByType = {};
   const formats = new Set();
   let malformedLines = 0;
-  let truncatedSpans = 0;
   let unrecognizedRecords = 0;
   let priorHistory = null;
   const records = [];
@@ -635,21 +625,16 @@ export function normalizeTranscript(jsonlText) {
       continue;
     }
 
-    let { text } = classified.keep;
-    if (text.length > PER_SPAN_BYTE_CAP) {
-      text = text.slice(0, PER_SPAN_BYTE_CAP);
-      truncatedSpans++;
-    }
-
-    records.push({ ...classified.keep, text });
+    records.push(classified.keep);
   }
 
   return {
-    ...boundStream(records),
+    records,
+    droppedForCeiling: 0,
     format: formatOf(formats),
     droppedByType,
     malformedLines,
-    truncatedSpans,
+    truncatedSpans: 0,
     unrecognizedRecords,
     priorHistory,
   };
@@ -659,25 +644,6 @@ export function normalizeTranscript(jsonlText) {
 function formatOf(formats) {
   if (formats.size === 1) return [...formats][0];
   return formats.size === 0 ? "unknown" : "mixed";
-}
-
-/**
- * Keep the newest records that fit both ceilings. Newest, because the end of a
- * session is where its learnings are, and a bounded stream is the only reason
- * a tens-of-megabytes transcript can be read at all.
- */
-function boundStream(records) {
-  const kept = [];
-  let total = 0;
-  for (let index = records.length - 1; index >= 0; index--) {
-    const record = records[index];
-    if (kept.length >= MAX_RECORDS) break;
-    if (total + record.text.length > MAX_TOTAL_BYTES) break;
-    total += record.text.length;
-    kept.push(record);
-  }
-  kept.reverse();
-  return { records: kept, droppedForCeiling: records.length - kept.length };
 }
 
 // ---------------------------------------------------------------------------
@@ -838,7 +804,6 @@ export function normalizeOpencode({ dbPath, sessionId }) {
   const db = openOpencodeDb(dbPath);
   const droppedByType = {};
   let malformedLines = 0;
-  let truncatedSpans = 0;
   const records = [];
 
   try {
@@ -880,11 +845,7 @@ export function normalizeOpencode({ dbPath, sessionId }) {
         droppedByType[`part:${type}`] = (droppedByType[`part:${type}`] ?? 0) + 1;
       }
 
-      let text = kept.join("\n");
-      if (text.length > PER_SPAN_BYTE_CAP) {
-        text = text.slice(0, PER_SPAN_BYTE_CAP);
-        truncatedSpans++;
-      }
+      const text = kept.join("\n");
       const isUserTurn = role === "user" && !CLAUDE_INJECTION_TAGS.some((tag) => text.includes(tag));
       records.push({ type: role, isUserTurn, text });
     }
@@ -897,11 +858,12 @@ export function normalizeOpencode({ dbPath, sessionId }) {
   }
 
   return {
-    ...boundStream(records),
+    records,
+    droppedForCeiling: 0,
     format: "opencode",
     droppedByType,
     malformedLines,
-    truncatedSpans,
+    truncatedSpans: 0,
     unrecognizedRecords: 0,
     priorHistory: null,
   };

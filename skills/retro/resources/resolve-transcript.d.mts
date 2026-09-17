@@ -3,15 +3,6 @@
 // TypeScript tooling, never at runtime. Same convention as
 // skills/team/references/supports-nesting.d.mts.
 
-/** Per-span byte cap applied before any lens sees a span. */
-export const PER_SPAN_BYTE_CAP: number;
-
-/** Aggregate record ceiling on the normalized stream, newest kept. */
-export const MAX_RECORDS: number;
-
-/** Aggregate byte ceiling on the normalized stream, newest kept. */
-export const MAX_TOTAL_BYTES: number;
-
 /** The hosts whose session stores this script reads, keyed by host name. */
 export const HOSTS: Record<string, { kind: "file" | "sqlite"; depth?: number; suffixed?: boolean }>;
 
@@ -24,7 +15,7 @@ export interface NormalizedRecord {
   type: string;
   /** True only for a real user prompt (no tool result, injection, or meta). */
   isUserTurn: boolean;
-  /** The record's span text, cut to PER_SPAN_BYTE_CAP. */
+  /** The record's complete span text. */
   text: string;
 }
 
@@ -36,13 +27,14 @@ export interface NormalizedTranscript {
   /** Dropped non-allowlisted record types, counted per type. */
   droppedByType: Record<string, number>;
   malformedLines: number;
-  truncatedSpans: number;
+  /** Retained for report compatibility; normalization never truncates spans. */
+  truncatedSpans: 0;
   /** Well-formed JSON lines no supported host writes. */
   unrecognizedRecords: number;
   /** The thread this one was forked from, whose turns are in another file. */
   priorHistory: string | null;
-  /** Records dropped to stay inside MAX_RECORDS / MAX_TOTAL_BYTES. */
-  droppedForCeiling: number;
+  /** Retained for report compatibility; normalization never caps the stream. */
+  droppedForCeiling: 0;
 }
 
 /** One raw record, classified: kept, dropped under a counter key, or unreadable. */
