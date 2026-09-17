@@ -89,11 +89,12 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    fixes it at the cost of one round. The round counter is session-scoped
    (TodoWrite) and starts fresh on re-invocation. The re-invoked session's
    ledger carries no `PR` phase item, so step 9 takes the standalone
-   branch and names `/team-pr`.
+   branch and offers an explicit same-session request for `team-pr` with the artifact directory.
 9. **Once Blocking and Major are clean:** record any **Minor-and-below**
    findings for the PR body's `## Review notes` section, tagged by
    source reviewer — never present them mid-run. Then:
    - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
      `/team` seeded it): do **not** end the turn. Proceed directly to the
      PR phase — Invoke Team skill `team-pr` — in the same turn.
-   - **Standalone**: suggest `/team-pr`.
+   - **Standalone**: stop and offer an explicit same-session request for `team-pr` with the artifact directory.
+     For later slash use, first offer `npx skills add bostonaholic/team --skill team-pr`.

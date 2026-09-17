@@ -110,8 +110,8 @@ Edit canonical Team source, then run `bun run skills:build`, verify with
 An edited packaged entrypoint fails before workflow work; `/retro` skips packaged
 edit targets. Each dependent command contains the complete compressed archive.
 The dependency-free principle requires no runtime archive.
-The generated archives measure 490,692 bytes per dependent command and
-12,757,992 bytes across 26 commands. Each decodes to 1,106,810 bytes before
+The generated archives measure 490,860 bytes per dependent command and
+12,762,360 bytes across 26 commands. Each decodes to 1,107,450 bytes before
 extraction. Repeated archives increase installation size and Git history.
 
 

@@ -56,6 +56,17 @@ function contains(root, path) {
   return child === "" || (!child.startsWith(`..${sep}`) && child !== ".." && !isAbsolute(child));
 }
 
+function projectRoot() {
+  const cwd = realpathSync(process.cwd());
+  let directory = cwd;
+  while (true) {
+    if (existsSync(join(directory, ".git"))) return directory;
+    const parent = dirname(directory);
+    if (parent === directory) return cwd;
+    directory = parent;
+  }
+}
+
 function nativeRoot(skillDirectory) {
   const skills = dirname(skillDirectory);
   if (basename(skills) !== "skills") return null;
@@ -95,7 +106,7 @@ export function resolveRuntime(resolverPath) {
     throw new Error(`${entrypoint}: packaged entrypoint differs from bundle; regenerate canonical source and reinstall`);
   }
   const temporary = realpathSync(tmpdir());
-  if (contains(realpathSync(process.cwd()), temporary) || contains(skillDirectory, temporary)) {
+  if (contains(projectRoot(), temporary) || contains(skillDirectory, temporary)) {
     throw new Error(`temporary runtime destination is inside the project or installation: ${temporary}`);
   }
   const root = mkdtempSync(join(temporary, "team-runtime-"));
