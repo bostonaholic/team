@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Team PR descriptions now use project terms, observed verification evidence, and merge-risk classifications with concrete recovery steps.
+
 ## [0.122.0] - 2026-09-17
 
 ### Added
 
 - **`/agent-prompt` composes an agent-optimized prompt for a task.** It reads a short task description plus an optional target repo or file set, records every fact with the path or command that shows it, marks anything it cannot verify as unknown, and emits the prompt — title and goal, repo and scope, why, ground truth, required changes, constraints, acceptance criteria, out of scope, and an evidence rule — to stdout or an optional output path. Before emitting, it applies concept elevation. Where several instructions share a purpose, it states one durable rule, and it never drops a fact, command, path, or check to gain length. The output is already optimized, so a later prompt improver is unnecessary. It produces text only: no dispatch, no execution. To admit it without raising Team's shared Codex catalog ceiling, nine over-long descriptions each dropped one redundant trigger phrase, so the catalog grows from 26 to 27 skills inside the existing footprint. **What this asks of you:** nothing.
+
 
 ## [0.121.0] - 2026-09-17
 

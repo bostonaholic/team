@@ -1,6 +1,6 @@
 ---
 name: team-pr
-description: 'Opens a pull request after verification. Trigger on "open the PR", "open a draft PR", or "/team-pr" only; never infer the phase from passed verification.'
+description: 'Opens PRs with project terms, evidence, and risk. Trigger on "open the PR", "open a draft PR", or "/team-pr" only; never infer the phase from passed verification.'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
@@ -35,19 +35,22 @@ Run the PR phase. Two modes:
 
 ```
 ## Summary
-[What and why]
+[Observable change, effect, and reason in project terms]
 
 ## Design Decisions
-[Key decisions]
+[Conditional review-relevant tradeoff]
 
 ## Changes
-[Observable changes]
+[Conditional detail or representation that adds to Summary]
 
 ## Screenshots
-[Conditional]
+[Conditional on UI impact; use the existing capture and upload rules]
 
 ## How to Verify
-- [Verification performed]
+- [Command/action: observed result, scope, and limitations]
+
+## Merge risk
+[One-way door or two-way door: supporting facts and concrete recovery]
 
 ## Pre-merge
 [Conditional merge requirements]
@@ -56,11 +59,12 @@ Run the PR phase. Two modes:
 [Conditional deferred findings]
 
 ## References
-- Design: $ARGUMENTS/6-design.md
-- Plan: $ARGUMENTS/8-plan.md
+- [Available, reviewer-accessible supporting references; omit unavailable artifacts]
 
 Closes #<n>
 ```
+
+Apply the detailed [body authoring rules](references/03-pr-body-template.md) to initial drafts and every refresh.
 
 **Prose bar.** The body addresses one busy reader making one decision. Before finalizing, read the [writing standards](../team/references/writing.md) and apply its `## One busy reader` rule and its `## Self-lint`. `## Summary` opens with the recommendation or the observable outcome, never with a sentence describing the PR.
 

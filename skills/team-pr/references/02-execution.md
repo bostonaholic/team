@@ -16,6 +16,8 @@
 3. **Resume path** — `$ARGUMENTS/1-task.md` exists: read `ticketId` from
    its frontmatter. Read `$ARGUMENTS/6-design.md` for the "why" behind the
    changes.
+   In either mode, gather the shared [inputs](01-input.md) for each changed repository.
+   Apply the [body authoring rules](03-pr-body-template.md) to each draft.
 4. **Decide UI impact and resolve the screenshot manifest.** Read the
    [ux reviewer brief](../code-review/references/ux-reviewer.md) and apply its
    `## Screenshot Capture (UI projects)` UI-impact gate to the full branch
@@ -70,10 +72,13 @@
    applies to any push that adds, removes, or changes commits on a PR's
    branch. It covers the initial open *and* every follow-up push, such as
    review feedback, fixups, and rebases. After each one, re-read the body
-   against the now-pushed commits and updating it
+   against the now-pushed commits and update it
    (`gh pr edit --body-file`, or a quoted heredoc per step 7) so the
-   Summary, Changes, and How-to-Verify sections still match what the branch
-   actually does. **Screenshots go stale the same way the prose does.**
+   explanations, terminology, representations, evidence, merge risk, and references match the pushed diff.
+   Reassess these facts through the shared input and body authoring rules.
+   Retain claims only when available evidence supports them.
+   Label earlier-commit evidence and unresolved current coverage when prior checks no longer prove the changed behavior.
+   **Screenshots go stale the same way the prose does.**
    When the push changed the UI, read the
    [ux reviewer brief](../code-review/references/ux-reviewer.md) and
    re-capture per its "Screenshot Capture (UI projects)" section. It wipes

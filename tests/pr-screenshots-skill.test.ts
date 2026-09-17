@@ -276,6 +276,72 @@ function occurrences(haystack: string, needle: string): number {
 }
 
 describe("Slice 1 — scripts/splice.mjs (L1)", () => {
+  test("Revised PR bodies preserve screenshot splice contracts", () => {
+    const beforeScreenshots = `## Summary
+
+Shows login failures beside the submitted form.
+
+## Changes
+
+~~~jsx
+<LoginForm><ErrorMessage /></LoginForm>
+~~~
+
+~~~mermaid
+flowchart LR
+  Submit --> Validate --> ErrorMessage
+~~~
+
+`;
+    const afterScreenshots = `## How to Verify
+
+- Form checks: 4 passed; browser check unavailable.
+
+## Merge risk
+
+Two-way door: revert the form change and redeploy. No stored data changes.
+
+## Review notes
+
+- Error state reviewed; keyboard behavior remains unverified.
+
+## References
+
+- [Design](https://example.com/design)
+
+## Pre-merge
+
+- [ ] Verify keyboard behavior in the browser.
+
+## Companion PRs
+
+- [API](https://example.com/pr/2)
+
+Closes #12
+`;
+    const firstSection = `## Screenshots
+
+**Login** (default)
+![screenshot-01](https://example.com/user-attachments/assets/0000)`;
+    const body = beforeScreenshots + afterScreenshots;
+    const expectedInserted = beforeScreenshots + firstSection + "\n\n" + afterScreenshots;
+    const expectedReplaced = beforeScreenshots + SECTION + "\n\n" + afterScreenshots;
+
+    const inserted = splice(body, firstSection, { landed: 1 });
+    expect(inserted.reason).toBe("");
+    expect(inserted.changed).toBe(true);
+    expect(inserted.body).toBe(expectedInserted);
+
+    const replaced = splice(inserted.body, SECTION, { landed: 2 });
+    expect(replaced.reason).toBe("");
+    expect(replaced.changed).toBe(true);
+    expect(replaced.body).toBe(expectedReplaced);
+
+    const repeated = splice(replaced.body, SECTION, { landed: 2 });
+    expect(repeated.changed).toBe(false);
+    expect(repeated.body).toBe(expectedReplaced);
+  });
+
   test("splice keeps a ticket-reference line when a crash tail collapsed the footer", () => {
     // A crash between attach and write leaves a standalone image line at EOF,
     // so rule 1's footer scan stops immediately and `Closes #12` lands in

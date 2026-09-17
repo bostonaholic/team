@@ -115,7 +115,7 @@ Executes and verifies implementation slices.
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
-Opens a pull request after verification.
+Opens PRs with project terms, evidence, and risk.
 
 **Used by:** `team`, `team-implement`
 
