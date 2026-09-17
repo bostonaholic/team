@@ -1,6 +1,6 @@
 ---
 name: team-question
-description: 'Decomposes a feature into task and question artifacts. Trigger on "shape this idea", "decompose this task", or "/team-question".'
+description: 'Decomposes a feature into task and question artifacts. Trigger on "decompose this task" or "/team-question".'
 effort: medium
 argument-hint: "<ticket id, issue URL, or task description>"
 ---

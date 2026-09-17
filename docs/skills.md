@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, retro, why, how, no-comments), each with the skills it loads."
+description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, retro, why, how, no-comments, agent-prompt), each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -41,7 +41,7 @@ This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 26 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 27 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 ## Entry-point skills
@@ -249,6 +249,14 @@ Reviews a diff with fresh context.
 ### [no-comments](https://github.com/bostonaholic/team/blob/main/skills/no-comments/SKILL.md)
 
 Removes low-value source comments and encodes valid constraints.
+
+**Used by:** None
+
+**Uses:** None
+
+### [agent-prompt](https://github.com/bostonaholic/team/blob/main/skills/agent-prompt/SKILL.md)
+
+Composes an agent-optimized prompt for a task.
 
 **Used by:** None
 

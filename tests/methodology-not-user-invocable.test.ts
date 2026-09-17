@@ -60,10 +60,10 @@ describe("methodology skills are never user-invocable", () => {
 
   // Guard: an empty or mis-parsed catalog would pass every check below.
   test("the catalog parse sees both kinds of section", () => {
-    expect(entries.length).toBe(26);
+    expect(entries.length).toBe(27);
     expect(entries.filter((e) => e.section === METHODOLOGY_SECTION).length).toBe(0);
     expect(entries.filter((e) => e.section === PRINCIPLE_SECTION).length).toBe(1);
-    expect(entries.filter((e) => COMMAND_SECTIONS.includes(e.section)).length).toBe(25);
+    expect(entries.filter((e) => COMMAND_SECTIONS.includes(e.section)).length).toBe(26);
   });
 
   test("every skill catalogued as methodology sets user-invocable: false", () => {

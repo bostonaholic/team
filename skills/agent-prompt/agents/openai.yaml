@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Prompt"
+  short_description: "Compose an agent-optimized prompt for a task"
+  default_prompt: "Use $agent-prompt to compose an agent-optimized prompt for a task."

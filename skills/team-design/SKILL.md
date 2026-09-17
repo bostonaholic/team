@@ -1,6 +1,6 @@
 ---
 name: team-design
-description: 'Drafts and adversarially reviews a design. Trigger on "design this", "let''s align on the approach", or "/team-design".'
+description: 'Drafts and adversarially reviews a design. Trigger on "design this" or "/team-design".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

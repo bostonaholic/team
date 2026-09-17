@@ -1,6 +1,6 @@
 ---
 name: team-plan
-description: 'Produces the tactical implementation plan. Trigger on "plan the implementation", "spell out the steps", or "/team-plan".'
+description: 'Produces the tactical implementation plan. Trigger on "plan the implementation" or "/team-plan".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
