@@ -10,6 +10,7 @@ const startup = `# Packaged runtime startup
 
 Only the invoking root session initializes a runtime. Nested calls and subagents inherit root and mode, without initialization.
 Resolve <skill-dir> from the host-supplied absolute base of this loaded skill, never from the consumer checkout.
+Pass that installation path without resolving its registration links.
 If that base is unavailable, stop and report "missing absolute skill base".
 Resolve <consumer-root> from the host's absolute consumer project root, separately from the installed skill base.
 If that root is unavailable, stop and report "missing absolute consumer project root". Never infer it from the invocation subdirectory.

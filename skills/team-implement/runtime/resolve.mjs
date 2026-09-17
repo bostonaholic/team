@@ -77,6 +77,7 @@ function nativeRoot(skillDirectory) {
 }
 
 export function resolveRuntime(resolverPath, consumerRoot) {
+  const invokedInstallation = realpathSync(dirname(dirname(dirname(resolverPath))));
   const skillDirectory = dirname(dirname(realpathSync(resolverPath)));
   const command = basename(skillDirectory);
   const native = nativeRoot(skillDirectory);
@@ -103,7 +104,7 @@ export function resolveRuntime(resolverPath, consumerRoot) {
     throw new Error(`${entrypoint}: packaged entrypoint differs from bundle; regenerate canonical source and reinstall`);
   }
   const temporary = realpathSync(tmpdir());
-  if (contains(project, temporary) || contains(dirname(skillDirectory), temporary)) {
+  if (contains(project, temporary) || contains(invokedInstallation, temporary) || contains(dirname(skillDirectory), temporary)) {
     throw new Error(`temporary runtime destination is inside the project or installation: ${temporary}`);
   }
   const root = mkdtempSync(join(temporary, "team-runtime-"));
@@ -128,7 +129,7 @@ export function resolveRuntime(resolverPath, consumerRoot) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try {
-    process.stdout.write(`${JSON.stringify(resolveRuntime(fileURLToPath(import.meta.url), process.argv[2]))}\n`);
+    process.stdout.write(`${JSON.stringify(resolveRuntime(process.argv[1], process.argv[2]))}\n`);
   } catch (error) {
     process.stderr.write(`${fileURLToPath(import.meta.url)}: ${error.message}\n`);
     process.exitCode = 1;
