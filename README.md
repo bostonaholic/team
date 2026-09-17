@@ -56,8 +56,8 @@ and CRLF entrypoints work without changing bundled canonical bytes. `/retro`
 skips packaged targets while preserving existing ordinary local edit targets.
 Each dependent command contains the complete compressed archive.
 The dependency-free principle requires no runtime archive.
-The generated archives measure 493,540 bytes per dependent command and
-12,832,040 bytes across 26 commands. Each decodes to 1,112,865 bytes before
+The generated archives measure 493,704 bytes per dependent command and
+12,836,304 bytes across 26 commands. Each decodes to 1,113,398 bytes before
 extraction. Repeated archives increase installation size and Git history.
 
 
