@@ -794,8 +794,11 @@ Targets are `claude-code`, `codex`, `antigravity-cli`, and `opencode`.
 Choose this path or native plugin setup for each host to avoid duplicate registrations.
 
 Each selected dependent command bundles canonical skills, 13 specialist definitions,
-and shared resources. Only selected commands register. Node and the host-supplied
-absolute skill base are required at invocation. Missing prerequisites stop before workflow work.
+and shared resources. Only selected commands register. Invocation requires Node, the host-supplied
+absolute skill base, and the host-resolved absolute consumer project root.
+Pass the consumer root separately to the resolver. Missing root context stops startup.
+The resolver does not infer the root from Git or the current directory.
+Missing prerequisites stop before workflow work.
 The resolver validates the complete archive before extraction into a private temporary directory.
 Successful directories stay readable until OS cleanup; failed initialization removes only its own directory.
 Native plugin resolution writes nothing. Read-only commands permit root initialization only; subagents inherit the prepared runtime.
@@ -810,11 +813,13 @@ Filesystem tests prove packaging and lifecycle behavior, not complete host execu
 
 Authors edit canonical sources and regenerate with `bun run skills:build`.
 The non-writing `bun run skills:check` checks generated paths, bytes, and decoded source records.
-Generated entrypoints and archives are not edit targets; local entrypoint changes fail before execution.
-`/retro` skips packaged targets and names source regeneration only when the source is known.
+Generated entrypoints and archives are not edit targets; substantive entrypoint changes fail before execution.
+Equivalent LF and CRLF entrypoints work. Extracted canonical resources retain their bundled bytes.
+`/retro` checks project/global `.agents/skills` and `.claude/skills`, including links, before offering an editable fallback.
+It skips packaged targets and names source regeneration only when the source is known.
 
-The generated archives measure 490,860 bytes per dependent command and
-12,762,360 bytes across 26 commands. Each decodes to 1,107,450 bytes before
+The generated archives measure 491,128 bytes per dependent command and
+12,769,328 bytes across 26 commands. Each decodes to 1,108,126 bytes before
 extraction. Repeated archives increase installation size and Git history.
 
 ### Lifecycle and native migration

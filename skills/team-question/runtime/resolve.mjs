@@ -56,17 +56,6 @@ function contains(root, path) {
   return child === "" || (!child.startsWith(`..${sep}`) && child !== ".." && !isAbsolute(child));
 }
 
-function projectRoot() {
-  const cwd = realpathSync(process.cwd());
-  let directory = cwd;
-  while (true) {
-    if (existsSync(join(directory, ".git"))) return directory;
-    const parent = dirname(directory);
-    if (parent === directory) return cwd;
-    directory = parent;
-  }
-}
-
 function nativeRoot(skillDirectory) {
   const skills = dirname(skillDirectory);
   if (basename(skills) !== "skills") return null;
@@ -87,11 +76,18 @@ function nativeRoot(skillDirectory) {
   return root;
 }
 
-export function resolveRuntime(resolverPath) {
+export function resolveRuntime(resolverPath, consumerRoot) {
   const skillDirectory = dirname(dirname(realpathSync(resolverPath)));
   const command = basename(skillDirectory);
   const native = nativeRoot(skillDirectory);
   if (native) return { mode: "plugin", root: native, skillPath: join(skillDirectory, "SKILL.md") };
+  if (typeof consumerRoot !== "string" || !isAbsolute(consumerRoot)) {
+    throw new Error("missing or invalid absolute consumer project root");
+  }
+  if (!existsSync(consumerRoot) || !statSync(consumerRoot).isDirectory()) {
+    throw new Error(`consumer project root must be an existing directory: ${consumerRoot}`);
+  }
+  const project = realpathSync(consumerRoot);
   const payload = join(skillDirectory, "runtime/bundle.json");
   let records;
   try {
@@ -102,11 +98,12 @@ export function resolveRuntime(resolverPath) {
   }
   const entrypoint = join(skillDirectory, "SKILL.md");
   const canonical = records.find((record) => record.path === `skills/${command}/SKILL.md`);
-  if (!canonical || stripBootstrap(readFileSync(entrypoint, "utf8")) !== canonical.text) {
+  const installed = stripBootstrap(readFileSync(entrypoint, "utf8").replace(/\r\n/g, "\n"));
+  if (!canonical || installed !== canonical.text.replace(/\r\n/g, "\n")) {
     throw new Error(`${entrypoint}: packaged entrypoint differs from bundle; regenerate canonical source and reinstall`);
   }
   const temporary = realpathSync(tmpdir());
-  if (contains(projectRoot(), temporary) || contains(dirname(skillDirectory), temporary)) {
+  if (contains(project, temporary) || contains(dirname(skillDirectory), temporary)) {
     throw new Error(`temporary runtime destination is inside the project or installation: ${temporary}`);
   }
   const root = mkdtempSync(join(temporary, "team-runtime-"));
@@ -131,7 +128,7 @@ export function resolveRuntime(resolverPath) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   try {
-    process.stdout.write(`${JSON.stringify(resolveRuntime(fileURLToPath(import.meta.url)))}\n`);
+    process.stdout.write(`${JSON.stringify(resolveRuntime(fileURLToPath(import.meta.url), process.argv[2]))}\n`);
   } catch (error) {
     process.stderr.write(`${fileURLToPath(import.meta.url)}: ${error.message}\n`);
     process.exitCode = 1;

@@ -11,10 +11,12 @@ const startup = `# Packaged runtime startup
 Only the invoking root session initializes a runtime. Nested calls and subagents inherit root and mode, without initialization.
 Resolve <skill-dir> from the host-supplied absolute base of this loaded skill, never from the consumer checkout.
 If that base is unavailable, stop and report "missing absolute skill base".
-Run this command with the actual absolute resolver path quoted as one argument:
+Resolve <consumer-root> from the host's absolute consumer project root, separately from the installed skill base.
+If that root is unavailable, stop and report "missing absolute consumer project root". Never infer it from the invocation subdirectory.
+Run this command with each absolute path quoted as a separate argument:
 
 \`\`\`sh
-node "<skill-dir>/runtime/resolve.mjs"
+node "<skill-dir>/runtime/resolve.mjs" "<consumer-root>"
 \`\`\`
 
 If Node is missing, stop and report "missing Node runtime". On nonzero exit, report the resolver diagnostic and stop.
