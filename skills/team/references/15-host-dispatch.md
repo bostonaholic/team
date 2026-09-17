@@ -47,11 +47,10 @@ Resolve every dispatch in this order:
 
 Capability mapping for the body-load path:
 
-- **Model selection.** Before stripping frontmatter or spawning in skills mode or on Codex or
-  Antigravity, follow [model selection](model-selection.md): run the installed
-  resolver, apply its host arguments, and report runtime resolution separately
-  from the requested tier. Claude named agents retain their native frontmatter.
-  Skills-mode Claude passes `Agent.model` through that same procedure. OpenCode retains its unverified execution limits.
+- **Model selection.** Before stripping frontmatter or spawning on Codex or Antigravity, run the installed [model resolver](model-selection.md).
+  Apply its host arguments and report runtime resolution separately from the requested tier.
+  Skills-mode Claude uses the [Standalone Claude procedure](model-selection.md#standalone-claude) directly for `Agent.model`, effort disclosure, and capability stops.
+  Claude named agents retain their native frontmatter. OpenCode retains its unverified execution limits.
 - **Tools.** Grant the subagent only the tools named in the definition's
   `tools:`. Reviewers receive no `Write` or `Edit` tool and no shell mutation
   ([independent review rules](principles/independent-review.md)).
