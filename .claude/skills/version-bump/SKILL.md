@@ -97,8 +97,8 @@ Using the **Runtime vs. Development** split in `CLAUDE.md`:
   a real change to a manifest, not the bare `"version"` field. Every host's
   manifest ships to that host's end users, so a Codex-only manifest change is
   as much a runtime change as a Claude Code one.
-- **Development (never bumps):** `.github/`, `.claude/`, `docs/`, `tests/`,
-  `evals/`, `package.json`/`bun.lock` tooling — everything that only validates or
+- **Development (never bumps):** `.github/`, `.claude/`, `docs/`, `package.json`
+  tooling — everything that only validates or
   builds the plugin.
 
 Take a quick orientation look at what this PR actually changed:
@@ -174,8 +174,7 @@ This is a hard gate, not a judgment call. The check runs early here (this step
 and step 7, while recovery is still purely local) and is enforced mechanically
 at merge time by the dev pre-merge guard
 (`.claude/hooks/pre-merge-guard.mjs`), which denies a `gh pr merge` on either
-violation: a dev-only diff that bumped, or a runtime diff that did not. The
-script itself stays pinned by `tests/version-bump-required.test.ts`.
+violation: a dev-only diff that bumped, or a runtime diff that did not.
 
 ### 1. Decide the bump level
 
@@ -340,14 +339,14 @@ it must run **after** the cut (so the dated section exists to validate). This is
 the in-tree replacement for the retired `version-gate.yml`:
 
 ```bash
-bun test tests/version-consistency.test.ts
+bash .claude/scripts/check-version-consistency.sh
 node -e "['.claude-plugin/plugin.json','.claude-plugin/marketplace.json','.codex-plugin/plugin.json','.agents/plugins/marketplace.json','plugin.json','package.json'].forEach(f=>JSON.parse(require('fs').readFileSync(f)));console.log('JSON OK')"
 ```
 
-The tripwire asserts strict semver, that all six strings agree, and that the
-host manifests agree on the plugin and marketplace names. Additionally
+The script asserts strict semver, that all six strings agree, and that the
+host manifests agree on the plugin and marketplace names and description. Additionally
 assert inline the released-section + footer-compare-link invariants (these hold
-only after the cut, so they live here, not in the tripwire):
+only after the cut, so they live here, not in the script):
 
 ```bash
 V=$(jq -r .version .claude-plugin/plugin.json)

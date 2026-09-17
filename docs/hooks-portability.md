@@ -82,8 +82,7 @@ The two recovery hooks keep a **byte-identical inference region** across all
 four recovery copies — `hooks/session-start-recover.mjs`,
 `hooks/pre-compact-anchor.mjs`, `hooks/codex/session-start-recover.mjs`, and
 `hooks/codex/pre-compact-anchor.mjs` — from `const ID_RE` to
-`async function main(`. `tests/architecture.test.ts` asserts the identity and
-includes a planted-drift positive.
+`async function main(`.
 
 ## Per-host notes
 

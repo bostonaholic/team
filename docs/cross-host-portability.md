@@ -213,7 +213,7 @@ reporting, mismatch handling, and unsupported-host limits.
   `discover-topic.sh`, and `pr-screenshots`' `scripts/splice.mjs` plus its
   `scripts/*.sh`),
   `hooks/*.mjs`, `.claude-plugin/`. The entire `.claude/`
-  tree, `tests/`, `evals/`, `docs/`, `.github/` never ship and are out of every
+  tree, `docs/`, `.github/` never ship and are out of every
   port's scope.
 - **A bundled skill script names its own directory, never a host variable.**
   `${CLAUDE_PLUGIN_ROOT}` exists on Claude Code alone, so a SKILL.md that
@@ -691,8 +691,7 @@ SQLite store.
   the study they build against.
 - **Building the shim generator and build tooling.** The epic chooses if it
   generates the shims or hand-writes them (decision 1 permits both).
-- **Porting the dev-only tree** (`.claude/`, `tests/`, `evals/`, `docs/`,
-  `.github/`), which is never distributed and never ported.
+- **Porting the dev-only tree** (`.claude/`, `docs/`, `.github/`), which is never distributed and never ported.
 - **Adopting MCP as a transport.** Documented as fallback only (decision 4).
 - **Reduced-MVP parity.** Explicitly rejected: full parity is the target.
 - **Full OpenCode parity.** Its native installation/discovery adapter is covered

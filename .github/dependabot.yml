@@ -8,25 +8,6 @@
 #     what is available.
 version: 2
 updates:
-  # package.json + bun.lock — TS + Bun harness deps (@anthropic-ai/sdk, bun-types, typescript).
-  # The "bun" ecosystem (GA since 2025-02) updates bun.lock alongside package.json;
-  # the "npm" ecosystem only touched package.json, breaking CI's --frozen-lockfile.
-  - package-ecosystem: "bun"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    commit-message:
-      prefix: "chore(deps)"
-    groups:
-      production-minor-patch:
-        dependency-type: "production"
-        update-types: ["minor", "patch"]
-      development-minor-patch:
-        dependency-type: "development"
-        update-types: ["minor", "patch"]
-    open-pull-requests-limit: 5
-
   # .github/workflows/ — actions/checkout, actions/setup-node, actions/upload-artifact,
   # oven-sh/setup-bun, etc. Major bumps here have historically required env-var
   # workarounds (Node 20 deprecation); keeping these current avoids that drift.

@@ -68,15 +68,15 @@ warranted **only when a PR changes the distributed plugin**: `agents/`,
 `skills/`, `hooks/`, `opencode/`, or host manifest *content* — `.claude-plugin/`,
 `.codex-plugin/`, `.agents/plugins/`, root `plugin.json` — (the
 [Runtime vs. development](../AGENTS.md) split). Contributor-facing and
-plugin-developer infrastructure (`.github/`, `.claude/`, `docs/`, `tests/`,
-`evals/`, and build tooling) **never bumps**, whatever its conventional-commit
+plugin-developer infrastructure (`.github/`, `.claude/`, `docs/`, and build
+tooling) **never bumps**, whatever its conventional-commit
 type. A `ci:`/`docs:`/`test:`/`chore:` PR that ships no runtime change lands
 with **no bump, no changelog cut, and a plain conventional title** (precedent:
 `710d44c` CI, `7d2e218` docs, `0821129` evals `feat:`).
 
 `version-bump` runs the check early, in its **step 0** and again right after
-the bump commit, through `.github/scripts/version-bump-required.sh`, which
-`tests/version-bump-required.test.ts` pins. CI does not enforce the invariant.
+the bump commit, through `.github/scripts/version-bump-required.sh`. CI does not enforce the
+invariant.
 Enforcement is mechanical at the merge attempt: the pre-merge dev hook
 (`.claude/hooks/pre-merge-guard.mjs`) runs the script against the PR's
 remote head and **denies a violating `gh pr merge`** on either violation — a
@@ -184,8 +184,8 @@ section. `version-bump` re-runs them itself, and CI does not check them on every
 push. The assertion runs **after the changelog cut and before the commit**. It
 fails fast and loud, and it never commits an invalid tree. It checks that:
 
-- `tests/version-consistency.test.ts` passes (strict semver, and the six
-  strings agree).
+- `.claude/scripts/check-version-consistency.sh` passes (strict semver, the six
+  strings agree, and the host manifests agree on names and description).
 - The dated `## [X.Y.Z] - YYYY-MM-DD` released section exists.
 - The footer carries a `[X.Y.Z]: …compare/…` link. The `[Unreleased]` footer
   compares from `vX.Y.Z...HEAD`.
@@ -220,8 +220,8 @@ grep -rn '"version"' package.json plugin.json .claude-plugin/plugin.json \
   .claude-plugin/marketplace.json .codex-plugin/plugin.json
 ```
 
-All six lines must show the same version. `tests/version-consistency.test.ts`
-enforces this on every `bun test` run.
+All six lines must show the same version.
+`.claude/scripts/check-version-consistency.sh` asserts this mechanically.
 
 ## Picking the next version
 
@@ -247,8 +247,8 @@ script reads. Its tests use this override.
 > Earlier revisions walked past any version *claimed by another open PR*,
 > through the GitHub API. That was the retired per-PR model's mechanism. It made
 > the output depend on whatever PRs were open, and it **skipped free versions**
-> that a stale PR happened to claim. It is gone, and
-> `tests/next-version.test.ts` locks it out.
+> that a stale PR happened to claim. It is gone. Do not
+> reintroduce it.
 
 ## Changelog: accumulate under `[Unreleased]`, cut at land time
 
@@ -292,13 +292,12 @@ backstop, not the mechanism.
 
 ## What CI enforces, and where
 
-Per [the testing guide](testing.md), every check lives at the cheapest layer that
-can catch it:
+Every check lives at the cheapest layer that can catch it:
 
 | Check | Layer | Where |
 |-------|-------|-------|
-| Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | Pre-merge dev hook + L3/L4 git-fixture test (free) | `.github/scripts/version-bump-required.sh`, `tests/version-bump-required.test.ts` |
-| Six version strings agree, on strict semver, and the host manifests agree on the plugin and marketplace names. This holds on every commit, drafted or landed. | L2 tripwire (free, every `bun test`) | `tests/version-consistency.test.ts` |
+| Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | Pre-merge dev hook | `.github/scripts/version-bump-required.sh`, `.claude/hooks/pre-merge-guard.mjs` |
+| Six version strings agree, on strict semver, and the host manifests agree on the plugin and marketplace names. This holds on every commit, drafted or landed. | Land-time assertion (`version-bump`) | `.claude/scripts/check-version-consistency.sh` |
 | Released-section and footer-compare-link invariants hold for the assigned version. It runs after the changelog cut and before the commit. | Land-time assertion (`version-bump`) | `.claude/skills/version-bump/SKILL.md` |
 | Title prefix matches the version. It applies only when the branch bumped the version forward of its fork point, after `version-bump` bumps. It no-ops otherwise. | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
 | Tag + GitHub release on merge | CI (needs write perms) | `.github/workflows/release-on-merge.yml` |
@@ -387,8 +386,8 @@ the bump:
 `git push --force-with-lease origin main && git push --force origin vX.Y.Z`.
 This is safe only if no commits landed after the broken one. First make sure
 that `origin/main` still equals your pre-amend commit. This case is
-near-impossible. The `bun test` run and `version-bump`'s land-time assertion
-both check string agreement before the merge.
+near-impossible. `version-bump`'s land-time assertion
+checks string agreement before the merge.
 
 ### The release workflow failed after merge
 
@@ -405,4 +404,3 @@ gh release create "v$V" --title "v$V" --notes-file /tmp/notes.md
 ## Read next
 
 - **[Project Tracking](project-tracking.md)**: the board the PR's issue moves across.
-- **[Testing](testing.md)**: why each check lives at its layer.

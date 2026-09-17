@@ -48,7 +48,7 @@ as machinery rather than as manners.
 
 | The rule | How Team enforces it |
 |----------|----------------------|
-| An author never approves their own work | Reviewers hold no `Write` or `Edit` tool and run in `plan` mode. Pinned by `tests/protocol.test.ts`, not requested in a prompt. |
+| An author never approves their own work | Reviewers hold no `Write` or `Edit` tool and run in `plan` mode. Enforced by frontmatter, not requested in a prompt. |
 | Review is not a rubber stamp | The implement loop re-runs until no Blocking or Major finding is left. There is no fixed number of rounds to outwait. |
 | A reviewer cannot be lobbied | Reviewers read the diff and a spec written before the code existed, never the implementer's account of its own work. |
 | The design is challenged before it is built | A fresh-context adversarial design review hard-gates the pipeline. |

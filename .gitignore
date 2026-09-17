@@ -33,9 +33,6 @@ docs/vendor/
 # Stray Bundler installs at repo root (gems should go in docs/vendor/bundle/)
 /vendor/
 
-# Eval run results (generated locally; CI uploads them as artifacts)
-evals/results/
-
 # Local secrets (repo-root .env holds API keys)
 .env
 .env.*
