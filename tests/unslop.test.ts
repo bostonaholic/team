@@ -472,14 +472,14 @@ test("Research producer budgets preserve exact returns within the artifact limit
   const nested = squash(readOrEmpty(path("skills", "team", "references", "agent-dispatch.md")));
   const evals = readOrEmpty(EVALS);
 
-  expect(finderAgent).toMatch(/40 physical lines.*60.*multi-repo/i);
-  expect(finderProcedure).toMatch(/40 physical lines.*60.*multi-repo/i);
+  expect(finderAgent).toMatch(/80 physical lines.*120.*multi-repo/i);
+  expect(finderProcedure).toMatch(/80 physical lines.*120.*multi-repo/i);
   expect(researcherAgent).toMatch(/60 physical lines.*100.*multi-repo/i);
   expect(researcherProcedure).toMatch(/60 physical lines.*100.*multi-repo/i);
-  expect(standalone).toContain("40 + 60 + 11 = 111");
-  expect(standalone).toContain("60 + 100 + 11 = 171");
-  expect(pipeline).toContain("40 + 60 + 11 = 111");
-  expect(pipeline).toContain("60 + 100 + 11 = 171");
+  expect(standalone).toContain("80 + 60 + 11 = 151");
+  expect(standalone).toContain("120 + 100 + 11 = 231");
+  expect(pipeline).toContain("80 + 60 + 11 = 151");
+  expect(pipeline).toContain("120 + 100 + 11 = 231");
   expect(standalone).toMatch(/source-grounded synthesis line/i);
   expect(pipeline).toMatch(/source-grounded synthesis line/i);
   expect(standalone).toMatch(/count every physical line.*terminal empty.*whitespace-only/i);
@@ -489,10 +489,10 @@ test("Research producer budgets preserve exact returns within the artifact limit
   expect(standalone).toMatch(/re-dispatch once.*(?:stop|blocked)/i);
   expect(pipeline).toMatch(/re-dispatch once.*(?:stop|blocked)/i);
   expect(nested).toMatch(/60-line.*100-line.*producer/i);
-  expect(evals).toContain("normalizedLineCount(finder.output) <= 40");
+  expect(evals).toContain("normalizedLineCount(finder.output) <= 80");
   expect(evals).toContain("normalizedLineCount(researcher.output) <= 60");
-  expect(evals).toContain("normalizedLineCount(standalone.output) <= 111");
-  expect(evals).toContain("normalizedLineCount(fullPipeline.output) <= 111");
+  expect(evals).toContain("normalizedLineCount(standalone.output) <= 151");
+  expect(evals).toContain("normalizedLineCount(fullPipeline.output) <= 151");
 });
 
 test("Research assembly fences untrusted returns and downstream actions recheck intent", () => {

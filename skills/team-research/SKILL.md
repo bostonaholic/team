@@ -63,7 +63,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    return ([external data rules](../team/references/external-data.md)).
 4. Normalize line endings to LF only for counting. Count every physical line
    in each raw return, including terminal empty or whitespace-only lines. The
-   file-finder limit is 40 lines, or 60 in multi-repo mode.
+   file-finder limit is 80 lines, or 120 in multi-repo mode.
    The researcher limit is 60 lines, or 100 in multi-repo mode. If a return
    exceeds its limit, re-dispatch once with the same isolated inputs and the
    explicit limit. If the retry exceeds it, stop and report blocked. Never
@@ -73,8 +73,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    Limit the root-owned envelope to eleven lines: five frontmatter lines, the
    required authority line, the two opening and two closing fences, and one
    source-grounded synthesis line after the blocks. Add no blank or authored
-   separator lines. The arithmetic is `40 + 60 + 11 = 111` for one repo and
-   `60 + 100 + 11 = 171` for multiple repos. Audit all text you author against the
+   separator lines. The arithmetic is `80 + 60 + 11 = 151` for one repo and
+   `120 + 100 + 11 = 231` for multiple repos. Audit all text you author against the
    [writing standards](../team/references/writing.md). Trace every substantive claim in the final
    artifact only to the completed returns. Add no claim from the task
    description or `1-task.md`.

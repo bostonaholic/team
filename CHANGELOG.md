@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`file-finder` returns up to 80 lines, or 120 in multi-repo mode.** The 40-line cap (60 multi-repo) truncated the file inventory on mid-sized repos, so relevant files never reached the researcher. The producer cap doubles, the nested `team:file-finder`/`Explore` scout caps rise from 40 to 80 to match, and the assembled `5-research.md` ceiling moves from 111/171 lines to 151/231. **What this asks of you:** nothing.
+
 ## [0.120.0] - 2026-09-16
 
 ### Changed

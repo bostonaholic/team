@@ -237,7 +237,7 @@ describe("non-vendor nested prose contract", () => {
   test("helpers read the writing standards before the ordered audit and preserve reply contracts", () => {
     const text = flat(read(NESTED_DISPATCH));
     expect(text).toMatch(/Read the writing standards.*untouched authored draft.*checklist.*rescan/i);
-    expect(text).toMatch(/(?:<=|at most) 40 lines/i);
+    expect(text).toMatch(/(?:<=|at most) 80 lines/i);
     expect(text).toMatch(/(?:<=|at most) 10 lines/i);
     expect(text).toContain("file:line");
     expect(text).toContain("REFUTED");
