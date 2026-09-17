@@ -10,5 +10,8 @@
     "claude",
     "ai-agent",
     "devtools"
-  ]
+  ],
+  "devDependencies": {
+    "fflate": "0.8.3"
+  }
 }

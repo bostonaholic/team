@@ -74,6 +74,19 @@ leaving you to find out. The full pipeline runs on Claude Code, Codex CLI, and
 Antigravity CLI. OpenCode support covers native skill/command discovery and
 installation. Execution limits are listed beside setup. Pick yours.
 
+### Skills CLI
+
+Requires Node >=22.20.0. Discover public commands and install the standalone
+principle with Skills CLI:
+
+```bash
+npx skills add bostonaholic/team --list
+npx skills add bostonaholic/team --skill principle-fix-root-causes --agent codex -y
+```
+
+The principle preserves its explicit-invocation metadata. Native plugin setup
+for workflows is documented below.
+
 ### Claude Code
 
 #### Native plugin installation
