@@ -97,4 +97,5 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
      `/team` seeded it): do **not** end the turn. Proceed directly to the
      PR phase — Invoke Team skill `team-pr` — in the same turn.
    - **Standalone**: stop and offer an explicit same-session request for `team-pr` with the artifact directory.
-     For later slash use, first offer `npx skills add bostonaholic/team --skill team-pr`.
+     For later slash use in skills mode, offer `npx skills add bostonaholic/team --skill team-pr` only when `team-pr` is unselected.
+     Native continuations use existing registrations.

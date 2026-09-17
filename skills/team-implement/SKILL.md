@@ -35,7 +35,9 @@ Run the IMPLEMENT phase. Three internal sub-steps:
 - Read [finding format](../code-review/references/findings.md) before aggregate decisions.
 - Persist `### Cross-model disposition` to `cross-model-notes.md` only when it does not begin `Not run:`.
 - Full pipeline: do **not** end the turn; Invoke Team skill `team-pr` in the same turn.
-- **Standalone**: after success, stop and offer an explicit same-session request for `team-pr` with the artifact directory. For later slash use, first offer `npx skills add bostonaholic/team --skill team-pr`.
+- **Standalone**: after success, stop and offer an explicit same-session request for `team-pr` with the artifact directory.
+  For later slash use in skills mode, offer `npx skills add bostonaholic/team --skill team-pr` only when `team-pr` is unselected.
+  Native continuations use existing registrations.
 
 ## Procedure references
 

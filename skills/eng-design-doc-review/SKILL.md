@@ -140,5 +140,6 @@ The existing `6-design.md` skips drafting. Its review gate records the verdict, 
 After that gate passes, explicitly request `team-structure` with the same artifact directory."**
 If the verdict is REQUEST CHANGES, tell the user:
 **"Explicitly request `team-design` with arguments `docs/plans/<id>/` and these findings in this session to revise the design."**
-For later slash invocation instead, offer the selected installation commands first:
+For later slash invocation in skills mode, offer installation only for unselected commands:
 `npx skills add bostonaholic/team --skill team-design` or `npx skills add bostonaholic/team --skill team-structure`.
+Native continuations use existing registrations.
