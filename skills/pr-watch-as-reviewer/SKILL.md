@@ -5,6 +5,9 @@ effort: medium
 argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 # pr-watch-as-reviewer — reviewer-side watch-and-approve loop
 

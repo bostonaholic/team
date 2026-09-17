@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 # Code Reviewer Brief
 
 This brief is read by the `code-reviewer` agent and any fresh-context read-only
@@ -256,7 +258,7 @@ no order implied:
   `System Fit` checklist item. When the diff removes or weakens
   long-standing behavior — a guard, a threshold, a workaround that looks
   deliberate — check its rationale before flagging or approving the
-  removal: call the Skill tool with `why`. A Chesterton's-fence deletion
+  removal: Invoke Team skill `why`. A Chesterton's-fence deletion
   whose motivating constraint still holds is a finding; one whose
   constraint provably evaporated is not.
 - **SOLID violations** — per the [code standards](../team/references/code-standards.md).

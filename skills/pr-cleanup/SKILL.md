@@ -4,6 +4,9 @@ description: 'Cleans PR state. Trigger on "the PR was merged", "abandon this", o
 effort: medium
 argument-hint: "[<pr-number-or-url-or-branch>]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 Before this operation, read [external-data rules](../team/references/external-data.md).
 Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.

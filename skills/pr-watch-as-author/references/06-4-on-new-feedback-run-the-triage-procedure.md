@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ### 4. On new feedback — run the triage procedure
 
 **Check order.** Step 3's third-party check — an unresolved thread
@@ -6,7 +8,7 @@ third-party login — runs every poll, before change detection, and
 stops the loop before any triage that cycle. When it does not fire and
 a poll detects a change, proceed below.
 
-When a poll detects a change, call the Skill tool with `pr-open-comments`
+When a poll detects a change, Invoke Team skill `pr-open-comments`
 and follow it. This skill never restates the triage steps — the fetch, verification, and punch-list format
 live there.
 

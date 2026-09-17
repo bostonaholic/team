@@ -785,3 +785,76 @@ Claude uses its plugin root. Codex and Antigravity use the supplied installed pa
 A missing resource stops its consuming step with the resolved path. No source-checkout fallback or recursive loading applies.
 
 Filesystem fixture results establish path and byte delivery. Native receiving-agent read traces establish instruction consumption separately.
+
+## Skills CLI distribution
+
+The [installation instructions](index.md#skills-cli) describe the standalone path.
+Targets are `claude-code`, `codex`, `antigravity-cli`, and `opencode`.
+`antigravity-cli` selects the CLI, not the `antigravity` application target.
+Choose this path or native plugin setup for each host to avoid duplicate registrations.
+
+Each selected dependent command bundles canonical skills, 13 specialist definitions,
+and shared resources. Only selected commands register. Invocation requires Node, the host-supplied
+absolute skill base, and the host-resolved absolute consumer project root.
+Pass the consumer root separately to the resolver. Missing root context stops startup.
+The resolver does not infer the root from Git or the current directory.
+Missing prerequisites stop before workflow work.
+The resolver validates the complete archive before extraction into a private temporary directory.
+It protects the explicit consumer root, invoked installation directory, and canonical storage.
+Successful directories stay readable until OS cleanup; failed initialization removes only its own directory.
+Native plugin resolution writes nothing. Read-only commands permit root initialization only; subagents inherit the prepared runtime.
+
+Skills installation adds no native hooks, recovery hooks, named agents, or plugin registration.
+Claude body-load passes unchanged aliases through `Agent.model`.
+If the active schema supports `effort`, dispatch passes it; otherwise effort inherits from the session and is reported.
+Unobserved model or effort values remain `unverified`. Missing model selection or reviewer enforcement stops dispatch.
+Codex and Antigravity retain their existing model resolver and enforcement checks.
+OpenCode installation and discovery remain supported, with full QRSPI, specialist dispatch, reviewer isolation, and hooks unverified.
+Packaging and lifecycle were verified before the test suite was removed; complete host execution remains unverified.
+
+Authors edit canonical sources and regenerate with `bun run skills:build`.
+The non-writing `bun run skills:check` checks generated paths, bytes, and decoded source records.
+Generated entrypoints and archives are not edit targets; substantive entrypoint changes fail before execution.
+Equivalent LF and CRLF entrypoints work. Extracted canonical resources retain their bundled bytes.
+`/retro` preserves an existing selected ordinary local edit target.
+Before offering a fallback, it checks project/global `.agents/skills` and `.claude/skills`, including links.
+Global Claude detection honors trimmed `CLAUDE_CONFIG_DIR`, defaulting to `~/.claude` when empty or absent.
+It skips packaged targets and names source regeneration only when the source is known.
+
+The generated archives measure 493,820 bytes per dependent command and
+12,839,320 bytes across 26 commands. Each decodes to 1,113,693 bytes before
+extraction. Repeated archives increase installation size and Git history.
+
+### Lifecycle and native migration
+
+Before test-suite removal, Skills CLI 1.6.0 verification covered individual and wildcard selection,
+copy and actual symlink modes, project/global listing, selected reinstall, and agent-scoped removal
+on all four targets, using isolated homes and local sources with network access disabled.
+Codex, Antigravity CLI, and OpenCode share canonical `.agents/skills` storage.
+Claude uses `.claude/skills`; copied Claude installations can remain independent.
+For global Claude installs, a nonempty trimmed `CLAUDE_CONFIG_DIR` replaces `~/.claude`.
+The upstream CLI owns installation metadata, links, and `skills update`.
+Selected reinstall with the original scope and targets is the verified update path.
+
+`script/dev-install-codex` refuses a real `~/.agents/skills/team` directory.
+Before switching from global skills to native Codex installation, list affected
+installations and remove the intended global selection with an explicit agent.
+If another detected universal host retains the canonical directory, resolve its intended selection before native setup:
+
+```bash
+npx skills list --global --json
+npx skills remove team --agent codex --global --yes
+script/dev-install codex
+```
+
+Remove other Team selections explicitly before native setup for that host.
+No automatic migration or directory replacement occurs. Native manifests,
+ownership guards, and OpenCode execution limits remain unchanged.
+
+Skills CLI 1.6.0 can delete a project selection during unfiltered global removal.
+Every removal example therefore names an agent. Canonical retention during
+target-only removal depends on upstream detecting the remaining host, not merely
+finding that host's copied skill. Without detection, removal can delete that
+other selection. With another detected universal host, shared canonical content
+can remain after agent-scoped removal. Do not assume independent storage or
+unconditional scope isolation from a successful exit code.

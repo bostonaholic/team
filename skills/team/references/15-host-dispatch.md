@@ -8,9 +8,10 @@ first dispatch of a run.
 
 Dispatch needs only that the host can read a file and spawn a subagent.
 Before every named or body-loaded dispatch, resolve the installed plugin root
-and `agents/<name>.md`. Claude uses `${CLAUDE_PLUGIN_ROOT}`. Codex and
-Antigravity derive the root from the loaded skill's absolute path. OpenCode
-uses its canonical realpath base. Never resolve from the consumer checkout.
+and `agents/<name>.md`. Prefer the explicit runtime root and mode inherited from startup.
+Native Claude uses `${CLAUDE_PLUGIN_ROOT}`. Native Codex and Antigravity derive the root from the loaded skill's absolute path.
+OpenCode uses its canonical realpath base. Never resolve from the consumer checkout.
+In skills mode, body-load definitions on every host, including Claude; no named agents are registered.
 
 Read the definition and resolve its applicable resource links before work.
 Pass the absolute root, definition path, resource paths, and predecessor paths
@@ -28,7 +29,7 @@ If the host does not expose that path, its dispatcher must supply it before work
 
 Resolve every dispatch in this order:
 
-1. **Named agent.** If the host resolves Team agents by name (Claude Code
+1. **Named agent.** In plugin mode, if the host resolves Team agents by name (Claude Code
    registers `team:<name>`), dispatch the named agent. This is preferred: the
    host applies the definition's tool and permission restrictions directly.
    Codex and Antigravity use the body-load path so their explicit model
@@ -46,11 +47,10 @@ Resolve every dispatch in this order:
 
 Capability mapping for the body-load path:
 
-- **Model selection.** Before stripping frontmatter or spawning on Codex or
-  Antigravity, follow [model selection](model-selection.md): run the installed
-  resolver, apply its host arguments, and report runtime resolution separately
-  from the requested tier. Claude named agents retain their native frontmatter.
-  Other hosts use their default model and record the substitution.
+- **Model selection.** Before stripping frontmatter or spawning on Codex or Antigravity, run the installed [model resolver](model-selection.md).
+  Apply its host arguments and report runtime resolution separately from the requested tier.
+  Skills-mode Claude uses the [Standalone Claude procedure](model-selection.md#standalone-claude) directly for `Agent.model`, effort disclosure, and capability stops.
+  Claude named agents retain their native frontmatter. OpenCode retains its unverified execution limits.
 - **Tools.** Grant the subagent only the tools named in the definition's
   `tools:`. Reviewers receive no `Write` or `Edit` tool and no shell mutation
   ([independent review rules](principles/independent-review.md)).

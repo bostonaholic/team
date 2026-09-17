@@ -4,6 +4,10 @@ description: 'Runs the compressed bug-fix pipeline. Trigger on "run the bug-fix 
 effort: high
 argument-hint: "<ticket id, issue URL, or bug description>"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 # Team Fix — Bug Fix Pipeline
 
@@ -21,7 +25,7 @@ for an inline fix, not this pipeline.
 
 - Run `WORKTREE → REPRODUCE → RED → GREEN → VERIFY → SHIP` in order.
 - For a ticket, read [tracking rules](../team-pr/references/tracking.md); move the ticket to in-progress before work and in-review only after its draft PR becomes ready.
-- When behavior looks deliberate, call the Skill tool with `why` before changing it.
+- When behavior looks deliberate, Invoke Team skill `why` before changing it.
 
 ## Procedure references
 

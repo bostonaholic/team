@@ -4,6 +4,9 @@ description: 'Lands a reviewed pull request. Trigger on "ship it", "land the PR"
 effort: medium
 argument-hint: "[<pr-number>]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 # shipit — land a reviewed PR
 

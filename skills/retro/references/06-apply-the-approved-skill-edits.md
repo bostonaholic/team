@@ -68,6 +68,10 @@ command as a literal.** Write it into the run cache with the file-writing tool,
 then read it back and hold it to a character allowlist before it reaches
 anything else:
 
+Select the guard's final literal argument from the approved item's kind: `edit` for an edit, `create` for a creation.
+The example uses `edit`. For an approved creation, replace only that final literal with `create`.
+Never change the approved operation because edit-target resolution reports a packaged installation.
+
 ```sh
 NAME="$(cat "<run cache>/name-<n>.txt")"   # substitution output is not re-parsed
 LC_ALL=C                     # in a UTF-8 locale the bracket set is collation-dependent
@@ -76,7 +80,7 @@ case "$NAME" in
     echo "refusing: a proposed name must be a skill name, lowercase and hyphenated" >&2
     exit 1 ;;
 esac
-node "<skill-dir>/resources/write-target.mjs" "$(git rev-parse --show-toplevel)" "${NAME:?}"
+node "<skill-dir>/resources/write-target.mjs" "$(git rev-parse --show-toplevel)" "${NAME:?}" edit
 ```
 
 Pasted between double quotes, a name carrying `$(…)`, a backtick, or `${…}`
@@ -91,20 +95,27 @@ back from an earlier block's variable.
 - **A name** must match `^[a-z][a-z0-9-]*$`. `.hidden`, `foo.bar`, `.`, `..`,
   and an uppercase name each drop that one item, named in the summary, while
   the others proceed.
+- **Packaged installations** in project/global `.agents/skills` and `.claude/skills`, including links, are not editable targets.
+  An existing selected local edit target takes precedence over unrelated installations with the same name.
+  Otherwise, the guard checks these locations before offering a fallback and skips matching packaged installations.
+  Global Claude placement honors trimmed `CLAUDE_CONFIG_DIR`, defaulting to `~/.claude` when empty or absent.
+  Canonical authored plugin source keeps its existing edit target. Packaged targets remain protected in repositories with plugin markers.
 - **An edit** lands in the skills root the running host actually loads: a repo
   carrying a plugin marker (`.claude-plugin/plugin.json` or a root
-  `plugin.json`) is a plugin root and its host reads `<repo>/skills/`; every
-  other repo is a project and its host reads `<repo>/.claude/skills/`. When
-  both roots hold the same name, the plan names both paths and marks the
-  shadowed one untouched.
+  `plugin.json`) selects `<repo>/skills/` first.
+  Otherwise, select the existing local `.claude/skills/<name>/SKILL.md`, then `.agents/skills/<name>/SKILL.md`.
+  When both exist, keep `.claude` priority and leave the other untouched.
+  Resolve the selected existing target file before checking for packaging, including file and directory links.
+  If neither local target exists, search other installations before offering the `.claude/skills` fallback.
 - **A creation** only ever targets `.claude/skills/<name>/SKILL.md` under the
-  repository, and only when that path does not exist. Adding a file to a
-  distributed plugin's own `skills/` directory is a release decision, so it
+  repository. An existing file, directory, or dangling symlink blocks creation.
+  Explicit `create` validates only that target's absence and containment, without consulting unrelated packaged edit targets.
+  Adding a file to a distributed plugin's own `skills/` directory is a release decision, so it
   goes to Backlog instead. A missing parent directory is created as part of the
   write.
 - **Every resolved real path must stay inside the repository**, so a symlinked
   directory cannot carry a write out of it.
-- **Never write** `~/.claude/**` (a plugin update overwrites cached skills), a
+- **Never write** global skills, including custom Claude configuration directories, `~/.agents/**`, or `~/.claude/**`, a
   sibling repository, or `agents/*.md` (agent frontmatter carries registry and
   tooling invariants).
 
@@ -130,3 +141,7 @@ to detect it, never invent one — and report the verdict. A failure names the f
 fixes the failure nor reverts the write: a revert hides which edit was wrong,
 and the recovery command per item is already in the report. Where the repo
 configures no check, say that none ran.
+
+If the resolver reports `skip: packaged skill target`, skip that approved item and report its diagnostic.
+Do not edit generated entrypoints or private bundled procedures. When canonical source is known, name source regeneration and reinstall.
+Never guess a checkout, edit upstream automatically, or expand approval to another target.

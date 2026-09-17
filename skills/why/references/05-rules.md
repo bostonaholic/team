@@ -1,6 +1,8 @@
+Before workflow work, read [initialization boundary](../team/references/skill-dispatch.md). Only the invoking root may initialize its private packaged runtime; subagents inherit it.
+
 ## Rules
 
-- **Read-only.** No writes, no artifacts under `docs/plans/`, no
+- **Read-only workflow.** After root initialization, no writes, no artifacts under `docs/plans/`, no
   state-changing commands, here or in any investigator.
 - **Never strip the hedges.** Rewriting "appears to" into "because" to
   sound authoritative is the exact failure this skill exists to prevent.

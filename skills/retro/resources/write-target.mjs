@@ -4,7 +4,7 @@
  * Where an approved skill edit is allowed to land, and whether a proposed
  * skill name may be used at all.
  *
- *     node "<skill-dir>/resources/write-target.mjs" <repo-root> <skill-name>
+ *     node "<skill-dir>/resources/write-target.mjs" <repo-root> <skill-name> [edit|create]
  *
  * Every input here comes from transcript text, so it is untrusted. The three
  * checks below are `f(input) -> output`, which is why they are code rather
@@ -13,7 +13,8 @@
  * resolve-transcript.mjs — one job each.
  */
 
-import { existsSync, realpathSync } from "node:fs";
+import { existsSync, lstatSync, realpathSync } from "node:fs";
+import { homedir } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -75,9 +76,9 @@ export function hasPluginMarker(repoRoot) {
 /**
  * The skills root the running host actually loads, which is the copy an edit
  * has to reach to change anything. A repo carrying a plugin marker is a plugin
- * root, and its host reads `<repo>/skills/`; every other repo is a project, and
- * its host reads `<repo>/.claude/skills/`. The probe is injected so the
- * tie-break itself stays pure.
+ * root, and its host reads `<repo>/skills/`. Existing local `.claude/skills`
+ * targets take precedence over `.agents/skills`; an absent target defaults to
+ * `.claude/skills`. Injected probes keep this selection pure.
  *
  * This decides where an EDIT lands. Creation is not symmetrical: a new skill
  * only ever goes to `<repo>/.claude/skills/<name>/SKILL.md`, because adding a
@@ -85,9 +86,8 @@ export function hasPluginMarker(repoRoot) {
  */
 export function preferredEditRoot(query) {
   const repoRoot = query?.repoRoot ?? "";
-  return query?.hasPluginMarker
-    ? join(repoRoot, "skills")
-    : join(repoRoot, ".claude", "skills");
+  if (query?.hasPluginMarker) return join(repoRoot, "skills");
+  return join(repoRoot, !query?.hasClaudeSkill && query?.hasAgentsSkill ? ".agents" : ".claude", "skills");
 }
 
 // CLI entry point — runs only when executed directly, never on import, so a
@@ -95,9 +95,10 @@ export function preferredEditRoot(query) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const repoRoot = process.argv[2] ?? "";
   const name = process.argv[3] ?? "";
+  const operation = process.argv[4] ?? "edit";
 
   if (!repoRoot || !name) {
-    process.stderr.write("usage: write-target.mjs <repo-root> <skill-name>\n");
+    process.stderr.write("usage: write-target.mjs <repo-root> <skill-name> [edit|create]\n");
     process.exit(1);
   }
 
@@ -106,23 +107,58 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(1);
   }
 
-  const editRoot = preferredEditRoot({ repoRoot, hasPluginMarker: hasPluginMarker(repoRoot) });
-  const editTarget = join(editRoot, name, "SKILL.md");
-  const createTarget = join(repoRoot, ".claude", "skills", name, "SKILL.md");
+  if (operation !== "edit" && operation !== "create") {
+    process.stderr.write("refusing: operation must be edit or create\n");
+    process.exit(1);
+  }
 
-  for (const [label, target] of [
-    ["edit target", editTarget],
-    ["create target", createTarget],
-  ]) {
-    if (!isInsideRepo({ candidatePath: target, repoRoot })) {
-      process.stderr.write(`refusing: ${label} resolves outside the repository\n`);
+  if (operation === "create") {
+    const createTarget = join(repoRoot, ".claude", "skills", name, "SKILL.md");
+    if (lstatSync(createTarget, { throwIfNoEntry: false })) {
+      process.stderr.write(`refusing: create target already exists: ${createTarget}\n`);
       process.exit(1);
     }
+    if (!isInsideRepo({ candidatePath: createTarget, repoRoot })) {
+      process.stderr.write("refusing: create target resolves outside the repository\n");
+      process.exit(1);
+    }
+    process.stdout.write(`create target: ${createTarget}\n`);
+    process.exit(0);
+  }
+
+  const editRoot = preferredEditRoot({
+    repoRoot,
+    hasPluginMarker: hasPluginMarker(repoRoot),
+    hasClaudeSkill: existsSync(join(repoRoot, ".claude", "skills", name, "SKILL.md")),
+    hasAgentsSkill: existsSync(join(repoRoot, ".agents", "skills", name, "SKILL.md")),
+  });
+  const editTarget = join(editRoot, name, "SKILL.md");
+
+  const targets = existsSync(editTarget) ? [editTarget] : [
+    join(repoRoot, ".agents", "skills", name, "SKILL.md"),
+    join(repoRoot, ".claude", "skills", name, "SKILL.md"),
+    join(homedir(), ".agents", "skills", name, "SKILL.md"),
+    join(process.env.CLAUDE_CONFIG_DIR?.trim() || join(homedir(), ".claude"), "skills", name, "SKILL.md"),
+  ];
+  const packaged = targets.find((target) => {
+    const resolved = existsSync(target) ? realpathSync(target) : target;
+    if (!existsSync(join(dirname(resolved), "runtime/bundle.json"))) return false;
+    const canonicalSource = resolved === join(realpathSync(repoRoot), "skills", name, "SKILL.md") &&
+      existsSync(join(repoRoot, "scripts/build-skills-runtime.mjs")) &&
+      existsSync(join(repoRoot, "skills/team/registry.json"));
+    return !canonicalSource;
+  });
+  if (packaged) {
+    process.stderr.write(`skip: packaged skill target ${packaged}; edit canonical source, regenerate, and reinstall when its source is known\n`);
+    process.exit(1);
+  }
+
+  if (!isInsideRepo({ candidatePath: editTarget, repoRoot })) {
+    process.stderr.write("refusing: edit target resolves outside the repository\n");
+    process.exit(1);
   }
 
   process.stdout.write(`edit root: ${editRoot}\n`);
   process.stdout.write(`edit target: ${editTarget}\n`);
   process.stdout.write(`edit target exists: ${existsSync(editTarget)}\n`);
-  process.stdout.write(`create target: ${createTarget}\n`);
-  process.stdout.write(`create target exists: ${existsSync(createTarget)}\n`);
 }
