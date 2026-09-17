@@ -821,8 +821,8 @@ Before offering a fallback, it checks project/global `.agents/skills` and `.clau
 Global Claude detection honors trimmed `CLAUDE_CONFIG_DIR`, defaulting to `~/.claude` when empty or absent.
 It skips packaged targets and names source regeneration only when the source is known.
 
-The generated archives measure 493,708 bytes per dependent command and
-12,836,408 bytes across 26 commands. Each decodes to 1,113,388 bytes before
+The generated archives measure 493,932 bytes per dependent command and
+12,842,232 bytes across 26 commands. Each decodes to 1,113,814 bytes before
 extraction. Repeated archives increase installation size and Git history.
 
 ### Lifecycle and native migration
