@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Execution
 
 ### Step 1 — Resolve the PR
@@ -170,7 +172,7 @@ Standard option menu (pick the options that apply):
 
 - **A. Apply the change** — edit `<file>` to do `<specific change>`. When the
   ask is an image rather than code, capture it first, then run
-  `/pr-screenshots` against this PR to put it in the description; the upload
+  `pr-screenshots` through the continuation choices against this PR to put it in the description; the upload
   mechanics are in `skills/pr-screenshots/SKILL.md`.
 - **B. Apply a variation** — `<a variant that addresses the concern differently>`.
 - **C. Reply with the answer** — `<one-line reply sketch>`.

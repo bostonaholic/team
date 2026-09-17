@@ -5,6 +5,9 @@ effort: high
 argument-hint: "[skill-name]"
 disable-model-invocation: true
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 # retro — turn a finished session into durable learnings
 

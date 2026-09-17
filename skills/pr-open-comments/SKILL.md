@@ -4,6 +4,9 @@ description: 'Triages unresolved PR review comments. Trigger on "address PR comm
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 # pr-open-comments — fetch, verify, recommend
 

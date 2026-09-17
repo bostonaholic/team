@@ -11,10 +11,11 @@ If `Agent` is missing, dispatch fails, or results never arrive, do the work your
 
 ## Version gate — confirm before the first nested dispatch
 
+Resolve `<resolved-team-root>` from the inherited runtime root and mode. Never initialize inside a subagent.
 Nested dispatch requires **Claude Code >= 2.1.172**. `Agent` tool presence is the universal gate, including for agents without `Bash`. With `Bash`, run once:
 
 ```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/team/references/supports-nesting.mjs" "$(claude --version)"
+node "<resolved-team-root>/skills/team/references/supports-nesting.mjs" "$(claude --version)"
 ```
 
 Only `supported` with exit `0` permits nesting for the turn. Any non-zero, older or unrecognizable version, or unavailable check is `unsupported`: fail-closed, do not spawn, and work inline ([verified results rules](principles/verified-results.md)).

@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Detect existing worktree
 
 **Never create a nested worktree.** For each target repo, determine if the
@@ -30,7 +32,7 @@ Compare against the repo's default branch
 - **Default branch** → report and stop. Implementing directly on the
   default branch inside a worktree is never acceptable, and nesting
   worktrees is not supported. The user should switch that worktree to a
-  feature branch (or invoke `/team` from a non-worktree checkout) before
+  feature branch (or explicitly request `team` through the continuation choices from a non-worktree checkout) before
   retrying.
 
 If the checkout is **not** a linked worktree, this repo proceeds through

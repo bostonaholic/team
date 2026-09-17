@@ -4,6 +4,10 @@ description: 'Decomposes a feature into task and question artifacts. Trigger on 
 effort: medium
 argument-hint: "<ticket id, issue URL, or task description>"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 Before artifact work, read [artifact schema](../team/references/artifacts.md).
@@ -104,4 +108,4 @@ Report:
 - Topic slug and `<id>`
 - Mode: single-repo or multi-repo (with the list of involved repo slugs
   if multi-repo)
-- Tell the user: **"Next: run `/team-research docs/plans/<id>/`"**
+- Tell the user: **"Next: request `team-research` with arguments `docs/plans/<id>/` using the continuation choices"**

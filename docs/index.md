@@ -68,7 +68,7 @@ company-significant work from problem definition through measured outcomes.
 
 ## Install
 
-Each host installs Team through its own plugin mechanism. Every section below
+Native installations use each host's plugin mechanism. Every host section below
 covers the same three methods, so a method missing on a host says so instead of
 leaving you to find out. The full pipeline runs on Claude Code, Codex CLI, and
 Antigravity CLI. OpenCode support covers native skill/command discovery and
@@ -76,16 +76,44 @@ installation. Execution limits are listed beside setup. Pick yours.
 
 ### Skills CLI
 
-Requires Node >=22.20.0. Discover public commands and install the standalone
-principle with Skills CLI:
+Requires Node >=22.20.0. Discover public commands or install a selection:
 
 ```bash
 npx skills add bostonaholic/team --list
 npx skills add bostonaholic/team --skill principle-fix-root-causes --agent codex -y
+npx skills add bostonaholic/team --skill team --agent codex -y
 ```
 
-The principle preserves its explicit-invocation metadata. Native plugin setup
-for workflows is documented below.
+Each selected workflow includes its runtime resources, sibling procedures, and
+specialist definitions. Only selected commands register. A bundled sibling runs
+through the shared dispatch contract with inherited arguments and authorization.
+A standalone command still stops at its own result. Explicitly request a bundled
+continuation in the same session, or install that command before later slash use.
+
+The host must supply the loaded skill's absolute base. Node runs the bundled
+resolver before workflow work. It validates the payload and creates a fresh
+private temporary runtime outside the project and installation. Native resolution
+writes nothing. Successful temporary directories remain until operating-system
+cleanup so active agents can still read them. Failed initialization removes only
+its own directory and stops the command.
+
+Choose skills installation or native plugin installation for a host. Skills
+installation registers no plugin hooks or named agents. Claude body-load passes
+`Agent.model`; effort uses the active Agent schema or disclosed session inheritance.
+Unsupported model selection or reviewer enforcement stops that operation.
+Codex and Antigravity retain their model resolver. OpenCode discovery and
+installation work; full QRSPI, specialist dispatch, and reviewer enforcement
+remain unverified. Packaging and lifecycle tests do not prove host execution.
+
+Edit canonical Team source, then run `bun run skills:build`, verify with
+`bun run skills:check`, and reinstall. Do not edit generated `runtime/` files.
+An edited packaged entrypoint fails before workflow work; `/retro` skips packaged
+edit targets. Each dependent command contains the complete compressed archive.
+The dependency-free principle requires no runtime archive.
+The generated archives measure 490,692 bytes per dependent command and
+12,757,992 bytes across 26 commands. Each decodes to 1,106,810 bytes before
+extraction. Repeated archives increase installation size and Git history.
+
 
 ### Claude Code
 

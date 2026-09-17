@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 Before each `design-author` dispatch or retry, read [host dispatch](references/15-host-dispatch.md).
 
 Before review dispatch, supply the installed plugin root and resolved `skills/eng-design-doc-review/references/design-reviewer.md` path.
@@ -90,11 +92,11 @@ When the `design-author` returns a draft:
    absolute worktree-rooted `docs/plans/<id>/` path, so the operator can
    open `6-design.md` and the `design-review-<n>.md` records directly. After
    an operator stop, a context-exhausted session, or this fail-closed
-   halt, edit `6-design.md` by hand and re-invoke `/team-design` bare. That
+   halt, edit `6-design.md` by hand and request `team-design` without arguments through the continuation choices. That
    command resumes at its own review step and never re-drafts an existing
-   `6-design.md`. It then stops and names `/team-structure` as the next
+   `6-design.md`. It then stops and offers `team-structure` through the continuation choices as the next
    command. `/team` also resumes when you give it the same description or
    ticket. Setup steps 4 through 7 re-derive `<id>` and fast-forward the
    ledger to the first incomplete phase. A recovered run can instead
-   continue one phase command at a time, through `/team-implement` and
-   `/team-pr`.
+   continue one phase command at a time, through `team-implement` and
+   `team-pr`, using those continuation choices.

@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Execution
 
 ### Derive identifiers
@@ -112,12 +114,11 @@ worktree needed.
 
 Report the worktree paths and tell the user:
 
-- Single-repo: **"Next: cd <home-worktree> and run `/team-implement docs/plans/<id>/`"**
+- Single-repo: **"Next: cd <home-worktree> and request `team-implement` with arguments `docs/plans/<id>/` using the continuation choices"**
 - Home repo skipped (already in its worktree):
-  **"Next: run `/team-implement docs/plans/<id>/`"** — no `cd` needed. Work
+  **"Next: request `team-implement` with arguments `docs/plans/<id>/` using the continuation choices"** — no `cd` needed. Work
   continues in the current checkout on the current branch.
-- Multi-repo: **"Next: cd <home-worktree> and run `/team-implement
-  docs/plans/<id>/`. The implementer will navigate between the
+- Multi-repo: **"Next: cd <home-worktree> and request `team-implement` with arguments `docs/plans/<id>/` using the continuation choices. The implementer will navigate between the
   per-repo worktrees as the plan steps require."**
 
 > The `/team-implement` handoff above is for **standalone, post-PLAN**

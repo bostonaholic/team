@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Worktree
 
 This is the **leading** phase, and the one hard gate in the pipeline. A fix
@@ -44,7 +46,7 @@ fi
 ### Isolate
 
 Create the home worktree on branch `<id>` off `origin/HEAD`, exactly as
-`/team`'s leading WORKTREE phase does. Call the Skill tool with
+`/team`'s leading WORKTREE phase does. Invoke Team skill
 `team-worktree` for the single-repo
 "Create the worktree(s)" procedure, and read the
 [worktree playbook](../team-worktree/playbooks/worktree.md) for the topology:

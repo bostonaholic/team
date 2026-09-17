@@ -707,7 +707,7 @@ reference is one of two kinds, and each has its own encoding:
 
 | Kind | Reads | Encoded as |
 |------|-------|-----------|
-| **Load** — the reader must go execute that skill | ``Call the Skill tool with `<name>` `` | bare name |
+| **Load** — the reader must go execute that skill | ``Invoke Team skill `<name>` `` | bare name, arguments, inherited authorization |
 | **Citation** — a schema lookup, a "see also", a rule restated nearby | `skills/<name>/SKILL.md` | path |
 
 The citation row splits. A reference to a skill's own `SKILL.md` is also an
@@ -717,19 +717,18 @@ skill's directory is a citation only and draws no edge, and so does a reference
 that only locates a skill's install directory (for example, "the directory
 containing `skills/team/SKILL.md`", read to run a script beside it).
 
-The imperative phrasing on a load is what makes a model actually issue the
-tool call. "Load X", "see X", and "per X" all read as citations, and a model
-that treats a load as a citation proceeds on the summary in its own context
-instead of the skill's actual content — a slice ships without the commit
-conventions applied, a review runs without its severity table, and nothing
-announces either.
+The invocation identifies immediate execution through the
+[skill dispatch contract](https://github.com/bostonaholic/team/blob/main/skills/team/references/skill-dispatch.md).
+Each caller preloads that contract independently of generated startup.
+Native mode uses registered skill lookup. Skills mode reads the canonical
+`<root>/skills/<name>/SKILL.md` with inherited arguments and authorization.
+The bare name identifies the command; the dispatcher owns its installed path.
 
-A load carries **no path**. The bare name is what the Skill tool takes, and a
-path sitting beside it reintroduces the ambiguity the imperative exists to
-remove: it reads as a file to go open. Name resolution is what replaces the
-path's rename-detection, and it is strictly stronger — it catches a rename
-*and* a typo, where a path assertion only ever confirmed a string was
-present. `skills/git-commmit/SKILL.md` passed the old check.
+
+Continuation suggestions preserve standalone stops and require explicit intent.
+For unselected siblings, they offer a same-session bundled request or selection
+through the upstream CLI before a later slash invocation. Self-resume retains
+the current procedure and state rather than recursively invoking itself.
 
 Shared principles use six ordinary documents under `skills/team/principles/`. Artifact and operational rules use scoped references, outside registration.
 Consumers explicitly read their installed paths before work; missing files stop the consuming operation with the resolved path.

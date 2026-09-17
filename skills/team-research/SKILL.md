@@ -4,6 +4,10 @@ description: 'Researches a codebase area before changes. Trigger on "explore the
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 Before artifact work, read [artifact schema](../team/references/artifacts.md).
@@ -40,7 +44,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 - **If the command printed nothing** (tier 3 — no directory holds `2-questions.md`),
   do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
   options:
-  - **Run the producer** — run `/team-question <description>` to produce the
+  - **Run the producer** — Invoke Team skill `team-question` with arguments `<description>` to produce the
     missing `2-questions.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
@@ -103,4 +107,4 @@ Report:
 - Path to `$ARGUMENTS/5-research.md`
 - Key findings (3–5 bullets)
 - Open questions count
-- Tell the user: **"Next: run `/team-design docs/plans/<id>/`"**
+- Tell the user: **"Next: request `team-design` with arguments `docs/plans/<id>/` using the continuation choices"**

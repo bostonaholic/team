@@ -120,6 +120,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     }
   }
 
+  if (!hasPluginMarker(repoRoot) && existsSync(join(dirname(editTarget), "runtime/bundle.json"))) {
+    process.stderr.write(`skip: packaged skill target ${editTarget}; edit canonical source, regenerate, and reinstall when its source is known\n`);
+    process.exit(1);
+  }
+
   process.stdout.write(`edit root: ${editRoot}\n`);
   process.stdout.write(`edit target: ${editTarget}\n`);
   process.stdout.write(`edit target exists: ${existsSync(editTarget)}\n`);

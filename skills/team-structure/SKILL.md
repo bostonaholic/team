@@ -4,6 +4,10 @@ description: 'Breaks a reviewed design into verified slices. Trigger on "break t
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 Before artifact work, read [artifact schema](../team/references/artifacts.md).
@@ -54,7 +58,7 @@ unreviewed or REQUEST-CHANGES candidates are skipped:
   `6-design.md` with a passing design review), do not hard-error. Fire
   `AskUserQuestion` with a `Setup` header
   and labeled options:
-  - **Run the producer** — run `/team-design docs/plans/<id>/` to produce
+  - **Run the producer** — Invoke Team skill `team-design` with arguments `docs/plans/<id>/` to produce
     and review `6-design.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
@@ -67,7 +71,7 @@ unreviewed or REQUEST-CHANGES candidates are skipped:
    tier-2 filter already enforced this. Re-check a tier-1 explicit path). If
    no review artifact exists, or the latest verdict is REQUEST CHANGES,
    **refuse**: report that the design has not passed review and suggest
-   `/team-design $ARGUMENTS` — never slice an unreviewed design.
+   `team-design` with `$ARGUMENTS` through the continuation choices — never slice an unreviewed design.
    No recorded verdict counts as not passed ([verified results rules](../team/principles/verified-results.md)).
 2. Dispatch `structure-planner`, which writes `$ARGUMENTS/7-structure.md`
    with vertical slices. The artifact carries plain frontmatter
@@ -80,5 +84,5 @@ unreviewed or REQUEST-CHANGES candidates are skipped:
 4. **Stop once `$ARGUMENTS/7-structure.md` exists.**
 
 Report the structure path. When run standalone, tell the user:
-**"Next: run `/team-plan docs/plans/<id>/`"**
+**"Next: request `team-plan` with arguments `docs/plans/<id>/` using the continuation choices"**
 (Within a full `/team` run the orchestrator advances to PLAN automatically.)

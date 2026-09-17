@@ -4,6 +4,10 @@ description: 'Drafts and adversarially reviews a design. Trigger on "design this
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 Before this operation, read [artifact schema](../team/references/artifacts.md).
 Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.
@@ -48,7 +52,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 - **If the command printed nothing** (tier 3 — no directory holds `5-research.md`),
   do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
   options:
-  - **Run the producer** — run `/team-research docs/plans/<id>/` to produce the
+  - **Run the producer** — Invoke Team skill `team-research` with arguments `docs/plans/<id>/` to produce the
     missing `5-research.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
@@ -126,4 +130,4 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    `$ARGUMENTS/design-review-<n>.md` verdict is APPROVE or COMMENT.**
 
 Report design path and tell the user:
-**"Next: run `/team-structure docs/plans/<id>/`"**
+**"Next: request `team-structure` with arguments `docs/plans/<id>/` using the continuation choices"**

@@ -130,3 +130,7 @@ to detect it, never invent one — and report the verdict. A failure names the f
 fixes the failure nor reverts the write: a revert hides which edit was wrong,
 and the recovery command per item is already in the report. Where the repo
 configures no check, say that none ran.
+
+If the resolver reports `skip: packaged skill target`, skip that approved item and report its diagnostic.
+Do not edit generated entrypoints or private bundled procedures. When canonical source is known, name source regeneration and reinstall.
+Never guess a checkout, edit upstream automatically, or expand approval to another target.

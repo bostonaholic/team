@@ -785,3 +785,34 @@ Claude uses its plugin root. Codex and Antigravity use the supplied installed pa
 A missing resource stops its consuming step with the resolved path. No source-checkout fallback or recursive loading applies.
 
 Filesystem fixture results establish path and byte delivery. Native receiving-agent read traces establish instruction consumption separately.
+
+## Skills CLI distribution
+
+The [installation instructions](index.md#skills-cli) describe the standalone path.
+Targets are `claude-code`, `codex`, `antigravity-cli`, and `opencode`.
+`antigravity-cli` selects the CLI, not the `antigravity` application target.
+Choose this path or native plugin setup for each host to avoid duplicate registrations.
+
+Each selected dependent command bundles canonical skills, 13 specialist definitions,
+and shared resources. Only selected commands register. Node and the host-supplied
+absolute skill base are required at invocation. Missing prerequisites stop before workflow work.
+The resolver validates the complete archive before extraction into a private temporary directory.
+Successful directories stay readable until OS cleanup; failed initialization removes only its own directory.
+Native plugin resolution writes nothing. Read-only commands permit root initialization only; subagents inherit the prepared runtime.
+
+Skills installation adds no native hooks, recovery hooks, named agents, or plugin registration.
+Claude body-load passes unchanged aliases through `Agent.model`.
+If the active schema supports `effort`, dispatch passes it; otherwise effort inherits from the session and is reported.
+Unobserved model or effort values remain `unverified`. Missing model selection or reviewer enforcement stops dispatch.
+Codex and Antigravity retain their existing model resolver and enforcement checks.
+OpenCode installation and discovery remain supported, with full QRSPI, specialist dispatch, reviewer isolation, and hooks unverified.
+Filesystem tests prove packaging and lifecycle behavior, not complete host execution.
+
+Authors edit canonical sources and regenerate with `bun run skills:build`.
+The non-writing `bun run skills:check` checks generated paths, bytes, and decoded source records.
+Generated entrypoints and archives are not edit targets; local entrypoint changes fail before execution.
+`/retro` skips packaged targets and names source regeneration only when the source is known.
+
+The generated archives measure 490,692 bytes per dependent command and
+12,757,992 bytes across 26 commands. Each decodes to 1,106,810 bytes before
+extraction. Repeated archives increase installation size and Git history.

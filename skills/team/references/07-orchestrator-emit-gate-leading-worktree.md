@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ### Orchestrator-Emit Gate (leading worktree)
 
 This is the **first** phase. It runs before QUESTION, off the description
@@ -41,7 +43,7 @@ clean for the whole run.
 
 1. **Create the home worktree** on branch `<id>` off `origin/HEAD`.
    Use the host's native worktree support when it offers one, otherwise
-   `git worktree add`. Call the Skill tool with
+   `git worktree add`. Invoke Team skill
    `team-worktree` and follow the
    single-repo block under "Create the worktree(s)". Only the
    home repo gets a worktree at this phase. Multi-repo secondary worktrees

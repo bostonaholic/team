@@ -4,6 +4,10 @@ description: 'Produces the tactical implementation plan. Trigger on "plan the im
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 Before artifact work, read [artifact schema](../team/references/artifacts.md).
@@ -45,7 +49,7 @@ approval check):
 - **If the command printed nothing** (tier 3 — no directory holds a
   `7-structure.md`), do not hard-error. Fire `AskUserQuestion` with a `Setup`
   header and labeled options:
-  - **Run the producer** — run `/team-structure docs/plans/<id>/` to produce
+  - **Run the producer** — Invoke Team skill `team-structure` with arguments `docs/plans/<id>/` to produce
     `7-structure.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
@@ -59,4 +63,4 @@ approval check):
 3. **Stop once `$ARGUMENTS/8-plan.md` exists.**
 
 Report plan path and tell the user:
-**"Next: run `/team-worktree docs/plans/<id>/`"**
+**"Next: request `team-worktree` with arguments `docs/plans/<id>/` using the continuation choices"**

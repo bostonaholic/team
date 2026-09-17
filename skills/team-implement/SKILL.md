@@ -4,6 +4,10 @@ description: 'Executes and verifies implementation slices. Trigger on "implement
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 Before artifact work, read [artifact schema](../team/references/artifacts.md).
@@ -30,7 +34,7 @@ Run the IMPLEMENT phase. Three internal sub-steps:
 - Retry as `Review round <n+1> (<b> Blocking, <m> Major open)`.
 - Read [finding format](../code-review/references/findings.md) before aggregate decisions.
 - Persist `### Cross-model disposition` to `cross-model-notes.md` only when it does not begin `Not run:`.
-- Full pipeline: do **not** end the turn; call the Skill tool with `team-pr` in the same turn.
+- Full pipeline: do **not** end the turn; Invoke Team skill `team-pr` in the same turn.
 - **Standalone**: after success, suggest `/team-pr`.
 
 ## Procedure references

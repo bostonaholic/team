@@ -4,6 +4,10 @@ description: 'Composes an agent-optimized prompt for a task. Trigger on "write a
 effort: medium
 argument-hint: "[<task description>] [--repo <path>] [--out <path>]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before workflow work, read [initialization boundary](../team/references/skill-dispatch.md). Only the invoking root may initialize its private packaged runtime; subagents inherit it.
 
 # Agent Prompt — Task Brief Composition
 
@@ -12,7 +16,7 @@ If a required read fails, stop that step with the exact path. Never use checkout
 
 Compose a self-contained prompt that another coding agent can execute — in a
 different repository, or on a bounded change here. The product is text: emit the
-prompt and stop. This skill dispatches nothing, runs nothing, and edits nothing
+prompt and stop. After packaged initialization, this skill dispatches nothing, runs no task, and edits nothing
 except the optional output file.
 
 Keep the prompt generic. Domain facts, product rules, and a target repo's own
@@ -57,7 +61,7 @@ Seed one TodoWrite item per numbered step below before starting
 ## Output
 
 Print the prompt to stdout. When the invocation gives an output path, write the
-same text there too; that is the only write this skill performs.
+same text there too; that is the only workflow write this skill performs.
 
 ## Hard rules
 

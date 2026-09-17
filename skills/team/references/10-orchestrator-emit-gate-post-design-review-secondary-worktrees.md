@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ### Orchestrator-Emit Gate (post-design-review secondary worktrees)
 
 One rule, two knowledge times: **each repo's worktree is born the moment
@@ -14,7 +16,7 @@ When the design review passes:
    **single-repo mode** and nothing further is needed here (the home
    worktree already exists). Read the
    [worktree playbook](../team-worktree/playbooks/worktree.md) for
-   the topology and call the Skill tool with `team-worktree` for
+   the topology and Invoke Team skill `team-worktree` for
    the procedure.
    Create the worktrees **without a confirmation prompt** — the phase loop
    never pauses mid-run. The "Confirm with the user" dialog in

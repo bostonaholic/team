@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Commit Discipline
 
 When creating the commit, read [commit discipline](commit.md) and apply it:
@@ -17,5 +19,5 @@ upload returned a non-null `operator_note`, the report carries that note
 verbatim (see Screenshot Upload, "Read the result"). It is operator-facing
 only and never enters a PR body.
 
-Next: say "the PR is ready for review" (or run /pr-watch-as-author with
+Next: say "the PR is ready for review" (or explicitly request pr-watch-as-author through the continuation choices with
 that wording) to arm the watch.

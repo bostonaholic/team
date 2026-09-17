@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 Before this operation, read [artifact schema](references/artifacts.md).
 Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
 
@@ -10,7 +12,7 @@ loop:
      get the expected agent(s) and predecessor artifact path(s).
   3. Verify predecessor artifacts exist on disk (for STRUCTURE, that
      includes a `design-review-<n>.md` with a passing verdict). If missing,
-     report a desync and suggest re-invoking the same /team-* command.
+     report a desync and offer that phase command through the shared continuation choices.
   4. Dispatch the agent(s) (parallel where the phase table marks them),
      reading and applying the dispatch contract before each initial call or retry
      (`references/15-host-dispatch.md`).
