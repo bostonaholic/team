@@ -112,8 +112,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(1);
   }
 
-  const createTarget = join(repoRoot, ".claude", "skills", name, "SKILL.md");
   if (operation === "create") {
+    const createTarget = join(repoRoot, ".claude", "skills", name, "SKILL.md");
     if (lstatSync(createTarget, { throwIfNoEntry: false })) {
       process.stderr.write(`refusing: create target already exists: ${createTarget}\n`);
       process.exit(1);
@@ -153,19 +153,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(1);
   }
 
-  for (const [label, target] of [
-    ["edit target", editTarget],
-    ["create target", createTarget],
-  ]) {
-    if (!isInsideRepo({ candidatePath: target, repoRoot })) {
-      process.stderr.write(`refusing: ${label} resolves outside the repository\n`);
-      process.exit(1);
-    }
+  if (!isInsideRepo({ candidatePath: editTarget, repoRoot })) {
+    process.stderr.write("refusing: edit target resolves outside the repository\n");
+    process.exit(1);
   }
 
   process.stdout.write(`edit root: ${editRoot}\n`);
   process.stdout.write(`edit target: ${editTarget}\n`);
   process.stdout.write(`edit target exists: ${existsSync(editTarget)}\n`);
-  process.stdout.write(`create target: ${createTarget}\n`);
-  process.stdout.write(`create target exists: ${existsSync(createTarget)}\n`);
 }

@@ -79,9 +79,13 @@ function generate(check) {
   const resolver = readFileSync(join(root, "scripts/skills-runtime-resolver.mjs"), "utf8");
   const expected = new Map();
   const dependent = names.filter((name) => name !== "principle-fix-root-causes");
-  for (const name of dependent) {
+  for (const name of names) {
     const entryPath = `skills/${name}/SKILL.md`;
     const canonical = records.find((record) => record.path === entryPath).text;
+    if (!dependent.includes(name)) {
+      expected.set(entryPath, canonical);
+      continue;
+    }
     if (!/^---\n[\s\S]*?\n---\n/.test(canonical)) throw new Error(`missing frontmatter: ${entryPath}`);
     expected.set(entryPath, canonical.replace(/^(---\n[\s\S]*?\n---\n)/, `$1${BOOTSTRAP}`));
     for (const [file, text] of [["resolve.mjs", resolver], ["start.md", startup], ["bundle.json", bundle]]) expected.set(`skills/${name}/runtime/${file}`, text);
