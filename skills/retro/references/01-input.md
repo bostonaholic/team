@@ -15,10 +15,16 @@ case "$FOCUS" in
   -*|*[!a-z0-9-]*)
     echo "refusing: a focus must be a skill name, lowercase and hyphenated" >&2; exit 1 ;;
   *)
-    ls -1d -- "skills/$FOCUS" ".claude/skills/$FOCUS" ".agents/skills/$FOCUS" 2>/dev/null
-    ls -1 skills .claude/skills .agents/skills 2>/dev/null | sort -u ;;   # the candidate list
+    CLAUDE_SKILLS_ROOT="$(node -p '
+      const { join } = require("node:path");
+      join(process.env.CLAUDE_CONFIG_DIR?.trim() || join(require("node:os").homedir(), ".claude"), "skills")
+    ')" || exit 1
+    ls -1d -- "skills/$FOCUS" ".claude/skills/$FOCUS" ".agents/skills/$FOCUS" "$HOME/.agents/skills/$FOCUS" "$CLAUDE_SKILLS_ROOT/$FOCUS" 2>/dev/null
+    ls -1 -- skills .claude/skills .agents/skills "$HOME/.agents/skills" "$CLAUDE_SKILLS_ROOT" 2>/dev/null | sort -u ;;   # the candidate list
 esac
 ```
+
+Global discovery permits analysis only. Global skills remain forbidden write targets.
 
 The character allowlist runs before the lookup, not after: the focus is an
 argument this skill places into commands, and every skill directory on disk is
