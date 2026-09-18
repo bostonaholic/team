@@ -1,9 +1,9 @@
 ### 6. Approve
 
 **Pre-cast re-review sweep.** The approval covers every tracked item of
-both shapes,
+all three shapes,
 so before any merge-safety check, every tracked thread and every tracked
-comment must hold a
+PR-level item must hold a
 current verdict of addressed or answered. Re-review any item that
 lacks one: a thread that resolved during a confirmation wait, a comment
 engaged during that wait, a verdict
@@ -11,19 +11,19 @@ voided by a reopen, or verdicts lost to a compaction. When the head
 moved after a verdict was recorded, re-check the threads whose `path`
 the new commits touch — an addressed verdict can be un-fixed by a later
 push, and a verdict rendered at head B proves nothing about head C's
-version of that file. **A tracked comment has no `path`, so it cannot be
-narrowed that way: re-check every tracked comment whenever the head
+version of that file. **Tracked review summaries and conversation comments have no `path`, so they cannot be
+narrowed that way: re-check every tracked PR-level item whenever the head
 moved after its verdict.** Failing closed on the whole set is the only
 sound option when the item does not say which files it covers. A
 rejected verdict here blocks the cast, before any confirmation is
-asked. The sweep renders every verdict, across both shapes, before any
+asked. The sweep renders every verdict, across all three shapes, before any
 write: test every thread with a rejected verdict for a viewer reply
 already below its first comment, and only then rebut. When any one
 thread already carries that reply, Dispute stands (step 5) fires
 instead, on either path: stop and report the thread and the
-disagreement, and take no rebuttal on any thread or tracked comment
-that cycle. Otherwise, rebut every rejected verdict of either shape — a
-tracked comment's rejected verdict always rebuts here, since Dispute
+disagreement, and take no rebuttal on any thread or tracked PR-level item
+that cycle. Otherwise, rebut every rejected verdict of any shape — a
+tracked PR-level item's rejected verdict always rebuts here, since Dispute
 stands tests threads only — then, on the loop path resume polling, or
 on the immediate path stop and report the open dispute rather than
 starting a loop that was not asked for. A pending
@@ -96,21 +96,21 @@ body text is never interpolated into the shell command:
 
 ```bash
 gh pr review --approve "$PR_URL" --body-file - <<'GH_APPROVE_EOF'
-Approved automatically: all <T> review threads and <C> PR comments from @<viewer> are settled, and each settlement was re-reviewed against the diff and accepted. <R> of those threads were resolved by this review after the reply was checked against the branch; the rest the author resolved. The comments carry no resolve state, so their settlement was judged from the change and the replies rather than read from a resolved flag. Head commit at approval time: <approval-head-SHA>. Armed at head commit: <arm-head-SHA>.
+Approved automatically: all <T> review threads, <S> review summaries, and <C> conversation comments from @<viewer> are settled, and each settlement was re-reviewed against the diff and accepted. <R> of those threads were resolved by this review after the reply was checked against the branch; the rest the author resolved. Review summaries and conversation comments carry no resolve state, so their settlement was judged from the change and the replies rather than read from a resolved flag. Head commit at approval time: <approval-head-SHA>. Armed at head commit: <arm-head-SHA>.
 GH_APPROVE_EOF
 ```
 
-The body states the two counts separately, and when `<C>` is non-zero it
-names how those comments were judged. That sentence is the audit trail
+The body states the three counts separately, and when `<S>` or `<C>` is non-zero it
+names how those PR-level items were judged. That sentence is the audit trail
 for the weaker evidence: a reader can otherwise not tell whether the
 approval rested on resolves the author clicked or on inferences the
 watch drew. `<R>` is the same disclosure for the resolves: an approval
 that counted threads the approver itself closed must say so, or a reader
 auditing it cannot tell the two apart. Drop that sentence when `<R>` is
-zero. When `<C>` is zero, drop the comment count and that sentence
+zero. When `<S>` and `<C>` are zero, drop both PR-level counts and that sentence
 entirely and say "all `<T>` review threads opened by @`<viewer>` are
 resolved" — a thread-only approval should read exactly as it did before
-plain comments were tracked, with no dead clause about a shape that did
+PR-level feedback was tracked, with no dead clause about a shape that did
 not appear.
 
 The body never names this skill, a slash command, or an agent — internal
@@ -127,7 +127,7 @@ poll from the cast. The body also carries the arm-time head SHA and the
 settled-item counts. When the two SHAs are equal, collapse the two SHA
 sentences into "Head commit at arm and approval time: <head-SHA>." An
 unexplained automated approval is unauditable, and an approval that
-hides head drift is unauditable too. When `<T>` or `<C>` differs from the
+hides head drift is unauditable too. When `<T>`, `<S>`, or `<C>` differs from the
 matching arm-time tracked count, items were deleted or added mid-watch —
 a gate
 cleared by deletion must not read as one cleared by settlement — so name

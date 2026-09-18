@@ -17,7 +17,8 @@ the values GitHub cannot return — recover them from the transcript:
   and the
   cycle-0 snapshot. When unrecoverable, say so in the approval body in
   place of the count comparison.
-- the **tracked comment list** — the classification from step 1, printed
+- the **tracked PR-level item list** — review summaries and conversation
+  comments from the classification in step 1, printed
   in the arm report by url. This one is *not* re-derivable: re-running
   the classification would re-read bodies and could silently reach a
   different answer than the list the user saw and accepted. When no copy
@@ -48,7 +49,7 @@ Report:
   Dispute stands, or confirmation declined)
 - the number of cycles consumed
 - when an approval was cast: its URL, the cited head SHA, and the
-  per-item verdict summary (each thread's path or each plain comment's
+  per-item verdict summary (each thread's path or each PR-level item's
   url, its shape, whether it was
   addressed or answered, the reaction that verdict placed, and who
   resolved it — you or the author). When the
@@ -61,7 +62,7 @@ Report:
   are reported whether or not an approval was cast — a run that ends on
   a user interrupt still leaves them behind
 - on the 3-cycle soft cap: which tracked items were still gated, split
-  by shape, and for a plain comment whether it was never engaged or
+  by shape, and for PR-level feedback whether it was never engaged or
   engaged but judged pending. Name separately any thread left holding a
   rejected verdict, with what the last rebuttal argued and how the
   author answered, plus the by-hand follow-up options (make the argument

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Pull-request feedback retrieval now includes top-level conversation comments, review-summary bodies, and inline review threads across `/pr-open-comments`, both PR watch skills, and `/why` without duplicate items.
+
 ## [0.125.0] - 2026-09-18
 
 ### Fixed

@@ -11,21 +11,23 @@ This path runs in two cases:
 
 In both cases the exclusions below stay absolute.
 
-After you finish the code changes for a given comment, complete the loop
-automatically — do not ask for permission to reply or resolve:
+After you finish the code changes for a given feedback item, complete the loop
+automatically — do not ask for permission to reply or, for an inline thread,
+resolve:
 
 1. **Push the changes.** Stage only the anchored file(s) the change
    touched — never `git add -A` or `git commit -a` — then commit and
    push, so the reply references landed code.
-2. **Reply to the thread.** Post a reply on that review thread that
-   describes the change. Cite the exact commit SHA that contains the
-   change, as bare text (no backticks), so the resolution stays
-   auditable.
-3. **Resolve the thread.** Call the `resolveReviewThread` mutation for
-   that thread.
+2. **Reply to the item.** For an inline comment, reply on its review thread.
+   For a review summary or conversation comment, post a top-level reply that
+   links the item. Describe the change and cite the exact commit SHA that
+   contains it as bare text (no backticks).
+3. **Resolve inline threads only.** Call the `resolveReviewThread` mutation
+   only for a `reviewThreads` item. Review summaries and conversation comments
+   have no resolve operation; their handling ends after the reply.
 
-Do this per comment as each one finishes — reply and resolve immediately,
-without a confirmation prompt. The user already authorized it.
+Do this per item as each one finishes — reply and, where supported, resolve
+immediately without a confirmation prompt. The user already authorized it.
 
 Exclusions (still pause and ask):
 
@@ -65,18 +67,18 @@ mutation($threadId: ID!) {
 }' -F threadId="<thread-node-id>"
 ```
 
-To capture the ids needed above, add `id` (the thread node id) and
-`comments(first: 1) { nodes { databaseId } }` to the step 2 query.
+The shared step 2 query supplies the thread node `id` and every inline
+comment's `databaseId`.
 
-- Every `reviewThreads` node with `isResolved == false` appears in the
-  output exactly once — under `Auto-applied` or `Needs your decision` —
-  and the punch-list blocks are globally numbered.
+- Every item in step 3's open-feedback set appears in the output exactly once
+  — under `Auto-applied` or `Needs your decision` — and the punch-list blocks
+  are globally numbered. Use GraphQL node ids to prevent duplicates.
 - Every auto-applied item cleared the bar. It had confidence above 90%
   assigned after verification, a `STILL RELEVANT` verdict, and no
   exclusion hit. Its change stayed bounded to the anchored file and
   lines, and its report line names its confidence and landing commit SHA.
 - Each `Needs your decision` item shows the file path and line, or
-  "PR-level" for issue comments. It also shows the author handle, body
+  "PR-level" for review summaries and conversation comments. It also shows the author handle, body
   excerpt, URL, and a verification verdict with evidence. It ends with a
   menu of 2–4 tailored options and exactly one recommendation with a
   one-line rationale. Auto-applied items are one-line entries with
@@ -102,15 +104,17 @@ To capture the ids needed above, add `id` (the thread node id) and
   edits, replies, or thread resolutions occur in that turn for items that
   did not clear the auto-apply bar.
 
-- Do not rely on `gh pr view --json reviews` for resolution state —
-  reviews aggregate comments but do not expose thread resolution.
+- Do not rely on `gh pr view --json reviews` for resolution state — reviews
+  do not expose thread resolution. Follow the shared pull-request comment
+  retrieval from step 2 for all three shapes.
 - Do not treat `isOutdated` as resolved. An outdated thread can still be
   blocking if the concern survived the rebase.
 - `gh api repos/{owner}/{repo}/pulls/{n}/comments` returns every inline
   comment ever made on the PR, including resolved ones. Prefer the GraphQL
   `reviewThreads` query.
-- Pagination: a PR with more than 100 threads needs `after:` cursors.
-  Rare, but possible on long-running PRs.
+- Pagination: any of the three top-level connections, or a thread's comment
+  connection, can exceed 100 nodes. Complete every `after:` cursor before
+  triage.
 - A thread can hold many comments — the first comment is usually the ask.
   Later comments can already answer it. Scan the full thread before you
   classify.

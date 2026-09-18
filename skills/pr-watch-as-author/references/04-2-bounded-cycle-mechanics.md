@@ -10,4 +10,5 @@ Bind its three slots:
 - **Cycle-0 subject** — feedback that already exists at arm time is
   triaged at once.
 - **Handoff state** — the current baseline state: unresolved-thread ids,
-  triaged-comment ids, PR `state`, `reviewDecision`, and head SHA.
+  triaged review-summary and conversation-comment ids, PR `state`,
+  `reviewDecision`, and head SHA.

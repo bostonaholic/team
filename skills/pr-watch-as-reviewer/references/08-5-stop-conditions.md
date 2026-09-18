@@ -10,14 +10,14 @@ cap, and 3 consecutive poll failures. This skill adds six:
   including "merged without your approval" when that is what happened.
 - **Empty tracked set** — a mid-watch poll that returns an empty tracked
   set stops the loop without approving. This happens when you deleted
-  your own last comment, or GitHub stopped returning the threads or the
-  comments. The
+  your own last PR-level item, or GitHub stopped returning the threads,
+  review summaries, or conversation comments. The
   arm-time precondition no longer holds, so nothing gates the approval
   now. Suggest an approval by hand, or a re-arm after you post new
-  comments. When some tracked items vanish but others remain — of either
+  comments. When some tracked items vanish but others remain — of any
   shape — the
   remaining items drive the gate. A withdrawn comment neither blocks
-  the approval nor is necessary for it. A tracked comment that vanishes
+  the approval nor is necessary for it. A tracked PR-level item that vanishes
   because it was deleted leaves the set the same way a deleted thread
   does.
 - **Confirmation declined** — a "no", or no answer, stops the run
@@ -42,8 +42,8 @@ cap, and 3 consecutive poll failures. This skill adds six:
   on any thread that cycle — nor does the approval.
 
 When the shared soft cap fires, two reports are this skill's to add. When
-the cap was reached with a plain comment still pending, say so explicitly
-and name the comment: this is the expected outcome for a comment the
+the cap was reached with a review summary or plain comment still pending, say so explicitly
+and name the item: this is the expected outcome for PR-level feedback the
 author never engaged, not a malfunction, and the reader should not have
 to infer that from a bare handoff. The cap can also be where an
 unsettled disagreement lands: a rejected verdict that never draws a
