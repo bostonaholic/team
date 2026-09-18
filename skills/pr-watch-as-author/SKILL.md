@@ -18,18 +18,19 @@ watch for 3 cycles (~90 minutes), then hands off to the scheduled
 pr-watch job so the session is free again. The user can interrupt at
 any time, and each individual command stays small and observable.
 
-Feedback arrives in two shapes and both are triaged:
+Feedback arrives in three disjoint shapes and all are triaged:
 
 - an **inline review thread**, anchored to a diff line and carrying a
   resolved/unresolved bit.
 - a **plain PR comment** on the conversation tab, carrying no resolution
-  bit at all. Whole-PR reviews — a summary review, a bot's findings,
-  an automated review posted as one body — land here.
+  bit at all.
+- a **review summary** submitted with a review, separate from its inline
+  comments and also carrying no resolution bit.
 
 The distinction matters because the unresolved-thread set cannot
-represent a plain comment. A comment is triaged **once**, keyed by its
-id, and is done when it has been triaged; it never joins a gate waiting
-to be resolved, because nothing can resolve it. Treating one as a thread
+represent either non-thread shape. A review summary or conversation comment
+is triaged **once**, keyed by its id, and is done when it has been triaged; it
+never joins a gate waiting to be resolved, because nothing can resolve it. Treating one as a thread
 would leave the watch waiting forever on a bit that does not exist;
 ignoring one would silently drop real feedback, which is the failure
 this shape is most prone to.

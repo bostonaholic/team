@@ -10,9 +10,10 @@ argument-hint: "[<pr-number-or-url>]"
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-Pull every **unresolved** review thread on a pull request. Hand the user a
-decision list: for each comment, show the request, the options, and one
-recommended option with a one-line rationale.
+Pull every open feedback item on a pull request: unresolved inline review
+threads, non-empty review-summary bodies, and top-level conversation comments.
+Hand the user a decision list: for each item, show the request, the options,
+and one recommended option with a one-line rationale.
 
 Apply the [decision method](../team/references/decisions.md) for a thread with two or more
 viable responses, naming the user as the decision owner. Use its result as

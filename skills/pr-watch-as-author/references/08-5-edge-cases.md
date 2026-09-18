@@ -1,10 +1,11 @@
 ### 5. Edge cases
 
-- If a wake finds zero unresolved threads, no untriaged issue comments,
+- If a wake finds zero unresolved threads, no untriaged review summaries or
+  conversation comments,
   and no other change (for
   example, a reviewer resolved their own thread), re-arm silently and
-  present nothing. Check the untriaged-comment set before taking this
-  path: a wake caused by a new plain comment has zero unresolved threads
+  present nothing. Check the untriaged PR-level item set before taking this
+  path: a wake caused by new non-thread feedback has zero unresolved threads
   by definition, so a thread-only reading of this rule would silently
   swallow exactly the feedback that woke the loop.
 - If a CHANGES_REQUESTED review arrives with an empty body and no

@@ -23,28 +23,28 @@ merge, so only a deliberate human invocation arms the watch.
 `agents/openai.yaml` restates the same guard for Codex as
 `policy.allow_implicit_invocation: false`.
 
-Feedback comes in two shapes, and the watch tracks both:
+Feedback comes in three disjoint shapes, and the watch tracks all three:
 
 - a **review thread** — an inline comment anchored to a diff line, which
   GitHub gives a resolved/unresolved bit.
 - a **plain PR comment** — a top-level issue comment on the
-  conversation tab, which GitHub gives **no resolution bit at all**. A
-  whole-PR review posted as one comment body (the common shape for an
-  automated or summary review) lands here.
+  conversation tab, which GitHub gives **no resolution bit at all**.
+- a **review summary** — the body submitted with a review, separate from
+  that review's inline comments and also without a resolution bit.
 
 That asymmetry drives the whole design below. A thread has an explicit
 author action — resolving it — that says "I am done with this". A plain
-comment has no such affordance: there is nothing for the author to
-click.
+comment or review summary has no such affordance: there is nothing for the
+author to click.
 
 Neither is trusted on its own. **The only thing that settles either is
 the state of the branch, read as it now stands.** A resolve is a claim
 by the person whose code you are approving; it can be clicked over a
 concern that was never addressed. So every item is verified against the
-current code, always. The two shapes differ only in which way an unclear
+current code, always. Thread and non-thread feedback differ only in which way an unclear
 read falls:
 
-- a **plain comment** requires that the head advanced after it — no push
+- a **plain comment or review summary** requires that the head advanced after it — no push
   since the comment means nothing could have addressed it — and an
   unclear read leaves it unsettled.
 - a **resolved thread** is verified too, but the author's explicit

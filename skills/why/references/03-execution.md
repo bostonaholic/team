@@ -15,8 +15,12 @@ The receiver reads them before work. Missing resources stop that step with the e
    - The exact-text trail when a constant or string is the question:
      `git log -S '<exact-text>' -- <file>`.
    - PR numbers from merge-commit subjects, then
-     `gh pr view <number> --json title,body,author,createdAt,mergedAt,comments,reviews,closingIssuesReferences`
-     for the substantive ones.
+     `gh pr view <number> --json url,title,body,author,createdAt,mergedAt,closingIssuesReferences`
+     for the substantive ones. Read and follow the shared
+     [pull-request comment retrieval](../../team/references/pull-request-comments.md)
+     for their full discussion: top-level conversation comments, non-empty
+     review-summary bodies, and inline review threads. Complete pagination;
+     never fetch inline comments again through a review summary.
    - Ticket IDs mentioned in commit messages and PR bodies.
 
 3. **Map the evidence categories.** Historical context spreads across

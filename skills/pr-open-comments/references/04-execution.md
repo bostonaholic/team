@@ -12,64 +12,42 @@ gh pr view "<number-or-url>" --json number,url,title
 
 Extract `owner`, `repo`, and `number`.
 
-### Step 2 — Fetch unresolved review threads (GraphQL)
+### Step 2 — Fetch all pull-request feedback (GraphQL)
 
-Issue-level comments (`gh pr view --json comments`) do not carry resolution
-state. The only reliable source of open review comments is `reviewThreads`
-through GraphQL, filtered on `isResolved: false`.
+Read and follow the shared [pull-request comment retrieval](../../team/references/pull-request-comments.md).
+It retrieves three separate connections: top-level conversation comments,
+review-summary bodies, and inline review threads. Do not substitute
+`gh pr view --json reviews`: it does not expose thread resolution.
 
-```bash
-gh api graphql -F owner="$OWNER" -F repo="$REPO" -F number="$NUMBER" -f query='
-query($owner: String!, $repo: String!, $number: Int!) {
-  repository(owner: $owner, name: $repo) {
-    pullRequest(number: $number) {
-      reviewThreads(first: 100) {
-        nodes {
-          isResolved
-          isOutdated
-          path
-          line
-          startLine
-          comments(first: 50) {
-            nodes {
-              author { login }
-              body
-              diffHunk
-              url
-              createdAt
-            }
-          }
-        }
-      }
-    }
-  }
-}'
-```
+When invoked directly, run the shared query and complete pagination before
+triage. When `pr-watch-as-author` supplies its fully paginated poll result,
+use that result and do not fetch again. Filter its already-triaged node ids
+before building the item list.
 
-Then filter `nodes` where `isResolved == false`. Keep `isOutdated` threads
-but flag them — the code they reference can have moved. If the PR has more
-than 100 threads, paginate with `after:` cursors.
+### Step 3 — Build the open-feedback set
 
-### Step 3 — Fetch issue-level comments (optional)
+Include every unresolved `reviewThreads` node, every non-empty
+`reviewSummaries` body, and every `conversationComments` node not already
+triaged by a caller. The three connections are disjoint; never obtain inline
+comments from both a review summary and its review thread.
 
-Top-level PR comments (not tied to a line) live on a different endpoint:
-
-```bash
-gh pr view "$NUMBER" --json comments --jq '.comments[] | {author: .author.login, body: .body, createdAt: .createdAt, url: .url}'
-```
-
-These comments carry no resolved flag, so an item stays open until the
-author's own follow-up clearly closes it. That follow-up is the only
-closure signal the endpoint offers.
+Review summaries and conversation comments carry no resolved flag. Their
+items stay open until the author's code and follow-up clearly address them.
+There is nothing to resolve for either shape: an applied item ends with a
+reply, and must never call `resolveReviewThread`. Keep `isOutdated` threads but
+flag them — the code they reference can have moved.
 
 ### Step 4 — Verify each comment (trust but verify)
 
-Do this first for each comment, before any classification or
+Do this first for each feedback item, before any classification or
 recommendation. Reviewers comment against a snapshot of the diff. The
-code can have moved since. For every unresolved thread:
+code can have moved since. For every open item:
 
-1. **Read the current code** at `path` (around `line`/`startLine`) in the
-   working tree. Compare it against the thread's `diffHunk`.
+1. **Read the current code** at `path` (around `line`/`startLine`) for an
+   inline thread. For a review summary or conversation comment, identify and
+   cite the current files its ask concerns; if that scope is unclear, use the
+   needs-clarification exclusion. Compare inline feedback against its
+   `diffHunk`.
 2. **Check the diff since the comment**: run
    `git diff origin/<base>...HEAD -- <path>` and
    `git log --oneline -- <path>`. Did a later commit already address,
