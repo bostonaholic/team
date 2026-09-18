@@ -325,8 +325,9 @@ frontmatter.
 **Action:** orchestrator-emit
 **Predecessor:** aggregate gate passed
 
-Update CHANGELOG.md (filter for user-facing commits since last release),
-push the branch, and open a draft PR automatically with
+Update an existing CHANGELOG.md (filter for user-facing commits since last
+release); if the root file is absent, leave it absent unless the user explicitly
+requested one. Push the branch and open a draft PR automatically with
 `gh pr create --draft`. The PR phase never waits for approval. Then
 surface the tracking ticket, if `1-task.md` carries `ticketId`. When the
 branch impacts a UI, the PR body also gets a `## Screenshots` section,

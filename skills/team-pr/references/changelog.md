@@ -1,6 +1,6 @@
 # Changelog discipline
 
-Before updating `CHANGELOG.md`, read this file and apply it. Maintain a curated user-facing `CHANGELOG.md` under [Keep a Changelog](https://keepachangelog.com). Every entry answers “How does this affect me?” Create the root file if missing.
+Before updating `CHANGELOG.md`, read this file and apply it. Maintain an existing curated user-facing `CHANGELOG.md` under [Keep a Changelog](https://keepachangelog.com). Every entry answers “How does this affect me?” If the root file is absent, leave it absent and report the skip unless the user explicitly requested a new changelog.
 
 Write at seventh-grade, STE-flavored level. Before finalizing, read the [writing standards](../team/references/writing.md) and apply its `## Self-lint`.
 
@@ -8,7 +8,7 @@ Write at seventh-grade, STE-flavored level. Before finalizing, read the [writing
 
 All changes stay under `## [Unreleased]` until an explicit release. Each bullet belongs to exactly one of `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`; always document vulnerability fixes. On release only, rename it using `[X.Y.Z] - YYYY-MM-DD` as `## [X.Y.Z] - YYYY-MM-DD` and add a new empty `[Unreleased]` above it.
 
-### Initial file
+### Explicitly requested initial file
 
 ```markdown
 # Changelog
@@ -100,10 +100,11 @@ Example candidates `feat(auth): add OAuth2 login with GitHub provider`, `fix: re
 
 ## Ship-phase procedure
 
-1. Read `[Unreleased]`; skip every change already covered. An unchanged second run writes nothing.
-2. Find the baseline, list later commits, inspect ambiguous diffs, and apply the filter.
-3. Merge commits that implement one user-visible change into one bullet. Sort each section by user impact.
-4. Commit the changelog with the code it documents. If nothing survives, leave `CHANGELOG.md` untouched and report that result.
+1. If the root `CHANGELOG.md` is absent, create it from the initial-file template only when the user explicitly requested a new changelog. Otherwise leave it absent, report the skip, and stop.
+2. Read `[Unreleased]`; skip every change already covered. An unchanged second run writes nothing.
+3. Find the baseline, list later commits, inspect ambiguous diffs, and apply the filter.
+4. Merge commits that implement one user-visible change into one bullet. Sort each section by user impact.
+5. Commit the changelog with the code it documents. If nothing survives, leave `CHANGELOG.md` untouched and report that result.
 
 ## Rules
 
@@ -114,6 +115,7 @@ Example candidates `feat(auth): add OAuth2 login with GitHub provider`, `fix: re
 - Relative `[versioning](docs/versioning.md)` links break in release notes; replace them with full `https://…` URLs.
 - A changelog rebase conflict keeps both: branch entries remain under `[Unreleased]`, above the base’s newest `## [X.Y.Z]`; every dated base section remains unchanged.
 - Always update `[Unreleased]`. Never create a versioned section unless the user explicitly requests a release.
+- Never introduce a root `CHANGELOG.md` during the PR phase unless the user explicitly requested one.
 
 Good entries describe outcomes: `- Added GitHub OAuth2 login — users can now sign in with their GitHub account`; `- Fixed token expiry check that caused premature session logout`; `- Changed API rate limit from 100 to 1000 requests per minute`.
 

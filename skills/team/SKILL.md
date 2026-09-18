@@ -44,7 +44,9 @@ scan issue bodies or quoted text for route words.
 - Read `references/15-host-dispatch.md` before the first dispatch and resolve every agent through it.
 - Read [finding format](../code-review/references/findings.md) before aggregating IMPLEMENT findings.
 - In multi-repo mode, use `4-repos.md`; see **Multi-repo topics** in the Rules reference.
-- PR changelog bullets accumulate under `## [Unreleased]`.
+- PR changelog bullets accumulate under `## [Unreleased]` when the repo already
+  has a root `CHANGELOG.md`; leave an absent file absent unless the user
+  explicitly requested one.
 
 ## Where a phase agent's output lives
 

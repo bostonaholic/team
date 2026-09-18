@@ -37,7 +37,7 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 | **Structure** | Break the design into vertical slices with verification checkpoints. The document is about two pages. It advances to Plan with no gate. |
 | **Plan** | The planner derives a tactical implementation plan from the structure. The implementer reads it. No gate applies. |
 | **Implement** | Test-first → slice execution → 5 parallel reviewers + typed retry loop. |
-| **PR** | Update changelog, commit, open pull request. |
+| **PR** | Update an existing changelog, commit, open pull request. A missing root changelog stays absent unless explicitly requested. |
 
 ## The governance stack
 

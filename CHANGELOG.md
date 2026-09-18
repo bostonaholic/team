@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.125.0] - 2026-09-18
+
+### Fixed
+
+- Team no longer introduces a root `CHANGELOG.md` during the PR phase in repositories that do not already use one. Existing changelogs still receive user-facing entries, and an explicit request can still create one.
+
 ## [0.124.0] - 2026-09-17
 
 ### Fixed
@@ -1103,7 +1109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.124.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.125.0...HEAD
+[0.125.0]: https://github.com/bostonaholic/team/compare/v0.124.0...v0.125.0
 [0.124.0]: https://github.com/bostonaholic/team/compare/v0.123.0...v0.124.0
 [0.123.0]: https://github.com/bostonaholic/team/compare/v0.122.0...v0.123.0
 [0.122.0]: https://github.com/bostonaholic/team/compare/v0.121.0...v0.122.0
