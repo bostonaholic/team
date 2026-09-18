@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Team no longer introduces a root `CHANGELOG.md` during the PR phase in repositories that do not already use one. Existing changelogs still receive user-facing entries, and an explicit request can still create one.
+
 ## [0.124.0] - 2026-09-17
 
 ### Fixed

@@ -34,6 +34,10 @@ documentation:
    - Configuration documentation (environment variable docs, setup guides)
    - Changelog or release notes
 
+   If a repository has no root `CHANGELOG.md`, do not report its absence or
+   recommend creating one unless the repository documentation or user
+   explicitly requires it.
+
 3. **Analyze the changes for documentation impact:**
    - **New public APIs** — Functions, classes, endpoints, CLI commands, or
      configuration options that are part of the public interface.
@@ -68,5 +72,5 @@ The documentation gap could cause confusion but would not block usage. Examples:
 - Prose that carries incidentals — background, discovery narration, or
   restatement the reader did not ask for
 - Inline comments that are now stale
-- Missing changelog entry for a notable change
+- Missing entry in a changelog the project already maintains for a notable change
 - Type definitions that could benefit from JSDoc

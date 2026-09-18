@@ -2,9 +2,11 @@
 
 When the aggregate gate passes:
 
-1. Update `CHANGELOG.md`: read [changelog rules](../team-pr/references/changelog.md) and apply it
-   — bullets go under `## [Unreleased]`. In multi-repo mode, update each repo's
-   `CHANGELOG.md` with the entries belonging to that repo's commits.
+1. Update an existing `CHANGELOG.md`: read [changelog rules](../team-pr/references/changelog.md) and apply it
+   — bullets go under `## [Unreleased]`. If the root file is absent, leave it
+   absent and report the skip unless the user explicitly requested a new
+   changelog. In multi-repo mode, apply this rule per repo and add only that
+   repo's entries.
 2. **Never version here.** Do not touch a version string, cut a dated
    changelog section, or put a version in the PR title. A version is
    assigned at land time against the base branch's tip, so one assigned

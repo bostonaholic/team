@@ -23,7 +23,9 @@ Run the PR phase. Two modes:
 
 ## Core contracts
 
-1. **Update CHANGELOG.md** and commit before opening any PR.
+1. **Update an existing CHANGELOG.md** and commit before opening any PR. If the
+   root file is absent, leave it absent and report the skip unless the user
+   explicitly requested a new changelog.
 2. **Open a draft PR automatically — do not stop to ask.** Push, then run `gh pr create --draft`.
 3. After creation, hand off to `/pr-watch-as-author`.
 4. In multi-repo mode, open one draft PR per repo and add `## Companion PRs` links.

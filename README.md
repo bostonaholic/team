@@ -360,7 +360,7 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 - **Structure.** Break the design into vertical slices with verification checkpoints. Produced autonomously. Advances to Plan with no gate.
 - **Plan.** Tactical implementation plan derived from the structure. Read by the implementer. Not gated.
 - **Implement.** Test-first, where test-architect writes failing tests and a mechanical gate checks them and the project's static checks. Then slice execution, where implementer commits each vertical slice atomically. Then adversarial verification, with 5 parallel reviewers and a typed failure-class retry loop that runs until no Blocking or Major finding remains.
-- **PR.** Update changelog, commit, open pull request with inline UI screenshots when applicable, surface the tracking item.
+- **PR.** Update an existing changelog, commit, open pull request with inline UI screenshots when applicable, surface the tracking item. Repositories without a root changelog remain unchanged unless the user explicitly requests one.
 
 ## Architecture
 

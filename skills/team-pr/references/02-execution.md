@@ -43,9 +43,10 @@
      stop. (Standalone mode is single-repo only.)
    - Skip aggregate-gate enforcement. Warn the user once that they are
      taking responsibility for correctness.
-6. **Update CHANGELOG.md** before committing (see Changelog Update below).
-   In multi-repo mode, update each repo's `CHANGELOG.md` with the
-   entries belonging to that repo's commits.
+6. **Update an existing CHANGELOG.md** before committing (see Changelog Update
+   below). If the root file is absent, leave it absent and report the skip
+   unless the user explicitly requested a new changelog. In multi-repo mode,
+   apply this rule per repo and add only that repo's entries.
 7. **Open a draft PR automatically — do not stop to ask.** The PR phase
    never waits for approval. Opening the PR requires no approval. Push the
    branch and open the PR as a **draft** (`gh pr create --draft`). Pass the
