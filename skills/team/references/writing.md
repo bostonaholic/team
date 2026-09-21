@@ -157,13 +157,28 @@ the terminal line, keep the supporting detail above it.
 
 ## Plain language
 
-- **Write at a seventh-grade reading level.** Short sentences, common words,
-  no unexplained jargon.
-- **Define terms at first use.** Every acronym, domain term, or jargon word is
-  defined or linked when it first appears.
+- **Write at a seventh-grade reading level.** Use short sentences and common
+  words.
+- **Define acronyms at first use.** Write the full name when the acronym first
+  appears.
 - **One idea per sentence.** Prefer one plain verb to a nominalization.
 - **Use American spelling.** "color", not "colour"; "analyze", not "analyse".
 - Use one consistent name for each thing.
+
+### No unexplained specialist terms
+
+A specialist term is a word or phrase that has a field-specific meaning and
+that the intended reader may not know.
+
+- Replace the term with plain language, or define it at first use.
+- When the term controls an action or decision, its definition must state:
+  - what the reader does.
+  - which inputs or sources the reader may use.
+  - what condition passes or fails.
+- A link may add detail. It cannot replace the definition when the term
+  controls an action or a pass-or-fail decision.
+- Keep an established technical term when its first use gives the reader enough
+  information to act and judge the result.
 
 ## Two modes
 
@@ -315,7 +330,10 @@ Before returning text, fix every:
 7. disallowed conditional mood;
 8. closer with no measurable fact;
 9. buried point — the recommendation, the finding, or the request does not
-   appear in the first paragraph.
+   appear in the first paragraph;
+10. unexplained specialist term, including a term that controls an action or
+    decision but omits the action, allowed inputs or sources, or pass-or-fail
+    condition.
 
 Do not self-lint quoted counter-examples. Review disagreements use the
 [finding format](../code-review/references/findings.md).

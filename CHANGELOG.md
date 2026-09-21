@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Team now requires authors to replace unexplained specialist terms with plain language or define them at first use. A term that controls an action or decision must define the action, allowed inputs or sources, and pass-or-fail condition. A link may add detail but cannot replace that definition.
+
 ## [0.126.0] - 2026-09-21
 
 ### Changed
