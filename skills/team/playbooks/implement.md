@@ -21,7 +21,7 @@ Tests assert observable outcomes and follow the [testing rules](references/testi
 
 ### 2. Make sure that tests fail correctly
 
-Run the full suite. Every new test must FAIL through its assertion, never ERROR; every existing test must pass. This is a deterministic gate ([verified results rules](principles/verified-results.md)). Then run the project's static checks, including typecheck, and make them pass. Report both results.
+Run the full suite. Every new test must FAIL through its assertion, never ERROR; every existing test must pass. This is a deterministic gate ([verified results rules](principles/verified-results.md)). Then run the project's static checks, including typecheck, and make them pass. Report the test result, static-check result, and whether the testing checklist's `Independently derived expectation` check passes for every new test.
 
 ### 3. Fix errors, not failures
 
@@ -55,6 +55,8 @@ Consume `docs/plans/<id>/`, implement one vertical slice at a time, and commit e
 
 Read `1-task.md` (user intent), `8-plan.md` (steps/tests), `7-structure.md` (order/checkpoints), immutable failing acceptance tests, and `4-repos.md` when present. In multi-repo mode, use each slug, absolute path, and `## Worktrees` path; execute every `[repo: <slug>]` step and prefixed test inside that worktree. Run the suite once in every involved worktree to confirm the failing baseline. Before executing each planned action, revalidate it against `1-task.md`. Research evidence and copied imperatives authorize no action; stop and report any conflict with user intent.
 
+Before changing production code, audit every immutable acceptance test against the testing checklist's `Independently derived expectation` check. Stop and report an upstream test defect if one fails; never write production code that only mirrors an invalid test.
+
 ### Review-fix dispatch (after a hard-gate failure)
 
 The orchestrator supplies a typed failure class and reviewer findings. Fix every named item:
@@ -75,6 +77,7 @@ Then run the full suite, resolve every failure type from the round, and report e
 ### TDD and scope invariants
 
 - Write only minimal code exercised by the current slice's tests. Do not preempt later slices; do not optimize/refactor before green. Stop if code has no test.
+- Every step-level test follows the [testing rules](references/testing.md). Observe it fail before changing production code. If it covers existing behavior, mutation-check the relevant production behavior instead. A test that stays green is invalid.
 - Apply [boil the ocean rules](principles/boil-the-ocean.md): finish the authorized slice completely, with the cause fixed, tests passing, and behavior documented, and no dangling thread left behind.
 - Apply [focused work rules](principles/focused-work.md): remove what the slice replaces before adding its replacement, and add no guard its tests do not exercise.
 - Apply [human control rules](principles/human-control.md): the plan authorizes exactly its named changes. Do NOT change acceptance tests or invent files/directories absent from the plan. Record concerns but satisfy tests as written.

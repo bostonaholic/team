@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.126.0] - 2026-09-21
+
+### Changed
+
+- Team now requires tests to derive expectations independently and blocks implementation review when a changed test only confirms its own setup, repeats production logic, or asserts a configured mock result.
+
 ### Fixed
 
 - Pull-request feedback retrieval now includes top-level conversation comments, review-summary bodies, and inline review threads across `/pr-open-comments`, both PR watch skills, and `/why` without duplicate items.
@@ -1113,7 +1119,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.125.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.126.0...HEAD
+[0.126.0]: https://github.com/bostonaholic/team/compare/v0.125.0...v0.126.0
 [0.125.0]: https://github.com/bostonaholic/team/compare/v0.124.0...v0.125.0
 [0.124.0]: https://github.com/bostonaholic/team/compare/v0.123.0...v0.124.0
 [0.123.0]: https://github.com/bostonaholic/team/compare/v0.122.0...v0.123.0

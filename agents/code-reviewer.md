@@ -58,8 +58,9 @@ the checks below are their application:
   `Comment Discipline` checklist item.
 - Check design-principle violations with the SOLID rules in the
   [code standards](../skills/team/references/code-standards.md).
-- Walk changed test files against the testing rules' style rules and
-  flaky-test red flags, which are blocking on **first** occurrence.
+- Walk changed test files against the testing rules' tautological-test,
+  style, and flaky-test rules. Tautological and flaky tests are blocking on
+  **first** occurrence.
 - Apply the "When Reviewing" section of the
   [code standards](../skills/team/references/code-standards.md) as more review
   criteria, and cite checklist item names in findings.
