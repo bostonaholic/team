@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Worktree
 
 This is the **leading** phase, and the one hard gate in the pipeline. A fix
@@ -36,7 +38,7 @@ fi
   No open PR, or one whose title names this bug → reuse the branch in
   place: create no worktree and no new branch, and announce the reuse
   once: "Continuing on branch `<branch>`." This is also the linked-worktree
-  reuse case in `skills/team-worktree/SKILL.md` → "Detect existing
+  reuse case in `skills/team-worktree/WORKFLOW.md` → "Detect existing
   worktree". An open PR for other work → treat it as `on-default`: a fix
   never rides on another PR's branch, so isolate per **Isolate** below.
 - **`on-default`** — isolate before the first commit, per **Isolate** below.
@@ -44,7 +46,7 @@ fi
 ### Isolate
 
 Create the home worktree on branch `<id>` off `origin/HEAD`, exactly as
-`/team`'s leading WORKTREE phase does. Call the Skill tool with
+`/team`'s leading WORKTREE phase does. Invoke Team skill
 `team-worktree` for the single-repo
 "Create the worktree(s)" procedure, and read the
 [worktree playbook](../team-worktree/playbooks/worktree.md) for the topology:

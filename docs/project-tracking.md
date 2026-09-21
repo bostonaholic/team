@@ -252,7 +252,7 @@ under `.claude/`. They are not part of the distributed plugin.
 
 ## How it ties to the QRSPI pipeline
 
-A Team run (`/team`, or the individual `/team-*` phases) maps onto the board
+A Team run (`/team`, or the individual `/team <phase>` phases) maps onto the board
 like this:
 
 - **Shaping work, before any run** →
@@ -264,9 +264,9 @@ like this:
   moves before you answer. Neither half ever starts a run.
 - **Picking up work** → the card moves to **In progress** **automatically** as
   the first action of the run. It moves from whichever entry column holds it:
-  **Ready**, **Backlog**, or **Bugs**. Give `/team` or `/team-fix` a ticket id
+  **Ready**, **Backlog**, or **Bugs**. Give `/team` or `/team fix` a ticket id
   or an issue. Its Setup step then does the generic, best-effort "move to
-  in-progress" that `skills/team/SKILL.md` and `skills/team-fix/SKILL.md`
+  in-progress" that `skills/team/SKILL.md` and `skills/team-fix/WORKFLOW.md`
   define. The runtime stays tracker-agnostic. **This repo's concrete binding**
   is the board scripts under `.claude/scripts/`. For an issue number `<N>`:
   ```sh
@@ -277,7 +277,7 @@ like this:
   it. The move never blocks the pipeline. You no longer need to move the card
   by hand before you launch.
 - **Opening the PR** → the PR phase links the PR to the issue. This covers
-  `/team-pr`, the `/team` PR gate, and `/team-fix` Ship. The link is
+  `/team pr`, the `/team` PR gate, and `/team fix` Ship. The link is
   `Closes #<N>` as the final line of the PR body, so the issue closes on merge.
   In a multi-repo run, only the home repo's PR carries the closing keyword.
   Companion PRs carry a non-closing qualified reference, either

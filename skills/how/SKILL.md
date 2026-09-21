@@ -4,6 +4,10 @@ description: 'Explains subsystem architecture and runtime flow. Trigger on "how 
 effort: medium
 argument-hint: "[<subsystem, feature, or question>]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before workflow work, read [initialization boundary](../team/references/skill-dispatch.md). Only the invoking root may initialize its private packaged runtime; subagents inherit it.
 
 # How — Architectural Explanation
 
@@ -20,7 +24,7 @@ how it works; `why` answers what forces led to its shape. When the user
 asks about motivation, rejected alternatives, or history, that is `why`'s
 job.
 
-This skill is **read-only**. It writes no files, records no artifacts,
+This skill is **read-only**. After packaged initialization, it writes no files, records no artifacts,
 and changes no state — in this session and in every subagent it
 dispatches.
 

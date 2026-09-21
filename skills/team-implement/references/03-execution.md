@@ -1,7 +1,9 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md).
 
 Before this operation, read [artifact schema](../team/references/artifacts.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Resolve these links from the installed `WORKFLOW.md` directory. If a read fails, stop and report its resolved path.
 
 ## Execution
 
@@ -81,17 +83,19 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    five reviewers holds a write tool, and the round item above carries
    counts rather than findings.
 
-   So re-invoke `/team-implement` bare. The resume branch at step 2 skips
+   So re-invoke `/team implement` bare. The resume branch at step 2 skips
    the test and slice steps, so the phase re-enters at step 5. The five
    reviewers there re-derive the current finding set, and the loop above
    fixes it at the cost of one round. The round counter is session-scoped
    (TodoWrite) and starts fresh on re-invocation. The re-invoked session's
    ledger carries no `PR` phase item, so step 9 takes the standalone
-   branch and names `/team-pr`.
+   branch and offers an explicit same-session request for `/team pr` with the artifact directory.
 9. **Once Blocking and Major are clean:** record any **Minor-and-below**
    findings for the PR body's `## Review notes` section, tagged by
    source reviewer — never present them mid-run. Then:
    - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
      `/team` seeded it): do **not** end the turn. Proceed directly to the
-     PR phase — call the Skill tool with `team-pr` — in the same turn.
-   - **Standalone**: suggest `/team-pr`.
+     PR phase — Invoke Team skill `team-pr` — in the same turn.
+   - **Standalone**: stop and offer an explicit same-session request for `/team pr` with the artifact directory.
+     For later slash use in skills mode, offer `npx skills add bostonaholic/team --skill team` only when `team` is unselected.
+     Native continuations use the registered `team` command with the phase argument.

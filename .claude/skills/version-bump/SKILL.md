@@ -12,6 +12,8 @@ description: |
   land intent from work merely being finished, reviewed, green, or ready to open
   a draft PR: a drafted PR carries no version, and a bump made before land time
   is stale by the time the PR merges.
+metadata:
+  internal: true
 ---
 
 # Version Bump — version a Team PR at land time

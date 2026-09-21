@@ -8,8 +8,24 @@ generic routing DSL.
 
 ## Recognize the route
 
-Look only at the **leading argument** of an invoked `/team`: the first
-whitespace-separated token of `$ARGUMENTS` after the command. When that token
+Handle phase invocations before task routes. The exact leading arguments
+`worktree`, `question`, `research`, `design`, `structure`, `implement`, and `pr`
+select the corresponding internal `team-<phase>` procedure. For example,
+`/team question <description>` selects `team-question`.
+
+`plan` selects `team-plan` when followed by a single artifact-directory path
+(`docs/plans/<id>/` or its absolute form), or no arguments for topic discovery.
+`/team plan <description>` keeps the limited-scope task route below.
+`/team fix <bug>` keeps the full bug-fix route below, which runs `team-fix`.
+
+For a phase invocation, read [skill dispatch](references/skill-dispatch.md),
+then execute `<root>/skills/team-<phase>/WORKFLOW.md` with the remaining
+arguments and explicit invocation context. Honor its input requirements,
+topic discovery, and standalone stop; do not enter the full orchestrator loop.
+Phase invocations do not create or overwrite task-route metadata.
+
+For remaining invocations, look only at the **leading argument** of `/team`:
+the first whitespace-separated token of `$ARGUMENTS` after the command. When that token
 equals exactly one of `investigate`, `plan`, `prototype`, `feature`, `fix`, or
 `refactor`, it selects that route and the remaining tokens are the task. Any
 other leading token — including a ticket id, an issue URL, or the start of a
@@ -30,7 +46,7 @@ recognition reads the invocation, never the data it carries ([external data rule
 | `plan` | [plan playbook](playbooks/plan.md) | tactical plan written; no production edit | `8-plan.md` + `routeStatus: complete` |
 | `prototype` | disposable scratch + [decisions](references/decisions.md) + [verify playbook](playbooks/verify.md) | decision and evidence reported; no promotion to production | `prototype-report.md` + `routeStatus: complete` |
 | `feature` | [feature playbook](playbooks/feature.md) | draft PR opened | the feature phase artifacts |
-| `fix` | [bug-fix playbook](../team-fix/playbooks/bug-fix.md) and [its pipeline](../team-fix/references/03-pipeline.md) | draft PR opened | the fix phase artifacts |
+| `fix` | [bug-fix procedure](../team-fix/WORKFLOW.md) | draft PR opened | the fix phase artifacts |
 | `refactor` | [feature playbook](playbooks/feature.md) with the zero-behavior-change refactor exception | draft PR opened + equivalence evidence | the feature phase artifacts |
 
 ## Full routes connect to review and draft PR
@@ -64,8 +80,8 @@ never grows into implementation on its own ([human control rules](principles/hum
 
 ## Missing task
 
-A route with no remaining task — `/team plan` with nothing after `plan` — must
-request the missing task before any mutation. Do not derive a worktree, write an
+A task route with no remaining task, such as `/team feature`, must request the
+missing task before any mutation. Do not derive a worktree, write an
 artifact, move a ticket, or take any consequential action until the task exists.
 Treat a missing route task exactly as an empty unprefixed `/team` treats a
 missing description.

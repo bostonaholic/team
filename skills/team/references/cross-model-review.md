@@ -249,7 +249,7 @@ Per round:
    reference. The reviewer judges those claims under `## Disposition` and
    reports its own findings alongside.
 6. **Record the transcript** — on the surfaces that persist records (the
-   design-review gates in `skills/team/SKILL.md` and `/team-design`;
+   design-review gates in `skills/team/SKILL.md` and `/team design`;
    standalone `/eng-design-doc-review` records nothing): append to
    `docs/plans/<id>/cross-model-raw.md`, created on first use
    (frontmatter schema in [artifact schema](references/artifacts.md)), one

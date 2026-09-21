@@ -4,6 +4,10 @@ description: 'Reviews a technical design document with fresh context. Trigger on
 effort: high
 argument-hint: "[docs/plans/<id>/]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 Before review dispatch, supply the installed plugin root and resolved `skills/eng-design-doc-review/references/design-reviewer.md` path.
 Pass the applicable resource paths and require reads before work.
@@ -12,17 +16,8 @@ If a required resource is missing, stop and report its resolved path; never use 
 # Engineering Design Doc Review — Independent Fresh-Context Audit
 Before dispatch, resolve [independent review](../team/principles/independent-review.md), [verified results](../team/principles/verified-results.md), [focused work](../team/principles/focused-work.md). Pass their absolute installed paths with the retained brief. The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
 Before each consuming step, read its linked shared rules from this installed skill directory. If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
-Adversarially review a design document with fresh context. The brief this
-skill dispatches lives in `skills/eng-design-doc-review/references/design-reviewer.md`, and the
-orchestrator loads the same brief for the DESIGN phase's adversarial
-review gate. Invoking this skill standalone remains supported whenever
-you want an independent, fresh-context audit of a design document.
-
-Write the prose this skill governs at a seventh-grade reading level, in
-STE-flavored mode — short sentences, common words, no unexplained jargon.
-Full methodology: the [writing standards](../team/references/writing.md). Before
-you finalize prose this skill governs, read the
-[writing standards](../team/references/writing.md) and apply its `## Self-lint` checklist.
+Review a design independently with the same brief as the adversarial review.
+Before finalizing prose, read [writing standards](../team/references/writing.md) and apply its `## Self-lint`.
 
 There is **no custom review agent**. This skill loads the review brief
 from `references/design-reviewer.md` and dispatches the built-in read-only
@@ -59,7 +54,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 - **If the command printed nothing** (tier 3 — no directory holds `6-design.md`),
   do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
   options:
-  - **Run the producer** — run `/team-design docs/plans/<id>/` to produce the
+  - **Run the producer** — Invoke Team skill `team-design` with arguments `docs/plans/<id>/` to produce the
     missing `6-design.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     directly (run `ls docs/plans/` to find your topic directory).
@@ -105,7 +100,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    user directly.
 5. **Do not auto-revise.** This skill does not loop the design-author. On
    REQUEST CHANGES, surface the findings and let the user decide if to
-   re-enter `/team-design` with that feedback.
+   re-enter `/team design` with that feedback.
 
 ## Rules
 
@@ -127,8 +122,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
   pipeline gate runs the brief. The recovery hooks fail closed on anything
   but a recorded passing verdict. The skill itself writes no artifacts.
   The toolset, not the prose, is the guarantee for writes ([independent review rules](../team/principles/independent-review.md)).
-- Standalone use blocks nothing: users may run `/team-design` or
-  `/team-structure` without ever invoking this skill directly.
+- Standalone use blocks nothing: users may request `/team design` or
+  `/team structure` through the continuation choices without invoking this skill directly.
 
 Print the verdict and the count of issue / suggestion / nitpick findings.
 When any vendor CLI was unavailable during the cross-model pass, add one
@@ -136,15 +131,15 @@ line per CLI naming it and the reason — or a single line naming
 `TEAM_DISABLE_CROSS_MODEL` when the pass was disabled machine-wide.
 
 **A standalone run records no `design-review-<n>.md`.** Only the pipeline's
-DESIGN review gate writes the verdict artifact. `/team-structure` needs a
+DESIGN review gate writes the verdict artifact. `/team structure` needs a
 recorded passing verdict before it slices a design.
 
 If the verdict is APPROVE or COMMENT, tell the user:
-**"To advance, run `/team-design docs/plans/<id>/` — with `6-design.md`
-already present it skips drafting and runs the review gate (skipping
-even that when the latest recorded verdict already passes — no
-redundant re-review), recording
-the verdict artifact — then proceed to `/team-structure`."**
+**"To advance, explicitly request `/team design` with arguments `docs/plans/<id>/` in this session.
+The existing `6-design.md` skips drafting. Its review gate records the verdict, unless a passing record already exists.
+After that gate passes, explicitly request `/team structure` with the same artifact directory."**
 If the verdict is REQUEST CHANGES, tell the user:
-**"Re-run `/team-design docs/plans/<id>/` with the findings above to
-re-dispatch `design-author` for a revision."**
+**"Explicitly request `/team design` with arguments `docs/plans/<id>/` and these findings in this session to revise the design."**
+For later slash invocation in skills mode, offer installation only if `team` is unselected:
+`npx skills add bostonaholic/team --skill team`.
+Native continuations use the registered `team` command with the phase argument.

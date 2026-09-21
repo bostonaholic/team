@@ -329,12 +329,9 @@ A bundled script scores prose against the mechanical rules, as violations per
 node "<skill-dir>/ste-lint.mjs" --breakdown --cap 25 "<file>"
 ```
 
-Replace `<skill-dir>` with the absolute path of the directory holding
-`ste-lint.mjs`. On Claude Code that is
-`${CLAUDE_PLUGIN_ROOT}/skills/team/references`, and the host sets that
-variable only for a skill loaded from an installed plugin. Codex sets no
-equivalent variable, so give the literal directory there. The script reads no
-environment variable — only the paths you pass it.
+Replace `<skill-dir>` with `<resolved-team-root>/skills/team/references`, using the inherited installed runtime root.
+Native Claude may use `${CLAUDE_PLUGIN_ROOT}` for that root. Skills-mode callers use their prepared private runtime.
+Never resolve from the consumer checkout. The script reads only the paths you pass it.
 
 The default cap of 20 scores instruction text; `--cap 25` scores descriptive
 prose. The score is a drift signal, not a gate. Nothing runs it automatically.

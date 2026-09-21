@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ## Execution
 
 ### Derive identifiers
@@ -23,7 +25,7 @@ artifact directory keeps the original `<id>`.
 ### Confirm with the user (standalone invocation only)
 
 **Standalone invocation only — in a full `/team` run, skip this dialog entirely and proceed straight to "Create the worktree(s)".**
-The dialog fires only when a human invoked `/team-worktree` directly — a
+The dialog fires only when a human invoked `/team worktree` directly — a
 setup-time prompt on direct invocation. Within a full `/team` run the
 orchestrator creates the worktrees **without a confirmation prompt** (the
 phase loop never pauses mid-run). The resolved repo set is recorded loudly
@@ -97,7 +99,7 @@ worktree directory and the `-b` flag in every repo. In the common case
 After all worktrees are created, append a `## Worktrees` section to the
 home worktree's `docs/plans/<id>/4-repos.md` listing each repo's worktree
 path. For repos the detect step skipped, record the current checkout's
-path. This becomes the discoverable record any later `/team-*` invocation
+path. This becomes the discoverable record any later `/team <phase>` invocation
 reads to relocate the worktrees.
 
 ```markdown
@@ -112,17 +114,16 @@ worktree needed.
 
 Report the worktree paths and tell the user:
 
-- Single-repo: **"Next: cd <home-worktree> and run `/team-implement docs/plans/<id>/`"**
+- Single-repo: **"Next: cd <home-worktree> and request `/team implement` with arguments `docs/plans/<id>/` using the continuation choices"**
 - Home repo skipped (already in its worktree):
-  **"Next: run `/team-implement docs/plans/<id>/`"** — no `cd` needed. Work
+  **"Next: request `/team implement` with arguments `docs/plans/<id>/` using the continuation choices"** — no `cd` needed. Work
   continues in the current checkout on the current branch.
-- Multi-repo: **"Next: cd <home-worktree> and run `/team-implement
-  docs/plans/<id>/`. The implementer will navigate between the
+- Multi-repo: **"Next: cd <home-worktree> and request `/team implement` with arguments `docs/plans/<id>/` using the continuation choices. The implementer will navigate between the
   per-repo worktrees as the plan steps require."**
 
-> The `/team-implement` handoff above is for **standalone, post-PLAN**
+> The `/team implement` handoff above is for **standalone, post-PLAN**
 > invocation (this skill's discovery command is gated on `8-plan.md`). In a full
 > `/team` pipeline run, WORKTREE is the **leading** phase: the orchestrator
 > creates the home worktree first, supplying `<id>` directly (it does not run
 > this skill's `8-plan.md`-gated discovery), and proceeds to QUESTION next — not
-> to `/team-implement`.
+> to `/team implement`.

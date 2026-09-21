@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, retro, why, how, no-comments, agent-prompt), each with the skills it loads."
+description: "The Team plugin's skills: one pipeline entry point and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, retro, why, how, no-comments, agent-prompt), each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -9,22 +9,22 @@ nav_label: skills
 # Team Skills
 
 > **The features you use.** Every entry-point skill is a slash command you can
-> run (`/team`, `/team-fix`, …). There are no methodology skills: what agents
+> run (`/team`, `/how`, …). There are no methodology skills: what agents
 > used to preload now lives in ordinary playbooks and references they read by
 > path. A principle is a guarded command — explicitly invoked, never applied by
 > the model on its own — that a consuming procedure reads by installed path.
 >
-> **Source of truth:** the skill bodies themselves, `skills/*/SKILL.md`.
+> **Source of truth:** the public `skills/*/SKILL.md` files and internal `skills/team-*/WORKFLOW.md` procedures.
 > This page is a hand-maintained reference. When it disagrees with a
 > `SKILL.md`, the `SKILL.md` wins.
 
 Each entry starts with one sentence copied from that skill's frontmatter
 `description`. `**Uses:**` lists the skills this skill consumes: the ones it
-loads through the Skill tool and the ones whose `SKILL.md` its files read by
+invokes through installed skill dispatch and the ones whose `SKILL.md` its files read by
 path. `**Used by:**` lists the skills that consume it. Both use
 comma-separated lists, or `None`.
 The load form is
-``Call the Skill tool with `<name>` ``. The path form is a reference to
+``Invoke Team skill `<name>` ``. The path form is a reference to
 `<name>/SKILL.md`, relative or root-relative. A reference to any other file in
 a skill's directory is neither a load nor a use, and neither is a reference
 that only locates a skill's install directory — "the directory containing
@@ -41,13 +41,33 @@ This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 27 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 18 registered skills and nine internal pipeline procedures. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
+
+## Skills CLI installation
+
+Install a selected command with its complete runtime through the [installation instructions](index.md#skills-cli).
+Supported targets are `claude-code`, `codex`, `antigravity-cli`, and `opencode`.
+`Invoke Team skill` uses native registration in plugin mode and canonical bundled paths in skills mode.
+Recovery invocations appear as catalog edges. Continuation suggestions and self-resume guidance do not execute another command.
+Only selected entrypoints register. Bundled siblings retain their intent gates and standalone stops.
+Selection, copy/link mode, project/global listing, selected reinstall, and agent-scoped removal are upstream-owned.
+Use the tested lifecycle commands in the installation instructions. `skills update` has no additional Team guarantees.
+Codex native migration lists installations, removes the intended global selection with explicit `--agent codex`, then runs the native installer.
+It never replaces an existing `~/.agents/skills/team` directory automatically.
+CLI 1.6.0 unfiltered global removal can affect project selections. Canonical retention depends on detecting remaining hosts.
+Shared canonical content can remain while another detected host uses it; resolve those intended selections before native migration.
+Generated `runtime/` files belong to `bun run skills:build`; `bun run skills:check` detects stale outputs.
+Edit canonical source and reinstall. Local packaged entrypoint edits stop resolution, and `/retro` skips packaged edits.
 
 ## Entry-point skills
 
-Each carries `argument-hint`, so it is a slash command, and each either kicks off a
-full run or drives one phase of the QRSPI pipeline.
+Install `team` to run the QRSPI pipeline. Its nine phase procedures have no
+`SKILL.md` and cannot be installed separately. Invoke one through
+`/team <phase> [arguments]`, such as `/team question <description>` or
+`/team design docs/plans/<id>/`. Use `/team plan [docs/plans/<id>/]` for an
+existing topic; `/team plan <description>` keeps the limited-scope task route.
+Other catalog skills remain individually installable.
 
 ### [team](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
 
@@ -57,63 +77,67 @@ Runs the 8-phase QRSPI feature pipeline, or a leading-argument route.
 
 **Uses:** `how`, `team-implement`, `team-pr`, `team-worktree`, `why`
 
-### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
+## Internal pipeline procedures
+
+Included with `team`; the names below are procedure names, not installable skills.
+
+### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/WORKFLOW.md)
 
 Decomposes a feature into task and question artifacts.
 
-**Used by:** None
+**Used by:** `team-research`
 
 **Uses:** None
 
-### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
+### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/WORKFLOW.md)
 
 Researches a codebase area before changes.
 
-**Used by:** None
+**Used by:** `team-design`
 
-**Uses:** None
+**Uses:** `team-question`
 
-### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
+### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/WORKFLOW.md)
 
 Drafts and adversarially reviews a design.
 
-**Used by:** None
+**Used by:** `eng-design-doc-review`, `team-structure`
 
-**Uses:** None
+**Uses:** `team-research`
 
-### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/SKILL.md)
+### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/WORKFLOW.md)
 
 Breaks a reviewed design into verified slices.
 
-**Used by:** None
+**Used by:** `team-plan`
 
-**Uses:** None
+**Uses:** `team-design`
 
-### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/SKILL.md)
+### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/WORKFLOW.md)
 
 Produces the tactical implementation plan.
 
-**Used by:** None
+**Used by:** `team-implement`, `team-worktree`
 
-**Uses:** None
+**Uses:** `team-structure`
 
-### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/SKILL.md)
+### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/WORKFLOW.md)
 
 Prepares isolated git worktrees.
 
-**Used by:** `team`, `team-fix`
+**Used by:** `team`, `team-fix`, `team-implement`
 
-**Uses:** `pr-cleanup`
+**Uses:** `pr-cleanup`, `team-plan`
 
-### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
+### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/WORKFLOW.md)
 
 Executes and verifies implementation slices.
 
 **Used by:** `team`
 
-**Uses:** `team-pr`
+**Uses:** `team-plan`, `team-pr`, `team-worktree`
 
-### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
+### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/WORKFLOW.md)
 
 Opens PRs with project terms, evidence, and risk.
 
@@ -121,7 +145,7 @@ Opens PRs with project terms, evidence, and risk.
 
 **Uses:** `pr-screenshots`
 
-### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
+### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/WORKFLOW.md)
 
 Runs the compressed bug-fix pipeline.
 
@@ -129,13 +153,17 @@ Runs the compressed bug-fix pipeline.
 
 **Uses:** `pr-screenshots`, `principle-fix-root-causes`, `team-worktree`, `why`
 
+## Design review utility
+
+Individually installable.
+
 ### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 
 Reviews a technical design document with fresh context.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `team-design`
 
 ## Standalone utilities
 
@@ -148,7 +176,7 @@ Lands a reviewed pull request.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `pr-cleanup`
 
 ### [pr-open-comments](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md)
 
@@ -186,7 +214,7 @@ Grooms a project backlog and proposes tracker changes.
 
 Cleans PR state.
 
-**Used by:** `pr-rebase`, `team-worktree`
+**Used by:** `pr-rebase`, `shipit`, `team-worktree`
 
 **Uses:** None
 

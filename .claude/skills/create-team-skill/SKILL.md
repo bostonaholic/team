@@ -1,6 +1,8 @@
 ---
 name: create-team-skill
 description: Create or revise a Team skill. Trigger on creating, scaffolding, or substantially rewriting a skill or SKILL.md.
+metadata:
+  internal: true
 ---
 
 # Create a Team skill

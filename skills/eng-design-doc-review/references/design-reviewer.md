@@ -1,6 +1,6 @@
 # Design Reviewer Brief
 
-This brief is referenced by the pipeline's DESIGN review gate, `/team-design`,
+This brief is referenced by the pipeline's DESIGN review gate, `/team design`,
 and `/eng-design-doc-review`, which dispatch it by reference. Editing the brief
 changes pipeline behavior — treat any change to its headings, process, or
 verdict set as a pipeline change.

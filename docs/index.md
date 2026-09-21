@@ -68,11 +68,124 @@ company-significant work from problem definition through measured outcomes.
 
 ## Install
 
-Each host installs Team through its own plugin mechanism. Every section below
+Native installations use each host's plugin mechanism. Every host section below
 covers the same three methods, so a method missing on a host says so instead of
 leaving you to find out. The full pipeline runs on Claude Code, Codex CLI, and
 Antigravity CLI. OpenCode support covers native skill/command discovery and
 installation. Execution limits are listed beside setup. Pick yours.
+
+### Skills CLI
+
+Install `team` for the full pipeline. The nine `team-*` phase procedures cannot
+be installed separately. Standalone utilities such as `how`, `why`, and `code-review`
+remain individually selectable.
+
+Requires Node >=22.20.0. Discover public commands or install a selection:
+
+```bash
+npx skills add bostonaholic/team --list
+npx skills add bostonaholic/team --skill principle-fix-root-causes --agent codex -y
+npx skills add bostonaholic/team --skill team --agent codex -y
+npx skills add bostonaholic/team --skill how --agent codex -y
+```
+
+Each selected workflow includes its runtime resources, sibling procedures, and
+specialist definitions. Only selected commands register. A bundled sibling runs
+through the shared dispatch contract with inherited arguments and authorization.
+A standalone command still stops at its own result. Explicitly request a bundled
+continuation in the same session, or install that command before later slash use.
+
+The host must supply the loaded skill's absolute base and the absolute consumer
+project root. Missing root context stops startup. The resolver does not infer it
+from Git or the current directory. Node runs the bundled resolver before workflow
+work. It validates the payload and creates a fresh private temporary runtime
+outside the project, linked installation directory, and canonical storage. Native resolution
+writes nothing. Successful temporary directories remain until operating-system
+cleanup so active agents can still read them. Failed initialization removes only
+its own directory and stops the command.
+
+Choose skills installation or native plugin installation for a host. Skills
+installation registers no plugin hooks or named agents. Claude body-load passes
+`Agent.model`; effort uses the active Agent schema or disclosed session inheritance.
+Unsupported model selection or reviewer enforcement stops that operation.
+Codex and Antigravity retain their model resolver. OpenCode discovery and
+installation work; full QRSPI, specialist dispatch, and reviewer enforcement
+remain unverified. Packaging and lifecycle tests do not prove host execution.
+
+Edit canonical Team source, then run `bun run skills:build`, verify with
+`bun run skills:check`, and reinstall. Do not edit generated `runtime/` files.
+Substantive packaged entrypoint edits fail before workflow work. Equivalent LF
+and CRLF entrypoints work without changing bundled canonical bytes. `/retro`
+skips packaged targets while preserving existing ordinary local edit targets.
+Each dependent command contains the complete compressed archive.
+The dependency-free principle requires no runtime archive.
+Git stores one shared runtime under `skills/team/runtime/`. Other public skills link to it;
+the Skills CLI dereferences those links into ordinary files during installation.
+Each selected utility retains a complete runtime without duplicating generated source in Git.
+
+
+#### Selection and lifecycle
+
+The tested target names are `claude-code`, `codex`, `antigravity-cli`, and
+`opencode`. Use `antigravity-cli` for Antigravity CLI; `antigravity` selects the
+separate application. Install all commands, or choose project/global placement:
+
+```bash
+npx skills add bostonaholic/team --skill '*' --agent claude-code codex antigravity-cli opencode -y
+npx skills add bostonaholic/team --skill team --agent codex --copy --global -y
+npx skills list --agent codex --json
+npx skills list --agent codex --global --json
+```
+
+Without `--global`, installation and listing use the current project. With it,
+they use the user installation. Codex, Antigravity CLI, and OpenCode share canonical
+`.agents/skills` storage in that scope. Claude uses `.claude/skills`.
+For global Claude installs, a nonempty trimmed `CLAUDE_CONFIG_DIR` replaces `~/.claude`.
+The CLI supports copies and links: `--copy` requests copies. Multiple targets
+can create actual Claude links to canonical storage; a single target can copy
+by default. Upstream owns links, lockfiles, and installation metadata.
+
+To update a selection, rerun its original `npx skills add` command with the
+same scope and targets. Selected reinstall replaces that selection while keeping
+other commands and the other scope. This is the verified update path;
+`skills update` remains upstream-owned without extra Team guarantees.
+
+Skills CLI 1.6.0 has two removal limits. Unfiltered global removal can also
+delete a project selection. Target-only removal preserves canonical storage
+only when upstream detects another host that uses it. Without that detection,
+even a separately copied host selection can disappear.
+
+List affected installations and select agents explicitly for removal:
+
+```bash
+npx skills remove team --agent claude-code --yes
+npx skills remove team --agent codex --global --yes
+```
+
+The first command removes the project Claude selection. Preservation of a
+separate Codex selection requires upstream to detect Codex. The second targets
+global Codex without the unfiltered command's project cleanup.
+A canonical directory serves several universal targets, so they are not
+independent copies. Shared content can remain while another detected host uses it.
+Resolve those intended selections before expecting canonical storage to disappear.
+
+#### Switching Codex to native installation
+
+The native installer `script/dev-install-codex` refuses a real
+`~/.agents/skills/team` directory from global skills installation. It never
+replaces that directory automatically. List affected targets, remove the intended
+global selection through upstream, then run the native installer from a Team checkout.
+If another detected host retains the canonical directory, resolve its intended selection first:
+
+```bash
+npx skills list --global --json
+npx skills remove team --agent codex --global --yes
+script/dev-install codex
+```
+
+Remove other Team selections explicitly before choosing native setup for that
+host. Use explicit agent and scope flags. Native plugin commands
+and their host capability limits remain as documented below.
 
 ### Claude Code
 
@@ -172,7 +285,7 @@ Then run a phase end-to-end:
 For a focused bug fix that skips the QRSPI ceremony:
 
 ```bash
-/team-fix Users see stale cache after profile update
+/team fix Users see stale cache after profile update
 ```
 
 ### Codex CLI

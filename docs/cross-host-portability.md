@@ -438,7 +438,7 @@ full parity. It starts from the matrix and works around the named gaps.
   equivalent — `policy.allow_implicit_invocation: false` in each skill's
   `agents/openai.yaml` — keeps all five out of the implicit catalog. The
   divergence is deliberate and the validator finding is expected.
-- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 27 entry commands remain in the picker. Principles are guarded `disable-model-invocation` skills read by installed path, so they add no implicit-invocation entries.
+- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 18 public skills remain in the picker. Principles are guarded `disable-model-invocation` skills read by installed path, so they add no implicit-invocation entries.
   Historical probe evidence: the `$` picker was fed by the `skills/list` app-server method, which returned all
   100 Team skills with `enabled: true`, `team:principle-fix-root-causes` among
   them. Its `SkillMetadata` payload carries nine fields — `dependencies`,
@@ -611,10 +611,11 @@ registered. Malformed native configuration can still prevent loading afterward.
 `opencode/catalog.mjs` owns catalog validation for both installation and plugin
 initialization. The entry resolves its real file before importing the helper, so
 checkout aliases and linked worktrees resolve to canonical file/base paths.
-Each immediate real skill directory contributes one regular `SKILL.md`. The
-validator walks its tree once without following symlinks. It rejects linked
-entries, nested `SKILL.md`, duplicate names, ambiguous consumed frontmatter, and
-empty catalogs. Ordinary references and scripts stay available. Headers are read
+Each public skill directory contributes one regular `SKILL.md`; directories
+containing only `WORKFLOW.md` are internal procedures. The validator accepts
+only the three generated runtime links targeting the corresponding regular
+files in `skills/team/runtime/`. Other linked entries, nested `SKILL.md`,
+duplicate names, ambiguous consumed frontmatter, and empty catalogs are rejected. Ordinary references and scripts stay available. Headers are read
 once. Bodies stay on disk. Canonical paths containing `$`, backticks, or `@` are
 rejected before registration or config contribution. Spaces and Unicode are
 supported. Existing command collisions or wrong consumed config types reject the
@@ -651,7 +652,7 @@ OpenCode preprocesses supplied command arguments. For example, the native syntax
 below can run `printf` before any model call:
 
 ```text
-/team-question !`printf example`
+/team question !`printf example`
 ```
 
 This shell substitution runs outside model-tool permission checks, including
@@ -785,3 +786,76 @@ Claude uses its plugin root. Codex and Antigravity use the supplied installed pa
 A missing resource stops its consuming step with the resolved path. No source-checkout fallback or recursive loading applies.
 
 Filesystem fixture results establish path and byte delivery. Native receiving-agent read traces establish instruction consumption separately.
+
+## Skills CLI distribution
+
+The [installation instructions](index.md#skills-cli) describe the standalone path.
+Targets are `claude-code`, `codex`, `antigravity-cli`, and `opencode`.
+`antigravity-cli` selects the CLI, not the `antigravity` application target.
+Choose this path or native plugin setup for each host to avoid duplicate registrations.
+
+Each selected dependent command bundles canonical skills, 13 specialist definitions,
+and shared resources. Only selected commands register. Invocation requires Node, the host-supplied
+absolute skill base, and the host-resolved absolute consumer project root.
+Pass the consumer root separately to the resolver. Missing root context stops startup.
+The resolver does not infer the root from Git or the current directory.
+Missing prerequisites stop before workflow work.
+The resolver validates the complete archive before extraction into a private temporary directory.
+It protects the explicit consumer root, invoked installation directory, and canonical storage.
+Successful directories stay readable until OS cleanup; failed initialization removes only its own directory.
+Native plugin resolution writes nothing. Read-only commands permit root initialization only; subagents inherit the prepared runtime.
+
+Skills installation adds no native hooks, recovery hooks, named agents, or plugin registration.
+Claude body-load passes unchanged aliases through `Agent.model`.
+If the active schema supports `effort`, dispatch passes it; otherwise effort inherits from the session and is reported.
+Unobserved model or effort values remain `unverified`. Missing model selection or reviewer enforcement stops dispatch.
+Codex and Antigravity retain their existing model resolver and enforcement checks.
+OpenCode installation and discovery remain supported, with full QRSPI, specialist dispatch, reviewer isolation, and hooks unverified.
+Packaging and lifecycle were verified before the test suite was removed; complete host execution remains unverified.
+
+Authors edit canonical sources and regenerate with `bun run skills:build`.
+The non-writing `bun run skills:check` checks generated paths, bytes, and decoded source records.
+Generated entrypoints and archives are not edit targets; substantive entrypoint changes fail before execution.
+Equivalent LF and CRLF entrypoints work. Extracted canonical resources retain their bundled bytes.
+`/retro` preserves an existing selected ordinary local edit target.
+Before offering a fallback, it checks project/global `.agents/skills` and `.claude/skills`, including links.
+Global Claude detection honors trimmed `CLAUDE_CONFIG_DIR`, defaulting to `~/.claude` when empty or absent.
+It skips packaged targets and names source regeneration only when the source is known.
+
+Git stores one shared runtime under `skills/team/runtime/`. Other public skills link to it;
+the Skills CLI dereferences those links into ordinary files during installation.
+Each selected utility retains a complete runtime without duplicating generated source in Git.
+
+### Lifecycle and native migration
+
+Before test-suite removal, Skills CLI 1.6.0 verification covered individual and wildcard selection,
+copy and actual symlink modes, project/global listing, selected reinstall, and agent-scoped removal
+on all four targets, using isolated homes and local sources with network access disabled.
+Codex, Antigravity CLI, and OpenCode share canonical `.agents/skills` storage.
+Claude uses `.claude/skills`; copied Claude installations can remain independent.
+For global Claude installs, a nonempty trimmed `CLAUDE_CONFIG_DIR` replaces `~/.claude`.
+The upstream CLI owns installation metadata, links, and `skills update`.
+Selected reinstall with the original scope and targets is the verified update path.
+
+`script/dev-install-codex` refuses a real `~/.agents/skills/team` directory.
+Before switching from global skills to native Codex installation, list affected
+installations and remove the intended global selection with an explicit agent.
+If another detected universal host retains the canonical directory, resolve its intended selection before native setup:
+
+```bash
+npx skills list --global --json
+npx skills remove team --agent codex --global --yes
+script/dev-install codex
+```
+
+Remove other Team selections explicitly before native setup for that host.
+No automatic migration or directory replacement occurs. Native manifests,
+ownership guards, and OpenCode execution limits remain unchanged.
+
+Skills CLI 1.6.0 can delete a project selection during unfiltered global removal.
+Every removal example therefore names an agent. Canonical retention during
+target-only removal depends on upstream detecting the remaining host, not merely
+finding that host's copied skill. Without detection, removal can delete that
+other selection. With another detected universal host, shared canonical content
+can remain after agent-scoped removal. Do not assume independent storage or
+unconditional scope isolation from a successful exit code.

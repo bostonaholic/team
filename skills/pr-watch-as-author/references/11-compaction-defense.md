@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ### Compaction defense
 
 Most loop state is re-fetchable from GitHub. After a compaction,
@@ -23,6 +25,6 @@ Report:
 - the active mode (present-then-stop or authorized)
 - the number of cycles consumed
 - the handoff — on approval,
-  `Next: run /shipit when you want to land it.`. On the soft cap, print
+  `Next: explicitly request shipit when you want to land it, using the continuation choices.`. On the soft cap, print
   the baseline state and the resume command for the scheduled pr-watch
   job. After the user's choices run, offer to re-arm the watch.

@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 Before this operation, read [artifact schema](references/artifacts.md).
 Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
 
@@ -29,7 +31,7 @@ returned:
 3. Track the round count in TodoWrite. The round-1 item is seeded before
    the implementer runs, as the bare label `Review round 1` with no counts
    — no aggregate has sorted anything at that point (the IMPLEMENT seed in
-   `skills/team-implement/SKILL.md`). Counts thus start on the round-2
+   `skills/team-implement/WORKFLOW.md`). Counts thus start on the round-2
    item. From there on, append an item like
    `Review round <n+1> (<b> Blocking, <m> Major open)` each retry. `<b>`
    and `<m>` are this round's open counts from the tier sort above.
@@ -50,14 +52,14 @@ findings are on disk. The TodoWrite round item carries counts rather than
 findings. The design-review gate is the opposite case, because it writes
 every round's findings to disk for a person to read before the fix.
 
-Here, re-invoke `/team-implement` bare. That command resumes the phase at
+Here, request `/team implement` without arguments through the continuation choices. That command resumes the phase at
 its reviewer-dispatch step, because `8-plan.md`, the tests, and the slice
 commits are already on the branch. The five reviewers there re-derive the
 current finding set, which the loop then fixes, at the cost of one round.
 The round counter is session-scoped through TodoWrite and starts fresh on
 re-invocation. A re-invoked session seeds no `PR` phase item, so
-`/team-implement` reads as standalone and names `/team-pr` as the next
-command. Run it to reach the draft PR.
+`/team implement` reads as standalone and offers `/team pr` through the continuation choices.
+An explicit continuation reaches the draft PR.
 
 **The loop is: IMPLEMENT → VERIFY (5 reviewers) → typed gate check →
 IMPLEMENT → VERIFY → ...** Each round is a complete re-review.

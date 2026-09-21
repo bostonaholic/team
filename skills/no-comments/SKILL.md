@@ -5,6 +5,9 @@ effort: high
 argument-hint: "[<files-or-diff>]"
 disable-model-invocation: true
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 # No Comments
 

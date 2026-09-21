@@ -10,5 +10,12 @@
     "claude",
     "ai-agent",
     "devtools"
-  ]
+  ],
+  "devDependencies": {
+    "fflate": "0.8.3"
+  },
+  "scripts": {
+    "skills:build": "node scripts/build-skills-runtime.mjs",
+    "skills:check": "node scripts/build-skills-runtime.mjs --check"
+  }
 }

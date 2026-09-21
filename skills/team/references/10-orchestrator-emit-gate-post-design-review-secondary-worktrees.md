@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ### Orchestrator-Emit Gate (post-design-review secondary worktrees)
 
 One rule, two knowledge times: **each repo's worktree is born the moment
@@ -14,12 +16,12 @@ When the design review passes:
    **single-repo mode** and nothing further is needed here (the home
    worktree already exists). Read the
    [worktree playbook](../team-worktree/playbooks/worktree.md) for
-   the topology and call the Skill tool with `team-worktree` for
+   the topology and Invoke Team skill `team-worktree` for
    the procedure.
    Create the worktrees **without a confirmation prompt** — the phase loop
    never pauses mid-run. The "Confirm with the user" dialog in
-   `skills/team-worktree/SKILL.md` applies only to standalone human
-   invocation of `/team-worktree`. The resolved repo set is already
+   `skills/team-worktree/WORKFLOW.md` applies only to standalone human
+   invocation of `/team worktree`. The resolved repo set is already
    recorded loudly in `6-design.md` (`## Decisions made`/`## Risks`) and
    echoed in the PR body's `## Review notes`. Before each
    `git worktree add`, re-check **containment**: the repo path's `realpath`
@@ -29,7 +31,7 @@ When the design review passes:
 2. **Append a `## Worktrees` section to `4-repos.md`**, post-design-review,
    **back-recording the home worktree path** created at the leading
    WORKTREE phase, plus each secondary repo's worktree path. Later
-   `/team-*` invocations can then rediscover every worktree from that one
+   `/team <phase>` invocations can then rediscover every worktree from that one
    file. The other repos' worktrees do not duplicate the artifacts. Agents
    that need them read from the home worktree path the orchestrator passes
    in.

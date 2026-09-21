@@ -6,7 +6,7 @@
  * from artifact presence + git signals (a leading WORKTREE state when a
  * worktree exists with no 1-task.md yet; IMPLEMENT once >=1 commit lands on the
  * <id> branch), and injects a recovery notice into additionalContext so the
- * agent suggests re-invoking any /team-* command bare — discovery
+ * agent suggests re-invoking any /team <phase> command bare — discovery
  * auto-resolves the directory (an explicit docs/plans/<id>/ is still accepted).
  *
  * Contract: always exits 0. Missing or unparseable artifacts are not an error;

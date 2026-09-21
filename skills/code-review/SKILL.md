@@ -4,6 +4,9 @@ description: 'Reviews a diff with fresh context. Trigger on "review this diff", 
 effort: high
 argument-hint: "[<diff target>]"
 ---
+<!-- team-runtime:start -->
+Before workflow work, read [runtime startup](runtime/start.md).
+<!-- team-runtime:end -->
 
 # Code Review
 

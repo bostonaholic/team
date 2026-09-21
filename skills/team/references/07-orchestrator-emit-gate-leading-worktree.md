@@ -1,3 +1,5 @@
+Before invocation or continuation, read [skill dispatch](references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
+
 ### Orchestrator-Emit Gate (leading worktree)
 
 This is the **first** phase. It runs before QUESTION, off the description
@@ -41,14 +43,14 @@ clean for the whole run.
 
 1. **Create the home worktree** on branch `<id>` off `origin/HEAD`.
    Use the host's native worktree support when it offers one, otherwise
-   `git worktree add`. Call the Skill tool with
+   `git worktree add`. Invoke Team skill
    `team-worktree` and follow the
    single-repo block under "Create the worktree(s)". Only the
    home repo gets a worktree at this phase. Multi-repo secondary worktrees
    are deferred until after the design review (see "Orchestrator-Emit Gate
    (post-design-review secondary worktrees)" below).
    **If the run was started from inside a linked worktree on a non-default branch, reuse it instead of creating a new one**
-   (see "Detect existing worktree" in `skills/team-worktree/SKILL.md`). If
+   (see "Detect existing worktree" in `skills/team-worktree/WORKFLOW.md`). If
    that worktree is on the default branch, stop rather than implement on
    it.
 2. **Create `docs/plans/<id>/` inside the worktree.** The artifact directory

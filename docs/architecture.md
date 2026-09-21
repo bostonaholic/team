@@ -44,7 +44,7 @@ seeds and updates a TodoWrite ledger, and runs the gates.
   and revision metadata. Phase progression is
   inferred by scanning artifacts.
 - **TodoWrite is the live coordination ledger.** It is session-scoped.
-  Re-invoking any `/team-*` command rebuilds the ledger by scanning
+  Re-invoking any `/team <phase>` command rebuilds the ledger by scanning
   artifacts on entry.
 - **Registry is a phase-tagged inventory.** `skills/team/registry.json`
   lists the 13 specialist agents and the QRSPI phase each serves. The
@@ -211,7 +211,7 @@ git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD
 
 At that point the orchestrator writes a `## Worktrees` section to
 `4-repos.md`. It back-records the home worktree path plus each secondary
-path. Any later `/team-*` invocation can thus rediscover all paths from
+path. Any later `/team <phase>` invocation can thus rediscover all paths from
 one file. Only the home repo's worktree carries `docs/plans/<id>/`. Other
 repos' worktrees do not duplicate the artifacts. See
 `skills/team-worktree/playbooks/worktree.md` for full topology.
@@ -307,14 +307,14 @@ total, so an operator watching the ledger can tell a converging loop
 from a stuck one.
 
 **Recovery after an operator stop, a context-exhausted session, or a
-fail-closed halt**: a human re-invokes the same `/team-*` command bare.
+fail-closed halt**: a human re-invokes the same `/team <phase>` command bare.
 Each command runs its own phase and names the next one to run. What
 the human can fix first differs by gate.
 
 The design-review gate writes every round's findings to
 `design-review-<n>.md`, so they are on disk to read before editing
 `6-design.md`. The aggregate gate persists none of its findings. So
-`/team-implement` resumes at the reviewer-dispatch step, and the five
+`/team implement` resumes at the reviewer-dispatch step, and the five
 reviewers re-derive the open set at the cost of one round. The aggregate
 round counter is session-scoped through TodoWrite and starts fresh on
 re-invocation. The design `revision` counter persists in `6-design.md`
@@ -623,7 +623,7 @@ loop:
      artifact path(s) in the phase table.
   3. Make sure that predecessors exist on disk. For STRUCTURE that includes
      a `design-review-<n>.md` with a passing verdict. If one is missing, the
-     run is desynced. Suggest the bare /team-* command again. Its three-tier
+     run is desynced. Suggest the bare /team <phase> command again. Its three-tier
      discovery resolves docs/plans/<id>/ without an explicit arg.
   4. Dispatch the agent(s) — pass them the artifact directory
      `docs/plans/<id>/`.
@@ -708,7 +708,7 @@ reference is one of two kinds, and each has its own encoding:
 
 | Kind | Reads | Encoded as |
 |------|-------|-----------|
-| **Load** — the reader must go execute that skill | ``Call the Skill tool with `<name>` `` | bare name |
+| **Load** — the reader must go execute that skill | ``Invoke Team skill `<name>` `` | bare name, arguments, inherited authorization |
 | **Citation** — a schema lookup, a "see also", a rule restated nearby | `skills/<name>/SKILL.md` | path |
 
 The citation row splits. A reference to a skill's own `SKILL.md` is also an
@@ -718,19 +718,17 @@ skill's directory is a citation only and draws no edge, and so does a reference
 that only locates a skill's install directory (for example, "the directory
 containing `skills/team/SKILL.md`", read to run a script beside it).
 
-The imperative phrasing on a load is what makes a model actually issue the
-tool call. "Load X", "see X", and "per X" all read as citations, and a model
-that treats a load as a citation proceeds on the summary in its own context
-instead of the skill's actual content — a slice ships without the commit
-conventions applied, a review runs without its severity table, and nothing
-announces either.
+The invocation identifies immediate execution through the
+[skill dispatch contract](https://github.com/bostonaholic/team/blob/main/skills/team/references/skill-dispatch.md).
+Each caller preloads that contract independently of generated startup.
+Native mode uses registered skill lookup. Skills mode reads the canonical
+`<root>/skills/<name>/SKILL.md` with inherited arguments and authorization.
+The bare name identifies the command; the dispatcher owns its installed path.
 
-A load carries **no path**. The bare name is what the Skill tool takes, and a
-path sitting beside it reintroduces the ambiguity the imperative exists to
-remove: it reads as a file to go open. Name resolution is what replaces the
-path's rename-detection, and it is strictly stronger — it catches a rename
-*and* a typo, where a path assertion only ever confirmed a string was
-present. `skills/git-commmit/SKILL.md` passed the old check.
+Continuation suggestions preserve standalone stops and require explicit intent.
+For unselected siblings, they offer a same-session bundled request or selection
+through the upstream CLI before a later slash invocation. Self-resume retains
+the current procedure and state rather than recursively invoking itself.
 
 Shared principles use six ordinary documents under `skills/team/principles/`. Artifact and operational rules use scoped references, outside registration.
 Consumers explicitly read their installed paths before work; missing files stop the consuming operation with the resolved path.
@@ -911,7 +909,7 @@ An overage requires a reviewed reason stating its exact line count.
    Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
    Twelve agent bodies read execution rules. File-finder retains its single-step contract.
-   Resources use no skill frontmatter or discovery metadata. Keep the 27 commands registered.
+   Resources use no skill frontmatter or discovery metadata. Keep the 18 public skills registered; pipeline phases remain internal procedures.
    Guarded principles are their own tier: they carry skill frontmatter and
    `agents/openai.yaml`, register as commands, and set `disable-model-invocation:
    true` so the model never applies them on its own. Do not add unguarded
@@ -1015,7 +1013,7 @@ same way. They list `docs/plans/*/` directories. They pick the most
 recent artifact directory by the mtime of any contained artifact. They
 infer the current phase from artifact presence and frontmatter. They then
 emit a short context message that names the phase, `<id>`, and the
-suggested next `/team-*` command. Both are stateless, exit 0 on any
+suggested next `/team <phase>` command. Both are stateless, exit 0 on any
 error, and return within the 5000ms hook budget.
 
 `validate-team-config.mjs` is the odd one out: it is a guard, not a notice. It
@@ -1051,7 +1049,7 @@ finish?" and "did the design review pass?"
 
 **Live coordination:** TodoWrite (session-scoped). The orchestrator
 seeds the ledger at the start of `/team`, marks each item `in_progress`
-when dispatching, and `completed` when the artifact lands. Any `/team-*`
+when dispatching, and `completed` when the artifact lands. Any `/team <phase>`
 command rebuilds the ledger by scanning artifacts on entry, so an
 interrupted run can be resumed by re-invoking any of them bare: discovery
 auto-resolves the artifact directory (an explicit `docs/plans/<id>/` is still
@@ -1066,7 +1064,7 @@ review round durably. The artifacts are self-describing.
 
 **Compaction defense:** the PreCompact hook scans `docs/plans/<id>/`
 directories for the active topic and injects a 4-line anchor (phase,
-`<id>`, suggested next `/team-*` command). The SessionStart hook does
+`<id>`, suggested next `/team <phase>` command). The SessionStart hook does
 the same for new sessions.
 
 **Artifact persistence:** during a run, files in `docs/plans/<id>/` live
