@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Team now requires tests to derive expectations independently and blocks implementation review when a changed test only confirms its own setup, repeats production logic, or asserts a configured mock result.
+
 ### Fixed
 
 - Pull-request feedback retrieval now includes top-level conversation comments, review-summary bodies, and inline review threads across `/pr-open-comments`, both PR watch skills, and `/why` without duplicate items.

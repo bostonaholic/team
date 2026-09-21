@@ -6,6 +6,12 @@ These rules govern every acceptance test and are the bar reviewers hold changed 
 
 Tests assert externally observable outcomes — return values, persisted state, effects visible to other components. A refactor that preserves behavior must leave every acceptance test green. Interaction tests verify state-changing calls only; never assert on query-only calls.
 
+## No tautological tests
+
+Derive expected results from the contract, a fixed example, or an independent oracle. Never calculate the expected result with production code or a copy of its algorithm, configure a mock to return a value and then assert that value, or assert setup data without exercising production behavior.
+
+Every test must reject at least one plausible broken implementation. Observe the test fail before changing production code. When the tested behavior already exists, temporarily alter or bypass the relevant production behavior, require the test to fail, then restore it. A test that stays green does not verify the behavior.
+
 ## Tests are DAMP, not DRY
 
 Inline the setup a reader needs to understand a failing test. Tolerate duplication; favor a linear arrange-act-assert story. Pass the asserted value through helpers, never hide it. No `if`, no loops, no string-building inside a test body.
@@ -68,6 +74,7 @@ Prefer real, then fake, then mock. Wrap vendor types behind owned interfaces. E2
 | Check | Pass criterion |
 |---|---|
 | Behavior-named | Name behavior, not a method. |
+| Independent oracle | Derive expectations independently; reject a plausible broken implementation. |
 | Narrow assertion | Assert the specific contract. |
 | Actionable failure | Output names the failed condition. |
 | No sleeps | Use condition waits. |
@@ -76,6 +83,10 @@ Prefer real, then fake, then mock. Wrap vendor types behind owned interfaces. E2
 | One scenario per test | One independent behavior. |
 | DAMP setup | Keep assertion-relevant setup visible. |
 | Fidelity ladder | Real > fake > mock; wrap unowned types. |
+
+## Tautological-test red flags (reviewer checklist)
+
+Any changed test that derives its expected result from the system under test, repeats the production algorithm, asserts a mock's configured return value, or only re-reads arranged data is blocking on first occurrence. It supplies no independent evidence that the behavior works.
 
 ## Flaky-test red flags (reviewer checklist)
 

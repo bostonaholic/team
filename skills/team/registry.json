@@ -29,7 +29,7 @@
     {"before": "QUESTION", "type": "orchestrator-emit", "action": "prepare home worktree on branch <id> and author docs/plans/<id>/ inside it"},
     {"after": "DESIGN", "type": "review", "artifact": "design-review-<n>.md"},
     {"after": "DESIGN", "type": "orchestrator-emit", "action": "prepare secondary worktrees per 4-repos.md and back-record ## Worktrees (multi-repo only)"},
-    {"after": "test-architect", "type": "mechanical", "condition": "all tests fail with assertion errors, not crashes"},
+    {"after": "test-architect", "type": "mechanical", "condition": "all tests fail with assertion errors, not crashes, and the independent-oracle audit passes"},
     {"after": "5 reviewers", "type": "aggregate", "hardGates": ["security-reviewer", "verifier", "code-reviewer"]}
   ]
 }

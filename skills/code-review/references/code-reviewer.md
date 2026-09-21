@@ -159,6 +159,13 @@ multiple tests:
   (`refundsCardOnPartialFailure`)
 - DRY helpers that hide the asserted value
 
+**Tautological tests (always blocking).** Any changed test that derives its
+expected result from the system under test, repeats the production algorithm,
+asserts a mock's configured return value, or only re-reads arranged data is
+`issue (blocking)` on first occurrence. The test must independently reject a
+plausible broken implementation; otherwise the changed behavior lacks test
+coverage.
+
 **Flaky-test red flags (always blocking).** Distinct from the style flags
 above. Any test in the diff whose *outcome depends on* a nondeterministic
 input is `issue (blocking)` on **first** occurrence, routing to the Blocking

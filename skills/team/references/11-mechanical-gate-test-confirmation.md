@@ -6,10 +6,13 @@ When the `test-architect` returns failing tests:
 2. Run every **static** check the project defines — typecheck, lint, format,
    build. Read the [verify playbook](playbooks/verify.md) and detect them
    the way it does. Skip the test entry there: step 1 already ran it.
-3. Advance only when both hold: all tests fail with assertion errors (not
-   crashes), **and** every static check passes.
-4. If tests crash or error, fix infrastructure and re-run.
-5. If a static check fails, send it back to the `test-architect` and re-run.
+3. Require `Independent-oracle audit passes: YES` in the test-architect report.
+4. Advance only when all three hold: all tests fail with assertion errors (not
+   crashes), the independent-oracle audit passes, **and** every static check
+   passes.
+5. If tests crash or error, fix infrastructure and re-run.
+6. If the audit or a static check fails, send it back to the `test-architect`
+   and re-run.
 
 A failing static check here is not a detail to clean up later. Many runners
 execute tests without type-checking them, so a suite can be green while the

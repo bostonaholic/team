@@ -19,12 +19,14 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    acceptance suite — so skip this dispatch, record the reason on a named
    line, and run step 3 in its inverted form.
 3. **Mechanical gate** — confirm all tests fail with assertion errors
-   (not crashes), **and** that every static check the project defines
-   passes (typecheck, lint, format, build — read the
+   (not crashes), the test-architect reports `Independent-oracle audit
+   passes: YES`, **and** every static check the project defines passes
+   (typecheck, lint, format, build — read the
    [verify playbook](../team/playbooks/verify.md) and
    detect them the way it does). On crash, fix
    test infrastructure before proceeding. On a failing static check, send it
-   back to the `test-architect`: a runner that executes tests without
+   back to the `test-architect`. Return a failed independent-oracle audit to
+   the `test-architect` too. A runner that executes tests without
    type-checking them leaves a red type checker behind a green suite, and
    the next actor to notice is the `verifier`, a full review round later.
    This gate applies to a fresh `test-architect` run only. A resumed run

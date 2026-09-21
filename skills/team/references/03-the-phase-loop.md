@@ -29,8 +29,9 @@ loop:
        `design-review-<n>.md`. On APPROVE or COMMENT, advance. On
        REQUEST CHANGES, re-dispatch design-author with the findings
        verbatim and `revision: <n+1>`; a fresh review round follows.
-     - MECHANICAL (tests-failing): run the suite; on assertion-only
-       failure, advance. For a zero-behavior-change refactor this gate
+     - MECHANICAL (tests-failing): run the suite and require the
+       test-architect's independent-oracle audit; on assertion-only failure
+       with a passing audit, advance. For a zero-behavior-change refactor this gate
        inverts — see "Mechanical Gate (test confirmation)" below.
      - ROUTER-EMIT (worktree, PR): perform the action.
      - AGGREGATE (5 reviewers): dispatch in parallel, collect results,

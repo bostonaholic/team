@@ -21,14 +21,14 @@ Before any code change, reliably reproduce the failure. Record exact inputs, act
 
 ## Step 2: Write a failing test
 
-Write a test that:
+Read the [testing rules](../../team/references/testing.md), including `No tautological tests`, then write a test that:
 
 - **Reproduces the bug** with the exact scenario;
 - asserts correct behavior, not current behavior;
 - fails through the intended assertion, not infrastructure;
 - names the behavior, not a bug number or method.
 
-Run it and the existing suite. The new test must fail for the right reason and all prior tests must pass. Do not continue without this Red state.
+Audit it against the testing checklist. Run it and the existing suite. The new test must fail for the right reason and all prior tests must pass. Do not continue without this Red state.
 
 ## Step 3: Fix minimally
 
