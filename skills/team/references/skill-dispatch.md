@@ -6,11 +6,12 @@ If either is unavailable, stop and report the missing installed context. Never s
 
 ## Invoke Team skill
 
-The machine identifier `Invoke Team skill` takes a public command name, its arguments, and inherited authorization.
+The machine identifier `Invoke Team skill` takes a public command or internal phase name, its arguments, and inherited authorization.
 It means immediate execution only where the caller already authorizes that operation.
 
-- In plugin mode, invoke the registered skill through the host's existing skill mechanism.
-- In skills mode, read `<root>/skills/<name>/SKILL.md` and execute that canonical procedure with the original arguments and invocation context.
+- For a `team-*` phase, read `<root>/skills/<name>/WORKFLOW.md` in either mode. These are internal procedures included with `team`, never independently registered or installed skills.
+- For other commands in plugin mode, invoke the registered skill through the host's existing skill mechanism.
+- For other commands in skills mode, read `<root>/skills/<name>/SKILL.md` and execute that canonical procedure with the original arguments and invocation context.
 - Pass root and mode to nested calls and agents. Never initialize another runtime or resolve a sibling through host discovery.
 - Preserve explicit-intent gates, standalone stops, artifacts, credentials, and consumer-project paths.
 - If an operation needs unsupported host capabilities or reviewer enforcement, stop that operation and report the limitation.
@@ -20,7 +21,9 @@ It means immediate execution only where the caller already authorizes that opera
 
 A continuation is a suggestion, not an immediate invocation. Keep the caller's stop condition.
 For an unselected sibling, offer an explicit same-session request with its name and arguments.
-Alternatively, show `npx skills add bostonaholic/team --skill <name>` before a later slash invocation.
+For an internal `team-*` phase, install `team` if needed: `npx skills add bostonaholic/team --skill team`.
+Request the phase by name and arguments in that Team session; do not offer an individual phase install or slash command.
+For a public utility, show `npx skills add bostonaholic/team --skill <name>` before a later slash invocation.
 Never imply that an unselected slash command exists. Never auto-install or advance because a bundled procedure exists.
 For the current command, resume its existing canonical procedure with the same root, mode, arguments, and recorded state.
 Self-resume is not a recursive invocation. Citations and ordinary file reads are not invocations.

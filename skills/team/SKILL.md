@@ -37,6 +37,11 @@ deliverable, or a full outcome (`feature`, `fix`, `refactor`) that ends in a
 draft PR. A route with no task requests the task before any mutation. Never
 scan issue bodies or quoted text for route words.
 
+`/team phase <name> [arguments]` invokes one internal pipeline procedure and
+stops at that procedure's boundary. Handle it before the full-pipeline contracts
+below. Phase procedures are included with `team`; they have no individual skill
+installation or slash-command registration.
+
 ## Core contracts
 
 - Walk this phase table in order: `Worktree → Question → Research → Design → Structure → Plan → Implement → PR`.

@@ -38,7 +38,7 @@ fi
   No open PR, or one whose title names this bug → reuse the branch in
   place: create no worktree and no new branch, and announce the reuse
   once: "Continuing on branch `<branch>`." This is also the linked-worktree
-  reuse case in `skills/team-worktree/SKILL.md` → "Detect existing
+  reuse case in `skills/team-worktree/WORKFLOW.md` → "Detect existing
   worktree". An open PR for other work → treat it as `on-default`: a fix
   never rides on another PR's branch, so isolate per **Isolate** below.
 - **`on-default`** — isolate before the first commit, per **Isolate** below.

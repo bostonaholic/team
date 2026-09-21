@@ -1,16 +1,13 @@
 ---
 name: team-design
-description: 'Drafts and adversarially reviews a design. Trigger on "design this" or "/team-design".'
+description: 'Drafts and adversarially reviews a design. Trigger on "design this" or "/team phase team-design".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
-<!-- team-runtime:start -->
-Before workflow work, read [runtime startup](runtime/start.md).
-<!-- team-runtime:end -->
 Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 Before this operation, read [artifact schema](../team/references/artifacts.md).
-Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.
+Before each consuming step, read its linked shared rules. Resolve links from this installed `WORKFLOW.md` directory.
 If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
@@ -119,7 +116,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
      rounds as it takes. Recovery runs after an operator stop, a
      context-exhausted session, or the fail-closed halt below. A person
      revises `$ARGUMENTS/6-design.md` by hand and re-invokes
-     `/team-design` bare. The run then resumes at this gate, per the
+     `/team phase team-design` bare. The run then resumes at this gate, per the
      resume branch at step 2. The `revision` counter persists in
      `6-design.md` frontmatter.
    - **Unparseable verdict or reviewer crash** — retry the review once

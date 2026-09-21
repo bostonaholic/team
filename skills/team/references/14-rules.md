@@ -8,7 +8,7 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
   and revision metadata. Write phase findings to disk before advancing.
   The file, not conversation memory, is the interface ([durable state rules](principles/durable-state.md)).
 - TodoWrite is the orchestrator's live coordination ledger. It is
-  session-scoped and is rebuilt on entry to any `/team-*` command by
+  session-scoped and is rebuilt on entry to any `/team phase <name>` command by
   scanning artifacts.
 - Where the host offers no TodoWrite, `docs/plans/<id>/ledger.md`
   substitutes for it — never supplements it. Same items in the same
@@ -33,7 +33,7 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
   context contains the user's original description, the pipeline has a
   defect. Stop and report.
 - On any unexpected failure: report to the user and suggest re-invoking
-  the same /team-* command with `docs/plans/<id>/`.
+  the same /team phase <name> command with `docs/plans/<id>/`.
 - To add a new agent to the pipeline, add an entry to the phase table
   above and to the inventory in `skills/team/registry.json`.
 

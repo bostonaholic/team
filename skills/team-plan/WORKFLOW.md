@@ -1,12 +1,9 @@
 ---
 name: team-plan
-description: 'Produces the tactical implementation plan. Trigger on "plan the implementation" or "/team-plan".'
+description: 'Produces the tactical implementation plan. Trigger on "plan the implementation" or "/team phase team-plan".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
-<!-- team-runtime:start -->
-Before workflow work, read [runtime startup](runtime/start.md).
-<!-- team-runtime:end -->
 Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.

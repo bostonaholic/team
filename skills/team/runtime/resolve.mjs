@@ -82,7 +82,7 @@ function nativeRoot(skillDirectory) {
 
 export function resolveRuntime(resolverPath, consumerRoot) {
   const invokedInstallation = realpathSync(dirname(dirname(dirname(resolverPath))));
-  const skillDirectory = dirname(dirname(realpathSync(resolverPath)));
+  const skillDirectory = realpathSync(dirname(dirname(resolverPath)));
   const command = basename(skillDirectory);
   const native = nativeRoot(skillDirectory);
   if (native) return { mode: "plugin", root: native, skillPath: join(skillDirectory, "SKILL.md") };

@@ -100,7 +100,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    user directly.
 5. **Do not auto-revise.** This skill does not loop the design-author. On
    REQUEST CHANGES, surface the findings and let the user decide if to
-   re-enter `/team-design` with that feedback.
+   re-enter `/team phase team-design` with that feedback.
 
 ## Rules
 
@@ -131,7 +131,7 @@ line per CLI naming it and the reason — or a single line naming
 `TEAM_DISABLE_CROSS_MODEL` when the pass was disabled machine-wide.
 
 **A standalone run records no `design-review-<n>.md`.** Only the pipeline's
-DESIGN review gate writes the verdict artifact. `/team-structure` needs a
+DESIGN review gate writes the verdict artifact. `/team phase team-structure` needs a
 recorded passing verdict before it slices a design.
 
 If the verdict is APPROVE or COMMENT, tell the user:

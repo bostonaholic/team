@@ -76,12 +76,17 @@ installation. Execution limits are listed beside setup. Pick yours.
 
 ### Skills CLI
 
+Install `team` for the full pipeline. The nine `team-*` phase procedures cannot
+be installed separately. Standalone utilities such as `how`, `why`, and `code-review`
+remain individually selectable.
+
 Requires Node >=22.20.0. Discover public commands or install a selection:
 
 ```bash
 npx skills add bostonaholic/team --list
 npx skills add bostonaholic/team --skill principle-fix-root-causes --agent codex -y
 npx skills add bostonaholic/team --skill team --agent codex -y
+npx skills add bostonaholic/team --skill how --agent codex -y
 ```
 
 Each selected workflow includes its runtime resources, sibling procedures, and
@@ -114,9 +119,9 @@ and CRLF entrypoints work without changing bundled canonical bytes. `/retro`
 skips packaged targets while preserving existing ordinary local edit targets.
 Each dependent command contains the complete compressed archive.
 The dependency-free principle requires no runtime archive.
-The generated archives measure 493,820 bytes per dependent command and
-12,839,320 bytes across 26 commands. Each decodes to 1,113,693 bytes before
-extraction. Repeated archives increase installation size and Git history.
+Git stores one shared runtime under `skills/team/runtime/`. Other public skills link to it;
+the Skills CLI dereferences those links into ordinary files during installation.
+Each selected utility retains a complete runtime without duplicating generated source in Git.
 
 
 #### Selection and lifecycle
@@ -280,7 +285,7 @@ Then run a phase end-to-end:
 For a focused bug fix that skips the QRSPI ceremony:
 
 ```bash
-/team-fix Users see stale cache after profile update
+/team phase team-fix Users see stale cache after profile update
 ```
 
 ### Codex CLI

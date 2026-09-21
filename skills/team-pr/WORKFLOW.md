@@ -1,12 +1,9 @@
 ---
 name: team-pr
-description: 'Opens PRs with project terms, evidence, and risk. Trigger on "open the PR", "open a draft PR", or "/team-pr" only; never infer the phase from passed verification.'
+description: 'Opens PRs with project terms, evidence, and risk. Trigger on "open the PR", "open a draft PR", or "/team phase team-pr" only; never infer the phase from passed verification.'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
-<!-- team-runtime:start -->
-Before workflow work, read [runtime startup](runtime/start.md).
-<!-- team-runtime:end -->
 Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 # Team PR — Create the Pull Request

@@ -50,7 +50,7 @@ clean for the whole run.
    are deferred until after the design review (see "Orchestrator-Emit Gate
    (post-design-review secondary worktrees)" below).
    **If the run was started from inside a linked worktree on a non-default branch, reuse it instead of creating a new one**
-   (see "Detect existing worktree" in `skills/team-worktree/SKILL.md`). If
+   (see "Detect existing worktree" in `skills/team-worktree/WORKFLOW.md`). If
    that worktree is on the default branch, stop rather than implement on
    it.
 2. **Create `docs/plans/<id>/` inside the worktree.** The artifact directory

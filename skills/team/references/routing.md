@@ -8,6 +8,16 @@ generic routing DSL.
 
 ## Recognize the route
 
+Handle `/team phase <name> [arguments]` before task routes. Valid names are
+`team-worktree`, `team-question`, `team-research`, `team-design`, `team-structure`,
+`team-plan`, `team-implement`, `team-pr`, and `team-fix`.
+Require an exact name from this list; on a missing or unknown name, report the
+valid names and stop before any workflow mutation. Read
+[skill dispatch](references/skill-dispatch.md), then execute that internal
+`WORKFLOW.md` with the remaining arguments and explicit invocation context.
+Honor its standalone stop condition; do not enter the full orchestrator loop.
+The `phase` selector does not create or overwrite task-route metadata.
+
 Look only at the **leading argument** of an invoked `/team`: the first
 whitespace-separated token of `$ARGUMENTS` after the command. When that token
 equals exactly one of `investigate`, `plan`, `prototype`, `feature`, `fix`, or

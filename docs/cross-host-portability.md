@@ -438,7 +438,7 @@ full parity. It starts from the matrix and works around the named gaps.
   equivalent — `policy.allow_implicit_invocation: false` in each skill's
   `agents/openai.yaml` — keeps all five out of the implicit catalog. The
   divergence is deliberate and the validator finding is expected.
-- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 27 entry commands remain in the picker. Principles are guarded `disable-model-invocation` skills read by installed path, so they add no implicit-invocation entries.
+- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 18 public skills remain in the picker. Principles are guarded `disable-model-invocation` skills read by installed path, so they add no implicit-invocation entries.
   Historical probe evidence: the `$` picker was fed by the `skills/list` app-server method, which returned all
   100 Team skills with `enabled: true`, `team:principle-fix-root-causes` among
   them. Its `SkillMetadata` payload carries nine fields — `dependencies`,
@@ -611,10 +611,11 @@ registered. Malformed native configuration can still prevent loading afterward.
 `opencode/catalog.mjs` owns catalog validation for both installation and plugin
 initialization. The entry resolves its real file before importing the helper, so
 checkout aliases and linked worktrees resolve to canonical file/base paths.
-Each immediate real skill directory contributes one regular `SKILL.md`. The
-validator walks its tree once without following symlinks. It rejects linked
-entries, nested `SKILL.md`, duplicate names, ambiguous consumed frontmatter, and
-empty catalogs. Ordinary references and scripts stay available. Headers are read
+Each public skill directory contributes one regular `SKILL.md`; directories
+containing only `WORKFLOW.md` are internal procedures. The validator accepts
+only the three generated runtime links targeting the corresponding regular
+files in `skills/team/runtime/`. Other linked entries, nested `SKILL.md`,
+duplicate names, ambiguous consumed frontmatter, and empty catalogs are rejected. Ordinary references and scripts stay available. Headers are read
 once. Bodies stay on disk. Canonical paths containing `$`, backticks, or `@` are
 rejected before registration or config contribution. Spaces and Unicode are
 supported. Existing command collisions or wrong consumed config types reject the
@@ -651,7 +652,7 @@ OpenCode preprocesses supplied command arguments. For example, the native syntax
 below can run `printf` before any model call:
 
 ```text
-/team-question !`printf example`
+/team phase team-question !`printf example`
 ```
 
 This shell substitution runs outside model-tool permission checks, including
@@ -821,9 +822,9 @@ Before offering a fallback, it checks project/global `.agents/skills` and `.clau
 Global Claude detection honors trimmed `CLAUDE_CONFIG_DIR`, defaulting to `~/.claude` when empty or absent.
 It skips packaged targets and names source regeneration only when the source is known.
 
-The generated archives measure 493,820 bytes per dependent command and
-12,839,320 bytes across 26 commands. Each decodes to 1,113,693 bytes before
-extraction. Repeated archives increase installation size and Git history.
+Git stores one shared runtime under `skills/team/runtime/`. Other public skills link to it;
+the Skills CLI dereferences those links into ordinary files during installation.
+Each selected utility retains a complete runtime without duplicating generated source in Git.
 
 ### Lifecycle and native migration
 

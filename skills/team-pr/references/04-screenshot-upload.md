@@ -1,7 +1,7 @@
 Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 Before this operation, read [external-data rules](../team/references/external-data.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Resolve these links from the installed `WORKFLOW.md` directory. If a read fails, stop and report its resolved path.
 
 ## Screenshot Upload
 

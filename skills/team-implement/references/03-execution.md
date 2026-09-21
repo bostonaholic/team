@@ -3,7 +3,7 @@ Before invocation or continuation, read [skill dispatch](../team/references/skil
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md).
 
 Before this operation, read [artifact schema](../team/references/artifacts.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Resolve these links from the installed `WORKFLOW.md` directory. If a read fails, stop and report its resolved path.
 
 ## Execution
 
@@ -83,7 +83,7 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
    five reviewers holds a write tool, and the round item above carries
    counts rather than findings.
 
-   So re-invoke `/team-implement` bare. The resume branch at step 2 skips
+   So re-invoke `/team phase team-implement` bare. The resume branch at step 2 skips
    the test and slice steps, so the phase re-enters at step 5. The five
    reviewers there re-derive the current finding set, and the loop above
    fixes it at the cost of one round. The round counter is session-scoped

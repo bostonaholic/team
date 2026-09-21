@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Install selected Team commands through Skills CLI with complete bundled runtime resources, installation-aware dispatch, and preserved native plugin setup.
+- Install the pipeline as `team`, with nine internal phase procedures; standalone utilities remain individually installable. Store shared generated runtime files once and let Skills CLI copy them for each selected installation.
 
 ### Fixed
 

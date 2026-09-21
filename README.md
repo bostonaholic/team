@@ -18,12 +18,17 @@ leaving you to find out. Pick yours.
 
 ### Skills CLI
 
+Install `team` for the full pipeline. The nine `team-*` phase procedures cannot
+be installed separately. Standalone utilities such as `how`, `why`, and `code-review`
+remain individually selectable.
+
 Requires Node >=22.20.0. Discover public commands or install a selection:
 
 ```bash
 npx skills add bostonaholic/team --list
 npx skills add bostonaholic/team --skill principle-fix-root-causes --agent codex -y
 npx skills add bostonaholic/team --skill team --agent codex -y
+npx skills add bostonaholic/team --skill how --agent codex -y
 ```
 
 Each selected workflow includes its runtime resources, sibling procedures, and
@@ -56,9 +61,9 @@ and CRLF entrypoints work without changing bundled canonical bytes. `/retro`
 skips packaged targets while preserving existing ordinary local edit targets.
 Each dependent command contains the complete compressed archive.
 The dependency-free principle requires no runtime archive.
-The generated archives measure 493,820 bytes per dependent command and
-12,839,320 bytes across 26 commands. Each decodes to 1,113,693 bytes before
-extraction. Repeated archives increase installation size and Git history.
+Git stores one shared runtime under `skills/team/runtime/`. Other public skills link to it;
+the Skills CLI dereferences those links into ordinary files during installation.
+Each selected utility retains a complete runtime without duplicating generated source in Git.
 
 
 #### Selection and lifecycle
@@ -387,24 +392,24 @@ external skill sources, and discovery diagnostics.
 For well-understood bugs, skip the QRSPI ceremony:
 
 ```
-/team-fix Users see stale cache after profile update
+/team phase team-fix Users see stale cache after profile update
 ```
 
 Or run individual phases:
 
 ```
-/team-worktree docs/plans/<id>/
-/team-question Add rate limiting middleware to all API endpoints
-/team-research docs/plans/<id>/
-/team-design docs/plans/<id>/
-/team-structure docs/plans/<id>/
-/team-plan docs/plans/<id>/
-/team-implement docs/plans/<id>/
-/team-pr docs/plans/<id>/
+/team phase team-worktree docs/plans/<id>/
+/team phase team-question Add rate limiting middleware to all API endpoints
+/team phase team-research docs/plans/<id>/
+/team phase team-design docs/plans/<id>/
+/team phase team-structure docs/plans/<id>/
+/team phase team-plan docs/plans/<id>/
+/team phase team-implement docs/plans/<id>/
+/team phase team-pr docs/plans/<id>/
 ```
 
 In a full `/team` run the home worktree is created automatically at the leading WORKTREE phase.
-Invoked standalone, `/team-worktree` consumes `8-plan.md` (post-PLAN). Use it for manual recovery
+Invoked standalone, `/team phase team-worktree` consumes `8-plan.md` (post-PLAN). Use it for manual recovery
 or multi-repo setup.
 
 Each downstream command takes the artifact directory `docs/plans/<id>/` as

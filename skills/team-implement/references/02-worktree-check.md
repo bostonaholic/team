@@ -25,7 +25,7 @@ Before any agent dispatch, decide where to work:
    - On **Worktree** — derive `<id>` from the resolved directory, create the
      worktree(s) through Invoke Team skill `team-worktree` with arguments `[docs/plans/<id>/]`, tell the user
      the home worktree path, and ask them to re-run
-     `/team-implement [docs/plans/<id>/]` from that directory.
+     `/team phase team-implement [docs/plans/<id>/]` from that directory.
    - On **In-place** — proceed. (In-place is single-repo only — refuse
      in-place if `4-repos.md` is present and tell the user that
      multi-repo work requires worktrees.)

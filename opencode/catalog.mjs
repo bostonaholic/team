@@ -1,4 +1,4 @@
-import { lstatSync, readdirSync, readFileSync, realpathSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 
 function safePath(path) {
@@ -72,14 +72,21 @@ function header(source, file) {
   return { name: values.get("name"), description: values.get("description"), guarded: values.get("disable-model-invocation") === true };
 }
 
-function inspectTree(directory, base) {
+function inspectTree(directory, base, sharedRuntime) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const path = join(directory, entry.name);
-    if (entry.isSymbolicLink()) throw new Error(`Symlinks are unsupported in skill trees: ${path}`);
+    if (entry.isSymbolicLink()) {
+      if (directory === join(base, "runtime") && ["resolve.mjs", "start.md", "bundle.json"].includes(entry.name) &&
+          realpathSync(path) === join(sharedRuntime, entry.name)) {
+        requireType(join(sharedRuntime, entry.name), "file");
+        continue;
+      }
+      throw new Error(`Symlinks are unsupported in skill trees: ${path}`);
+    }
     if (entry.name === "SKILL.md" && directory !== base) {
       throw new Error(`Nested SKILL.md would expose an unintended native skill: ${path}`);
     }
-    if (entry.isDirectory()) inspectTree(path, base);
+    if (entry.isDirectory()) inspectTree(path, base, sharedRuntime);
   }
 }
 
@@ -98,8 +105,13 @@ export function loadCatalog(root) {
     safePath(base);
     requireType(base, "directory");
     const file = join(base, "SKILL.md");
+    if (!existsSync(file) && existsSync(join(base, "WORKFLOW.md"))) {
+      requireType(join(base, "WORKFLOW.md"), "file");
+      inspectTree(base, base, join(skills, "team/runtime"));
+      continue;
+    }
     requireType(file, "file");
-    inspectTree(base, base);
+    inspectTree(base, base, join(skills, "team/runtime"));
     const metadata = header(readFileSync(file, "utf8"), file);
     if (names.has(metadata.name)) {
       throw new Error(`Duplicate skill name ${metadata.name}: ${names.get(metadata.name)} and ${file}`);

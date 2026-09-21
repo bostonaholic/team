@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, retro, why, how, no-comments, agent-prompt), each with the skills it loads."
+description: "The Team plugin's skills: one pipeline entry point and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, pr-rebase, retro, why, how, no-comments, agent-prompt), each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -9,12 +9,12 @@ nav_label: skills
 # Team Skills
 
 > **The features you use.** Every entry-point skill is a slash command you can
-> run (`/team`, `/team-fix`, …). There are no methodology skills: what agents
+> run (`/team`, `/how`, …). There are no methodology skills: what agents
 > used to preload now lives in ordinary playbooks and references they read by
 > path. A principle is a guarded command — explicitly invoked, never applied by
 > the model on its own — that a consuming procedure reads by installed path.
 >
-> **Source of truth:** the skill bodies themselves, `skills/*/SKILL.md`.
+> **Source of truth:** the public `skills/*/SKILL.md` files and internal `skills/team-*/WORKFLOW.md` procedures.
 > This page is a hand-maintained reference. When it disagrees with a
 > `SKILL.md`, the `SKILL.md` wins.
 
@@ -41,7 +41,7 @@ This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 27 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 18 registered skills and nine internal pipeline procedures. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 ## Skills CLI installation
@@ -62,8 +62,9 @@ Edit canonical source and reinstall. Local packaged entrypoint edits stop resolu
 
 ## Entry-point skills
 
-Each carries `argument-hint`, so it is a slash command, and each either kicks off a
-full run or drives one phase of the QRSPI pipeline.
+Install `team` to run the QRSPI pipeline. Its nine phase procedures have no
+`SKILL.md` and cannot be installed separately. Invoke one through
+`/team phase <name> [arguments]`. Other catalog skills remain individually installable.
 
 ### [team](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
 
@@ -73,7 +74,11 @@ Runs the 8-phase QRSPI feature pipeline, or a leading-argument route.
 
 **Uses:** `how`, `team-implement`, `team-pr`, `team-worktree`, `why`
 
-### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
+## Internal pipeline procedures
+
+Included with `team`; the names below are procedure names, not installable skills.
+
+### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/WORKFLOW.md)
 
 Decomposes a feature into task and question artifacts.
 
@@ -81,7 +86,7 @@ Decomposes a feature into task and question artifacts.
 
 **Uses:** None
 
-### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
+### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/WORKFLOW.md)
 
 Researches a codebase area before changes.
 
@@ -89,7 +94,7 @@ Researches a codebase area before changes.
 
 **Uses:** `team-question`
 
-### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
+### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/WORKFLOW.md)
 
 Drafts and adversarially reviews a design.
 
@@ -97,7 +102,7 @@ Drafts and adversarially reviews a design.
 
 **Uses:** `team-research`
 
-### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/SKILL.md)
+### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/WORKFLOW.md)
 
 Breaks a reviewed design into verified slices.
 
@@ -105,7 +110,7 @@ Breaks a reviewed design into verified slices.
 
 **Uses:** `team-design`
 
-### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/SKILL.md)
+### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/WORKFLOW.md)
 
 Produces the tactical implementation plan.
 
@@ -113,7 +118,7 @@ Produces the tactical implementation plan.
 
 **Uses:** `team-structure`
 
-### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/SKILL.md)
+### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/WORKFLOW.md)
 
 Prepares isolated git worktrees.
 
@@ -121,7 +126,7 @@ Prepares isolated git worktrees.
 
 **Uses:** `pr-cleanup`, `team-plan`
 
-### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
+### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/WORKFLOW.md)
 
 Executes and verifies implementation slices.
 
@@ -129,7 +134,7 @@ Executes and verifies implementation slices.
 
 **Uses:** `team-plan`, `team-pr`, `team-worktree`
 
-### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
+### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/WORKFLOW.md)
 
 Opens PRs with project terms, evidence, and risk.
 
@@ -137,13 +142,17 @@ Opens PRs with project terms, evidence, and risk.
 
 **Uses:** `pr-screenshots`
 
-### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
+### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/WORKFLOW.md)
 
 Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
 **Uses:** `pr-screenshots`, `principle-fix-root-causes`, `team-worktree`, `why`
+
+## Design review utility
+
+Individually installable.
 
 ### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 

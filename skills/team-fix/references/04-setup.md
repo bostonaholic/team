@@ -23,7 +23,7 @@
    `<id>` minus the `<TICKET>-` or `<YYYY-MM-DD>-` prefix. Never use the
    ticket id, the date, or a re-worded description as the topic.
    `ticketId` lives only on `1-task.md`. This is the single durable record
-   for the fix and lets any `/team-*` command pick it up if interrupted.
+   for the fix and lets any `/team phase <name>` command pick it up if interrupted.
 6. **Seed the TodoWrite ledger** with the bug-fix phases:
    `Worktree → Reproduce → Red (failing test) → Green (minimal fix) → Verify → Ship`.
    Mark `Worktree` as `in_progress`.

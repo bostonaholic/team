@@ -1,12 +1,9 @@
 ---
 name: team-fix
-description: 'Runs the compressed bug-fix pipeline. Trigger on "run the bug-fix pipeline", "team-fix this bug", or "/team-fix" only; never infer pipeline intent from a plain bug-fix request.'
+description: 'Runs the compressed bug-fix pipeline. Trigger on "run the bug-fix pipeline", "team-fix this bug", or "/team phase team-fix" only; never infer pipeline intent from a plain bug-fix request.'
 effort: high
 argument-hint: "<ticket id, issue URL, or bug description>"
 ---
-<!-- team-runtime:start -->
-Before workflow work, read [runtime startup](runtime/start.md).
-<!-- team-runtime:end -->
 Before invocation or continuation, read [skill dispatch](../team/references/skill-dispatch.md); apply its installation-aware continuation and self-resume rules.
 
 # Team Fix — Bug Fix Pipeline

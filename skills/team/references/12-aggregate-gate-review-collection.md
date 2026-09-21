@@ -31,7 +31,7 @@ returned:
 3. Track the round count in TodoWrite. The round-1 item is seeded before
    the implementer runs, as the bare label `Review round 1` with no counts
    — no aggregate has sorted anything at that point (the IMPLEMENT seed in
-   `skills/team-implement/SKILL.md`). Counts thus start on the round-2
+   `skills/team-implement/WORKFLOW.md`). Counts thus start on the round-2
    item. From there on, append an item like
    `Review round <n+1> (<b> Blocking, <m> Major open)` each retry. `<b>`
    and `<m>` are this round's open counts from the tier sort above.
@@ -58,7 +58,7 @@ commits are already on the branch. The five reviewers there re-derive the
 current finding set, which the loop then fixes, at the cost of one round.
 The round counter is session-scoped through TodoWrite and starts fresh on
 re-invocation. A re-invoked session seeds no `PR` phase item, so
-`/team-implement` reads as standalone and offers `team-pr` through the continuation choices.
+`/team phase team-implement` reads as standalone and offers `team-pr` through the continuation choices.
 An explicit continuation reaches the draft PR.
 
 **The loop is: IMPLEMENT → VERIFY (5 reviewers) → typed gate check →

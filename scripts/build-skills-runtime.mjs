@@ -1,7 +1,7 @@
 import { gzipSync } from "fflate";
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { addBootstrap, COMPRESSED_LIMIT, DECODED_LIMIT, stripBootstrap, validateEnvelope } from "./skills-runtime-resolver.mjs";
 
@@ -54,7 +54,7 @@ function generatedFiles(directory, prefix = "") {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = prefix ? `${prefix}/${entry.name}` : entry.name;
     if (entry.isDirectory()) return generatedFiles(join(directory, entry.name), path);
-    if (!entry.isFile()) throw new Error(`unsupported generated runtime file type or link: ${join(directory, entry.name)}`);
+    if (!entry.isFile() && !entry.isSymbolicLink()) throw new Error(`unsupported generated runtime file type: ${join(directory, entry.name)}`);
     return [path];
   });
 }
@@ -78,6 +78,7 @@ function generate(check) {
   const bundle = JSON.stringify(envelope) + "\n";
   const resolver = readFileSync(join(root, "scripts/skills-runtime-resolver.mjs"), "utf8");
   const expected = new Map();
+  const links = new Map();
   const dependent = names.filter((name) => name !== "principle-fix-root-causes");
   for (const name of names) {
     const entryPath = `skills/${name}/SKILL.md`;
@@ -88,12 +89,19 @@ function generate(check) {
     }
     if (!/^---\n[\s\S]*?\n---\n/.test(canonical)) throw new Error(`missing frontmatter: ${entryPath}`);
     expected.set(entryPath, addBootstrap(canonical));
-    for (const [file, text] of [["resolve.mjs", resolver], ["start.md", startup], ["bundle.json", bundle]]) expected.set(`skills/${name}/runtime/${file}`, text);
+    for (const [file, text] of [["resolve.mjs", resolver], ["start.md", startup], ["bundle.json", bundle]]) {
+      const path = `skills/${name}/runtime/${file}`;
+      expected.set(path, text);
+      if (name !== "team") links.set(path, relative(dirname(path), `skills/team/runtime/${file}`));
+    }
   }
   const actualGenerated = generatedFiles(skills).filter((path) => /^[^/]+\/runtime\//.test(path)).map((path) => `skills/${path}`);
   const stale = actualGenerated.filter((path) => !expected.has(path));
   for (const [path, text] of expected) {
-    if (!existsSync(join(root, path)) || !lstatSync(join(root, path)).isFile() || readFileSync(join(root, path), "utf8") !== text) stale.push(path);
+    const absolute = join(root, path);
+    if (!existsSync(absolute) || (links.has(path)
+      ? !lstatSync(absolute).isSymbolicLink() || readlinkSync(absolute) !== links.get(path)
+      : !lstatSync(absolute).isFile() || readFileSync(absolute, "utf8") !== text)) stale.push(path);
   }
   if (check) {
     if (stale.length) throw new Error(`stale generated runtime or bootstrap:\n${stale.join("\n")}`);
@@ -101,10 +109,12 @@ function generate(check) {
     for (const path of actualGenerated) if (!expected.has(path)) rmSync(join(root, path));
     for (const [path, text] of expected) {
       mkdirSync(dirname(join(root, path)), { recursive: true });
-      writeFileSync(join(root, path), text);
+      rmSync(join(root, path), { force: true });
+      if (links.has(path)) symlinkSync(links.get(path), join(root, path));
+      else writeFileSync(join(root, path), text);
     }
   }
-  process.stdout.write(`${dependent.length} runtime bundles; ${Buffer.byteLength(bundle)} bytes per command; ${Buffer.byteLength(bundle) * dependent.length} aggregate archive bytes; ${decoded.length} decoded bytes\n`);
+  process.stdout.write(`${names.length} installable skills; one shared runtime (${dependent.length} consumers); ${Buffer.byteLength(bundle)} archive bytes; ${decoded.length} decoded bytes\n`);
 }
 
 try {
