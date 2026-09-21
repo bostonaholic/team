@@ -53,6 +53,9 @@ function generatedFiles(directory, prefix = "") {
   if (!existsSync(directory)) return [];
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+    if (entry.isSymbolicLink() && !/^[^/]+\/runtime\/(resolve\.mjs|start\.md|bundle\.json)$/.test(path)) {
+      throw new Error(`unsupported generated runtime link: ${join(directory, entry.name)}`);
+    }
     if (entry.isDirectory()) return generatedFiles(join(directory, entry.name), path);
     if (!entry.isFile() && !entry.isSymbolicLink()) throw new Error(`unsupported generated runtime file type: ${join(directory, entry.name)}`);
     return [path];
