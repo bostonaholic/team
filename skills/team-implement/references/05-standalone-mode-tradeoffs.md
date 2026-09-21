@@ -20,4 +20,4 @@ How the phase ends depends on how it was entered:
   open the draft PR in the same turn. Ending the turn with verdicts but
   no draft PR is a defect.
 - **Standalone**: present all review verdicts and tell the user:
-  **"Next: request `team-pr` with arguments `docs/plans/<id>/` using the continuation choices"**
+  **"Next: request `/team pr` with arguments `docs/plans/<id>/` using the continuation choices"**

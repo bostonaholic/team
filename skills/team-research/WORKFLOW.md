@@ -1,6 +1,6 @@
 ---
 name: team-research
-description: 'Researches a codebase area before changes. Trigger on "explore the codebase for" or "/team phase team-research".'
+description: 'Researches a codebase area before changes. Trigger on "explore the codebase for" or "/team research".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
@@ -104,4 +104,4 @@ Report:
 - Path to `$ARGUMENTS/5-research.md`
 - Key findings (3–5 bullets)
 - Open questions count
-- Tell the user: **"Next: request `team-design` with arguments `docs/plans/<id>/` using the continuation choices"**
+- Tell the user: **"Next: request `/team design` with arguments `docs/plans/<id>/` using the continuation choices"**

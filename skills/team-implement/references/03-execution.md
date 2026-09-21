@@ -83,19 +83,19 @@ Resolve these links from the installed `WORKFLOW.md` directory. If a read fails,
    five reviewers holds a write tool, and the round item above carries
    counts rather than findings.
 
-   So re-invoke `/team phase team-implement` bare. The resume branch at step 2 skips
+   So re-invoke `/team implement` bare. The resume branch at step 2 skips
    the test and slice steps, so the phase re-enters at step 5. The five
    reviewers there re-derive the current finding set, and the loop above
    fixes it at the cost of one round. The round counter is session-scoped
    (TodoWrite) and starts fresh on re-invocation. The re-invoked session's
    ledger carries no `PR` phase item, so step 9 takes the standalone
-   branch and offers an explicit same-session request for `team-pr` with the artifact directory.
+   branch and offers an explicit same-session request for `/team pr` with the artifact directory.
 9. **Once Blocking and Major are clean:** record any **Minor-and-below**
    findings for the PR body's `## Review notes` section, tagged by
    source reviewer — never present them mid-run. Then:
    - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
      `/team` seeded it): do **not** end the turn. Proceed directly to the
      PR phase — Invoke Team skill `team-pr` — in the same turn.
-   - **Standalone**: stop and offer an explicit same-session request for `team-pr` with the artifact directory.
-     For later slash use in skills mode, offer `npx skills add bostonaholic/team --skill team-pr` only when `team-pr` is unselected.
-     Native continuations use existing registrations.
+   - **Standalone**: stop and offer an explicit same-session request for `/team pr` with the artifact directory.
+     For later slash use in skills mode, offer `npx skills add bostonaholic/team --skill team` only when `team` is unselected.
+     Native continuations use the registered `team` command with the phase argument.

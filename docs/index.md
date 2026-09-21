@@ -285,7 +285,7 @@ Then run a phase end-to-end:
 For a focused bug fix that skips the QRSPI ceremony:
 
 ```bash
-/team phase team-fix Users see stale cache after profile update
+/team fix Users see stale cache after profile update
 ```
 
 ### Codex CLI

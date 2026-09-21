@@ -1,6 +1,6 @@
 ## When to Use
 
-Use `/team phase team-fix` when:
+Use `/team fix` when:
 
 - The bug is well-understood and the affected code is known
 - The fix is likely contained to a small number of files

@@ -21,7 +21,7 @@ When the design review passes:
    Create the worktrees **without a confirmation prompt** — the phase loop
    never pauses mid-run. The "Confirm with the user" dialog in
    `skills/team-worktree/WORKFLOW.md` applies only to standalone human
-   invocation of `/team phase team-worktree`. The resolved repo set is already
+   invocation of `/team worktree`. The resolved repo set is already
    recorded loudly in `6-design.md` (`## Decisions made`/`## Risks`) and
    echoed in the PR body's `## Review notes`. Before each
    `git worktree add`, re-check **containment**: the repo path's `realpath`
@@ -31,7 +31,7 @@ When the design review passes:
 2. **Append a `## Worktrees` section to `4-repos.md`**, post-design-review,
    **back-recording the home worktree path** created at the leading
    WORKTREE phase, plus each secondary repo's worktree path. Later
-   `/team phase <name>` invocations can then rediscover every worktree from that one
+   `/team <phase>` invocations can then rediscover every worktree from that one
    file. The other repos' worktrees do not duplicate the artifacts. Agents
    that need them read from the home worktree path the orchestrator passes
    in.

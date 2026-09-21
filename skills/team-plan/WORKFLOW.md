@@ -1,6 +1,6 @@
 ---
 name: team-plan
-description: 'Produces the tactical implementation plan. Trigger on "plan the implementation" or "/team phase team-plan".'
+description: 'Produces the tactical implementation plan. Trigger on "plan the implementation" or "/team plan".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
@@ -60,4 +60,4 @@ approval check):
 3. **Stop once `$ARGUMENTS/8-plan.md` exists.**
 
 Report plan path and tell the user:
-**"Next: request `team-worktree` with arguments `docs/plans/<id>/` using the continuation choices"**
+**"Next: request `/team worktree` with arguments `docs/plans/<id>/` using the continuation choices"**

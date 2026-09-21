@@ -1,6 +1,6 @@
 ---
 name: team-question
-description: 'Decomposes a feature into task and question artifacts. Trigger on "decompose this task" or "/team phase team-question".'
+description: 'Decomposes a feature into task and question artifacts. Trigger on "decompose this task" or "/team question".'
 effort: medium
 argument-hint: "<ticket id, issue URL, or task description>"
 ---
@@ -105,4 +105,4 @@ Report:
 - Topic slug and `<id>`
 - Mode: single-repo or multi-repo (with the list of involved repo slugs
   if multi-repo)
-- Tell the user: **"Next: request `team-research` with arguments `docs/plans/<id>/` using the continuation choices"**
+- Tell the user: **"Next: request `/team research` with arguments `docs/plans/<id>/` using the continuation choices"**

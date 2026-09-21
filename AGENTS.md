@@ -49,16 +49,16 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 | Command | Phase |
 |---------|-------|
 | `/team <desc>` | Full 8-phase QRSPI pipeline, on stated pipeline intent — it commits, pushes, opens a PR, and moves the ticket. A leading-argument route selects a bounded task instead: `/team investigate|plan|prototype` stop at their deliverable with no commit, push, or PR; `/team feature|fix|refactor` run their full pipeline to a draft PR |
-| `/team phase team-fix <bug>` | Compressed bug-fix pipeline (no QRSPI ceremony), on stated pipeline intent, never on a plain "fix this bug" |
-| `/team phase team-worktree` | Leading WORKTREE phase: create the home worktree — a branch, so on stated intent or as phase 1 of a `/team` run. In a full run it is automatic and first. Standalone, it consumes `8-plan.md` post-PLAN for manual recovery or multi-repo setup |
-| `/team phase team-question <desc>` | Decompose intent into task + questions + brief |
-| `/team phase team-research` | Isolated codebase research (runs Question if missing) |
-| `/team phase team-design` | Draft the design. An adversarial design review gates advancement |
+| `/team fix <bug>` | Compressed bug-fix pipeline (no QRSPI ceremony), on stated pipeline intent, never on a plain "fix this bug" |
+| `/team worktree` | Leading WORKTREE phase: create the home worktree — a branch, so on stated intent or as phase 1 of a `/team` run. In a full run it is automatic and first. Standalone, it consumes `8-plan.md` post-PLAN for manual recovery or multi-repo setup |
+| `/team question <desc>` | Decompose intent into task + questions + brief |
+| `/team research` | Isolated codebase research (runs Question if missing) |
+| `/team design` | Draft the design. An adversarial design review gates advancement |
 | `/eng-design-doc-review` | Adversarial fresh-context audit of `6-design.md`. The front door over the design reviewer brief the pipeline's design-review gate also runs |
-| `/team phase team-structure` | Break design into vertical slices (autonomous) |
-| `/team phase team-plan` | Tactical plan from the structure |
-| `/team phase team-implement` | Test-first + slice execution + 5-reviewer verify, on stated intent or as the IMPLEMENT phase — it commits each slice |
-| `/team phase team-pr` | Commit + open PR, on stated intent or as the PR phase — it pushes and moves the ticket |
+| `/team structure` | Break design into vertical slices (autonomous) |
+| `/team plan` | Tactical plan from the structure |
+| `/team implement` | Test-first + slice execution + 5-reviewer verify, on stated intent or as the IMPLEMENT phase — it commits each slice |
+| `/team pr` | Commit + open PR, on stated intent or as the PR phase — it pushes and moves the ticket |
 
 ## Agents (13)
 
@@ -96,7 +96,7 @@ Antigravity has no `SessionStart` or `PreCompact` and its `PostToolUse` cannot b
 
 ## State
 
-State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite (session-scoped). Any `/team phase <name>` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
+State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite (session-scoped). Any `/team <phase>` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
 
 ## Learned rules
 

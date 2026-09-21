@@ -52,13 +52,13 @@ findings are on disk. The TodoWrite round item carries counts rather than
 findings. The design-review gate is the opposite case, because it writes
 every round's findings to disk for a person to read before the fix.
 
-Here, request `team-implement` without arguments through the continuation choices. That command resumes the phase at
+Here, request `/team implement` without arguments through the continuation choices. That command resumes the phase at
 its reviewer-dispatch step, because `8-plan.md`, the tests, and the slice
 commits are already on the branch. The five reviewers there re-derive the
 current finding set, which the loop then fixes, at the cost of one round.
 The round counter is session-scoped through TodoWrite and starts fresh on
 re-invocation. A re-invoked session seeds no `PR` phase item, so
-`/team phase team-implement` reads as standalone and offers `team-pr` through the continuation choices.
+`/team implement` reads as standalone and offers `/team pr` through the continuation choices.
 An explicit continuation reaches the draft PR.
 
 **The loop is: IMPLEMENT → VERIFY (5 reviewers) → typed gate check →

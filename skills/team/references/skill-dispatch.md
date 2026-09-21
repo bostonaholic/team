@@ -22,7 +22,7 @@ It means immediate execution only where the caller already authorizes that opera
 A continuation is a suggestion, not an immediate invocation. Keep the caller's stop condition.
 For an unselected sibling, offer an explicit same-session request with its name and arguments.
 For an internal `team-*` phase, install `team` if needed: `npx skills add bostonaholic/team --skill team`.
-Request the phase by name and arguments in that Team session; do not offer an individual phase install or slash command.
+Request `/team <phase> [arguments]`, dropping the internal `team-` prefix (for example, `/team question <description>`). Do not offer an individual phase install or slash command.
 For a public utility, show `npx skills add bostonaholic/team --skill <name>` before a later slash invocation.
 Never imply that an unselected slash command exists. Never auto-install or advance because a bundled procedure exists.
 For the current command, resume its existing canonical procedure with the same root, mode, arguments, and recorded state.

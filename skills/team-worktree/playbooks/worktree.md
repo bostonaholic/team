@@ -49,7 +49,7 @@ branch name `<id>`:
 
 After all worktrees are created, the orchestrator appends a `## Worktrees`
 section to `4-repos.md` recording the per-repo worktree paths. Any later
-`/team phase <name>` invocation rediscovers them by reading that one file.
+`/team <phase>` invocation rediscovers them by reading that one file.
 
 ## Worktree creation
 

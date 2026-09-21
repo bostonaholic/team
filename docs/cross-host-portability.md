@@ -652,7 +652,7 @@ OpenCode preprocesses supplied command arguments. For example, the native syntax
 below can run `printf` before any model call:
 
 ```text
-/team phase team-question !`printf example`
+/team question !`printf example`
 ```
 
 This shell substitution runs outside model-tool permission checks, including

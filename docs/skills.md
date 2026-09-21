@@ -64,7 +64,10 @@ Edit canonical source and reinstall. Local packaged entrypoint edits stop resolu
 
 Install `team` to run the QRSPI pipeline. Its nine phase procedures have no
 `SKILL.md` and cannot be installed separately. Invoke one through
-`/team phase <name> [arguments]`. Other catalog skills remain individually installable.
+`/team <phase> [arguments]`, such as `/team question <description>` or
+`/team design docs/plans/<id>/`. Use `/team plan [docs/plans/<id>/]` for an
+existing topic; `/team plan <description>` keeps the limited-scope task route.
+Other catalog skills remain individually installable.
 
 ### [team](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
 

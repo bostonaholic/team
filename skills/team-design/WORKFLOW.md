@@ -1,6 +1,6 @@
 ---
 name: team-design
-description: 'Drafts and adversarially reviews a design. Trigger on "design this" or "/team phase team-design".'
+description: 'Drafts and adversarially reviews a design. Trigger on "design this" or "/team design".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
@@ -116,7 +116,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
      rounds as it takes. Recovery runs after an operator stop, a
      context-exhausted session, or the fail-closed halt below. A person
      revises `$ARGUMENTS/6-design.md` by hand and re-invokes
-     `/team phase team-design` bare. The run then resumes at this gate, per the
+     `/team design` bare. The run then resumes at this gate, per the
      resume branch at step 2. The `revision` counter persists in
      `6-design.md` frontmatter.
    - **Unparseable verdict or reviewer crash** — retry the review once
@@ -127,4 +127,4 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    `$ARGUMENTS/design-review-<n>.md` verdict is APPROVE or COMMENT.**
 
 Report design path and tell the user:
-**"Next: request `team-structure` with arguments `docs/plans/<id>/` using the continuation choices"**
+**"Next: request `/team structure` with arguments `docs/plans/<id>/` using the continuation choices"**

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Install the pipeline as `team`, with nine internal phase procedures; standalone utilities remain individually installable. Store shared generated runtime files once and let Skills CLI copy them for each selected installation.
+- Install the pipeline as `team`, with phase commands such as `/team question` and `/team design`; standalone utilities remain individually installable. Store shared generated runtime files once and let Skills CLI copy them for each selected installation.
 
 ### Fixed
 

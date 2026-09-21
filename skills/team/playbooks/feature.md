@@ -48,7 +48,7 @@ Non-blocking; no acknowledgment, e.g. documentation-gap analysis or style sugges
 
 ## State and transitions
 
-Files, never conversation memory, are the phase interface ([durable state rules](principles/durable-state.md)). Rebuild state from `docs/plans/<id>/*.md` frontmatter and TodoWrite on every `/team phase <name>` entry.
+Files, never conversation memory, are the phase interface ([durable state rules](principles/durable-state.md)). Rebuild state from `docs/plans/<id>/*.md` frontmatter and TodoWrite on every `/team <phase>` entry.
 
 | Latest durable state | Next/current phase |
 |---|---|

@@ -1,6 +1,6 @@
 ---
 name: team-implement
-description: 'Executes and verifies implementation slices. Trigger on "implement this", "execute the plan", or "/team phase team-implement" only; never infer the phase from a ready plan.'
+description: 'Executes and verifies implementation slices. Trigger on "implement this", "execute the plan", or "/team implement" only; never infer the phase from a ready plan.'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
@@ -32,9 +32,9 @@ Run the IMPLEMENT phase. Three internal sub-steps:
 - Read [finding format](../code-review/references/findings.md) before aggregate decisions.
 - Persist `### Cross-model disposition` to `cross-model-notes.md` only when it does not begin `Not run:`.
 - Full pipeline: do **not** end the turn; Invoke Team skill `team-pr` in the same turn.
-- **Standalone**: after success, stop and offer an explicit same-session request for `team-pr` with the artifact directory.
-  For later slash use in skills mode, offer `npx skills add bostonaholic/team --skill team-pr` only when `team-pr` is unselected.
-  Native continuations use existing registrations.
+- **Standalone**: after success, stop and offer an explicit same-session request for `/team pr` with the artifact directory.
+  For later slash use in skills mode, offer `npx skills add bostonaholic/team --skill team` only when `team` is unselected.
+  Native continuations use the registered `team` command with the phase argument.
 
 ## Procedure references
 

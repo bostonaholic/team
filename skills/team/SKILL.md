@@ -2,7 +2,7 @@
 name: team
 description: 'Runs the 8-phase QRSPI feature pipeline, or a leading-argument route. Trigger on "hey team", "build a feature", or "/team" only; never infer pipeline intent from a plain coding request.'
 effort: high
-argument-hint: "<ticket id, issue URL, feature description, or leading-argument route (investigate|plan|prototype|feature|fix|refactor)>"
+argument-hint: "<task, task route (investigate|plan|prototype|feature|fix|refactor), or phase (worktree|question|research|design|structure|plan|implement|pr)>"
 ---
 <!-- team-runtime:start -->
 Before workflow work, read [runtime startup](runtime/start.md).
@@ -29,18 +29,19 @@ in-session coordination uses TodoWrite.
 
 ## Routes
 
-First read [routing](references/routing.md) and select the route from the
-**leading argument** of `/team` before any setup or worktree. An unprefixed
+First read [routing](references/routing.md) and select a phase or task route from
+the **leading argument** of `/team` before any setup or worktree. An unprefixed
 `/team <description>` keeps the full feature pipeline; a leading route selects a
 limited-scope outcome (`investigate`, `plan`, `prototype`) that stops at its
 deliverable, or a full outcome (`feature`, `fix`, `refactor`) that ends in a
-draft PR. A route with no task requests the task before any mutation. Never
+draft PR. A task route with no task requests the task before any mutation. Never
 scan issue bodies or quoted text for route words.
 
-`/team phase <name> [arguments]` invokes one internal pipeline procedure and
-stops at that procedure's boundary. Handle it before the full-pipeline contracts
-below. Phase procedures are included with `team`; they have no individual skill
-installation or slash-command registration.
+`/team question <description>`, `/team research [docs/plans/<id>/]`, and the
+other phase invocations in routing run one internal procedure and stop at its
+boundary. Handle them before the full-pipeline contracts below. Phase procedures
+are included with `team`; they have no individual skill installation or
+slash-command registration.
 
 ## Core contracts
 

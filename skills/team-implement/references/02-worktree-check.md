@@ -7,7 +7,7 @@ Before any agent dispatch, decide where to work:
 1. **Read `$ARGUMENTS/4-repos.md` if present.** When present, you are in
    multi-repo mode. Make sure that a worktree exists in **every** listed
    repo (read the `## Worktrees` section). If any are missing, tell the user
-   to request `team-worktree` with arguments `[docs/plans/<id>/]` through the continuation choices (the path is optional —
+   to request `/team worktree` with arguments `[docs/plans/<id>/]` through the continuation choices (the path is optional —
    discovery resolves it) and stop.
 2. Run `git rev-parse --absolute-git-dir`. If the path contains
    `/worktrees/`, you are already inside a linked worktree — proceed in
@@ -25,7 +25,7 @@ Before any agent dispatch, decide where to work:
    - On **Worktree** — derive `<id>` from the resolved directory, create the
      worktree(s) through Invoke Team skill `team-worktree` with arguments `[docs/plans/<id>/]`, tell the user
      the home worktree path, and ask them to re-run
-     `/team phase team-implement [docs/plans/<id>/]` from that directory.
+     `/team implement [docs/plans/<id>/]` from that directory.
    - On **In-place** — proceed. (In-place is single-repo only — refuse
      in-place if `4-repos.md` is present and tell the user that
      multi-repo work requires worktrees.)

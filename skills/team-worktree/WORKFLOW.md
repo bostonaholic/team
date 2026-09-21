@@ -1,6 +1,6 @@
 ---
 name: team-worktree
-description: 'Prepares isolated git worktrees. Trigger on "set up the worktree", "isolate this work", or "/team phase team-worktree" only; never infer the phase from work needing isolation.'
+description: 'Prepares isolated git worktrees. Trigger on "set up the worktree", "isolate this work", or "/team worktree" only; never infer the phase from work needing isolation.'
 effort: low
 argument-hint: "[docs/plans/<id>/]"
 ---

@@ -392,28 +392,29 @@ external skill sources, and discovery diagnostics.
 For well-understood bugs, skip the QRSPI ceremony:
 
 ```
-/team phase team-fix Users see stale cache after profile update
+/team fix Users see stale cache after profile update
 ```
 
 Or run individual phases:
 
 ```
-/team phase team-worktree docs/plans/<id>/
-/team phase team-question Add rate limiting middleware to all API endpoints
-/team phase team-research docs/plans/<id>/
-/team phase team-design docs/plans/<id>/
-/team phase team-structure docs/plans/<id>/
-/team phase team-plan docs/plans/<id>/
-/team phase team-implement docs/plans/<id>/
-/team phase team-pr docs/plans/<id>/
+/team worktree docs/plans/<id>/
+/team question Add rate limiting middleware to all API endpoints
+/team research docs/plans/<id>/
+/team design docs/plans/<id>/
+/team structure docs/plans/<id>/
+/team plan docs/plans/<id>/
+/team implement docs/plans/<id>/
+/team pr docs/plans/<id>/
 ```
 
 In a full `/team` run the home worktree is created automatically at the leading WORKTREE phase.
-Invoked standalone, `/team phase team-worktree` consumes `8-plan.md` (post-PLAN). Use it for manual recovery
+Invoked standalone, `/team worktree` consumes `8-plan.md` (post-PLAN). Use it for manual recovery
 or multi-repo setup.
 
 Each downstream command takes the artifact directory `docs/plans/<id>/` as
-its argument.
+its argument. `/team plan <description>` still selects the limited-scope task
+route; `/team plan [docs/plans/<id>/]` runs the planning phase for an existing topic.
 
 ## Configuration
 

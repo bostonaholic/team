@@ -44,7 +44,7 @@ seeds and updates a TodoWrite ledger, and runs the gates.
   and revision metadata. Phase progression is
   inferred by scanning artifacts.
 - **TodoWrite is the live coordination ledger.** It is session-scoped.
-  Re-invoking any `/team phase <name>` command rebuilds the ledger by scanning
+  Re-invoking any `/team <phase>` command rebuilds the ledger by scanning
   artifacts on entry.
 - **Registry is a phase-tagged inventory.** `skills/team/registry.json`
   lists the 13 specialist agents and the QRSPI phase each serves. The
@@ -211,7 +211,7 @@ git -C <repo-path> worktree add .claude/worktrees/<id> -b <id> origin/HEAD
 
 At that point the orchestrator writes a `## Worktrees` section to
 `4-repos.md`. It back-records the home worktree path plus each secondary
-path. Any later `/team phase <name>` invocation can thus rediscover all paths from
+path. Any later `/team <phase>` invocation can thus rediscover all paths from
 one file. Only the home repo's worktree carries `docs/plans/<id>/`. Other
 repos' worktrees do not duplicate the artifacts. See
 `skills/team-worktree/playbooks/worktree.md` for full topology.
@@ -307,14 +307,14 @@ total, so an operator watching the ledger can tell a converging loop
 from a stuck one.
 
 **Recovery after an operator stop, a context-exhausted session, or a
-fail-closed halt**: a human re-invokes the same `/team phase <name>` command bare.
+fail-closed halt**: a human re-invokes the same `/team <phase>` command bare.
 Each command runs its own phase and names the next one to run. What
 the human can fix first differs by gate.
 
 The design-review gate writes every round's findings to
 `design-review-<n>.md`, so they are on disk to read before editing
 `6-design.md`. The aggregate gate persists none of its findings. So
-`/team phase team-implement` resumes at the reviewer-dispatch step, and the five
+`/team implement` resumes at the reviewer-dispatch step, and the five
 reviewers re-derive the open set at the cost of one round. The aggregate
 round counter is session-scoped through TodoWrite and starts fresh on
 re-invocation. The design `revision` counter persists in `6-design.md`
@@ -623,7 +623,7 @@ loop:
      artifact path(s) in the phase table.
   3. Make sure that predecessors exist on disk. For STRUCTURE that includes
      a `design-review-<n>.md` with a passing verdict. If one is missing, the
-     run is desynced. Suggest the bare /team phase <name> command again. Its three-tier
+     run is desynced. Suggest the bare /team <phase> command again. Its three-tier
      discovery resolves docs/plans/<id>/ without an explicit arg.
   4. Dispatch the agent(s) — pass them the artifact directory
      `docs/plans/<id>/`.
@@ -1013,7 +1013,7 @@ same way. They list `docs/plans/*/` directories. They pick the most
 recent artifact directory by the mtime of any contained artifact. They
 infer the current phase from artifact presence and frontmatter. They then
 emit a short context message that names the phase, `<id>`, and the
-suggested next `/team phase <name>` command. Both are stateless, exit 0 on any
+suggested next `/team <phase>` command. Both are stateless, exit 0 on any
 error, and return within the 5000ms hook budget.
 
 `validate-team-config.mjs` is the odd one out: it is a guard, not a notice. It
@@ -1049,7 +1049,7 @@ finish?" and "did the design review pass?"
 
 **Live coordination:** TodoWrite (session-scoped). The orchestrator
 seeds the ledger at the start of `/team`, marks each item `in_progress`
-when dispatching, and `completed` when the artifact lands. Any `/team phase <name>`
+when dispatching, and `completed` when the artifact lands. Any `/team <phase>`
 command rebuilds the ledger by scanning artifacts on entry, so an
 interrupted run can be resumed by re-invoking any of them bare: discovery
 auto-resolves the artifact directory (an explicit `docs/plans/<id>/` is still
@@ -1064,7 +1064,7 @@ review round durably. The artifacts are self-describing.
 
 **Compaction defense:** the PreCompact hook scans `docs/plans/<id>/`
 directories for the active topic and injects a 4-line anchor (phase,
-`<id>`, suggested next `/team phase <name>` command). The SessionStart hook does
+`<id>`, suggested next `/team <phase>` command). The SessionStart hook does
 the same for new sessions.
 
 **Artifact persistence:** during a run, files in `docs/plans/<id>/` live

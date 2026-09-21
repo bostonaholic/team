@@ -1,6 +1,6 @@
 ---
 name: team-structure
-description: 'Breaks a reviewed design into verified slices. Trigger on "break the design into steps" or "/team phase team-structure".'
+description: 'Breaks a reviewed design into verified slices. Trigger on "break the design into steps" or "/team structure".'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
@@ -81,5 +81,5 @@ unreviewed or REQUEST-CHANGES candidates are skipped:
 4. **Stop once `$ARGUMENTS/7-structure.md` exists.**
 
 Report the structure path. When run standalone, tell the user:
-**"Next: request `team-plan` with arguments `docs/plans/<id>/` using the continuation choices"**
+**"Next: request `/team plan` with arguments `docs/plans/<id>/` using the continuation choices"**
 (Within a full `/team` run the orchestrator advances to PLAN automatically.)

@@ -100,7 +100,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    user directly.
 5. **Do not auto-revise.** This skill does not loop the design-author. On
    REQUEST CHANGES, surface the findings and let the user decide if to
-   re-enter `/team phase team-design` with that feedback.
+   re-enter `/team design` with that feedback.
 
 ## Rules
 
@@ -122,8 +122,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
   pipeline gate runs the brief. The recovery hooks fail closed on anything
   but a recorded passing verdict. The skill itself writes no artifacts.
   The toolset, not the prose, is the guarantee for writes ([independent review rules](../team/principles/independent-review.md)).
-- Standalone use blocks nothing: users may request `team-design` or
-  `team-structure` through the continuation choices without invoking this skill directly.
+- Standalone use blocks nothing: users may request `/team design` or
+  `/team structure` through the continuation choices without invoking this skill directly.
 
 Print the verdict and the count of issue / suggestion / nitpick findings.
 When any vendor CLI was unavailable during the cross-model pass, add one
@@ -131,15 +131,15 @@ line per CLI naming it and the reason — or a single line naming
 `TEAM_DISABLE_CROSS_MODEL` when the pass was disabled machine-wide.
 
 **A standalone run records no `design-review-<n>.md`.** Only the pipeline's
-DESIGN review gate writes the verdict artifact. `/team phase team-structure` needs a
+DESIGN review gate writes the verdict artifact. `/team structure` needs a
 recorded passing verdict before it slices a design.
 
 If the verdict is APPROVE or COMMENT, tell the user:
-**"To advance, explicitly request `team-design` with arguments `docs/plans/<id>/` in this session.
+**"To advance, explicitly request `/team design` with arguments `docs/plans/<id>/` in this session.
 The existing `6-design.md` skips drafting. Its review gate records the verdict, unless a passing record already exists.
-After that gate passes, explicitly request `team-structure` with the same artifact directory."**
+After that gate passes, explicitly request `/team structure` with the same artifact directory."**
 If the verdict is REQUEST CHANGES, tell the user:
-**"Explicitly request `team-design` with arguments `docs/plans/<id>/` and these findings in this session to revise the design."**
-For later slash invocation in skills mode, offer installation only for unselected commands:
-`npx skills add bostonaholic/team --skill team-design` or `npx skills add bostonaholic/team --skill team-structure`.
-Native continuations use existing registrations.
+**"Explicitly request `/team design` with arguments `docs/plans/<id>/` and these findings in this session to revise the design."**
+For later slash invocation in skills mode, offer installation only if `team` is unselected:
+`npx skills add bostonaholic/team --skill team`.
+Native continuations use the registered `team` command with the phase argument.
