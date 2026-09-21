@@ -84,7 +84,7 @@ After all tests are written and confirmed failing, report:
 
 ### All tests fail cleanly: YES/NO
 
-### Independent-oracle audit passes: YES/NO
+### Expected results derived independently: YES/NO
 
 ### Static checks pass: YES/NO
 | Check | Command | Result |

@@ -8,9 +8,9 @@ Tests assert externally observable outcomes — return values, persisted state, 
 
 ## No tautological tests
 
-Derive expected results from the contract, a fixed example, or an independent oracle. Never calculate the expected result with production code or a copy of its algorithm, configure a mock to return a value and then assert that value, or assert setup data without exercising production behavior.
+Write the expected result without using the implementation being tested. Derive it from the requirement, a fixed example, or an external specification. Do not call production code, import its calculated values, copy its algorithm, configure a mock result and assert that same result, or assert setup data without exercising production behavior.
 
-Every test must reject at least one plausible broken implementation. Observe the test fail before changing production code. When the tested behavior already exists, temporarily alter or bypass the relevant production behavior, require the test to fail, then restore it. A test that stays green does not verify the behavior.
+Ask: "If the implementation were wrong, could this expected result still be correct?" If not, the test is tautological. Every test must reject at least one plausible broken implementation. Observe the test fail before changing production code. When the tested behavior already exists, temporarily alter or bypass the relevant production behavior, require the test to fail, then restore it. A test that stays green does not verify the behavior.
 
 ## Tests are DAMP, not DRY
 
@@ -74,7 +74,7 @@ Prefer real, then fake, then mock. Wrap vendor types behind owned interfaces. E2
 | Check | Pass criterion |
 |---|---|
 | Behavior-named | Name behavior, not a method. |
-| Independent oracle | Derive expectations independently; reject a plausible broken implementation. |
+| Independently derived expectation | The expected result does not depend on the implementation being tested and rejects a plausible incorrect implementation. |
 | Narrow assertion | Assert the specific contract. |
 | Actionable failure | Output names the failed condition. |
 | No sleeps | Use condition waits. |
