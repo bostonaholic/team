@@ -1,6 +1,6 @@
 ---
 title: Versioning
-description: "Land-time versioning for the Team plugin. A drafted PR carries no version. It accumulates changelog bullets under [Unreleased]. At land time the dev version-bump skill assigns the version, cuts the changelog section, sets the title, and runs the consistency assertion. The runtime /shipit skill then pushes, waits for CI, and squash-merges. CI publishes the release on merge."
+description: "Land-time versioning. A drafted PR carries no version. It accumulates changelog bullets under [Unreleased]. At land time /shipit runs version-bump, which reads project context, assigns the version when required, cuts the changelog section, sets the title, and runs the consistency assertion. /shipit then pushes, waits for CI, and squash-merges. CI publishes the release on merge when configured."
 audience: [developer]
 nav_order: 6
 nav_label: versioning
@@ -8,25 +8,25 @@ nav_label: versioning
 
 # Versioning
 
-> **Audience:** Plugin maintainers and contributors. End users do not need
-> this. It describes how the Team plugin *itself* is versioned, and nothing here
-> applies to projects that merely *use* the plugin.
+> **Audience:** Plugin and application maintainers. End users do not need this.
+> It describes the land-time versioning procedure used by projects that opt into
+> this release workflow.
 
-Team assigns the version at **land time**, not per PR. A drafted PR carries no
+The project assigns the version at **land time**, not per PR. A drafted PR carries no
 version, no `vX.Y.Z` title, and no released changelog section. It accumulates
-bullets under `[Unreleased]`. Landing a Team PR is **two steps**:
+bullets under `[Unreleased]`. Landing a PR is **two steps inside `/shipit`**:
 
-1. **Bump.** The **dev** `version-bump` skill
-   (`.claude/skills/version-bump/SKILL.md`) is Team's internal bumper. Run it
-   against current `main`. It assigns the next version, bumps the six version
-   strings, and cuts the `[Unreleased]` body into a dated `## [X.Y.Z]` section.
-   It then sets the PR title, runs the land-time consistency assertion, and
-   commits `chore(version): X.Y.Z`.
+1. **Bump.** The `version-bump` skill
+   (`skills/version-bump/SKILL.md`) reads project context. `/shipit` runs it
+   against current `main`. When a bump is required, it assigns the next version,
+   bumps the version strings, cuts the `[Unreleased]` body into a dated
+   `## [X.Y.Z]` section, sets the PR title, runs the land-time consistency
+   assertion, and commits `chore(version): X.Y.Z`. When no bump is required, it
+   reports that and returns to `/shipit`.
 2. **Land.** The **generic, distributed** runtime `/shipit` skill
    (`skills/shipit/SKILL.md`) pushes the branch, waits for CI, and
-   squash-merges. `shipit` is project-agnostic: it does no versioning or
-   changelog work. Team ships it to *users* as a general "land a reviewed PR"
-   utility. Team's own version logic stays in `version-bump`.
+   squash-merges. `shipit` is project-agnostic: it delegates versioning and
+   changelog work to `version-bump`.
 
 There is no batch release step. The merge *is* the release. CI tags and
 publishes automatically.
@@ -58,7 +58,7 @@ land makes it stale, and the pre-merge guard then denies the merge until
 someone recomputes it. This is what happened on PR #208, which opened as
 `v0.36.0 …` with a cut changelog section and had to be reverted by hand.
 `version-bump` accordingly fires only on **explicit land intent** — see its
-[land-intent precondition](../.claude/skills/version-bump/SKILL.md) — and the
+[land-intent precondition](../skills/version-bump/SKILL.md) — and the
 `/team` pipeline's PR gate forbids versioning outright.
 
 ## Only runtime changes bump (the runtime-vs-dev gate)
@@ -147,13 +147,13 @@ Then run `/shipit` to push, wait for CI, and squash-merge.
 
 ## Choosing the level
 
-Team is pre-1.0, and that changes which SemVer rules apply.
+The current project is pre-1.0, and that changes which SemVer rules apply.
 [SemVer 2.0.0](https://semver.org/spec/v2.0.0.html) scopes its MAJOR, MINOR, and
-PATCH rules (items 8, 7, 6) to `x > 0`. Team's version starts `0.`, so none of
+PATCH rules (items 8, 7, 6) to `x > 0`. A version that starts `0.` means none of
 them binds. Item 4 governs: "Major version zero (`0.y.z`) is for initial
 development. Anything MAY change at any time. The public API SHOULD NOT be
 considered stable." The spec assigns no level pre-1.0, so the convention below
-is Team's, written to keep meaning the same thing after 1.0.0.
+is this workflow's convention, written to keep meaning the same thing after 1.0.0.
 
 | Level | When | Reachable pre-1.0 |
 |-------|------|-------------------|
@@ -168,12 +168,11 @@ Two consequences worth stating, because both were previously decided wrong:
   Declaring 1.0.0 is a deliberate decision, never a side effect of a bump.
 - **The commit type is not the input.** It describes intent, not blast radius. A
   `fix:` that changes observable behavior is a minor; a `feat:` confined to
-  internals is a patch. [PR #228](https://github.com/bostonaholic/team/pull/228)
-  is the worked example: a `fix:` that removed the `/shipit` `--yes` argument and
-  its confirmation prompt landed as **0.44.0**.
+  internals is a patch. Example: a `fix:` that removed the `/shipit` `--yes`
+  argument and its confirmation prompt landed as **0.44.0**.
 
 The full decision procedure, with the spec quoted verbatim, is step 1 of
-[`.claude/skills/version-bump/SKILL.md`](https://github.com/bostonaholic/team/blob/main/.claude/skills/version-bump/SKILL.md).
+[`skills/version-bump/SKILL.md`](../skills/version-bump/SKILL.md).
 
 ## Land-time consistency assertion
 
@@ -191,7 +190,7 @@ fails fast and loud, and it never commits an invalid tree. It checks that:
   compares from `vX.Y.Z...HEAD`.
 
 If any check fails, `version-bump` stops before committing. Nothing is
-committed, pushed, or merged. See `.claude/skills/version-bump/SKILL.md` step 5.
+committed, pushed, or merged. See `skills/version-bump/SKILL.md` step 5.
 
 ## The six version strings
 
@@ -264,7 +263,7 @@ is cut only when the PR lands.
      `## [Unreleased]`, containing the accumulated body.
   2. Update the link-reference footer:
      - `[Unreleased]` compare base → `vX.Y.Z...HEAD`
-     - Add `[X.Y.Z]: https://github.com/bostonaholic/team/compare/v<prev>...vX.Y.Z`
+     - Add `[X.Y.Z]: https://github.com/<owner>/<repo>/compare/v<prev>...vX.Y.Z`
 
 The dated section becomes the GitHub release notes verbatim (see below). Write
 it for a reader who must decide if they upgrade.
@@ -298,7 +297,7 @@ Every check lives at the cheapest layer that can catch it:
 |-------|-------|-------|
 | Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | Pre-merge dev hook | `.github/scripts/version-bump-required.sh`, `.claude/hooks/pre-merge-guard.mjs` |
 | Six version strings agree, on strict semver, and the host manifests agree on the plugin and marketplace names. This holds on every commit, drafted or landed. | Land-time assertion (`version-bump`) | `.claude/scripts/check-version-consistency.sh` |
-| Released-section and footer-compare-link invariants hold for the assigned version. It runs after the changelog cut and before the commit. | Land-time assertion (`version-bump`) | `.claude/skills/version-bump/SKILL.md` |
+| Released-section and footer-compare-link invariants hold for the assigned version. It runs after the changelog cut and before the commit. | Land-time assertion (`version-bump`) | `skills/version-bump/SKILL.md` |
 | Title prefix matches the version. It applies only when the branch bumped the version forward of its fork point, after `version-bump` bumps. It no-ops otherwise. | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
 | Tag + GitHub release on merge | CI (needs write perms) | `.github/workflows/release-on-merge.yml` |
 

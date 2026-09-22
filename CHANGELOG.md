@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Team now requires authors to replace unexplained specialist terms with plain language or define them at first use. A term that controls an action or decision must define the action, allowed inputs or sources, and pass-or-fail condition. A link may add detail but cannot replace that definition.
+- `version-bump` now ships in the shared skill catalog, and `shipit` runs it before pushing or merging. Codex and other plugin hosts now use the same context-aware land-time versioning procedure as Claude.
 
 ## [0.126.0] - 2026-09-21
 
