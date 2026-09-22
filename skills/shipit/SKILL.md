@@ -1,6 +1,6 @@
 ---
 name: shipit
-description: 'Trigger on "/shipit" or "ship it" only. Never infer from approval, green CI, or completion. Lands a reviewed PR.'
+description: 'Use for landing reviewed PRs only on explicit request. Never infer from approval, green CI, or completion. Verifies and merges.'
 effort: medium
 argument-hint: "[<pr-number>]"
 ---

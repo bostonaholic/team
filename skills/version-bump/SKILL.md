@@ -1,6 +1,6 @@
 ---
 name: version-bump
-description: 'Invoke ONLY on "/version-bump" or "bump the version", including during "/shipit". Never infer from finished, reviewed, green, or draft-ready work. Assigns the next SemVer at land time.'
+description: 'Use for version bumps on explicit request or during PR landing through shipit. Never infer from finished, reviewed, green, or draft-ready work. Assigns SemVer.'
 ---
 
 # Version Bump — version a project at land time

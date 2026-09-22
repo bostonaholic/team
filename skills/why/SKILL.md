@@ -1,6 +1,6 @@
 ---
 name: why
-description: 'Trigger on "/why" or "why does X work this way". Investigates design rationale behind code.'
+description: 'Use for investigating design rationale behind code.'
 effort: high
 argument-hint: "[<question, file, symbol, or decision>]"
 ---

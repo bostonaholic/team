@@ -321,7 +321,7 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
    path, so no methodology registration remains for Codex to list. The principle
    tier is returning as guarded `disable-model-invocation` skills, kept out of
    Codex's implicit catalog by `allow_implicit_invocation: false`; the `$`
-   picker shows the 27 commands. See
+   picker shows the 28 commands. See
    [the divergence note](#57-codex-port) for the historical evidence.
 
 3. **Recency risk.** This is cross-cutting rather than a primitive gap. Codex's

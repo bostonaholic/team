@@ -1,6 +1,6 @@
 ---
 name: team-design
-description: 'Trigger on "/team-design" or "design this". Drafts and reviews a technical design.'
+description: 'Use for drafting technical designs with independent review.'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

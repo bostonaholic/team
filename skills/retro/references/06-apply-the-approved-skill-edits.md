@@ -117,8 +117,8 @@ every tier is not an error — none of those ships with this skill, so the
 fallback is fixed here:
 
 - `name` and `description` always.
-- The description carries one double-quoted natural-language phrase and the
-  literal `/<name>`.
+- The description starts with one concise semantic use condition; add a second
+  only for distinct intent. Do not quote exact requests or repeat `/<name>`.
 - `argument-hint` **and** `effort` together when the skill is user-invocable.
 - `user-invocable: false` and **no** `effort` otherwise.
 - No other frontmatter field.

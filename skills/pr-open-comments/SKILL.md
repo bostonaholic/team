@@ -1,6 +1,6 @@
 ---
 name: pr-open-comments
-description: 'Trigger on "/pr-open-comments" or "address PR comments" only. Never infer from unresolved comments. Triages PR feedback.'
+description: 'Use for addressing PR comments only on explicit request. Never infer from unresolved comments. Triages PR feedback.'
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 ---

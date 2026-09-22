@@ -1,6 +1,6 @@
 ---
 name: principle-fix-root-causes
-description: 'Invoke ONLY on "/principle-fix-root-causes" or "find the root cause". Never infer intent. Requires root-cause repair.'
+description: 'Use for root-cause repair only on explicit request. Requires fixing causes instead of symptoms.'
 disable-model-invocation: true
 ---
 

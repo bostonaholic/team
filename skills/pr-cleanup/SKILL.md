@@ -1,6 +1,6 @@
 ---
 name: pr-cleanup
-description: 'Invoke ONLY on "/pr-cleanup", "the PR was merged", or "abandon this". Never infer from staleness. Cleans PR state.'
+description: 'Use for PR cleanup after the user reports a merge or asks to abandon it. Never infer abandonment from staleness. Cleans PR state.'
 effort: medium
 argument-hint: "[<pr-number-or-url-or-branch>]"
 ---
