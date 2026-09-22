@@ -18,8 +18,9 @@ nav_label: skills
 > This page is a hand-maintained reference. When it disagrees with a
 > `SKILL.md`, the `SKILL.md` wins.
 
-Each entry starts with one sentence copied from that skill's frontmatter
-`description`. `**Uses:**` lists the skills this skill consumes: the ones it
+Each entry starts with a short user-facing description of what the skill
+does, maintained separately from its invocation metadata. `**Uses:**` lists
+the skills this skill consumes: the ones it
 loads through the Skill tool and the ones whose `SKILL.md` its files read by
 path. `**Used by:**` lists the skills that consume it. Both use
 comma-separated lists, or `None`.
@@ -51,7 +52,7 @@ full run or drives one phase of the QRSPI pipeline.
 
 ### [team](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
 
-Trigger on "/team" or "hey team" only.
+Runs the 8-phase QRSPI feature pipeline, or a leading-argument route.
 
 **Used by:** None
 
@@ -59,7 +60,7 @@ Trigger on "/team" or "hey team" only.
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
-Trigger on "/team-question" or "decompose this task".
+Decomposes a feature into task and question artifacts.
 
 **Used by:** None
 
@@ -67,7 +68,7 @@ Trigger on "/team-question" or "decompose this task".
 
 ### [team-research](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
 
-Trigger on "/team-research" or "explore the codebase".
+Researches a codebase area before changes.
 
 **Used by:** None
 
@@ -75,7 +76,7 @@ Trigger on "/team-research" or "explore the codebase".
 
 ### [team-design](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
 
-Trigger on "/team-design" or "design this".
+Drafts and adversarially reviews a design.
 
 **Used by:** None
 
@@ -83,7 +84,7 @@ Trigger on "/team-design" or "design this".
 
 ### [team-structure](https://github.com/bostonaholic/team/blob/main/skills/team-structure/SKILL.md)
 
-Trigger on "/team-structure" or "break the design into steps".
+Breaks a reviewed design into verified slices.
 
 **Used by:** None
 
@@ -91,7 +92,7 @@ Trigger on "/team-structure" or "break the design into steps".
 
 ### [team-plan](https://github.com/bostonaholic/team/blob/main/skills/team-plan/SKILL.md)
 
-Trigger on "/team-plan" or "plan the implementation".
+Produces the tactical implementation plan.
 
 **Used by:** None
 
@@ -99,7 +100,7 @@ Trigger on "/team-plan" or "plan the implementation".
 
 ### [team-worktree](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/SKILL.md)
 
-Trigger on "/team-worktree" or "set up the worktree" only.
+Prepares isolated git worktrees.
 
 **Used by:** `team`, `team-fix`
 
@@ -107,7 +108,7 @@ Trigger on "/team-worktree" or "set up the worktree" only.
 
 ### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
 
-Trigger on "/team-implement" or "implement this" only.
+Executes and verifies implementation slices.
 
 **Used by:** `team`
 
@@ -115,7 +116,7 @@ Trigger on "/team-implement" or "implement this" only.
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
-Trigger on "/team-pr" or "open the PR" only.
+Opens PRs with project terms, evidence, and risk.
 
 **Used by:** `team`, `team-implement`
 
@@ -123,7 +124,7 @@ Trigger on "/team-pr" or "open the PR" only.
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
-Trigger on "/team-fix" or "run the bug-fix pipeline" only.
+Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
@@ -131,7 +132,7 @@ Trigger on "/team-fix" or "run the bug-fix pipeline" only.
 
 ### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
 
-Trigger on "/eng-design-doc-review" or "review the design doc".
+Reviews a technical design document with fresh context.
 
 **Used by:** None
 
@@ -144,7 +145,7 @@ QRSPI phase: a self-contained action a user runs on demand.
 
 ### [shipit](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md)
 
-Trigger on "/shipit" or "ship it" only.
+Lands a reviewed pull request.
 
 **Used by:** None
 
@@ -152,7 +153,7 @@ Trigger on "/shipit" or "ship it" only.
 
 ### [version-bump](https://github.com/bostonaholic/team/blob/main/skills/version-bump/SKILL.md)
 
-Invoke ONLY on "/version-bump" or "bump the version", including during "/shipit".
+Versions the current project at land time.
 
 **Used by:** `shipit`
 
@@ -160,7 +161,7 @@ Invoke ONLY on "/version-bump" or "bump the version", including during "/shipit"
 
 ### [pr-open-comments](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md)
 
-Trigger on "/pr-open-comments" or "address PR comments" only.
+Triages unresolved PR review comments.
 
 **Used by:** `pr-watch-as-author`, `pr-watch-as-reviewer`
 
@@ -168,7 +169,7 @@ Trigger on "/pr-open-comments" or "address PR comments" only.
 
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
-Trigger on "/pr-watch-as-author" or "watch the PR" only.
+Watches an authored PR for feedback.
 
 **Used by:** None
 
@@ -176,7 +177,7 @@ Trigger on "/pr-watch-as-author" or "watch the PR" only.
 
 ### [pr-watch-as-reviewer](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
 
-Invoke ONLY on "/pr-watch-as-reviewer" or "watch and approve".
+Watches a reviewed PR and approves settled feedback.
 
 **Used by:** None
 
@@ -184,7 +185,7 @@ Invoke ONLY on "/pr-watch-as-reviewer" or "watch and approve".
 
 ### [groom-backlog](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
 
-Trigger on "/groom-backlog" or "groom the backlog".
+Grooms a project backlog and proposes tracker changes.
 
 **Used by:** None
 
@@ -192,7 +193,7 @@ Trigger on "/groom-backlog" or "groom the backlog".
 
 ### [pr-cleanup](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
 
-Invoke ONLY on "/pr-cleanup", "the PR was merged", or "abandon this".
+Cleans PR state.
 
 **Used by:** `pr-rebase`, `team-worktree`
 
@@ -200,7 +201,7 @@ Invoke ONLY on "/pr-cleanup", "the PR was merged", or "abandon this".
 
 ### [pr-verify](https://github.com/bostonaholic/team/blob/main/skills/pr-verify/SKILL.md)
 
-Trigger on "/pr-verify" or "verify the test plan".
+Verifies a PR test plan with evidence-rated verdicts.
 
 **Used by:** None
 
@@ -208,7 +209,7 @@ Trigger on "/pr-verify" or "verify the test plan".
 
 ### [pr-screenshots](https://github.com/bostonaholic/team/blob/main/skills/pr-screenshots/SKILL.md)
 
-Invoke ONLY on "/pr-screenshots" or "add screenshots to a PR".
+Attaches local images to a PR body.
 
 **Used by:** `pr-open-comments`, `team-fix`, `team-pr`
 
@@ -216,7 +217,7 @@ Invoke ONLY on "/pr-screenshots" or "add screenshots to a PR".
 
 ### [pr-rebase](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
 
-Invoke ONLY on "/pr-rebase" or "rebase onto main".
+Rebases a branch onto its base.
 
 **Used by:** None
 
@@ -224,7 +225,7 @@ Invoke ONLY on "/pr-rebase" or "rebase onto main".
 
 ### [retro](https://github.com/bostonaholic/team/blob/main/skills/retro/SKILL.md)
 
-Invoke ONLY on "/retro" or "run a retro".
+Mines a session for durable learnings.
 
 **Used by:** None
 
@@ -232,7 +233,7 @@ Invoke ONLY on "/retro" or "run a retro".
 
 ### [why](https://github.com/bostonaholic/team/blob/main/skills/why/SKILL.md)
 
-Trigger on "/why" or "why does X work this way".
+Investigates design rationale behind code.
 
 **Used by:** `code-review`, `how`, `team`, `team-fix`
 
@@ -240,7 +241,7 @@ Trigger on "/why" or "why does X work this way".
 
 ### [how](https://github.com/bostonaholic/team/blob/main/skills/how/SKILL.md)
 
-Trigger on "/how" or "how does X work".
+Explains subsystem architecture and runtime flow.
 
 **Used by:** `team`, `why`
 
@@ -248,7 +249,7 @@ Trigger on "/how" or "how does X work".
 
 ### [code-review](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
 
-Trigger on "/code-review" or "review this diff".
+Reviews a diff with fresh context.
 
 **Used by:** None
 
@@ -256,7 +257,7 @@ Trigger on "/code-review" or "review this diff".
 
 ### [no-comments](https://github.com/bostonaholic/team/blob/main/skills/no-comments/SKILL.md)
 
-Invoke ONLY on "/no-comments" or "remove unnecessary comments".
+Removes low-value source comments and encodes valid constraints.
 
 **Used by:** None
 
@@ -264,7 +265,7 @@ Invoke ONLY on "/no-comments" or "remove unnecessary comments".
 
 ### [agent-prompt](https://github.com/bostonaholic/team/blob/main/skills/agent-prompt/SKILL.md)
 
-Trigger on "/agent-prompt" or "write an agent prompt".
+Composes an agent-optimized prompt for a task.
 
 **Used by:** None
 
@@ -277,7 +278,7 @@ them on its own. Consuming procedures read them by installed path.
 
 ### [principle-fix-root-causes](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md)
 
-Invoke ONLY on "/principle-fix-root-causes" or "find the root cause".
+Requires diagnosis and repair of root causes.
 
 **Used by:** `team-fix`
 
