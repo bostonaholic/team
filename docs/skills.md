@@ -148,6 +148,14 @@ Lands a reviewed pull request.
 
 **Used by:** None
 
+**Uses:** `version-bump`
+
+### [version-bump](https://github.com/bostonaholic/team/blob/main/skills/version-bump/SKILL.md)
+
+Versions the current project at land time.
+
+**Used by:** `shipit`
+
 **Uses:** None
 
 ### [pr-open-comments](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md)

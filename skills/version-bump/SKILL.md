@@ -1,12 +1,12 @@
 ---
 name: version-bump
 description: |
-  Version the Team plugin at land time (DEV-internal, not distributed): decide
+  Version the current project at land time: decide
   the SemVer level, compute the next free version against current `main`, update
-  all six version strings, cut the `[Unreleased]` changelog body into a dated
-  `## [X.Y.Z]` section, run the land-time consistency assertion, and commit
-  `chore(version): X.Y.Z`. This is the Team-internal bumper; the generic runtime
-  `/shipit` skill then pushes, waits for CI, and squash-merges. Invoke ONLY on
+  version strings, cut the `[Unreleased]` changelog body into a dated
+  `## [X.Y.Z]` section, run the project consistency assertion, and commit
+  `chore(version): X.Y.Z`. The generic runtime `/shipit` skill then pushes,
+  waits for CI, and squash-merges. Invoke ONLY on
   explicit land intent — the user says "ship it", "land the PR", "bump the
   version", "version this PR", or a `/shipit` is already in flight. Never infer
   land intent from work merely being finished, reviewed, green, or ready to open
@@ -14,32 +14,32 @@ description: |
   is stale by the time the PR merges.
 ---
 
-# Version Bump — version a Team PR at land time
+# Version Bump — version a project at land time
 
-> Follow [execution rules](../../../skills/team/references/execution.md): this procedure has more than two steps —
+> Follow [execution rules](../team/references/execution.md): this procedure has more than two steps —
 > seed one todo item per step below before starting and mark each complete as you go.
 
-This skill versions the **Team plugin itself** at land time. It is **dev-only**
-(lives under `.claude/`, never distributed to plugin users). Tagging and the
-GitHub release are **not** part of this procedure — `release-on-merge.yml` does
-both automatically when the PR merges. Full policy:
-[docs/versioning.md](../../../docs/versioning.md).
+This skill versions the **current project** at land time. Tagging and the
+GitHub release are **not** part of this procedure when project automation does
+that on merge. Full policy:
+[docs/versioning.md](../../docs/versioning.md).
 
 ## The dev land process
 
-Landing a Team PR is two steps, in order:
+Landing a PR is two steps, in order:
 
 1. **Bump (this skill).** Run `version-bump` against current `main`. It picks the
    level, assigns the next free version, and bumps the six version strings. It
    cuts the `[Unreleased]` changelog into a dated `## [X.Y.Z]` section, runs the
    land-time consistency assertion, and commits `chore(version): X.Y.Z`.
 2. **Land (the generic `/shipit` skill).** Run the distributed runtime
-   [`/shipit`](../../../skills/shipit/SKILL.md) skill to push the branch, wait
-   for CI, and squash-merge. `shipit` is project-agnostic — it does no
-   versioning. This skill is the Team-internal bumper it composes with.
+   [`/shipit`](../shipit/SKILL.md) skill to push the branch, wait
+   for CI, and squash-merge. `shipit` is project-agnostic and invokes this
+   skill for project-specific versioning work.
 
-Run this skill **before** `/shipit`, against the version of `main` you intend to
-land onto.
+When invoked directly, run this skill **before** `/shipit`, against the version
+of `main` you intend to land onto. When `/shipit` invokes this skill, return to
+`/shipit` after step 8.
 
 ## Precondition — explicit land intent
 
@@ -85,10 +85,10 @@ It answers *does this PR warrant a bump*, never *is now the right time* — the
 land-intent precondition above already settled the timing, and a yes here does
 not reopen it.
 
-The version, changelog, and GitHub release exist for **plugin end users** —
-people who install Team and run `/team`. They are driven *only* by changes to the
-**distributed plugin**. Contributor-facing / plugin-developer infrastructure does
-not move the version, no matter what conventional-commit type it carries.
+The version, changelog, and GitHub release exist for the project's **end
+users**. They are driven *only* by changes to the distributed runtime surface.
+Contributor-facing and developer-only infrastructure does not move the version,
+no matter what conventional-commit type it carries.
 
 Using the **Runtime vs. Development** split in `CLAUDE.md`:
 
@@ -198,12 +198,12 @@ scope column — **items 6, 7, and 8 each carry an `x > 0` precondition:**
 | 7 | MINOR "MUST be incremented if new, backward compatible functionality is introduced to the public API." | `x.Y.z \| x > 0` |
 | 8 | MAJOR "MUST be incremented if any backward incompatible changes are introduced to the public API." | `X.y.z \| X > 0` |
 
-Team's version starts `0.`, so **not one of those three rules binds.** Item 4
-governs instead: "Major version zero (`0.y.z`) is for initial development.
-Anything MAY change at any time. The public API SHOULD NOT be considered
-stable." The spec assigns **no level at all** pre-1.0, which is why the rule
-below is Team's own convention — chosen so it keeps meaning the same thing once
-1.0.0 arrives. Item 5: "Version 1.0.0 defines the public API."
+If the project's version starts `0.`, **not one of those three rules binds.**
+Item 4 governs instead: "Major version zero (`0.y.z`) is for initial
+development. Anything MAY change at any time. The public API SHOULD NOT be
+considered stable." The spec assigns **no level at all** pre-1.0, so the
+decision below uses the same observable-change rule before and after 1.0.0.
+Item 5: "Version 1.0.0 defines the public API."
 
 #### The decision
 
@@ -212,12 +212,12 @@ commit subject:
 
 1. **Can a plugin user observe the difference?** → **minor**
 
-   A user installs Team and runs its commands. Anything that changes what they
-   type, what they get back, or what the plugin does on their behalf is
-   observable: a command's name or arguments (`argument-hint`), documented
-   behavior, whether a step prompts them, an artifact's format or frontmatter
-   schema, hook behavior, an agent's model or tool access. New capability and
-   changed capability both land here.
+   A user installs or runs the project. Anything that changes what they type,
+   what they get back, or what the project does on their behalf is observable:
+   a command's name or arguments (`argument-hint`), documented behavior, whether
+   a step prompts them, an artifact's format or frontmatter schema, hook
+   behavior, an agent's model, or tool access. New capability and changed
+   capability both land here.
 
 2. **Otherwise** → **patch**
 
@@ -226,10 +226,10 @@ commit subject:
    item 6's definition — "an internal change that fixes incorrect behavior" —
    and it requires *both* qualifiers, not just a `fix:` subject.
 
-   **Expect patch to be rare.** Team ships prose that a model reads, so a
-   runtime edit usually changes what the plugin does, and question 1 catches it.
-   That is the intended consequence of this rule, not evidence it is
-   miscalibrated — do not widen patch to make the cadence feel familiar.
+   **Expect patch to be rare** for projects that ship instructions a model
+   reads. A runtime edit usually changes project behavior, and question 1
+   catches it. That is the intended consequence of this rule. Do not widen
+   patch to make the cadence feel familiar.
 
 **`major` is unreachable while the version starts `0.`** Item 8 is scoped
 `X > 0`, and 1.0.0 is the release that "defines the public API" (item 5). A
@@ -247,13 +247,11 @@ so it never decides the level. A `fix:` that changes observable behavior is a
 settled *whether* to bump, so a `ci:`/`test:`/`docs:`/`chore:` commit shipping
 no runtime change never reaches this decision at all.
 
-**Worked example — [PR #228](https://github.com/bostonaholic/team/pull/228),
-which this rule exists to get right.** `fix(shipit): merge without stopping for
-approval` removed the `--yes` argument and removed the pre-merge confirmation.
-Question 1: a user who typed `/shipit` stopped being asked to confirm, and a
-documented argument disappeared — observable. **minor** (0.43.2 → 0.44.0). The
-`fix:` subject is irrelevant, and the removed argument does not make it a major
-while Team is pre-1.0.
+**Worked example.** `fix(shipit): merge without stopping for approval` removed
+the `--yes` argument and removed the pre-merge confirmation. Question 1: a user
+who typed `/shipit` stopped being asked to confirm, and a documented argument
+disappeared — observable. **minor**. The `fix:` subject is irrelevant, and the
+removed argument does not make it a major while the project is pre-1.0.
 
 State the chosen level and which question decided it. Both levels are reachable
 from any commit type, so a level that needed a judgment call is a signal the
@@ -314,7 +312,7 @@ format, entry style per `skills/changelog/SKILL.md`):
   `## [Unreleased]` in place, now empty again.
 - Re-point the link-reference footer:
   - `[Unreleased]` compare base → `vX.Y.Z...HEAD`
-  - Add `[X.Y.Z]: https://github.com/bostonaholic/team/compare/v<prev>...vX.Y.Z`
+  - Add `[X.Y.Z]: https://github.com/<owner>/<repo>/compare/v<prev>...vX.Y.Z`
 
 This section becomes the GitHub release notes verbatim — write it for a reader
 deciding if the upgrade is worth it. Any links must be **absolute URLs**: relative paths (e.g.
@@ -350,12 +348,13 @@ only after the cut, so they live here, not in the script):
 
 ```bash
 V=$(jq -r .version .claude-plugin/plugin.json)
+OWNER_REPO=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 ESC=$(sed 's/\./\\./g' <<<"$V")
 grep -qE "^## \[$ESC\] - [0-9]{4}-[0-9]{2}-[0-9]{2}$" CHANGELOG.md \
   || { echo "::error::no '## [$V] - YYYY-MM-DD' section — the cut did not land"; exit 1; }
 grep -qE "^\[$ESC\]: https://" CHANGELOG.md \
   || { echo "::error::no footer compare link for $V"; exit 1; }
-grep -q "\[Unreleased\]: https://github.com/bostonaholic/team/compare/v$V...HEAD" CHANGELOG.md \
+grep -q "\[Unreleased\]: https://github.com/$OWNER_REPO/compare/v$V...HEAD" CHANGELOG.md \
   || { echo "::error::[Unreleased] footer does not compare from v$V"; exit 1; }
 echo "OK: land-time consistency holds"
 ```
@@ -394,5 +393,4 @@ stale-bump recovery re-titles with the recomputed version, and a re-entry that
 ends at "no bump" strips the `vX.Y.Z` prefix explicitly — the title backstop
 never strips a stale prefix.
 
-Then run `/shipit` (step 2 of the dev land process) to push, wait for CI, and
-squash-merge.
+Return to `/shipit` to push, wait for CI, and squash-merge.

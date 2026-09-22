@@ -2,7 +2,7 @@
 
 `shipit` lands the open PR for the **current branch**. Discover it with
 `gh pr view --json baseRefName,number,state,title` and a base-branch fallback.
-Never hardcode the base branch. The `title` is captured here because step 4
+Never hardcode the base branch. The `title` is captured here because step 5
 lands it as the squash commit subject. Run this in one bash call (an agent
 thread resets cwd between calls):
 

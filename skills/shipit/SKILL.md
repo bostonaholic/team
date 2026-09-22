@@ -10,16 +10,13 @@ argument-hint: "[<pr-number>]"
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-`shipit` lands a pull request that already passed review. It pushes any unpushed
-local commits, waits for CI to go green, and squash-merges. The PR title then
-lands as the commit subject on the base branch. If a project puts a version in
-the title, that version shows up in `git log`. It
-**finalizes an existing open PR**, and never opens one. It is generic, and it
-does no versioning, changelog editing, or release work. If a project assigns a
-version at land time, that happens in a separate project-specific step *before*
-`/shipit` (in this repo, the dev `version-bump` skill — see
-[docs/versioning.md](../../docs/versioning.md)). `shipit` only cares that the
-branch is ready to land.
+`shipit` lands a pull request that already passed review. It runs land-time
+versioning, pushes any unpushed local commits, waits for CI to go green, and
+squash-merges. The PR title then lands as the commit subject on the base branch.
+If `version-bump` puts a version in the title, that version shows up in
+`git log`. It **finalizes an existing open PR**, and never opens one. It is
+generic: it invokes `version-bump`, and `version-bump` decides from project
+context whether to commit a bump, land with no bump, or stop.
 
 `gh pr merge` is irreversible, so two things guard it — neither of them a
 frontmatter flag, and neither of them a question put to the user mid-run:
@@ -27,7 +24,7 @@ frontmatter flag, and neither of them a question put to the user mid-run:
 1. **Explicit ship intent.** The skill fires only on a direct "ship it" / "land
    the PR" / `/shipit`. An approved, green, or finished-looking PR is *not*
    ship intent — the user decides when to land.
-2. **CI green** (step 3), which gates the merge mechanically — a red or timed
+2. **CI green** (step 4), which gates the merge mechanically — a red or timed
    out check stops the land before `gh pr merge` ever runs.
 
 The first guard is [human control rules](../team/principles/human-control.md) applied to
@@ -37,7 +34,7 @@ granted authorization is spent, not re-asked.
 **Do not ask the user to confirm the merge.** Ship intent already carried the
 authorization to merge, so a confirmation re-requests permission the invocation
 granted, and every caller that chains into `/shipit` inherits the stop. Once
-step 3 reports green, merge. The guard against merging the wrong thing is
+step 4 reports green, merge. The guard against merging the wrong thing is
 refusing to start without ship intent, not stopping halfway through a land the
 user asked for.
 
