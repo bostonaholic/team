@@ -790,15 +790,18 @@ context before compaction. Compaction can evict that retained content. A
 recovered pipeline phase uses its phase entry and reloads the writing
 standards explicitly.
 
-The trigger-phrase convention keys on the `user-invocable` field —
+The trigger-condition convention keys on the `user-invocable` field —
 not on `argument-hint`, which `docs/skills.md` uses to sort skill
 *flavor*. A skill that does not set `user-invocable: false` must state,
-in its description, at least one double-quoted natural-language phrase
-(one that does not start with `/`) plus its own literal `/<name>`,
-as a leading `Trigger on "/<name>" or "…".` sentence. A
+in its description, one concise use condition by default and a second only for
+a distinct intent. The leading `Use for …` sentence describes the situation
+rather than quoting an exact request. The description omits its own slash
+command because host catalogs already show the skill name. A
 **side-effecting or irreversible** entry-point skill MUST start with an
-explicit-intent guard: `Invoke ONLY …` or `Trigger on … only`. It must also
-state `Never infer …`, the quoted phrases, and the slash name.
+explicit-intent guard that puts the operation immediately after `Use for` and
+includes `only on explicit request` in that sentence. It must also
+state `Never infer …`, unless every
+mutation requires its own in-run approval.
 
 **Which skills are in that class is a complement pair over every write an
 invocation authorizes**, so it returns one answer per skill. *Out of
@@ -910,7 +913,7 @@ An overage requires a reviewed reason stating its exact line count.
    Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
    Twelve agent bodies read execution rules. File-finder retains its single-step contract.
-   Resources use no skill frontmatter or discovery metadata. Keep the 27 commands registered.
+   Resources use no skill frontmatter or discovery metadata. Keep the 28 commands registered.
    Guarded principles are their own tier: they carry skill frontmatter and
    `agents/openai.yaml`, register as commands, and set `disable-model-invocation:
    true` so the model never applies them on its own. Do not add unguarded

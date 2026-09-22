@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: 'Trigger on "/code-review" or "review this diff". Reviews a diff with fresh context.'
+description: 'Use for reviewing code diffs with fresh context.'
 effort: high
 argument-hint: "[<diff target>]"
 ---

@@ -1,6 +1,6 @@
 ---
 name: team-question
-description: 'Trigger on "/team-question" or "decompose this task". Produces task and research-question artifacts.'
+description: 'Use for decomposing features into tasks and research questions. Produces task and question artifacts.'
 effort: medium
 argument-hint: "<ticket id, issue URL, or task description>"
 ---

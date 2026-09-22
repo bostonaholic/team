@@ -1,6 +1,6 @@
 ---
 name: team-fix
-description: 'Trigger on "/team-fix" or "run the bug-fix pipeline" only. Never infer from a plain bug-fix request. Runs the compressed pipeline.'
+description: 'Use for the full bug-fix pipeline only on explicit request. Never infer from an ordinary bug fix. Runs the compressed pipeline.'
 effort: high
 argument-hint: "<ticket id, issue URL, or bug description>"
 ---

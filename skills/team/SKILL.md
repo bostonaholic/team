@@ -1,6 +1,6 @@
 ---
 name: team
-description: 'Trigger on "/team" or "hey team" only. Never infer from a coding request. Runs the QRSPI pipeline or a leading route.'
+description: 'Use for the Team pipeline only on explicit request. Never infer from ordinary coding work. Runs QRSPI or a leading route.'
 effort: high
 argument-hint: "<ticket id, issue URL, feature description, or leading-argument route (investigate|plan|prototype|feature|fix|refactor)>"
 ---

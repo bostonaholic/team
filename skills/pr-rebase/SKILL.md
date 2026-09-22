@@ -1,6 +1,6 @@
 ---
 name: pr-rebase
-description: 'Invoke ONLY on "/pr-rebase" or "rebase onto main". Never infer from a behind branch. Rebases a branch onto its base.'
+description: 'Use for branch rebases only on explicit request. Never infer from a behind branch. Rebases onto the branch base.'
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true

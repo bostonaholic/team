@@ -1,6 +1,6 @@
 ---
 name: team-research
-description: 'Trigger on "/team-research" or "explore the codebase". Researches a codebase area before changes.'
+description: 'Use for focused codebase research before changes.'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

@@ -1,6 +1,6 @@
 ---
 name: pr-screenshots
-description: 'Invoke ONLY on "/pr-screenshots" or "add screenshots to a PR". Never infer from images on disk. Attaches images to a PR body.'
+description: 'Use for adding PR screenshots only on explicit request. Never infer from local images. Attaches them to the PR body.'
 effort: medium
 argument-hint: "[<pr-number-or-url>] [--entries <path>]"
 ---

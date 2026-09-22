@@ -1,6 +1,6 @@
 ---
 name: create-team-skill
-description: Trigger on "create a Team skill" or "revise SKILL.md". Defines skill structure, catalog, and validation.
+description: Use for creating or revising Team skills. Defines structure, catalog, and validation.
 ---
 
 # Create a Team skill
@@ -34,7 +34,7 @@ A description is not Team's to spend freely. Hosts render every installed skill 
 Team cannot see the other tenants and so can never verify that it fits. Be a good neighbor instead: spend as little of the pool as the trigger needs and leave the rest.
 
 - Pay for growth by compressing. A new skill or a longer description comes out of the fleet ceiling, never out of a raise to it.
-- Two trigger phrases, never three near-synonyms. Shortening cuts from the tail, so the discriminating words go first.
+- State one concise use condition by default. Add a second only for a distinct intent. Describe the situation rather than quoting an exact request. Omit the skill's own slash name; the host supplies it. Shortening cuts from the tail, so the discriminating words go first.
 - Keep names short. A name cannot be shortened, and it is charged twice — once as the name, once inside the path.
 
 ## Classify
@@ -48,7 +48,7 @@ If the invocation surface is genuinely ambiguous, ask the user before writing.
 
 ## Write the frontmatter
 
-Required fields are `name` and `description`. Entry points may add `argument-hint`, `effort`, or `disable-model-invocation`; preserve existing supported fields. Descriptions state capability and trigger only. A write-authorizing entry point says `Invoke ONLY on explicit … intent` and `never infer …`, unless every mutation has its own in-run approval.
+Required fields are `name` and `description`. Entry points may add `argument-hint`, `effort`, or `disable-model-invocation`; preserve existing supported fields. Descriptions state the use condition first and capability second. Start ordinary descriptions with `Use for …`. A write-authorizing entry point puts the operation immediately after `Use for` and includes `only on explicit request` in that sentence. It also says `Never infer …`, unless every mutation requires its own in-run approval.
 
 Every runtime skill also has `skills/<name>/agents/openai.yaml`:
 
@@ -92,10 +92,10 @@ Never put `$` followed by a digit in `SKILL.md`; hosts may substitute it as an a
 - Add entry points to the `AGENTS.md` routing table and `docs/skills.md`.
 - Add methodology registrations to `docs/skills.md`. Document ordinary resources separately.
 - Write every `docs/skills.md` entry as its heading, a short user-facing description of what the skill does, one `**Used by:**` line, then one `**Uses:**` line. Use comma-separated backticked names, or `None`. Update the summary when the skill’s purpose changes; do not copy invocation or host-routing instructions from the frontmatter `description`.
-- `Uses` lists, in codepoint order, the skills the files consume in any `.md` under `skills/<name>/`, references and prompt templates included: the ones they load through ``Call the Skill tool with `<name>` ``, and the ones whose `SKILL.md` they reference by path (relative or root-relative). A reference to any other file in a skill's directory, such as a `references/*.md` brief, is not a use, and neither is a bare name in prose nor a reference that only locates a skill's install directory to run a script beside it. Sort in codepoint order (plain `sort`, so `pr-verify` precedes `reviewing-code`). `tests/docs-skills-catalog.test.ts` is the gate.
+- `Uses` lists, in codepoint order, the skills the files consume in any `.md` under `skills/<name>/`, references and prompt templates included: the ones they load through ``Call the Skill tool with `<name>` ``, and the ones whose `SKILL.md` they reference by path (relative or root-relative). A reference to any other file in a skill's directory, such as a `references/*.md` brief, is not a use, and neither is a bare name in prose nor a reference that only locates a skill's install directory to run a script beside it. Sort in codepoint order (plain `sort`, so `pr-verify` precedes `reviewing-code`).
 - `Used by` lists, in codepoint order, every skill whose `Uses` list names this skill.
 - Add one TodoWrite item per ordered step by applying [execution rules](../../../skills/team/references/execution.md); do not copy its banner into the skill.
-- Update `agents/openai.yaml` whenever the description changes.
+- Review `agents/openai.yaml` whenever the description changes; update it when the displayed capability or invocation policy changes.
 - For runtime behavior, update `CHANGELOG.md` under `Unreleased`; version only at land time.
 
 ## Verify

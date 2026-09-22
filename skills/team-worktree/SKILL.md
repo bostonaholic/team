@@ -1,6 +1,6 @@
 ---
 name: team-worktree
-description: 'Trigger on "/team-worktree" or "set up the worktree" only. Never infer from work needing isolation. Prepares isolated git worktrees.'
+description: 'Use for isolated worktrees only on explicit request. Never infer from work needing isolation. Applies project conventions.'
 effort: low
 argument-hint: "[docs/plans/<id>/]"
 ---

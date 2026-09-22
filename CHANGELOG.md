@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Skill descriptions now put concise semantic use conditions first and omit redundant slash-command names, preserving more catalog context for routing.
+
 ## [0.128.0] - 2026-09-22
 
 ### Changed

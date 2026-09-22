@@ -1,6 +1,6 @@
 ---
 name: retro
-description: 'Invoke ONLY on "/retro" or "run a retro". Never infer from session end or friction. Mines a session for durable learnings.'
+description: 'Use for retrospectives only on explicit request. Never infer from session end or friction. Extracts durable learnings.'
 effort: high
 argument-hint: "[skill-name]"
 disable-model-invocation: true
