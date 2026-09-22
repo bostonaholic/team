@@ -1,6 +1,6 @@
 ---
 name: pr-watch-as-author
-description: 'Watches an authored PR for feedback. Trigger on "watch the PR" or "/pr-watch-as-author" only; never infer intent from an open PR.'
+description: 'Trigger on "/pr-watch-as-author" or "watch the PR" only. Never infer from an open PR. Watches an authored PR for feedback.'
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
 ---

@@ -18,8 +18,9 @@ nav_label: skills
 > This page is a hand-maintained reference. When it disagrees with a
 > `SKILL.md`, the `SKILL.md` wins.
 
-Each entry starts with one sentence copied from that skill's frontmatter
-`description`. `**Uses:**` lists the skills this skill consumes: the ones it
+Each entry starts with a short user-facing description of what the skill
+does, maintained separately from its invocation metadata. `**Uses:**` lists
+the skills this skill consumes: the ones it
 loads through the Skill tool and the ones whose `SKILL.md` its files read by
 path. `**Used by:**` lists the skills that consume it. Both use
 comma-separated lists, or `None`.

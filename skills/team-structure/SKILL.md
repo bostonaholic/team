@@ -1,6 +1,6 @@
 ---
 name: team-structure
-description: 'Breaks a reviewed design into verified slices. Trigger on "break the design into steps" or "/team-structure".'
+description: 'Trigger on "/team-structure" or "break the design into steps". Breaks a reviewed design into slices.'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

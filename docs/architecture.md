@@ -795,11 +795,10 @@ not on `argument-hint`, which `docs/skills.md` uses to sort skill
 *flavor*. A skill that does not set `user-invocable: false` must state,
 in its description, at least one double-quoted natural-language phrase
 (one that does not start with `/`) plus its own literal `/<name>`,
-normally as a final `Trigger on "…", "…", or "/<name>".` sentence. A
-**side-effecting or irreversible** entry-point skill MUST carry
-shipit-style explicit-intent guard wording ("Invoke ONLY on explicit …
-intent — … never infer …") beside or instead of the plain carrier, and
-still state the quoted phrases and the slash name.
+as a leading `Trigger on "/<name>" or "…".` sentence. A
+**side-effecting or irreversible** entry-point skill MUST start with an
+explicit-intent guard: `Invoke ONLY …` or `Trigger on … only`. It must also
+state `Never infer …`, the quoted phrases, and the slash name.
 
 **Which skills are in that class is a complement pair over every write an
 invocation authorizes**, so it returns one answer per skill. *Out of

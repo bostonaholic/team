@@ -1,6 +1,6 @@
 ---
 name: team
-description: 'Runs the 8-phase QRSPI feature pipeline, or a leading-argument route. Trigger on "hey team", "build a feature", or "/team" only; never infer pipeline intent from a plain coding request.'
+description: 'Trigger on "/team" or "hey team" only. Never infer from a coding request. Runs the QRSPI pipeline or a leading route.'
 effort: high
 argument-hint: "<ticket id, issue URL, feature description, or leading-argument route (investigate|plan|prototype|feature|fix|refactor)>"
 ---

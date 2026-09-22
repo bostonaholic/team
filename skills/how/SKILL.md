@@ -1,6 +1,6 @@
 ---
 name: how
-description: 'Explains subsystem architecture and runtime flow. Trigger on "how does X work", "explain the architecture", or "/how".'
+description: 'Trigger on "/how" or "how does X work". Explains subsystem architecture and runtime flow.'
 effort: medium
 argument-hint: "[<subsystem, feature, or question>]"
 ---

@@ -1,6 +1,6 @@
 ---
 name: pr-watch-as-reviewer
-description: 'Watches a reviewed PR and approves settled feedback. Trigger on "watch and approve" or "/pr-watch-as-reviewer"; user-invoked only.'
+description: 'Invoke ONLY on "/pr-watch-as-reviewer" or "watch and approve". Never infer intent. Watches and approves PR feedback.'
 effort: medium
 argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true

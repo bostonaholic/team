@@ -1,6 +1,6 @@
 ---
 name: create-team-skill
-description: Create or revise a Team skill. Trigger on creating, scaffolding, or substantially rewriting a skill or SKILL.md.
+description: Trigger on "create a Team skill" or "revise SKILL.md". Defines skill structure, catalog, and validation.
 ---
 
 # Create a Team skill
@@ -13,7 +13,7 @@ Create a skill another agent can select cheaply and follow without missing a con
 2. **Give the invariant, not the case list.** Keep enumerations only when each member is a distinct fact, command, exception, or security boundary.
 3. **Single source of truth.** Define shared logic and rules once. Consumers name the skill or invoke the shared script.
 4. **SKILL.md is a router.** Put conditional procedures, prompt templates, schemas, and long command recipes in `references/` or executable logic in `scripts/`.
-5. **The description is a trigger.** Write `<what it does>. <when to trigger>.`; keep it at most 200 characters, or 150 for methodology, and inside the shared catalog ceilings below.
+5. **The description is a trigger.** Write `<when to trigger>. <what it does>.`; keep it at most 200 characters, or 150 for methodology, and inside the shared catalog ceilings below.
 6. **Tests pin contracts, not wording.** Assertions may pin a command, number, name, or path. Never pin a sentence or heading.
 
 Preserve every command, number, path, name, authorization boundary, untrusted-input rule, fail-closed gate, and producer/reviewer separation rule during rewrites.
@@ -91,7 +91,7 @@ Never put `$` followed by a digit in `SKILL.md`; hosts may substitute it as an a
 
 - Add entry points to the `AGENTS.md` routing table and `docs/skills.md`.
 - Add methodology registrations to `docs/skills.md`. Document ordinary resources separately.
-- Write every `docs/skills.md` entry as its heading, the verbatim first sentence of the frontmatter `description`, one `**Used by:**` line, then one `**Uses:**` line. Use comma-separated backticked names, or `None`. Rewriting a `description` updates that entry in the same commit.
+- Write every `docs/skills.md` entry as its heading, a short user-facing description of what the skill does, one `**Used by:**` line, then one `**Uses:**` line. Use comma-separated backticked names, or `None`. Update the summary when the skill’s purpose changes; do not copy invocation or host-routing instructions from the frontmatter `description`.
 - `Uses` lists, in codepoint order, the skills the files consume in any `.md` under `skills/<name>/`, references and prompt templates included: the ones they load through ``Call the Skill tool with `<name>` ``, and the ones whose `SKILL.md` they reference by path (relative or root-relative). A reference to any other file in a skill's directory, such as a `references/*.md` brief, is not a use, and neither is a bare name in prose nor a reference that only locates a skill's install directory to run a script beside it. Sort in codepoint order (plain `sort`, so `pr-verify` precedes `reviewing-code`). `tests/docs-skills-catalog.test.ts` is the gate.
 - `Used by` lists, in codepoint order, every skill whose `Uses` list names this skill.
 - Add one TodoWrite item per ordered step by applying [execution rules](../../../skills/team/references/execution.md); do not copy its banner into the skill.
