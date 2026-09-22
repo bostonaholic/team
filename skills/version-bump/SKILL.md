@@ -1,17 +1,6 @@
 ---
 name: version-bump
-description: |
-  Version the current project at land time: decide
-  the SemVer level, compute the next free version against current `main`, update
-  version strings, cut the `[Unreleased]` changelog body into a dated
-  `## [X.Y.Z]` section, run the project consistency assertion, and commit
-  `chore(version): X.Y.Z`. The generic runtime `/shipit` skill then pushes,
-  waits for CI, and squash-merges. Invoke ONLY on
-  explicit land intent — the user says "ship it", "land the PR", "bump the
-  version", "version this PR", or a `/shipit` is already in flight. Never infer
-  land intent from work merely being finished, reviewed, green, or ready to open
-  a draft PR: a drafted PR carries no version, and a bump made before land time
-  is stale by the time the PR merges.
+description: 'Invoke ONLY on "/version-bump" or "bump the version", including during "/shipit". Never infer from finished, reviewed, green, or draft-ready work. Assigns the next SemVer at land time.'
 ---
 
 # Version Bump — version a project at land time

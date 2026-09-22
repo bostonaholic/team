@@ -1,6 +1,6 @@
 ---
 name: agent-prompt
-description: 'Composes an agent-optimized prompt for a task. Trigger on "write an agent prompt", "spec out a task", or "/agent-prompt".'
+description: 'Trigger on "/agent-prompt" or "write an agent prompt". Composes an agent-optimized task prompt.'
 effort: medium
 argument-hint: "[<task description>] [--repo <path>] [--out <path>]"
 ---

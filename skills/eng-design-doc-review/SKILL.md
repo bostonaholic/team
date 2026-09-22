@@ -1,6 +1,6 @@
 ---
 name: eng-design-doc-review
-description: 'Reviews a technical design document with fresh context. Trigger on "review the design doc", "audit 6-design.md", or "/eng-design-doc-review".'
+description: 'Trigger on "/eng-design-doc-review" or "review the design doc". Reviews a design with fresh context.'
 effort: high
 argument-hint: "[docs/plans/<id>/]"
 ---

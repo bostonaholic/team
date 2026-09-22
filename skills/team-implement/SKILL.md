@@ -1,6 +1,6 @@
 ---
 name: team-implement
-description: 'Executes and verifies implementation slices. Trigger on "implement this", "execute the plan", or "/team-implement" only; never infer the phase from a ready plan.'
+description: 'Trigger on "/team-implement" or "implement this" only. Never infer from a ready plan. Executes and verifies implementation slices.'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

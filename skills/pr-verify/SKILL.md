@@ -1,6 +1,6 @@
 ---
 name: pr-verify
-description: 'Verifies a PR test plan with evidence-rated verdicts. Trigger on "verify the test plan", "is this PR ready", or "/pr-verify".'
+description: 'Trigger on "/pr-verify" or "verify the test plan". Verifies a PR test plan with evidence.'
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 ---

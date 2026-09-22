@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Skill descriptions now put invocation phrases first and use fewer catalog characters, so hosts retain each skill's trigger terms when they shorten the shared catalog.
+
 ## [0.127.0] - 2026-09-22
 
 ### Changed

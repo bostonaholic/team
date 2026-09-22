@@ -1,6 +1,6 @@
 ---
 name: team-pr
-description: 'Opens PRs with project terms, evidence, and risk. Trigger on "open the PR", "open a draft PR", or "/team-pr" only; never infer the phase from passed verification.'
+description: 'Trigger on "/team-pr" or "open the PR" only. Never infer from passed verification. Opens PRs with project terms, evidence, and risk.'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

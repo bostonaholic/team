@@ -1,6 +1,6 @@
 ---
 name: create-team-skill
-description: Create or revise a Team skill. Trigger on creating, scaffolding, or substantially rewriting a skill or SKILL.md.
+description: Trigger on "create a Team skill" or "revise SKILL.md". Defines skill structure, catalog, and validation.
 ---
 
 # Create a Team skill
@@ -13,7 +13,7 @@ Create a skill another agent can select cheaply and follow without missing a con
 2. **Give the invariant, not the case list.** Keep enumerations only when each member is a distinct fact, command, exception, or security boundary.
 3. **Single source of truth.** Define shared logic and rules once. Consumers name the skill or invoke the shared script.
 4. **SKILL.md is a router.** Put conditional procedures, prompt templates, schemas, and long command recipes in `references/` or executable logic in `scripts/`.
-5. **The description is a trigger.** Write `<what it does>. <when to trigger>.`; keep it at most 200 characters, or 150 for methodology, and inside the shared catalog ceilings below.
+5. **The description is a trigger.** Write `<when to trigger>. <what it does>.`; keep it at most 200 characters, or 150 for methodology, and inside the shared catalog ceilings below.
 6. **Tests pin contracts, not wording.** Assertions may pin a command, number, name, or path. Never pin a sentence or heading.
 
 Preserve every command, number, path, name, authorization boundary, untrusted-input rule, fail-closed gate, and producer/reviewer separation rule during rewrites.
