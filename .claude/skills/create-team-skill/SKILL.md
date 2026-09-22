@@ -48,7 +48,7 @@ If the invocation surface is genuinely ambiguous, ask the user before writing.
 
 ## Write the frontmatter
 
-Required fields are `name` and `description`. Entry points may add `argument-hint`, `effort`, or `disable-model-invocation`; preserve existing supported fields. Descriptions state the use condition first and capability second. Start ordinary descriptions with `Use for …`. A write-authorizing entry point puts the operation immediately after `Use for` and includes `only on explicit request` in that sentence. It also says `Never infer …`, unless every mutation requires its own in-run approval.
+Required fields are `name` and `description`. Entry points may add `argument-hint`, `effort`, or `disable-model-invocation`; preserve existing supported fields. Descriptions state the use condition first and capability second. Start ordinary descriptions with `Use for …`. A write-authorizing entry point puts the operation immediately after `Use for` and includes `only on explicit request` in that sentence. Add a specific exclusion only to prevent likely misrouting; omit generic restatements of the explicit-request requirement.
 
 Every runtime skill also has `skills/<name>/agents/openai.yaml`:
 

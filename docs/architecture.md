@@ -799,9 +799,9 @@ rather than quoting an exact request. The description omits its own slash
 command because host catalogs already show the skill name. A
 **side-effecting or irreversible** entry-point skill MUST start with an
 explicit-intent guard that puts the operation immediately after `Use for` and
-includes `only on explicit request` in that sentence. It must also
-state `Never infer …`, unless every
-mutation requires its own in-run approval.
+includes `only on explicit request` in that sentence. Add a specific exclusion
+only to prevent likely misrouting; omit generic restatements of the
+explicit-request requirement.
 
 **Which skills are in that class is a complement pair over every write an
 invocation authorizes**, so it returns one answer per skill. *Out of

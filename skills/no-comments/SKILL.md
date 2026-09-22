@@ -1,6 +1,6 @@
 ---
 name: no-comments
-description: 'Use for comment cleanup only on explicit request. Never infer intent. Removes low-value comments and encodes valid constraints.'
+description: 'Use for comment cleanup only on explicit request. Removes low-value comments and encodes valid constraints.'
 effort: high
 argument-hint: "[<files-or-diff>]"
 disable-model-invocation: true
