@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.129.0] - 2026-09-22
+
 ### Changed
 
 - Skill descriptions now put concise semantic use conditions first and omit redundant slash-command names, preserving more catalog context for routing.
@@ -1136,7 +1138,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.128.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.129.0...HEAD
+[0.129.0]: https://github.com/bostonaholic/team/compare/v0.128.0...v0.129.0
 [0.128.0]: https://github.com/bostonaholic/team/compare/v0.127.0...v0.128.0
 [0.127.0]: https://github.com/bostonaholic/team/compare/v0.126.0...v0.127.0
 [0.126.0]: https://github.com/bostonaholic/team/compare/v0.125.0...v0.126.0
