@@ -76,6 +76,15 @@ can refuse because an *unrelated sibling* branch needs restacking. The
 correct response is to scope the submit down to the current branch and its
 restacked children — never to restack branches this run did not touch.
 
+A second Graphite wrinkle: `gt submit` also refuses when the **local trunk**
+is behind its remote, and it names trunk rather than the branch being
+submitted, so the message reads as unrelated to this run. Fast-forward trunk
+in the clone that has it checked out — `git pull --ff-only <remote> <trunk>`
+there — and re-issue the submit. A worktree cannot fetch into a branch a
+different worktree holds checked out, so this is not fixable from where the
+rebase ran. Fast-forward only: a trunk that cannot fast-forward has diverged,
+which is a different problem and is not this step's to resolve.
+
 **Re-check the draft state after the publish, whichever path ran:**
 
 ```sh
