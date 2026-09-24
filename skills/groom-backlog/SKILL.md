@@ -11,13 +11,8 @@ If a required read fails, stop that step and report its resolved path. Never use
 
 # groom-backlog — plan, ask, wait, then execute
 
-Grooming mutates shared state that a whole team reads. Placement, dates, and ticket rewrites
-are judgment calls with no mechanical ground truth. A wrong one stays invisible until someone
-acts on a board that now lies. So this skill plans, asks the consequential questions, and
-waits. It acts only on approval. That is the shape `pr-open-comments` takes for an item below
-its auto-apply bar. That checkpoint is the ethos applied, not a hole in it. The pipeline's
-autonomous middle earns its autonomy from mechanical gates. A grooming judgment has none, so
-the user's answer stays this skill's one gate until a loop-driven controller replaces it.
+This skill plans, asks the consequential questions, and waits. It acts only on approval. The
+user's answer stays this skill's one gate until a loop-driven controller replaces it.
 
 The shape is [human control rules](../team/principles/human-control.md): plan the mutations to a file,
 present each consequential choice with one recommendation, and execute only the answered
@@ -47,7 +42,5 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Read and apply: [verified results rules](../team/principles/verified-results.md),
-[human control rules](../team/principles/human-control.md),
-[durable state rules](../team/principles/durable-state.md), and
-[external data rules](../team/references/external-data.md).
+Read and apply: [verified results rules](../team/principles/verified-results.md) and
+[durable state rules](../team/principles/durable-state.md).

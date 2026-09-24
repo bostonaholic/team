@@ -9,7 +9,6 @@ Produce this table into `$RUN_DIR/gap-inventory.md` before forming any opinion:
 - issues whose labels diverge from the project's dominant set
 - estimate coverage — under a third, say so and stop treating rollups as meaningful
 - work owned by another team or repo with nobody named on the other side
-- issues in a ready-to-work or in-progress state with a declared blocker still open — the
-  board is advertising work nobody can start
+- issues in a ready-to-work or in-progress state with a declared blocker still open
 - declared links that cycle, point at themselves, or point at a closed or deleted issue
 - blockers outside this repository, and blockers not on the board at all
