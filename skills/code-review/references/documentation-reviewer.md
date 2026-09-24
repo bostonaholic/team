@@ -31,8 +31,9 @@ documentation quality, apply the [writing standards](../team/references/writing.
    explicitly requires it.
 
 3. **Analyze documentation impact:** new public APIs (part of the public
-   interface), changed behavior, removed functionality, new dependencies, and
-   changed setup or configuration.
+   interface), changed behavior, removed functionality, new dependencies
+   users or contributors need to know about, and changed setup or
+   configuration.
 
 4. **Cross-reference.** Check that existing documentation accurately reflects
    each change: references to removed code or old behavior, broken code examples,

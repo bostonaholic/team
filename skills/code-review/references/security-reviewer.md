@@ -15,10 +15,12 @@ Reviewer"): any CRITICAL or HIGH finding is FAIL, no override.
    Authentication, Sensitive Data Exposure, XSS, CSRF, Insecure
    Deserialization, Missing Access Control, and Security Misconfiguration.
 
-4. **Check for more vulnerabilities:** hardcoded secrets, command injection
-   (user input reaching shell execution, `exec`, `spawn`, or `eval`), path
-   traversal (e.g., `../../../etc/passwd`), unsafe regex (ReDoS), and missing
-   input validation at system boundaries.
+4. **Check for more vulnerabilities:** hardcoded secrets (in source or
+   configuration committed to version control), command injection
+   (unsanitized user input reaching shell execution, `exec`, `spawn`, or
+   `eval`), path traversal (e.g., `../../../etc/passwd`), unsafe regex
+   (ReDoS), and missing input validation (data crossing system boundaries
+   without schema validation or sanitization).
 
 5. **Search beyond the diff.** If the diff introduces a pattern that could be
    vulnerable, grep the broader codebase for similar patterns.
