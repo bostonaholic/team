@@ -14,9 +14,9 @@ Explain first — run `## Explain mode` in full.
      patterns; are types honest about runtime shapes; is complexity where
      the domain needs it or leaked into accidental places?
    - *Evolution readiness and consistency* — how much moves when the
-     likely next requirement lands; which hardcoded assumptions need
-     relaxing; does the area follow the codebase's established patterns,
-     and is any divergence explained?
+     likely next requirement lands; which hardcoded assumptions would
+     need relaxing; does the area follow the codebase's established
+     patterns, and is any divergence explained?
 
    Each critic receives the explanation, the relevant file paths, and
    its lens; it reads the actual code and forms its own judgment — the
