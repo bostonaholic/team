@@ -1,25 +1,22 @@
 Before dispatch, resolve [independent review](../team/principles/independent-review.md). Pass their absolute installed paths with the retained brief.
 The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
 
-## Critique mode
-
-Explain first — run `## Explain mode` in full. You cannot judge an
-architecture you have not established.
+Explain first — run `## Explain mode` in full.
 
 1. **Dispatch critics.** Three fresh-context critics, all **in one
    message**, through the `Agent` tool with `subagent_type: Explore` and
    `model: sonnet`, one lens each:
    - *Abstraction fit and boundary discipline* — does each abstraction
-     earn its place; are boundaries where things change independently;
-     is validation at entry points; could this be tested in isolation?
-   - *Data model and complexity spend* — do the structures fit the
-     access patterns; are types honest about runtime shapes; is
-     complexity concentrated where the domain needs it or leaked into
-     accidental places?
+     earn its place; do boundaries sit where things change
+     independently; is validation at entry points; is it testable in
+     isolation?
+   - *Data model and complexity spend* — do structures fit access
+     patterns; are types honest about runtime shapes; is complexity where
+     the domain needs it or leaked into accidental places?
    - *Evolution readiness and consistency* — how much moves when the
-     likely next requirement lands; which hardcoded assumptions would
-     need relaxing; does this area follow the codebase's established
-     patterns, and is any divergence explained?
+     likely next requirement lands; which hardcoded assumptions need
+     relaxing; does the area follow the codebase's established patterns,
+     and is any divergence explained?
 
    Each critic receives the explanation, the relevant file paths, and
    its lens; it reads the actual code and forms its own judgment — the
@@ -29,17 +26,13 @@ architecture you have not established.
    **observation** (worth noting), with concrete code evidence — a
    dependency chain shown, never asserted. Architectural findings only:
    line-level review belongs to `code-review`, and a rewrite may not be
-   suggested without a demonstrated problem. The critics get fresh
-   context and no authorship stake — that separation is the point
-   ([independent review rules](../team/principles/independent-review.md)). If dispatch is
+   suggested without a demonstrated problem. If dispatch is
    unavailable, run the three lenses yourself sequentially and say so.
 
-2. **Judge as the lead.** You are a pragmatic lead, not an aggregator.
-   Sort every finding into **Act on** (worth fixing now), **Consider**
-   (real, unclear cost/benefit), **Noted** (valid, low priority), or
-   **Dismissed** (wrong, missing context, or style preference — say
-   which).
+2. **Judge as the lead**, not an aggregator. Sort every finding into
+   **Act on** (worth fixing now), **Consider** (real, unclear
+   cost/benefit), **Noted** (valid, low priority), or **Dismissed**
+   (wrong, missing context, or style preference — say which).
 
 3. **Present.** The explanation first, standing on its own; the critique
-   verdict below it. A reader who only wants to understand the system
-   never wades through critique.
+   verdict below it.
