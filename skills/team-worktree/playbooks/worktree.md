@@ -1,8 +1,8 @@
 # Worktree Isolation
 
 Every `/team` run works in one isolated git worktree per repository the topic
-touches. The router owns isolation, not individual agents. Read this playbook
-before setup or teardown.
+touches; main working trees are never touched. The router owns isolation, not
+individual agents. Read this playbook before setup or teardown.
 
 ## Single-repo (default)
 
@@ -26,9 +26,10 @@ artifacts from the home worktree path the orchestrator passes in.
 ## Worktree creation
 
 For the home repo, use the host's native worktree support when it offers one
-(Claude Code's `--worktree <topic>` or dispatch into a worktree context). For
-the other repos in multi-repo mode, use plain `git worktree add`, because a
-native flag only knows about the repo the session was launched from.
+(Claude Code's `--worktree <topic>` or dispatch into a worktree context) and
+`git worktree add` otherwise. For the other repos in multi-repo mode, use
+plain `git worktree add`, because a native flag only knows about the repo the
+session was launched from.
 
 ## Lifecycle
 

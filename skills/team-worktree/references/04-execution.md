@@ -9,20 +9,24 @@
   `skills/team-worktree/playbooks/worktree.md`)
 
 **Branch names must never contain a slash (`/`).** Use `-` as the only
-delimiter: replace every `/` in `<id>` with `-` —
-`branch="$(printf '%s' "$id" | tr '/' '-')"`, normally identical to `<id>` —
-and use that `<branch>` as **both** the branch name and the worktree
-directory name in every repo. Only the `docs/plans/<id>/` artifact directory
-keeps the original `<id>`.
+delimiter. If `basename "$ARGUMENTS"` ever yields a name containing `/`,
+replace every `/` with `-` first and use that sanitized name as **both** the
+branch name and the worktree directory name:
+`branch="$(printf '%s' "$id" | tr '/' '-')"`. Only the `docs/plans/<id>/`
+artifact directory keeps the original `<id>`.
 
 ### Confirm with the user (standalone invocation only)
 
 **Standalone invocation only — in a full `/team` run, skip this dialog entirely and proceed straight to "Create the worktree(s)".**
+The dialog fires only when a human invoked `/team-worktree` directly.
 
-If **no** repo needs creation (e.g. single-repo mode where the detect step
-skipped the home repo), skip this dialog too — the reuse announcement
-suffices. Otherwise show each worktree to create (`<repo-name> @ <path>` per
-repo in multi-repo mode), the branch `<id>`, and `$ARGUMENTS/8-plan.md`.
+Create a worktree only for the repos that actually need one. If **no** repo
+needs creation (single-repo mode where the detect step skipped the home
+repo), skip this dialog entirely — the reuse announcement above is
+sufficient. Proceed to Completion.
+
+Show each worktree to create (`<repo-name> @ <path>` per repo in multi-repo
+mode), the branch `<id>`, and `$ARGUMENTS/8-plan.md`.
 Use `AskUserQuestion` with a `Worktree` header and **Proceed** /
 **Cancel** options.
 
@@ -31,6 +35,10 @@ Use `AskUserQuestion` with a `Worktree` header and **Proceed** /
 After the user confirms (standalone invocation) — or immediately, in
 pipeline mode — create a worktree in each repo the detect step
 did **not** skip:
+
+Use the slash-sanitized name (`<branch>`, derived above) for both the
+worktree directory and the `-b` flag in every repo. In the common case
+`<branch>` equals `<id>`.
 
 - **Single-repo:** create the home worktree on branch `<id>` off
   `origin/HEAD`, using the host's native worktree support when it offers
