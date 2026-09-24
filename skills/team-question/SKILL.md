@@ -30,7 +30,7 @@ Run the QUESTION phase only, then stop. The phase writes, in `docs/plans/<id>/`:
 1. **Resolve `$ARGUMENTS`** to a description:
    - Empty: **discover, do not demand.** Read recent `git log` activity and
      the repo's `README` / `CLAUDE.md` to propose a likely topic, then use
-     `AskUserQuestion` with labeled options to fill any genuine gap in
+     `AskUserQuestion` with labeled options only to fill a genuine gap in
      intent. Never bare-stop with a plain "describe it" demand when context
      is already available.
    - Ticket-only: ask the user for context, or use any tracker integration
