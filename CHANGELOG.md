@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `/agent-prompt` is about 34% shorter. The template's filled example, a paragraph that repeated the skill's elevation step, and sentences the skill said twice came out; every rule stayed — the one question when the target repo is ambiguous, the open question instead of a guessed reading, a source or `unknown` on every fact, elevation that keeps every command, path, and check, the output file as the only write, no secrets or untrusted text in the prompt, and no dispatch or execution. **What this asks of you:** nothing.
+
 ## [0.132.0] - 2026-09-25
 
 ### Fixed
