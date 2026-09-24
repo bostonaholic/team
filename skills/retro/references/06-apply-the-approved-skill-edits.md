@@ -70,14 +70,17 @@ command; shell state does not survive between invocations, so the file is
 re-read and the repository root re-derived in whichever invocation needs them,
 rather than read back from an earlier block's variable.
 
-- **A refused name** — by the allowlist above or by the guard — drops only
-  that one item, named in the summary, while the others proceed.
-- **An edit** lands at the guard's `edit target`. When both `<repo>/skills/`
-  and `<repo>/.claude/skills/` hold the same name, the plan names both paths
-  and marks the shadowed one untouched.
+- **A name** the allowlist or the guard's name check refuses drops only that
+  one item, named in the summary, while the others proceed.
+- **An edit** lands under the guard's `edit root`, the skills root the running
+  host actually loads. When both `<repo>/skills/` and `<repo>/.claude/skills/`
+  hold the same name, the plan names both paths and marks the shadowed one
+  untouched.
 - **A creation** only ever targets `.claude/skills/<name>/SKILL.md` under the
   repository, and only when that path does not exist. A missing parent
   directory is created as part of the write.
+- **Every resolved real path must stay inside the repository**, so a symlinked
+  directory cannot carry a write out of it.
 - **Never write** `~/.claude/**` (a plugin update overwrites cached skills), a
   sibling repository, or `agents/*.md`.
 

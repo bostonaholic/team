@@ -40,7 +40,7 @@ context window. Track the last record read when continuing across chunks.
 There is no per-span, record-count, or aggregate-size limit on the normalized
 transcript.
 
-It reads Claude Code's `~/.claude/projects/<project-slug>/<session-id>.jsonl`,
+The script reads Claude Code's `~/.claude/projects/<project-slug>/<session-id>.jsonl`,
 Codex's `${CODEX_HOME:-~/.codex}/sessions/<YYYY>/<MM>/<DD>/rollout-<timestamp>-<thread-id>.jsonl`,
 or OpenCode's SQLite database at `$OPENCODE_DB` (default
 `${XDG_DATA_HOME:-~/.local/share}/opencode/opencode.db`). **Conductor is not a
