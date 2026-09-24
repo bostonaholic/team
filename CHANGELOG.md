@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Shortened `/team-design` by about a fifth without changing what it does. It still discovers the same `docs/plans/<id>/` directory, resumes at review when a design already exists, runs the cross-model pass and the adversarial review each round, records every verdict, re-drafts on REQUEST CHANGES with no round cap, and fails closed on a missing verdict. [`skills/team-design/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
+
 ## [0.132.6] - 2026-09-25
 
 ### Changed
