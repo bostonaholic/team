@@ -1,10 +1,11 @@
 // Fails when a skills/**/*.md or agents/*.md file references a missing path in one of these forms:
 // - outside fenced code, from the file's directory or (under skills/) its skill root:
 //   [text](path) links, and code spans starting with references/, playbooks/, scripts/,
-//   resources/, or ../<skill>/.
+//   resources/, or ../<skill>/. A span wrapped across lines is skipped.
 // - outside fenced code, from the plugin root: code spans starting with skills/.
-// - everywhere, fences included: ${CLAUDE_PLUGIN_ROOT}/path from the plugin root,
-//   <NAME-skill-dir>/path from skills/NAME, and <skill-dir>/path like a link.
+// - everywhere, fences included: ${CLAUDE_PLUGIN_ROOT}/path and <installed-team-root>/path
+//   from the plugin root, <skills-root>/path from skills/, <NAME-skill-dir>/path from
+//   skills/NAME, <refs-dir>/path from the file's directory, and <skill-dir>/path like a link.
 // Skips URLs, pure anchors, and paths holding < > { } [ ] * ? $ …. An unclosed fence fails.
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -25,13 +26,16 @@ function markdownFiles(dir) {
 function references(file) {
   const [tree, skill] = file.split(sep);
   const local = tree === "skills" ? [dirname(file), join(tree, skill)] : [dirname(file)];
+  const roots = { "skill-dir": local, "refs-dir": [dirname(file)], "skills-root": ["skills"], "installed-team-root": ["."] };
   const found = [];
   let fence = null;
+  let openSpan = false;
   readFileSync(file, "utf8").split(/\r?\n/).forEach((text, index) => {
     const add = (path, bases) => found.push({ file, line: index + 1, path: path.replace(/#.*$/, ""), bases });
     for (const [, path] of text.matchAll(/\$\{CLAUDE_PLUGIN_ROOT\}\/([^\s"'`)]+)/g)) add(path, ["."]);
-    for (const [, name, path] of text.matchAll(/<(?:([\w-]+)-)?skill-dir>\/([^\s"'`)]+)/g)) {
-      add(path, name ? [join("skills", name)] : local);
+    for (const [, root, path] of text.matchAll(/<([\w-]+)>\/([^\s"'`)]+)/g)) {
+      const bases = root.endsWith("-skill-dir") ? [join("skills", root.replace(/-skill-dir$/, ""))] : roots[root];
+      if (bases) add(path, bases);
     }
 
     const marker = text.match(/^\s*(`{3,}|~{3,})(.*)$/);
@@ -43,15 +47,26 @@ function references(file) {
     }
     if (marker) {
       fence = { marker: marker[1], line: index + 1 };
+      openSpan = false;
       return;
     }
 
-    for (const [, span] of text.matchAll(/`([^`]+)`/g)) {
+    // Drop the parts of a code span that wraps across lines so backtick pairing stays aligned.
+    let prose = text;
+    if (!prose.trim()) openSpan = false;
+    if (openSpan) {
+      if (!prose.includes("`")) return;
+      prose = prose.slice(prose.indexOf("`") + 1);
+    }
+    openSpan = (prose.match(/`/g) ?? []).length % 2 === 1;
+    if (openSpan) prose = prose.slice(0, prose.lastIndexOf("`"));
+
+    for (const [, span] of prose.matchAll(/`([^`]+)`/g)) {
       const path = span.trim().split(/\s/)[0];
       if (path.startsWith("skills/")) add(path, ["."]);
       else if (SKILL_LOCAL.test(path)) add(path, local);
     }
-    for (const [, target] of text.replace(/`[^`]+`/g, "").matchAll(/\]\(([^)\s]+)/g)) add(target, local);
+    for (const [, target] of prose.replace(/`[^`]+`/g, "").matchAll(/\]\(([^)\s]+)/g)) add(target, local);
   });
   if (fence) found.push({ file, line: fence.line, path: "unclosed code fence", bases: [] });
   return found;
