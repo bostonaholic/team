@@ -57,7 +57,7 @@ hit it lands in `$RUN_DIR/unloaded-threads.txt`, and every issue that hit a link
 
 Each link node carries `number`, `title`, `url`, `state`, and `repository.nameWithOwner`, so
 the cache decides if a blocker is still open and if it lives in this repository. The load is
-open-issues-only while a link outlives its target's closing: a `blockedBy` node in state
+open-issues-only while a link outlives its target's closing. A `blockedBy` node in state
 `CLOSED` is a satisfied dependency, not a missing issue. The node's `id` is a
 **GraphQL node id**, not the database id the REST writes want — `## Tracker recipes` resolves
 that separately.
