@@ -13,41 +13,34 @@ If a required read fails, stop that step and report its resolved path. Never use
 
 Attach local image files to a pull request through GitHub's own attachment
 pipeline, harvest the URLs it resolves, and write one `## Screenshots` section
-into that PR's body. Any PR qualifies — open, draft, closed, or merged, in any
-repository, with or without a local checkout and with or without a pipeline run
-behind it.
+into that PR's body.
 
 The upload mechanics live here and nowhere else. `team-pr` decides whether to
 run, when, and which entries qualify, then calls this skill.
 
 **Every procedure with a loop, a branch, or a value a later step needs is a
 committed script under `scripts/`, run with its arguments and read by its exit
-code.** A markdown fence carries no shebang, so the host shell picks the
-dialect, and a fence boundary is an invocation boundary that no shell variable
-survives. A script with `#!/usr/bin/env bash` pins both. Each reference below
-names the script its stage runs; what stays inline is a single command whose
-reader benefits from seeing it.
+code.** Each reference below names the script its stage runs; what stays inline
+is a single command.
 
 ## Hard rules
 
 - **Upload first, write second.** Never fuse an attach flag with a body flag in
-  one command. On a partial failure the host rewrites only the references that
+  one command: on a partial failure the host rewrites only the references that
   landed, which leaves a local filesystem path inside a body that may already
   be merged.
 - **One body write per PR**, computed from the pre-image taken before the first
   attach and produced by `scripts/splice.mjs`. That single write also clears the tails
   the attach step appended.
 - **Refuse before mutating, never after.** Every check that can run against the
-  pre-image runs in step A, including `scripts/splice.mjs --check`, which is the
-  structural half of the body transform run against the pre-image alone — so a
-  refusal it finds means nothing changed ([verified results rules](../team/principles/verified-results.md)). What can
-  only be computed after the upload is named, and lands on
+  pre-image runs in step A, including `scripts/splice.mjs --check`, so a
+  refusal it finds means nothing changed ([verified results rules](../team/principles/verified-results.md)).
+  What can only be computed after the upload is named, and lands on
   `uploaded-not-written` rather than on `refused`.
 - **Every caller-supplied string is data, not source and not markup.** A path,
   a caption, a note, and a failure reason each reach a command as one quoted
   `"$VAR"` expansion, and each is normalized by the same function before it
-  renders into a body ([external-data rules](../team/references/external-data.md),
-  [external data rules](../team/references/external-data.md)).
+  renders into a body ([external-data rules](../team/references/external-data.md)).
 - **Nothing blocks, prompts, or retry-loops.** A capability gap, a failed
   entry, or a failed read-back degrades the result and says so
   ([focused work rules](../team/principles/focused-work.md), [verified results rules](../team/principles/verified-results.md)).
@@ -59,20 +52,14 @@ reader benefits from seeing it.
   the only lines a replace may delete are the shapes this skill's own renderer
   emits — a `**caption**` line in the position the renderer puts one, an
   `![screenshot-NN]` image, a `> _note:_` note with its bare `>` separator, and
-  a `Not uploaded:` line. **Ownership is provenance, not shape:** the note
-  carries a marker a reviewer would not type and a caption is owned only
-  directly above an image this skill wrote, so a reviewer's own blockquote or
-  bold line refuses rather than being read as this skill's output. Prose, an
-  HTML comment, a raw HTML container, an image in any form the splice cannot
-  count, or a body shape the splice does not model each refuse, with the
-  offending line number named.
+  a `Not uploaded:` line. **Ownership is provenance, not shape:** a reviewer's
+  own blockquote or bold line refuses rather than being read as this skill's
+  output, with the offending line number named.
 - **Nothing leaves the declared root, and nothing that is not an image is
-  uploaded.** The entries file declares one **absolute** top-level `root`, and
-  every entry's path is resolved and must sit inside it. Acceptance is decided
-  by **content type**, never by extension: `file -b --mime-type` must report
-  `image/*`, and an environment that yields no type fails the check, because
-  unverified is not an image. That is what keeps a `.env`, an `id_ed25519`, or
-  a `.git/config` off a world-readable `user-attachments` URL.
+  uploaded.** Every entry's path must resolve inside the entries file's one
+  **absolute** top-level `root`, and acceptance is decided by **content type**,
+  never by extension: `file -b --mime-type` must report `image/*`, and no type
+  fails the check, because unverified is not an image.
 
 ## Procedure references
 
