@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `/retro` is shorter. Its instructions no longer carry rationale paragraphs or explanations of what its bundled scripts already enforce. Every approval question, refusal, write fence, untrusted-input rule, and host-specific fact is unchanged. **What this asks of you:** nothing.
+
 ## [0.132.4] - 2026-09-25
 
 ### Changed

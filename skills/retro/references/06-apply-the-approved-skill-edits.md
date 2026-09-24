@@ -1,8 +1,7 @@
 ## Apply the approved skill edits
 
 The plan turn ends here. Applying the plan is a **separate turn** that reads
-the plan file, because approval can arrive after a compaction that took the
-plan turn's reasoning with it.
+the plan file.
 
 ### The approval question
 
@@ -10,8 +9,6 @@ Ask one `AskUserQuestion` for the whole skill-write class, presenting each
 proposed edit with its target path, the learning it lands, and its evidence
 line. Nothing is written before the answer. No answer writes nothing; a
 partial answer writes only the subset that was answered.
-The gate is [human control rules](../team/principles/human-control.md): the ask and the
-act are separate turns, and the executing turn re-reads the plan from disk.
 
 One question for the class is enough **because of the precondition below**, not
 instead of it. Every write is either a file retro created — undone by
@@ -24,18 +21,14 @@ irreversible, so it takes its own question per issue.
 
 Apply the plan file in the run cache whose absolute path **this conversation
 printed**. Never read a plan file from a directory this conversation did not
-print: two retro runs can sit on one repo, approval is not idempotent, and a
-stranger run's plan applies edits nobody approved. With no printed path — a
-fresh session, or a compaction that lost it — stop and fire `AskUserQuestion`
-for the absolute plan path rather than guessing at one.
+print. With no printed path — a fresh session, or a compaction that lost it —
+stop and fire `AskUserQuestion` for the absolute plan path rather than
+guessing at one.
 
 ### Per item: the precondition that makes the undo true
 
-The two kinds of write have different undos, so they carry different
-preconditions. Hold an edit to the tracked-and-clean fence; hold a creation to
-the absence of its target.
-This is [durable state rules](../team/principles/durable-state.md): the undo defines the
-precondition, and a write with no recoverable before-state does not run.
+Hold an edit to the tracked-and-clean fence; hold a creation to the absence of
+its target.
 
 **An edit** is applied only while its target is tracked and clean:
 
@@ -44,21 +37,14 @@ git ls-files --error-unmatch -- "<path>"   # not tracked -> skip this item
 git status --porcelain -- "<path>"         # non-empty -> skip this item
 ```
 
-A target that is untracked or already dirty cannot be restored to a known
-state, so `git restore -- <path>` would not be an undo there — it would discard
-the user's own uncommitted work. Such an item is **skipped** with the reason
-reported, never written. Then re-read the target and compare it against the
-**pre-image** the plan recorded. Any difference skips that item and reports it,
-which covers a target that already carries the edit and a target that changed
-some other way.
+An item that fails either check is **skipped** with the reason reported, never
+written. Then re-read the target and compare it against the **pre-image** the
+plan recorded. Any difference skips that item and reports it, which covers a
+target that already carries the edit and a target that changed some other way.
 
-**A creation** targets a path that does not exist, so it is untracked by
-definition and has no pre-image — the fence above would therefore skip every
-creation ever proposed, and the comparison would have nothing to compare. Its
-precondition is that absence itself: the named path must not exist. A path that
-does exist skips that item and reports it, because retro overwrites nothing it
-did not create. Its undo is deleting the named path, which is safe for exactly
-that reason.
+**A creation** is applied only while its named path does not exist. A path
+that does exist skips that item and reports it, because retro overwrites
+nothing it did not create.
 
 ### Where a write may land
 
@@ -79,42 +65,28 @@ esac
 node "<skill-dir>/resources/write-target.mjs" "$(git rev-parse --show-toplevel)" "${NAME:?}"
 ```
 
-Pasted between double quotes, a name carrying `$(…)`, a backtick, or `${…}`
-runs as shell before `node` starts, so the guard's own allowlist would arrive
-one process too late — the same reason a focus is screened before the lookup.
-A command substitution's **output**, by contrast, is not re-parsed. Reference
-the value only as `"$NAME"` and never paste the literal into a later command;
-shell state does not survive between invocations, so the file is re-read and the
-repository root re-derived in whichever invocation needs them, rather than read
-back from an earlier block's variable.
+Reference the value only as `"$NAME"` and never paste the literal into a later
+command; shell state does not survive between invocations, so the file is
+re-read and the repository root re-derived in whichever invocation needs them,
+rather than read back from an earlier block's variable.
 
-- **A name** must match `^[a-z][a-z0-9-]*$`. `.hidden`, `foo.bar`, `.`, `..`,
-  and an uppercase name each drop that one item, named in the summary, while
-  the others proceed.
-- **An edit** lands in the skills root the running host actually loads: a repo
-  carrying a plugin marker (`.claude-plugin/plugin.json` or a root
-  `plugin.json`) is a plugin root and its host reads `<repo>/skills/`; every
-  other repo is a project and its host reads `<repo>/.claude/skills/`. When
-  both roots hold the same name, the plan names both paths and marks the
-  shadowed one untouched.
+- **A refused name** — by the allowlist above or by the guard — drops only
+  that one item, named in the summary, while the others proceed.
+- **An edit** lands at the guard's `edit target`. When both `<repo>/skills/`
+  and `<repo>/.claude/skills/` hold the same name, the plan names both paths
+  and marks the shadowed one untouched.
 - **A creation** only ever targets `.claude/skills/<name>/SKILL.md` under the
-  repository, and only when that path does not exist. Adding a file to a
-  distributed plugin's own `skills/` directory is a release decision, so it
-  goes to Backlog instead. A missing parent directory is created as part of the
-  write.
-- **Every resolved real path must stay inside the repository**, so a symlinked
-  directory cannot carry a write out of it.
+  repository, and only when that path does not exist. A missing parent
+  directory is created as part of the write.
 - **Never write** `~/.claude/**` (a plugin update overwrites cached skills), a
-  sibling repository, or `agents/*.md` (agent frontmatter carries registry and
-  tooling invariants).
+  sibling repository, or `agents/*.md`.
 
 ### How the edit is authored
 
 Probe for the repo's own authoring guidance and follow the first hit:
 `.claude/skills/create-team-skill/`, then any repo skill whose directory name
 matches `create-*skill*`, then an installed host `skill-creator`. A miss at
-every tier is not an error — none of those ships with this skill, so the
-fallback is fixed here:
+every tier is not an error — the fallback is fixed here:
 
 - `name` and `description` always.
 - The description starts with one concise semantic use condition; add a second
@@ -126,7 +98,6 @@ fallback is fixed here:
 ### After the writes
 
 Run the repo's own check — read the [verify playbook](../team/playbooks/verify.md)
-to detect it, never invent one — and report the verdict. A failure names the failing test and the file written. Reflect neither
-fixes the failure nor reverts the write: a revert hides which edit was wrong,
-and the recovery command per item is already in the report. Where the repo
-configures no check, say that none ran.
+to detect it, never invent one — and report the verdict. A failure names the
+failing test and the file written. Reflect neither fixes the failure nor
+reverts the write. Where the repo configures no check, say that none ran.

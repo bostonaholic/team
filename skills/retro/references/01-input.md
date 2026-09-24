@@ -1,8 +1,7 @@
 ## Input
 
-`$ARGUMENTS` is optional and carries one scalar: a **skill name** that narrows
-every lens to learnings about that skill. Empty means the whole session, which
-is the normal case.
+`$ARGUMENTS` is optional: one **skill name** that narrows every lens to
+learnings about that skill. Empty means the whole session.
 
 **A focus is validated before anything is read.** Resolve it against the
 directories that exist:
@@ -20,14 +19,11 @@ case "$FOCUS" in
 esac
 ```
 
-The character allowlist runs before the lookup, not after: the focus is an
-argument this skill places into commands, and every skill directory on disk is
-lowercase and hyphenated anyway, so a name outside that set cannot be a hit and
-must not reach a command as one.
+The character allowlist runs before the lookup, not after: every skill
+directory on disk is lowercase and hyphenated, so a name outside that set
+cannot be a hit and must not reach a command as one.
 
 A focus naming no skill **stops the run here** and prints its near matches —
 the names within an edit or two of what was typed, and the names that contain
-it. Reading a whole session to serve an argument that was never going to match
-spends the expensive step first and reports nothing; a near-match list turns a
-typo into a one-line correction. A focus that resolves is carried into every
-lens prompt as a scope, never as a conclusion about what the session got wrong.
+it. A focus that resolves is carried into every lens prompt as a scope, never
+as a conclusion about what the session got wrong.
