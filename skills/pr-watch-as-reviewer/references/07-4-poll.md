@@ -3,29 +3,13 @@
 Each poll is one Bash call. Its comment connections are the structural
 projection of the shared [pull-request comment retrieval](../../team/references/pull-request-comments.md):
 review threads, review summaries, and conversation comments remain disjoint,
-and inline comments come only from `reviewThreads`. The GraphQL query below fetches the PR state
-for merge and close detection, the head SHA, and the auto-merge state.
-It also fetches the review threads with the fields the partition in step
-2 needs: thread `isResolved`, plus the first comment's author and review
-state for tracked-set membership and PENDING exclusion. The `id` and
-`path` fields are structural too: `id` lets the re-review below
-attribute a resolved↔unresolved flip to the same thread across polls,
-and `path` names the file a verdict must be re-checked against after a
-push. The thread's `comments` connection is selected at `first: 100`
-rather than `first: 1`, because the new-reply trigger needs every
-comment id on the thread, not only the first: the first comment's
-`author` and `state` still decide tracked-set membership, and the ids
-below it are what a later poll diffs to notice a reply. Paginate past
-100 with `after:` cursors. Every field here is structural — ids,
-logins, and a review state — so the widened selection still carries no
-body:
-
-The same query fetches review summaries and plain PR comments with the
-structural fields their tracked classes need and no body. `id` keys membership
-against the step-1 classification, `author { login }` filters to the viewer,
-and `submittedAt` or `createdAt` is the timestamp engagement is measured
-against. The aliased connections remain different from a review thread's
-`comments`, so an inline comment never appears twice:
+and inline comments come only from `reviewThreads`. A thread's `id`
+attributes a resolved↔unresolved flip to the same thread across polls; its
+`path` names the file a verdict must be re-checked against after a push.
+Each thread's `comments` stay at `first: 100`, not `first: 1`, because the
+new-reply trigger diffs every comment id on the thread across polls; the
+first comment's `author` and `state` still decide tracked-set membership
+and PENDING exclusion:
 
 ```bash
 gh api graphql -f owner="$OWNER" -f repo="$REPO" -F number="$NUMBER" -f query='
@@ -75,54 +59,33 @@ query($owner: String!, $repo: String!, $number: Int!) {
 
 The string variables pass with `-f`, which always sends a literal —
 `gh api -F` reads a value's leading `@` as a file reference. `number`
-alone keeps `-F`, which parses the typed `Int!` (the pending-review
-check in step 1 uses the same flags for the same reason).
+alone keeps `-F`, which parses the typed `Int!`.
 
 Recompute `autoMergeEnabled` from `autoMergeRequest` on every poll.
-Anyone with write access can enable auto-merge mid-watch. Step 6's
-merge-safety checks thus trust only the final poll's value, never the
+Step 6's merge-safety checks trust only the final poll's value, never the
 stale arm-time read. `enabledAt` is a timestamp. The selection
 deliberately carries no user or free-text field.
 
 Past 100 nodes, paginate every top-level connection and every thread's comment
 connection with `after:` cursors (the same pagination
 pitfall `skills/pr-open-comments/SKILL.md` documents). Step 2's rule
-applies — the gate is computed only after pagination completes for all
-connections, and an
-unfetched page is a poll failure, never an empty gate.
-
-**What counts as settled differs by shape, and no shape is taken on
-faith.** A flag or a reply is a trigger to go look at the branch. What
-settles an item is always the same thing: the code, read as it now
-stands, meets the concern the comment raised.
+applies — an unfetched page is a poll failure, never an empty gate.
 
 A **tracked PR-level item** — review summary or conversation comment — settles only when both hold:
 
 1. **The head SHA advanced after the item's `submittedAt` or `createdAt`.** An item
    that clears this bar is **engaged** — the one term used for it
    throughout this skill. This is a
-   hard precondition, not one option among several. PR-level feedback
-   raises something about the code, so nothing but the code changing can
-   settle it. A reply alone never does — not a "good catch", not a
-   "fixed in the next push", not an argument. No push after the comment
-   means the comment is not engaged, its verdict is **pending**, and the
-   loop keeps
-   waiting.
+   hard precondition, not one option among several. A reply alone never
+   settles it — not a "good catch", not a "fixed in the next push", not
+   an argument. No push after the comment means the comment is not
+   engaged, its verdict is **pending**, and the loop keeps waiting.
 2. **The current state of the branch addresses the comment**, judged by
    the re-review rules below against the code as it now stands — not
    against the commit that happened to move the head.
 
 A **tracked thread** settles when the author resolves it AND the
-re-review agrees. `isResolved` is a claim, not a fact: it is one click
-by the person whose code you are approving, and it survives being wrong.
-So a resolved thread is verified against the current branch exactly like
-PR-level feedback is. What differs is not whether you check — you always
-check — but how much it takes to overturn what you find, which the
-deference rule below sets.
-
-A trigger is never a verdict. It says only that something happened that
-*might* meet the concern. The re-review decides, and it is the only
-thing that can.
+re-review agrees.
 
 **Re-review every new settlement, and every new reply.** Three triggers
 fire the semantic check the wait gate deliberately lacks:
@@ -133,21 +96,15 @@ fire the semantic check the wait gate deliberately lacks:
    viewer — a comment id on the thread that the previous poll did not
    show, and at cycle 0 every tracked thread that already carries a
    non-viewer reply. **This trigger fires whether or not the thread is
-   resolved**, and it is the one that keeps a reply from sitting in the
-   dark: an author who answers in prose and waits for you gets an answer
-   instead of silence until the soft cap. It is why the poll
-   query selects each thread's full comment connection rather than only
-   its first comment: diffing this poll's comment ids against the
-   previous poll's is what detects the reply.
+   resolved.**
 3. a tracked PR-level item whose **head-advance precondition is newly met** —
    the head moved past its `submittedAt` or `createdAt` since the previous
    poll, and at cycle 0 every tracked PR-level item the head has already moved past.
 
 A reply-triggered re-review on an unresolved thread renders a verdict
 exactly like a settlement-triggered one, and the verdict actions below
-then follow from it. A **pending** verdict there is the ordinary case, not a
-failure: the author said something the branch does not yet bear out, so
-nothing is written and the loop keeps waiting.
+then follow from it. A **pending** verdict there writes nothing and the
+loop keeps waiting.
 
 - Fetch the settled items' full comment lists (id, author login, and
   body) with a scoped GraphQL read — a thread's `comments`, or for a
@@ -171,19 +128,16 @@ nothing is written and the loop keeps waiting.
     the evidence does not clearly support another verdict.
   - **rejected** — the change or reply does not meet the concern, and
     you are confident it does not.
-- **Thread and PR-level feedback differ in which way they fail, not in whether they
-  are checked.** Both are read against the current branch. What changes
-  is where the burden sits when the evidence is unclear:
+- When the evidence is unclear, the burden sits by shape:
   - **A tracked PR-level item defaults to pending.** No author action asserts
     it is done, so an unclear read means not-yet-settled. A push that
     touches files the comment never raised is **pending**, not
     **addressed**. A reply with no code behind it is **pending**, not
-    **answered**. The comment names its scope in prose, so read that
-    scope narrowly and require a change that meets it on its own terms.
-    Ambiguity never becomes a passing verdict.
-  - **A resolved thread defaults to accepted.** The author made an
-    explicit assertion, and overturning it is a real accusation, so the
-    bar to **rejected** is high: reject only when you have *very high
+    **answered**. Read the comment's scope narrowly and require a change
+    that meets it on its own terms. Ambiguity never becomes a passing
+    verdict.
+  - **A resolved thread defaults to accepted.** The bar to **rejected**
+    is high: reject only when you have *very high
     confidence* the concern is not addressed AND you *strongly disagree*
     with the resolution. Anything short of that — a partial fix you
     might quibble with, a different approach than you would have taken,
@@ -191,16 +145,13 @@ nothing is written and the loop keeps waiting.
     rejected. When you find yourself reasoning "this is probably fine
     but", that is an accept.
   - **An unresolved thread carrying a reply defaults to pending.** The
-    author wrote something but did not close the thread, so there is no
-    assertion of doneness to defer to and the resolved-thread bar does
-    not apply here. Judge the reply on its merits against the branch: it
+    resolved-thread bar does not apply here. Judge the reply on its
+    merits against the branch: it
     reaches **answered** or **addressed** only when it stands on its own
     the way a resolved thread's would, and **rejected** only on the
     ordinary rejected bar — a claimed fix the branch does not show, or a
     refusal with no argument that holds. Everything between is
-    **pending**, which writes nothing and waits. Read an open thread as
-    a conversation still in progress: the author may be mid-push, or may
-    be waiting on you.
+    **pending**, which writes nothing and waits.
 - Never reach for **rejected** merely because an item is unanswered —
   that is **pending**. The difference is load-bearing: rejected stops
   the watch and tells the author you dispute their resolution, while
@@ -216,11 +167,10 @@ nothing is written and the loop keeps waiting.
   rebuttal — see Dispute stands below. Never approve
   over a live rejected verdict.
 - A **pending** verdict neither stops the loop nor approves. Keep
-  polling: a later push may yet meet the concern. This
-  is the path freshly posted PR-level feedback takes at cycle 0 — no push
-  has landed since it, so the precondition fails and the verdict is
-  pending — and it is
-  why a new comment never trips the rejected stop on the first poll.
+  polling: a later push may yet meet the concern. Freshly posted
+  PR-level feedback takes this path at cycle 0 — no push has landed
+  since it — so a new comment never trips the rejected stop on the
+  first poll.
 - A thread that reopens loses its verdict. A later re-resolution is
   re-reviewed fresh, against the diff current at that poll. A tracked
   PR-level item's passing verdict is likewise voided when the head advances
@@ -239,13 +189,10 @@ from a third-party login ([watch loop](../../pr-watch-as-author/references/watch
 cycle — no resolve, no reaction, no rebuttal on any thread. Every
 reviewer-side tracked thread opens with the viewer's own comment (step
 2), so the check reduces to a third distinct login on an unresolved
-tracked thread. It reads only fields the poll query already selects —
-`isResolved` and each comment's `id` and `author { login }` — so it
-needs no new poll field. Report the login(s), or "comment author
+tracked thread. Report the login(s), or "comment author
 unavailable" for a `null` author.
 
-**Act on every verdict.** A verdict that changes nothing the author
-can see is a verdict that was never delivered. Each one maps to exactly
+**Act on every verdict.** Each one maps to exactly
 one action, taken in the same cycle it is rendered:
 
 | Verdict | Thread you opened | Tracked review summary or conversation comment |
@@ -261,11 +208,10 @@ one action, taken in the same cycle it is rendered:
   first comment — a prior rebuttal, or a comment you typed by hand. When
   any one does, stop and report the thread and the disagreement instead
   of acting, and take no verdict action, resolve, reaction, or rebuttal
-  on any thread that cycle — nor does the approval. Key it the same way
-  "one action per verdict" below already keys a rebuttal: by the thread
-  id plus the triggering comment id. That rule already blocks a rejected
-  verdict from re-firing with no new counterpart reply, so this check
-  only tests for an existing viewer reply on the thread, never a count.
+  on any thread that cycle — nor does the approval. Key it like "one
+  action per verdict" below — by the thread id plus the triggering
+  comment id — so this check only tests for an existing viewer reply on
+  the thread, never a count.
 - **Resolve on a passing verdict** with `resolveReviewThread`:
 
   ```bash
@@ -306,15 +252,6 @@ one action, taken in the same cycle it is rendered:
   project convention prescribes, the same one the approval body uses.
   Never restate the original comment, never re-argue a point the reply
   already conceded, and never name this skill or any agent.
-- **The exchange ends on the verdict, never on a count.** The actual
-  bound is the Dispute-stands check above: a rejected verdict repeated
-  on a thread that already carries the viewer's own reply is terminal.
-  Short of that, the author sets the pace. One rebuttal answers one
-  reply, so the skill writes again only when the author has written
-  again — an author who stops replying draws no further rebuttals, and
-  one who keeps replying is having a conversation rather than being
-  talked at. The 3-cycle soft cap is the outer bound on the whole
-  in-session watch and needs no help here.
 - **One action per verdict.** Key it by the thread id plus the
   comment id that triggered the verdict, and skip any thread already
   acted on for that same trigger. This is what keeps a standing
@@ -324,23 +261,18 @@ one action, taken in the same cycle it is rendered:
   is a new verdict about new evidence.
 
 **React to the settlement to mark it useful or not.** The reaction rides
-alongside the action above, not instead of it. A verdict is a
-judgment about someone else's comment, so publish it where they will
-see it. The subject is the comment that claimed the settlement — the
+alongside the action above, not instead of it. The subject is the comment
+that claimed the settlement — the
 author's reply on your thread, or the conversation comment or review body
 posted after your tracked PR-level item. Never your own comment, and never
 the diff, which is not a `Reactable` subject at all:
 
 - 👍 `THUMBS_UP` — **answered**, and **addressed** where a reply came
-  with the change. The comment did what it claimed.
-- 👎 `THUMBS_DOWN` — **rejected**. The reply claimed a fix the branch
-  does not show, or declined the concern without an argument that
-  holds. The high bar the rejected verdict already carries is the bar
-  for the 👎: you never place one on a settlement you merely quibble
-  with.
+  with the change.
+- 👎 `THUMBS_DOWN` — **rejected**. The high bar the rejected verdict
+  already carries is the bar for the 👎: you never place one on a
+  settlement you merely quibble with.
 - No reaction — **pending**, and **addressed** with no reply at all.
-  Nothing is settled yet in the first case; in the second the fix
-  landed silently and there is no comment to react to.
 
 React once per settlement, keyed by the comment's id. A verdict that is
 voided and re-rendered — a thread that reopened and re-resolved, a
@@ -348,34 +280,27 @@ comment the head moved past again — does not re-react unless the new
 verdict lands on a different comment. Select
 `reactionGroups { content viewerHasReacted }` alongside `id` on the
 comments the re-review already fetches, and skip any subject already
-carrying your reaction. Both fields are structural, so they widen
-nothing under the hard rules. The mutation is in
+carrying your reaction. The mutation is in
 `skills/pr-open-comments/SKILL.md`, `## Reaction mechanics`.
 
 A reaction failure never stops the watch and never blocks the approval:
-warn, note it in the snapshot line, and keep polling. The verdict is
-what gates the approval; the reaction only reports it.
+warn, note it in the snapshot line, and keep polling.
 
-Print a one-line snapshot per poll. Progress then stays observable
-without a flood of transcript, and the loop's baselines survive a
+Print a one-line snapshot per poll, so the loop's baselines survive a
 compaction inside the transcript itself. The snapshot carries the cycle
 number and the tracked and ungated counts, **split by shape** — threads
 resolved of tracked, review summaries engaged of tracked, and conversation
-comments engaged of tracked — so a watch blocked on unengaged PR-level feedback is visible rather than hidden in
-a merged total. It also carries the
+comments engaged of tracked. It also carries the
 arm-time head SHA, the current head SHA, and the arm-time and current
 auto-merge states, plus the running verdict tally
 (addressed/answered/pending per item, with the reaction and the
 action each verdict placed — resolved, rebutted, or nothing — by
 path for a thread and by
-URL for a review summary or conversation comment). A rebutted thread names the reply the
-rebuttal answered, so a reader can see the exchange advancing rather
-than a bare `rebutted` repeating. It ends with a change note
+URL for a review summary or conversation comment). A rebutted thread names
+the reply the rebuttal answered. It ends with a change note
 when the gate shrank or grew, the head moved, auto-merge flipped, a
 verdict was recorded or voided, or a thread was resolved or rebutted.
-Name who resolved each thread — you or the author — because the
-approval report distinguishes them and the snapshot is where that
-survives.
+Name who resolved each thread — you or the author.
 
 A single transient poll failure is not a stop — retry on the next cycle.
 After 3 consecutive poll failures, stop and name the error — never spin

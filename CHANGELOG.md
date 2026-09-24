@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Shortened `/pr-watch-as-reviewer` by about a fifth. Restated rules, reasons behind rules, and an empty stage file came out. The watch still checks every settlement against the branch, asks before any approval that auto-merge could turn into a merge, and approves only when every tracked item passes. **What this asks of you:** nothing. [`skills/pr-watch-as-reviewer/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
+
 ## [0.132.12] - 2026-09-25
 
 ### Changed
