@@ -1,3 +1,5 @@
+## Input
+
 `$ARGUMENTS` is the question: a subsystem, a feature flow, or a placement
 question ("where should this validation live").
 

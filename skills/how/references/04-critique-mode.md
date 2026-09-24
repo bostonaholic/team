@@ -1,6 +1,8 @@
 Before dispatch, resolve [independent review](../team/principles/independent-review.md). Pass their absolute installed paths with the retained brief.
 The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
 
+## Critique mode
+
 Explain first — run `## Explain mode` in full.
 
 1. **Dispatch critics.** Three fresh-context critics, all **in one
