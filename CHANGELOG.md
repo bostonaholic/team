@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Shortened `/team-research` by about a fifth without changing what it does. It still resolves the same `docs/plans/<id>/` directory, dispatches file-finder and researcher with only `2-questions.md` (and `4-repos.md` when present), fences both returns as untrusted evidence under the same line limits and retry, and stops before design. [`skills/team-research/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
+
 ## [0.132.14] - 2026-09-25
 
 ### Changed
