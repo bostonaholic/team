@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `pr-open-comments` and `pr-watch-as-author` now re-request review from each changes-requesting reviewer when a pass leaves no feedback awaiting a response.
+
 ## [0.129.0] - 2026-09-22
 
 ### Changed

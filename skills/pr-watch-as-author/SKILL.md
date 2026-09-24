@@ -17,6 +17,8 @@ cycle. When new review feedback arrives, it runs the triage procedure in
 watch for 3 cycles (~90 minutes), then hands off to the scheduled
 pr-watch job so the session is free again. The user can interrupt at
 any time, and each individual command stays small and observable.
+Each delegated triage pass ends with the `pr-open-comments` Completion
+step, and that step can re-request review, which notifies the reviewer.
 
 Feedback arrives in three disjoint shapes and all are triaged:
 

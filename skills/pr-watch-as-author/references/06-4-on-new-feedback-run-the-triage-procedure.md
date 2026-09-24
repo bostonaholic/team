@@ -80,6 +80,8 @@ and landing commit SHA, so the loop stays auditable. The batch report
 names the reaction each item received and, for a presented item, the
 reaction each of its options would place, so a 👎 the user would have
 argued with is a choice in the transcript rather than a fact on GitHub.
+The batch report also carries the `Review re-request` line group from the
+delegated pass.
 A soft-cap re-arm
 keeps the mode. A exclusion stop ends the authorization, so a re-arm
 after one starts in present-then-stop. Authorized mode re-arms **after a

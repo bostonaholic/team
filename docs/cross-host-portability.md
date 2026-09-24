@@ -210,8 +210,8 @@ reporting, mismatch handling, and unsupported-host limits.
   the distributed set ports: `agents/`, `skills/*/SKILL.md` + `registry.json` +
   the bundled skill scripts (`supports-nesting.mjs`, `ste-lint.mjs`,
   `external-review.mjs`, `resolve-transcript.mjs`, `write-target.mjs`,
-  `discover-topic.sh`, and `pr-screenshots`' `scripts/splice.mjs` plus its
-  `scripts/*.sh`),
+  `discover-topic.sh`, `pr-screenshots`' `scripts/splice.mjs` plus its
+  `scripts/*.sh`, and `pr-open-comments`' `scripts/re-request-review.mjs`),
   `hooks/*.mjs`, `.claude-plugin/`. The entire `.claude/`
   tree, `docs/`, `.github/` never ship and are out of every
   port's scope.

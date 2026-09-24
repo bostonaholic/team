@@ -161,7 +161,7 @@ Versions the current project at land time.
 
 ### [pr-open-comments](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md)
 
-Triages unresolved PR review comments.
+Triages unresolved PR review comments. When a pass leaves no feedback awaiting a response, it re-requests review from each changes-requesting reviewer.
 
 **Used by:** `pr-watch-as-author`, `pr-watch-as-reviewer`
 

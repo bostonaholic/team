@@ -210,5 +210,5 @@ recommendation. On 4 go with option B."
 
 After the report is rendered, stop. Do not begin editing, posting, or
 resolving for `Needs your decision` items in the same turn. Wait for the
-user's per-item decisions. The hand-off prompt is in `## Completion`
-below.
+user's per-item decisions. Run [Completion](08-completion.md). Then give
+the hand-off prompt in [Open Questions to Flag](07-open-questions-to-flag.md).

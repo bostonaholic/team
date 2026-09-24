@@ -31,6 +31,10 @@ explicitly directs you to apply the changes ("fix the PR feedback"),
 Authorized Execution runs for every non-carve-out item regardless of
 confidence.
 
+A pass that leaves no feedback awaiting a response re-requests review from
+each reviewer whose latest review requested changes, and GitHub notifies
+that reviewer.
+
 ## Procedure references
 
 Read each reference completely when reaching that stage. Follow them in order; later stages depend on state and gates established earlier.
@@ -42,6 +46,7 @@ Read each reference completely when reaching that stage. Follow them in order; l
 5. [Reaction mechanics](references/05-reaction-mechanics.md)
 6. [Authorized Execution](references/06-authorized-execution.md)
 7. [Open Questions to Flag](references/07-open-questions-to-flag.md)
+8. [Completion](references/08-completion.md)
 
 ## Applied principles
 
