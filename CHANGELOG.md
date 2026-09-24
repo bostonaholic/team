@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `/team-worktree` is about a third shorter. Restated rules, benefit lists, and rationale came out; every guard stayed — reuse-or-stop inside an existing linked worktree, slash-free branch names, the standalone-only confirmation, the multi-repo containment check, the `## Worktrees` record, the numbered teardown with its residue sweep, and the never-block fallback. **What this asks of you:** nothing.
+
 ## [0.132.18] - 2026-09-25
 
 ### Changed

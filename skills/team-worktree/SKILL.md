@@ -5,15 +5,13 @@ effort: low
 argument-hint: "[docs/plans/<id>/]"
 ---
 
-# Team Worktree — Isolate the Implementation
+# Team Worktree
 
 Before finalizing prose you author, read the [writing standards](../team/references/writing.md).
 
-Create a git worktree per involved repository so implementation happens on
-isolated branches without affecting any main working tree. In single-repo
-mode (the default) this is one worktree in the home repo. In multi-repo
-mode (when `docs/plans/<id>/4-repos.md` is present) it is one worktree per
-listed repo, all sharing the same `<id>` branch name.
+Create one isolated git worktree per involved repo, all on branch `<id>`: the
+home repo in single-repo mode (the default), or every repo listed in
+`docs/plans/<id>/4-repos.md` when that file exists.
 
 ## Core contracts
 
