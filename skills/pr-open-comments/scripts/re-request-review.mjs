@@ -43,12 +43,20 @@
  *
  * Pending feedback:
  *
- *   - an unresolved review thread.
+ *   - an unresolved review thread, unless its latest comment is the viewer's
+ *     and carries an outcome marker naming the thread's first-comment url.
  *   - a non-empty, non-PENDING review body, or a conversation comment, by a
- *     User other than the viewer.
+ *     User other than the viewer, unless a viewer conversation comment
+ *     carries an outcome marker naming the item's url.
  *   - the empty CHANGES_REQUESTED review (no body, zero inline comments) of a
  *     reviewer the script would re-request. No triage pass presents it, so
  *     only that reviewer's pending request or newer review clears it.
+ *
+ * An outcome marker is a whole line `<!-- feedback-outcome: <url> -->` in a
+ * viewer comment body. `references/06-authorized-execution.md` writes it at
+ * the end of each outcome reply. The url must equal the item url exactly, so
+ * `#issuecomment-123` never clears `#issuecomment-12`. Another author's
+ * marker clears nothing.
  *
  * Read limit: one GraphQL query that reads 100 nodes per connection. A
  * connection with more nodes makes the read incomplete, and nothing is sent.
@@ -83,6 +91,7 @@ const PR_URL_PATTERN = new RegExp(
 );
 const LOGIN_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
 const HTTP_STATUS_PATTERN = /\(HTTP (\d{3})\)/;
+const OUTCOME_MARKER_PATTERN = /^<!-- feedback-outcome: (\S+) -->\r?$/gm;
 const MAX_PENDING_URL_LINES = 10;
 const DEFAULT_HOST = "github.com";
 // execFile's default 1 MiB maxBuffer is too small for a page of 100 full comment bodies.
@@ -197,13 +206,36 @@ function describePending(reviewState, pullRequest, writeSet) {
 function pendingItemUrls({ viewerLogin, reviewThreads, reviews, comments }) {
   const isOtherUser = (author) => author?.__typename === "User" && author.login !== viewerLogin;
   const threadUrls = reviewThreads
-    .filter((thread) => !thread.isResolved)
+    .filter((thread) => !thread.isResolved && !isThreadMarked(thread, viewerLogin))
     .map((thread) => thread.firstComment?.nodes?.[0]?.url);
+
+  const markedPullRequestItemUrls = new Set(
+    comments
+      .filter((comment) => comment.author?.login === viewerLogin)
+      .flatMap((comment) => outcomeMarkerUrls(comment.body)),
+  );
+  const isUnmarked = (item) => !markedPullRequestItemUrls.has(item.url);
   const reviewUrls = reviews
     .filter((review) => review.state !== "PENDING" && !isEmptyBody(review.body) && isOtherUser(review.author))
+    .filter(isUnmarked)
     .map((review) => review.url);
-  const commentUrls = comments.filter((comment) => isOtherUser(comment.author)).map((comment) => comment.url);
+  const commentUrls = comments
+    .filter((comment) => isOtherUser(comment.author))
+    .filter(isUnmarked)
+    .map((comment) => comment.url);
   return [...threadUrls, ...reviewUrls, ...commentUrls];
+}
+
+function isThreadMarked(thread, viewerLogin) {
+  const latestComment = thread.latestComment?.nodes?.[0];
+  const firstCommentUrl = thread.firstComment?.nodes?.[0]?.url;
+  if (latestComment?.author?.login !== viewerLogin || typeof firstCommentUrl !== "string") return false;
+  return outcomeMarkerUrls(latestComment.body).includes(firstCommentUrl);
+}
+
+function outcomeMarkerUrls(body) {
+  if (typeof body !== "string") return [];
+  return Array.from(body.matchAll(OUTCOME_MARKER_PATTERN), (match) => match[1]);
 }
 
 function isEmptyBody(body) {

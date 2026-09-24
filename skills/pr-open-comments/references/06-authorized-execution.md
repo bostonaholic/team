@@ -11,6 +11,10 @@ This path runs in two cases:
 
 In both cases the exclusions below stay absolute.
 
+When the batch answers items from an earlier report, it is a decision pass.
+Run [Completion](08-completion.md) after its last item. A batch inside a
+triage pass reaches Completion through step 8.
+
 After you finish the code changes for a given feedback item, complete the loop
 automatically — do not ask for permission to reply or, for an inline thread,
 resolve:
@@ -20,7 +24,7 @@ resolve:
    push, so the reply references landed code.
 2. **Reply to the item.** For an inline comment, reply on its review thread.
    For a review summary or conversation comment, post a top-level reply that
-   links the item. Describe the change and cite the exact commit SHA that
+   links the item by its `url`. Describe the change and cite the exact commit SHA that
    contains it as bare text (no backticks).
 3. **Resolve inline threads only.** Call the `resolveReviewThread` mutation
    only for a `reviewThreads` item. Review summaries and conversation comments
@@ -52,8 +56,27 @@ never interpolated into the shell command:
 gh api --method POST "repos/$OWNER/$REPO/pulls/$NUMBER/comments" \
   -F body=@- -F "in_reply_to=$FIRST_COMMENT_DATABASE_ID" <<'GH_REPLY_EOF'
 <what changed> — landed in <bare-sha>
+<!-- feedback-outcome: <first-comment-url> -->
 GH_REPLY_EOF
 ```
+
+End every outcome reply with the outcome marker line for its item. An
+outcome reply carries out option A to F, on any item shape. This includes
+C and D replies on review summaries and conversation comments, which make
+no commit. The marker line is:
+
+```text
+<!-- feedback-outcome: <url> -->
+```
+
+`<url>` is the item's structural `url` from the step 2 query. For a thread,
+use the first comment's `url`. For a review summary, use the review's `url`.
+For a conversation comment, use the comment's `url`. Copy the `url`
+unchanged. Put the marker on its own line, after all other text. When one
+reply answers several PR-level items, add one marker line per item. A G
+reply never carries the marker, because the item still awaits an answer.
+GitHub hides the line when it renders the reply. Without the line,
+`scripts/re-request-review.mjs` counts the item as still pending.
 
 Resolve the thread (needs the thread's GraphQL node id, available as `id`
 on each `reviewThreads` node):

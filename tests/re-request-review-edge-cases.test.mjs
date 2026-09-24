@@ -273,3 +273,65 @@ test("more than ten pending urls list the empty changes requests after pending-m
   assert.deepEqual(result.lines.slice(-3), ["pending-more 1", "pending empty-changes-request bob", "not-requested pending-feedback"]);
   assert.equal(result.lines.filter((line) => line.startsWith(`pending ${PR_URL}`)).length, 10);
 });
+
+test("an outcome marker counts only as a whole line", async (t) => {
+  await t.test("a marker line ending in CRLF clears its thread", () => {
+    const result = derive(
+      reviewState({
+        latestOpinionatedReviews: [ALICE_WITH_THREADS],
+        reviews: [ALICE_WITH_THREADS],
+        reviewThreads: [
+          viewerLastThread({
+            discussionId: 1001,
+            latestBody: `${BODY_SENTINEL}\r\n<!-- feedback-outcome: ${PR_URL}#discussion_r1001 -->\r\n`,
+          }),
+        ],
+      }),
+      PULL_REQUEST_412,
+    );
+    assert.deepEqual(result, { lines: [], logins: ["alice"] });
+  });
+
+  await t.test("a marker inside a line of prose clears nothing", () => {
+    const result = derive(
+      reviewState({
+        latestOpinionatedReviews: [ALICE_WITH_THREADS],
+        reviews: [ALICE_WITH_THREADS],
+        reviewThreads: [
+          viewerLastThread({
+            discussionId: 1001,
+            latestBody: `Fixed. <!-- feedback-outcome: ${PR_URL}#discussion_r1001 -->`,
+          }),
+        ],
+      }),
+      PULL_REQUEST_412,
+    );
+    assert.deepEqual(result, {
+      lines: [`pending ${PR_URL}#discussion_r1001`, "not-requested pending-feedback"],
+      logins: [],
+    });
+  });
+});
+
+test("a marker in a viewer review body does not clear a PR-level item", () => {
+  const daveComment = { url: `${PR_URL}#issuecomment-12`, body: BODY_SENTINEL, author: { __typename: "User", login: "dave" } };
+  const viewerReview = {
+    state: "COMMENTED",
+    url: `${PR_URL}#pullrequestreview-300`,
+    body: `<!-- feedback-outcome: ${PR_URL}#issuecomment-12 -->`,
+    comments: { totalCount: 0 },
+    author: { __typename: "User", login: "me" },
+  };
+  const result = derive(
+    reviewState({
+      latestOpinionatedReviews: [ALICE_WITH_THREADS],
+      reviews: [ALICE_WITH_THREADS, viewerReview],
+      comments: [daveComment],
+    }),
+    PULL_REQUEST_412,
+  );
+  assert.deepEqual(result, {
+    lines: [`pending ${PR_URL}#issuecomment-12`, "not-requested pending-feedback"],
+    logins: [],
+  });
+});

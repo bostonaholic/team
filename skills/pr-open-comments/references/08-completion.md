@@ -1,13 +1,18 @@
 ## Completion
 
-Run Completion once per triage pass, as the last action of the pass.
-Then give the hand-off prompt in
-[Open Questions to Flag](07-open-questions-to-flag.md).
+Run Completion once per pass, as the last action of the pass. A pass is a
+triage pass or a decision pass. After a triage pass, give the hand-off
+prompt in [Open Questions to Flag](07-open-questions-to-flag.md).
 
 A triage pass is steps 1 to 7 of [Execution](04-execution.md) for one PR.
 It includes the step 6 per-item runs. It also includes a whole-batch
 directive given with the invocation, such as "fix the PR feedback". The
 pass ends at step 8. Never run Completion from a step 6 per-item run.
+
+A decision pass runs the user's chosen options for items from an earlier
+report. The choice can follow a triage pass or a watch stop. The pass ends
+after the last chosen item reaches an outcome. Its items are the chosen
+items only.
 
 ### Item outcomes
 
@@ -15,6 +20,10 @@ An item gets its outcome at one of these points:
 
 - Options A, B, E, and F: after the option executes.
 - Options C and D: after the reply posts.
+
+Each outcome reply ends with the outcome marker line for its item. See
+`### Reply + resolve mechanics` in
+[Authorized Execution](06-authorized-execution.md).
 
 These items have no outcome:
 

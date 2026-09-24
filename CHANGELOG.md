@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `pr-open-comments` and `pr-watch-as-author` now re-request review from each changes-requesting reviewer when a pass leaves no feedback awaiting a response.
+- `pr-open-comments` and `pr-watch-as-author` now re-request review from each changes-requesting reviewer when a pass leaves no feedback awaiting a response. Outcome replies now end with a hidden line that names the item, so a hand reply no longer counts as an outcome.
 
 ## [0.129.0] - 2026-09-22
 
