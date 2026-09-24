@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.131.0] - 2026-09-24
+
 ### Removed
 
 - **Runtime hooks are gone.** Team no longer ships or registers any runtime hooks: the `hooks/` tree (session recovery, compaction anchor, plugin-file validation, and the `.team/config.json` guard), the Claude Code `SessionStart`/`PreCompact`/`PostToolUse`/`UserPromptSubmit` registrations, the Codex `hooks/hooks.json` bindings, the Antigravity root `hooks.json`, and the OpenCode recovery, compaction, and write-validation adapters. Session recovery now lives entirely in the orchestrator's Setup step — any `/team-*` command resolves `docs/plans/<id>/` and rebuilds the ledger from artifact presence and frontmatter on entry — and `.team/config.json` is validated by the resolver at dispatch time instead of ahead of a prompt. Development hooks under `.claude/hooks/` and the clone-local Git pull hooks are unchanged. **What this asks of you:** nothing; the change arrives with your next plugin update.
@@ -1148,7 +1150,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.130.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.131.0...HEAD
+[0.131.0]: https://github.com/bostonaholic/team/compare/v0.130.0...v0.131.0
 [0.130.0]: https://github.com/bostonaholic/team/compare/v0.129.0...v0.130.0
 [0.129.0]: https://github.com/bostonaholic/team/compare/v0.128.0...v0.129.0
 [0.128.0]: https://github.com/bostonaholic/team/compare/v0.127.0...v0.128.0
