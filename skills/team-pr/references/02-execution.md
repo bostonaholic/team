@@ -79,7 +79,8 @@
    Screenshot Upload procedure again, so the embedded images show the UI the
    branch now produces. When the push left the UI alone, the refresh
    carries the uploaded `## Screenshots` section through verbatim: never
-   dropped, never re-run. A re-capture that cannot run falls back to the
+   dropped, never re-run — the asset URLs already in the body stay
+   valid. A re-capture that cannot run falls back to the
    degraded note the rendering rules define. A screenshot problem never
    blocks or delays the push. When the body carries a closing line (the
    home repo's PR of a ticketed topic), each refresh re-emits **exactly
