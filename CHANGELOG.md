@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Shortened `/team-question` by about a third without changing what it does. It still accepts the same inputs, derives the same `docs/plans/<id>/` directory, dispatches the questioner, and stops before research. [`skills/team-question/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
+
 ## [0.132.13] - 2026-09-25
 
 ### Changed
