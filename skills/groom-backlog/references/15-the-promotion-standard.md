@@ -1,5 +1,8 @@
 ## The promotion standard
 
+This section is self-contained method — its own inputs, standard, and stopping point — so it
+can be loaded on its own.
+
 **Inputs.** One issue identified by number, on a named board. Create the run cache first,
 with `RUN_DIR="$(mktemp -d "${TMPDIR:-/tmp}/groom-backlog.XXXXXXXX")"`. Print its absolute
 path. A cache that cannot be created stops the run. Then load narrowly into it, and nothing

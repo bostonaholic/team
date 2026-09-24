@@ -11,8 +11,9 @@ Then place each cluster:
 - Refuse the third path, where completed constructs become rolling buckets — a construct
   that delivered its outcome is allowed to close.
 
-A declared dependency is evidence about placement: an edge crossing two constructs is worth
-re-examining the placement before the edge. Dependencies order work *inside* a construct.
+A declared dependency is evidence about placement: two linked issues usually serve one
+outcome, and an edge crossing two constructs is worth re-examining the placement before the
+edge. Dependencies order work *inside* a construct.
 They never justify one of their own.
 
 Extending a description holds to the same bar as **Describe**: the sentence stays markable.

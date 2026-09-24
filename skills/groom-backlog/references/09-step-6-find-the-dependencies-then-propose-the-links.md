@@ -7,8 +7,8 @@ are read out of the same cache, two ways:
   lands", "requires", "prerequisite", "follow-up to". A bare `#N` is a citation, not a
   dependency. The sentence around it decides. Comments outrank bodies.
 - *Structural.* One issue introduces the artifact another consumes — a schema, an interface,
-  a flag, an endpoint — inferred from what each says it will build, though neither cites the
-  other. It is the weaker of the two signals.
+  a flag, an endpoint. Neither need cite the other. This is inferred from what each says it
+  will build, and it is the weaker of the two signals.
 
 **The direction test.** A is blocked by B when A cannot be *finished* until B lands. When
 both directions read plausible, the pair is usually one issue, or split along the wrong

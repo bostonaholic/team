@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `groom-backlog` is about a sixth shorter. Rationale paragraphs, a worked domain example, citations of this repository's dev-only board scripts, and rules repeated within one file are gone. Every gate stays: one question per mutation class, a separate answer for each new issue and each closure, the plan file written before the question, the untrusted-input and shell-safety rules, the pre-image and pre-close re-reads, the Ready limit of 5, the `bug` refusal, and every tracker command. **What this asks of you:** nothing.
+- `groom-backlog` is about a sixth shorter. Rationale paragraphs, a worked domain example, citations of this repository's dev-only board scripts, and rules stated twice within the skill are gone. Every gate stays: one question per mutation class, a separate answer for each new issue and each closure, the plan file written before the question, the untrusted-input and shell-safety rules, the pre-image and pre-close re-reads, the Ready limit of 5, the `bug` refusal, and every tracker command. **What this asks of you:** nothing.
 
 ## [0.132.5] - 2026-09-25
 

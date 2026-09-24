@@ -42,5 +42,6 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Read and apply: [verified results rules](../team/principles/verified-results.md) and
+Read and apply: [verified results rules](../team/principles/verified-results.md),
+[human control rules](../team/principles/human-control.md), and
 [durable state rules](../team/principles/durable-state.md).
