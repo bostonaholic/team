@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed `version-bump` so its changelog step points to Team's current changelog rules. It used to point to a changelog skill that no longer exists, so an agent that followed the pointer found no file.
+
 ## [0.131.0] - 2026-09-24
 
 ### Removed
