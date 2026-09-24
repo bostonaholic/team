@@ -12,10 +12,10 @@ If a required read fails, stop that step with the exact path. Never use checkout
 
 Feedback arrives in three disjoint shapes, all triaged: an **inline review
 thread** (anchored to a diff line, with a resolved/unresolved bit), a **plain
-PR comment**, and a **review summary** (separate from its inline comments).
-Only the thread carries a resolution bit. A review summary or conversation
-comment is triaged **once**, keyed by its id, and never joins a gate waiting
-to be resolved.
+PR comment** (conversation comment), and a **review summary** (separate from
+its inline comments). Only the thread carries a resolution bit. A review
+summary or conversation comment is triaged **once**, keyed by its id, and
+never joins a gate waiting to be resolved.
 
 ## Procedure references
 
