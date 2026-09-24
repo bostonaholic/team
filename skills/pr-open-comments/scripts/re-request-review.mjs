@@ -98,7 +98,7 @@ const LOGIN_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
 const HTTP_STATUS_PATTERN = /\(HTTP (\d{3})\)/;
 const OUTCOME_MARKER_PATTERN = /^<!-- feedback-outcome: (\S+) -->\r?$/gm;
 const MAX_PENDING_URL_LINES = 10;
-// execution.md requires every loop to declare its bound. 10 pages hold 1,000 nodes per connection.
+// 10 pages cap each connection at 1,000 nodes.
 const MAX_PAGES_PER_CONNECTION = 10;
 const DEFAULT_HOST = "github.com";
 // execFile's default 1 MiB maxBuffer is too small for a page of 100 full comment bodies.

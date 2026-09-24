@@ -190,7 +190,7 @@ function postReviewerRequest(login) {
 
 const POST_SUCCEEDED = { stdout: JSON.stringify({ url: PR_URL }), stderr: "", exitCode: 0 };
 
-// --- Slice 1 -------------------------------------------------------------------------
+// --- Targets, the review-decision gate, pending feedback, and the POST ---------------
 
 test("derives targets and the review-decision gate", async (t) => {
   await t.test("a CHANGES_REQUESTED review makes its author the write target", () => {
@@ -694,7 +694,7 @@ test("CLI writes only when nothing is pending", async (t) => {
   });
 });
 
-// --- Slice 2 -------------------------------------------------------------------------
+// --- Outcome markers -----------------------------------------------------------------
 
 test("a viewer marker clears only the item it names", async (t) => {
   await t.test("a viewer-last thread with a marker for that thread is clear", () => {
@@ -859,7 +859,7 @@ test("markers from other authors and later replies do not clear", async (t) => {
   });
 });
 
-// --- Slice 3 -------------------------------------------------------------------------
+// --- Paginated reads -----------------------------------------------------------------
 
 test("CLI follows a second page by cursor", (t) => {
   const run = runScript(t, {
