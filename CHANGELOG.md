@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `/shipit` is 27% shorter to read and lands a PR the same way. It still fires only on explicit ship intent, runs `version-bump` before pushing, waits for CI through the bounded settle, watch, and verify gate, rebases a branch that fell behind with `--force-with-lease`, squash-merges with the PR title as the commit subject, and runs `/pr-cleanup` only after a merge that landed. The removed text explained why the rules exist or repeated them. **What this asks of you:** nothing.
+- `/shipit` is 26% shorter to read and lands a PR the same way. It still fires only on explicit ship intent, runs `version-bump` before pushing, waits for CI through the bounded settle, watch, and verify gate, rebases a branch that fell behind with `--force-with-lease`, squash-merges with the PR title as the commit subject, and runs `/pr-cleanup` only after a merge that landed. The removed text explained why the rules exist or repeated them. **What this asks of you:** nothing.
 
 ## [0.132.21] - 2026-09-25
 

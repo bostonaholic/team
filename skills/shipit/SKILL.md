@@ -24,8 +24,8 @@ nor a question put to the user mid-run:
 2. **CI green** (step 4) gates the merge mechanically: a red or timed-out check
    stops the land before `gh pr merge` runs.
 
-The first guard applies [human control rules](../team/principles/human-control.md)
-to the merge: an irreversible act fires on stated intent, never on state, and
+The first guard is [human control rules](../team/principles/human-control.md) applied to
+the merge: an irreversible act fires on stated intent, never on state, and
 granted authorization is spent, not re-asked.
 
 **Do not ask the user to confirm the merge.** Once step 4 reports green, merge.

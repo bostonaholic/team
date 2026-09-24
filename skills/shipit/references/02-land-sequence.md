@@ -1,7 +1,7 @@
 ## Land sequence
 
-Nothing here waits on a human: the steps run end to end with no prompt in the
-middle.
+The steps below are the whole sequence, and they run end to end with no prompt
+in the middle. Nothing here waits on a human.
 
 ### 1. Pre-flight merge-button check
 
@@ -36,15 +36,16 @@ Push so CI runs against what will land:
 git push
 ```
 
-If the local branch and remote diverged after a local rebase, follow step 5's
-force-with-lease guidance. Never use a bare `--force`.
+If the local branch and remote diverged because someone rebased the branch
+locally, see the force-with-lease guidance in step 5. Never use a bare
+`--force`.
 
 ### 4. Wait for CI
 
 Three parts, in order: **settle**, **watch**, **verify**. The watch is not the
-verdict: `gh pr checks --watch` exits 0 when nothing is pending *right now*,
-which also happens before a push's checks attach and before a gated job spawns.
-The verdict comes from GitHub's aggregate, which knows a check *suite* is still
+verdict: `gh pr checks --watch` exits when nothing is pending *right now*, and
+exits 0 even before a push's checks attach or before a gated job spawns. The
+verdict comes from GitHub's aggregate, which knows a check *suite* is still
 running.
 
 **4a — Settle.** Let the push's workflows register before watching. Run it
@@ -149,3 +150,5 @@ Two limits hold:
 - **Only Mode A is reachable this way.** Mode B (closed / abandoned) stays
   user-triggered: an explicit abandon request is its only gate, and this
   chaining never reaches it.
+
+`shipit` touches no tracker or board — it stays generic.
