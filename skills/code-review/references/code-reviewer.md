@@ -142,7 +142,8 @@ multiple tests:
 - Mock-everything / mock chains where a real or fake equivalent exists
 - Full-equality assertions on complex objects when one field carries the
   contract
-- Logic in tests (`if`, loops, string-building)
+- Logic in tests (`if`, loops, string-building) that can carry the same bug as
+  the code
 - Tests named after methods (`testProcessOrder_2`) rather than behaviors
   (`refundsCardOnPartialFailure`)
 - DRY helpers that hide the asserted value
