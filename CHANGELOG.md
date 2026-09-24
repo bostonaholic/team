@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `version-bump` is about a third shorter. The restated land-process overview, the runtime-vs-dev file list the gate script already decides, precedent commit hashes, a worked example, and rationale paragraphs are gone. Every guard stays: explicit land intent, the fail-closed invariant run and its exact-match verdicts, the six version strings, the changelog cut, the consistency assertion, and the title reset. **What this asks of you:** nothing.
+
 ## [0.132.20] - 2026-09-25
 
 ### Changed
