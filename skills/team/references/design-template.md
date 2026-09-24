@@ -1,6 +1,6 @@
 # Design document template
 
-Use this body for `6-design.md`. Read [design playbook](playbooks/design.md) for the authoring procedure.
+Use this body for `6-design.md`.
 
 ```markdown
 # Design: <topic>

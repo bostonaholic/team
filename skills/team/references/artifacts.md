@@ -1,10 +1,8 @@
 # Artifact Frontmatter
 
-This is the schema contract for durable pipeline state under `docs/plans/<id>/`. Phase behavior lives in the [feature playbook](playbooks/feature.md); files are the phase interface ([durable state rules](principles/durable-state.md)).
-
 ## Artifact inventory
 
-`<id>` is `<TICKET>-<kebab-topic>` (for example `ENG-1234-add-rate-limiting`) or `<YYYY-MM-DD>-<kebab-topic>` (for example `2026-05-01-add-rate-limiting`). `skills/team/discover-topic.sh` owns executable `ID_RE` and `PHASE_FILES` definitions ([durable state rules](principles/durable-state.md)).
+`<id>` is `<TICKET>-<kebab-topic>` or `<YYYY-MM-DD>-<kebab-topic>`. `skills/team/discover-topic.sh` owns executable `ID_RE` and `PHASE_FILES` definitions ([durable state rules](principles/durable-state.md)).
 
 | Artifact | Path | Created by | Required |
 |---|---|---|---|
@@ -19,7 +17,7 @@ This is the schema contract for durable pipeline state under `docs/plans/<id>/`.
 
 ## Frontmatter schema
 
-Every artifact starts with `topic: <kebab-case>`, `date: <YYYY-MM-DD>`, and `phase: task | questions | prd | repos | research | design | structure | plan`. Task alone adds `ticketId: <id>` or `null`; design adds `revision: 0`. PRD and structure are not gated; plan derives mechanically from structure.
+Every artifact starts with `topic: <kebab-case>`, `date: <YYYY-MM-DD>`, and `phase: task | questions | prd | repos | research | design | structure | plan`. Task alone adds `ticketId: <id>` or `null`; design adds `revision: 0`. PRD and structure are not gated.
 
 `1-task.md` also carries the selected route when one was chosen ([routing](routing.md)):
 
@@ -27,7 +25,7 @@ Every artifact starts with `topic: <kebab-case>`, `date: <YYYY-MM-DD>`, and `pha
   leading-argument route, recorded before dispatch. Optional; absent means the
   legacy unprefixed full feature workflow.
 - `routeStatus: complete` — present only when a limited-scope route
-  (`investigate`, `plan`, `prototype`) has finished its deliverable. Resume
+  (`investigate`, `plan`, `prototype`) finished its deliverable; resume
   detection reads it so a finished plan is not mistaken for permission to
   implement.
 
@@ -41,7 +39,7 @@ plan, `prototype-report.md` for prototype); they create no production worktree.
 - Never restore the retired `^approved:` frontmatter gate; review records alone determine passage.
 - `design-review-<n>.md`: orchestrator-written at the highest existing `<n>` + 1, or 1. Frontmatter is `topic`, `date`, `phase: design-review`, and `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`; body is the verbatim report. Highest-round APPROVE or COMMENT passes. REQUEST CHANGES re-dispatches `design-author` with findings verbatim and increments numeric `revision`; missing/non-numeric means `0`, so the first rewrite writes `revision: 1`.
 - `cross-model-notes.md`: orchestrator-written, append-only, one already-blockquoted `### Cross-model disposition` block per DESIGN or IMPLEMENT review round. Frontmatter: copied `topic`, `date`, `phase: cross-model-review`; no `verdict`. A block starting `> **Design round <n>**` is from DESIGN; unlabeled means IMPLEMENT. Create only on first use; reviewers never read it as prior state.
-- `cross-model-raw.md`: orchestrator-written, append-only DESIGN capture with one result line plus fenced raw output per vendor call; zero calls append nothing. Frontmatter: copied `topic`, `date`, `phase: cross-model-raw`; no `verdict`. It supports live/pre-merge audit only because `docs/plans/` is gitignored and `/pr-cleanup` deletes the topic directory.
+- `cross-model-raw.md`: orchestrator-written, append-only DESIGN capture with one result line plus fenced raw output per vendor call; zero calls append nothing. Frontmatter: copied `topic`, `date`, `phase: cross-model-raw`; no `verdict`.
 
 ## Topic and ticket invariants
 

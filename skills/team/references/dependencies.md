@@ -1,10 +1,10 @@
 # System dependency checks
 
-A reasoning lens for co-changing callers and siblings. It produces no artifact and blocks nothing. Read it before judging or changing a component whose neighbors share its contracts.
+A reasoning lens for co-changing callers and siblings. It produces no artifact and blocks nothing.
 
 ## Core lenses
 
-- **Blast radius over diff radius** — the lines a change edits are rarely the whole change. Include callers, config, docs, tests, and sibling implementations that must change together.
+- **Blast radius over diff radius** — include callers, config, docs, tests, and sibling implementations that must change together.
 - **Callers and siblings first** — find consumers and comparable implementations before judging or changing a component.
 - **Conventions are contracts** — follow established naming, errors, layout, and idioms unless a documented decision requires divergence.
 - **Leave the system consistent** — callers work and siblings agree, or every divergence is explicit.
@@ -35,4 +35,4 @@ Does a sibling diverge? Does a caller or consumer outside the diff need change? 
 
 ## Lens, not dogma
 
-This lens informs judgment and never blocks. Greenfield or single-file work can have no callers, siblings, or conventions; "none found" is a complete answer. Never manufacture findings.
+Greenfield or single-file work can have no callers, siblings, or conventions; "none found" is a complete answer. Never manufacture findings.

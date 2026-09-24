@@ -48,29 +48,14 @@ phase: questions
 - Vocabulary: <neutral term definitions used below; no goal>
 
 ## Topology
-- Where does <component class> live in this codebase?
-- What modules consume / produce <relevant data>?
+- Where does <component class> live, and what consumes / produces <relevant data>?
 
 ## Conventions
-- What test framework, naming convention, and structure does the codebase use?
-- What error-handling pattern is used for <relevant subsystem>?
+- What test framework, naming, structure, and error handling does <relevant subsystem> use?
 
 ## Constraints
-- What types, schemas, or interfaces must changes here honor?
-- What existing utilities or abstractions provide <relevant capability>?
+- What types, schemas, or interfaces must changes here honor, and what existing utilities provide <relevant capability>?
 
 ## Reference points
 - What representative similar implementation exists, and where?
-```
-
-## `3-prd.md`
-
-This artifact is autonomous and ungated, so it has no `approved` or `revision`.
-
-```yaml
----
-topic: <kebab-case-topic>
-date: <YYYY-MM-DD>
-phase: prd
----
 ```

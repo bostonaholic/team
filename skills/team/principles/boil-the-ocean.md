@@ -1,6 +1,6 @@
 # Boil the ocean
 
-The marginal cost of completeness is near zero. Finish the whole authorized job, not the part that turns the tests green.
+Finish the whole authorized job, not the part that turns the tests green.
 
 Fix the cause, not the symptom. A workaround, a guard that silences the failure, or a note to revisit while the real fix is in reach is a defect.
 Search for an existing implementation before building a new one ([dependency rules](../references/dependencies.md)).

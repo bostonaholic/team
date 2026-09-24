@@ -1,15 +1,16 @@
 ## Setup
 
-0. **Select the route first.** Read [routing](routing.md) and identify the
-   selected route from the leading argument, before any worktree or artifact
-   is authored. A limited-scope route (`investigate`, `plan`, `prototype`)
+0. **Select the route first.** Read [routing](routing.md) and select the route
+   from the leading argument, before any worktree or artifact is authored.
+   A limited-scope route (`investigate`, `plan`, `prototype`)
    creates no production worktree: it writes its artifacts in place under the
    home `docs/plans/<id>/` and stops at its deliverable. Only a full route
    (`feature`, `fix`, `refactor`, or unprefixed) runs the leading WORKTREE
-   phase below. Record `route: <route>` on `1-task.md` before dispatching any
-   agent, and set `routeStatus: complete` when a limited-scope route finishes.
-1. **Resolve `$ARGUMENTS`** to a description (fetch issue through `gh` if a
-   URL. Lookup tracker if a ticket-only ID. Otherwise use as-is).
+   phase below.
+1. **Resolve `$ARGUMENTS`** to a description (fetch the issue's title and body
+   through `gh issue view` if a URL. Lookup tracker if a ticket-only ID.
+   Otherwise use as-is). If `$ARGUMENTS` is empty, ask the user to describe the
+   feature and stop.
 2. **Capture `ticketId`** — if `$ARGUMENTS` starts with a ticket-like
    pattern (e.g., `<system>-<id>`), set it aside as `ticketId` for
    `1-task.md`. Otherwise leave `ticketId` as `null`.
@@ -19,22 +20,17 @@
    begins. Read [tracking rules](../team-pr/references/tracking.md) and follow its
    ticket-lifecycle rules, best-effort — skip silently when no tracker
    mechanism exists. Never block the pipeline on a tracker update.
-4. **Derive `<id>`:**
-   - With ticket: `<TICKET>-<kebab-topic>` (e.g., `ENG-1234-add-auth`)
-   - Without ticket: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
-     `2026-05-01-add-auth`)
+4. **Derive `<id>`:** `<TICKET>-<kebab-topic>` with a ticket, otherwise
+   `<YYYY-MM-DD>-<kebab-topic>`.
 5. **Seed the TodoWrite ledger** with one item per phase, in order:
    `Worktree → Question → Research → Design → Structure → Plan → Implement → PR`.
    Mark `Worktree` as `in_progress`.
-   See [execution rules](references/execution.md) for the per-step tracking convention agents follow within each phase.
    With no TodoWrite on the host, seed the substitute file ledger the
    Rules reference defines instead; it is written once WORKTREE creates
    the directory.
-   The home worktree and `docs/plans/<id>/` are both created at the leading
-   WORKTREE phase (see "Orchestrator-Emit Gate (leading worktree)" below) —
-   not here.
-6. **Resolve the canonical artifact directory.** Artifacts now live inside
-   the worktree, authored there at the leading WORKTREE phase. Run
+   The home worktree and `docs/plans/<id>/` are created at the leading
+   WORKTREE phase ("Orchestrator-Emit Gate (leading worktree)" below), not here.
+6. **Resolve the canonical artifact directory.** Run
    `git worktree list` and look for a worktree path whose basename is
    `<id>`, per the `.claude/worktrees/<id>` convention. If one exists, the
    canonical artifact directory is `<worktree-path>/docs/plans/<id>/` — use
@@ -50,11 +46,8 @@
    resumes **at the review step**, never a re-draft (any `approved` fields
    left by older runs are ignored). Then mark the first incomplete phase
    `in_progress`.
-   **Never re-dispatch a phase whose artifact already exists** — re-running
-   QUESTION over an existing `1-task.md`, for example, would overwrite
-   in-progress work (data loss).
-   Resume is an idempotent re-run: already-done is done, never an error ([durable state rules](principles/durable-state.md)).
+   **Never re-dispatch a phase whose artifact already exists.**
 
-You hold the description in your own context. Downstream of QUESTION the
+**Research-isolation invariant.** You hold the description in your own context. Downstream of QUESTION the
 description must NEVER appear in any artifact or agent payload outside
 `1-task.md` and the questioner's own outputs.

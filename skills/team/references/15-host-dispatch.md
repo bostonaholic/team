@@ -3,10 +3,8 @@
 Team ships every specialist as a portable definition at `agents/<name>.md`.
 The YAML frontmatter carries host metadata (including Claude Code's optional
 fields); the body is a complete role prompt. To run a phase, dispatch that
-definition through the host's subagent facility. Read this reference before the
-first dispatch of a run.
+definition through the host's subagent facility.
 
-Dispatch needs only that the host can read a file and spawn a subagent.
 Before every named or body-loaded dispatch, resolve the installed plugin root
 and `agents/<name>.md`. Claude uses `${CLAUDE_PLUGIN_ROOT}`. Codex and
 Antigravity derive the root from the loaded skill's absolute path. OpenCode
@@ -37,11 +35,10 @@ Resolve every dispatch in this order:
    frontmatter, and spawn a fresh subagent of the host's general-purpose type
    with the body as its role instructions, plus the same artifact-path payload
    the named path receives. Preserve the body byte-for-byte; frontmatter is the
-   only part removed. Fresh-context isolation is identical to the named path.
+   only part removed.
 3. **Inline fallback.** If the host cannot spawn a subagent, run a **producer**
    agent's body in the orchestrator's own context. Never run a **reviewer**
-   inline: a reviewer sharing the author's context cannot judge it, so the
-   generator/evaluator invariant is unsatisfiable. Stop and report instead
+   inline. Stop and report instead
    ([independent review rules](principles/independent-review.md)).
 
 Capability mapping for the body-load path:
@@ -67,8 +64,8 @@ Dispatch independent agents concurrently — RESEARCH's pair, IMPLEMENT's five
 reviewers — up to the host's concurrent-subagent cap. Batch the fan-out when it
 exceeds the cap; never serialize reviewers for convenience. Every dispatch must
 return to the orchestrator in full. A host mode that returns only a truncated
-notice and holds the body elsewhere loses a return-only agent's entire output
-(see "Where a phase agent's output lives").
+notice loses a return-only agent's entire output (see "Where a phase agent's
+output lives").
 
 The body-load payload is the same for every phase: the agent body, the
 canonical artifact directory, and the predecessor artifact paths the phase

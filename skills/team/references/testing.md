@@ -1,6 +1,6 @@
 # Test quality policy
 
-These rules govern every acceptance test and are the bar reviewers hold changed test files to. Each rule catches a different class of test-suite decay.
+These rules govern every acceptance test and are the bar reviewers hold changed test files to.
 
 ## Test behavior, not implementation
 
@@ -10,7 +10,7 @@ Tests assert externally observable outcomes — return values, persisted state, 
 
 Write the expected result without using the implementation being tested. Derive it from the requirement, a fixed example, or an external specification. Do not call production code, import its calculated values, copy its algorithm, configure a mock result and assert that same result, or assert setup data without exercising production behavior.
 
-Ask: "If the implementation were wrong, could this expected result still be correct?" If not, the test is tautological. Every test must reject at least one plausible broken implementation. Observe the test fail before changing production code. When the tested behavior already exists, temporarily alter or bypass the relevant production behavior, require the test to fail, then restore it. A test that stays green does not verify the behavior.
+Every test must reject at least one plausible broken implementation. Observe the test fail before changing production code. When the tested behavior already exists, temporarily alter or bypass the relevant production behavior, require the test to fail, then restore it. A test that stays green does not verify the behavior.
 
 ## Tests are DAMP, not DRY
 
@@ -24,10 +24,6 @@ Assert the specific field or effect the test cares about, not full equality on a
 
 A failing test must be diagnosable from name + assertion output alone, without rerunning. Test names describe behavior, not method.
 
-## Wait for the condition. Never sleep
-
-Replace every fixed `sleep(N)` with a wait-for-condition primitive.
-
 ## Assert outcomes, not interleavings
 
 Never depend on scheduler order. `join()`/`await` every concurrent task before asserting. Sort or compare sets unless order is the contract.
@@ -35,23 +31,6 @@ Never depend on scheduler order. `join()`/`await` every concurrent task before a
 ## Control the clock
 
 Freeze or inject time. Never feed real `new Date()`, `Date.now()`, naive calendar math, future expiry literals, or timezone-naive dates into assertions.
-
-```js
-const token = { expiresAt: "2030-01-01" };
-expect(isValid(token, new Date())).toBe(true);
-```
-
-```js
-const now = new Date("2024-06-15T12:00:00Z");
-const token = issueToken({ now, ttlDays: 30 });
-expect(isValid(token, now)).toBe(true);
-```
-
-Past or fixed date literals with an explicit timezone are the sanctioned form.
-
-## Seed all randomness
-
-Use explicit inputs or seed every RNG that can affect an assertion.
 
 ## Tests own their state — any order, any host
 
@@ -67,7 +46,7 @@ Stub real networks; allocate ports dynamically; always close resources. Pin loca
 
 ## Fidelity ladder: real > fake > mock
 
-Prefer real, then fake, then mock. Wrap vendor types behind owned interfaces. E2E is reserved for critical user journeys; when behavior overlaps an existing feature, add a cross-feature interaction test.
+Wrap vendor types behind owned interfaces. E2E is reserved for critical user journeys; when behavior overlaps an existing feature, add a cross-feature interaction test.
 
 ## Audit checklist
 

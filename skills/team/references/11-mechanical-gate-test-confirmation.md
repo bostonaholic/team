@@ -14,32 +14,19 @@ When the `test-architect` returns failing tests:
 6. If the report line is missing or says `NO`, or if a static check fails,
    send it back to the `test-architect` and re-run.
 
-A failing static check here is not a detail to clean up later. Many runners
-execute tests without type-checking them, so a suite can be green while the
-type checker is red — and the first actor to notice is otherwise the
-`verifier`, one of the five reviewers, which costs a full review round and a
-fix round to learn something a static check answers in seconds. Test-first
-deliberately produces incomplete stubs, which is exactly the state that
-type-checks badly, so this gate is where that shows up.
-
 #### The refactor case — the gate inverts
 
 A change whose stated contract is **zero behavior change** has no test to
-write. The acceptance tests already exist: they are the current suite, and
-their correct state throughout is green, not red. Writing new tests for the
-mechanics of a file move would add tests the task never asked for. So the
-gate's polarity inverts:
+write: the current suite is the acceptance suite, and its correct state
+throughout is green, not red. The gate's polarity inverts:
 
 1. Capture the baseline — the suite and every static check — **before** any
-   file moves. A baseline taken after the first move measures the change
-   rather than the pre-image ([durable state rules](principles/durable-state.md)), and a check that
-   could not run at all is UNKNOWN, never a pass.
+   file moves. A check that could not run at all is UNKNOWN, never a pass
+   ([durable state rules](principles/durable-state.md)).
 2. Skip the `test-architect` dispatch and record the reason on a named line
-   ([verified results rules](principles/verified-results.md)). A silent skip is indistinguishable from a
-   forgotten one.
+   ([verified results rules](principles/verified-results.md)).
 3. Advance only when the checks **reproduce that baseline**. A check red
-   before the change stays red; a new failure is a regression, not an
-   assertion the implementer is about to satisfy.
+   before the change stays red; a new failure is a regression.
 
 Structural checks carry the acceptance criteria the tests cannot express
 here: a `grep` with an exact expected match count, a path that must no longer

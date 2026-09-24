@@ -1,10 +1,8 @@
 # PRD template
 
-Use this body for `3-prd.md` when the PRD criteria apply. Read [question playbook](playbooks/question.md) for when to write one.
-
 ## Problem Statement
 
-In 1–3 sentences, state the user's problem, its cause, and why it matters now. Ground all later sections in it.
+1–3 sentences: the user's problem, its cause, and why it matters now. Ground all later sections in it.
 
 ## User Stories
 
@@ -14,7 +12,7 @@ List every in-scope workflow:
 As a [user type], I want to [action], so that [outcome].
 ```
 
-Put excluded stories in Non-Goals and possible later stories in Future Scope. Stay at "what," never "how." Syntax errors highlighted in an editor is behavior; parser AST error metadata is implementation.
+Put excluded stories in Non-Goals and possible later stories in Future Scope. Stay at "what," never "how."
 
 ## Acceptance Criteria
 

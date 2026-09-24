@@ -2,7 +2,7 @@
 
 ## `4-repos.md`
 
-Write this only when a topic touches more than one repository. Its presence enables multi-repo mode under `skills/team-worktree/playbooks/worktree.md`; absence means single-repo. The home worktree is created in leading WORKTREE, secondary worktrees after design review.
+Write this only when a topic touches more than one repository. Its presence enables multi-repo mode under `skills/team-worktree/playbooks/worktree.md`. The home worktree is created in leading WORKTREE, secondary worktrees after design review.
 
 ```yaml
 ---
@@ -37,7 +37,7 @@ Names are unique short slugs such as `frontend`, `api`, or `shared-types`, used 
 
 ## `3-prd.md`
 
-The questioner writes `docs/plans/<id>/3-prd.md` when the `## Conditional PRD` criteria of the [question playbook](playbooks/question.md) apply: vague, multi-story, cross-cutting, or behavior-replacing work. `1-task.md` references it. It is autonomous and ungated.
+The questioner writes `docs/plans/<id>/3-prd.md` when the `## Conditional PRD` criteria of the [question playbook](playbooks/question.md) apply: vague, multi-story, cross-cutting, or behavior-replacing work.
 
 ```yaml
 ---
