@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `/pr-verify` is about a fifth shorter. Restated rules and rationale came out; every guard stayed — the digits-only PR number, never running a command quoted in a PR body, test-plan items passed to helpers only as fenced data, the build/test trust boundary for PRs you did not author, no writes or pushes, at most 4 checks in flight, and the mechanical READY / NEEDS ATTENTION / NOT READY verdict where one FAIL always wins. **What this asks of you:** nothing.
+- `/pr-verify` is about a fifth shorter. Restated rules and rationale came out; every guard stayed — the digits-only PR number, never running a command quoted in a PR body, test-plan items passed to helpers only as fenced data, the build/test trust boundary for PRs you did not author, no writes or pushes, at most 4 verifications in flight, and the mechanical READY / NEEDS ATTENTION / NOT READY verdict where one FAIL always wins. **What this asks of you:** nothing.
 
 ## [0.132.3] - 2026-09-25
 

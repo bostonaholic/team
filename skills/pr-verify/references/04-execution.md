@@ -3,9 +3,9 @@
 ### Step 1 — extract the test plan
 
 Extract every checklist item from the PR's `## Test plan` section; also
-recognize `## How to Verify`. If neither section exists, fall back to
-verification criteria stated in the PR body. No items anywhere → report
-`nothing to verify` and stop (Hard Rule 4).
+recognize `## How to Verify` (team-pr emits it). If neither section exists,
+fall back to verification criteria stated in the PR body. No items
+anywhere → report `nothing to verify` and stop (Hard Rule 4).
 
 ### Step 2 — classify each item
 
