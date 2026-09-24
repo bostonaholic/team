@@ -82,7 +82,7 @@ Two entry paths, selected in `## Detection and surface`.
    600-second bound, or the project's own bound when it names one. Both sit
    outside the capture budget, which starts when the app is foregrounded.
 
-Then follow `## Screenshot Capture (UI projects)` below.
+Then follow `## Screenshot Capture (UI projects)` below, with no dev server.
 
 **Failure severity (both paths).** A build failure caused by the branch is
 Broken — a REQUEST CHANGES verdict. An unavailable toolchain is Could Improve,

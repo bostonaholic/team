@@ -45,12 +45,12 @@ ux-reviewer's) uses Working/Broken/Could Improve.
 ## Report Format
 
 One report shape binds every surface a code review crosses: the
-code-reviewer's final report, a subagent's report on a dispatcher's behalf,
-and the full output the top-level session presents after a direct
-invocation. A relay reproduces the report in full — never a paraphrase,
-never a subset. A reviewer that carries its own report template in its
-agent file (the security-reviewer, the ux-reviewer, the technical-writer,
-the verifier) keeps it; this shape governs the code review.
+code-reviewer's final report, a subagent's report when it reviews a diff on a
+dispatcher's behalf, and the full output the top-level session presents after
+a direct invocation. A relay reproduces the report in full — never a
+paraphrase, never a subset. A reviewer that carries its own report template
+in its agent file (the security-reviewer, the ux-reviewer, the
+technical-writer, the verifier) keeps it; this shape governs the code review.
 
 ```markdown
 **Verdict: <✅ APPROVE | ❌ REQUEST CHANGES | 💬 COMMENT>**
