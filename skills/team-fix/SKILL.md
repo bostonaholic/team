@@ -10,9 +10,6 @@ argument-hint: "<ticket id, issue URL, or bug description>"
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-Run the compressed bug-fix pipeline. Goes straight to test-driven fix
-discipline without the full QRSPI ceremony.
-
 Invocation is guarded per [human control rules](../team/principles/human-control.md): the
 pipeline fires only on stated pipeline intent — a plain "fix this bug" asks
 for an inline fix, not this pipeline.
@@ -25,7 +22,7 @@ for an inline fix, not this pipeline.
 
 ## Procedure references
 
-Read each reference completely when reaching that stage. Follow them in order; later stages depend on state and gates established earlier.
+Read each reference completely when reaching that stage. Follow them in order.
 
 1. [Input](references/01-input.md)
 2. [When to Use](references/02-when-to-use.md)
