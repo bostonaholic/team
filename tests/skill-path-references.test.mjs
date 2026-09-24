@@ -7,6 +7,7 @@
 // - everywhere, fences included: ${CLAUDE_PLUGIN_ROOT}/path and <installed-team-root>/path
 //   from the plugin root, <skills-root>/path from skills/, <NAME-skill-dir>/path from
 //   skills/NAME, <refs-dir>/path from the file's directory, and <skill-dir>/path like a link.
+// A line starting with ``` opens a fence only if the rest of the line holds no backtick.
 // Skips URLs, pure anchors, and paths holding < > { } [ ] * ? $ …. Fails on a fence still
 // open at EOF, or a code span still open at a blank line, fence, or EOF.
 import assert from "node:assert/strict";
@@ -41,7 +42,9 @@ function references(file) {
       if (bases) add(path, bases);
     }
 
-    const marker = text.match(/^\s*(`{3,}|~{3,})(.*)$/);
+    let marker = text.match(/^\s*(`{3,}|~{3,})(.*)$/);
+    // CommonMark: a backtick fence's info string cannot contain a backtick, so such a line is prose.
+    if (marker?.[1][0] === "`" && marker[2].includes("`")) marker = null;
     if (fence) {
       if (marker && marker[1][0] === fence.marker[0] && marker[1].length >= fence.marker.length && !marker[2].trim()) {
         fence = null;
