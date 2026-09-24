@@ -1,18 +1,18 @@
 ## Output format
 
-Keep the confidence separation intact — it is the product. Every line is a
-claim with a citation or a named gap; remove narrative that carries no claim.
+Keep the confidence separation intact. Every line is a claim with a
+citation or a named gap; remove narrative that carries no claim.
 
-- **The Question** — one or two sentences restating what was asked.
+- **The Question** — restated in one or two sentences.
 - **The Code in Question** — file paths, line ranges, key symbols.
 - **What We Found** — one bullet per claim with textual evidence, tagged
   `[Direct]` or `[Supported]`, each with its citation.
-- **What We Can Reasonably Infer** — `[Inferred]` claims in hedged
-  language, each with its visible inference chain ("Given A and B,
-  likely C"). Omit the section when there is nothing to infer.
-- **Competing Hypotheses** — when the evidence fits several stories,
-  each with the evidence for and against. Never force a winner. Omit
-  when one answer is clear.
+- **What We Can Reasonably Infer** — `[Inferred]` claims, hedged, each
+  with its visible inference chain ("Given A and B, likely C"). Omit the
+  section when there is nothing to infer.
+- **Competing Hypotheses** — when the evidence fits several stories, each
+  with its evidence for and against; never force a winner. Omit when one
+  answer is clear.
 - **What We Don't Know** — the specific gaps: questions the evidence did
   not answer, searches that came up empty.
 - **Sources Consulted** — one line per category:
