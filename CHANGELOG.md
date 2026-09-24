@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `/pr-rebase` is now a short procedure instead of 882 lines across thirteen files. It still discovers the base, rebases the current branch, resolves conflicts from both sides' intent, runs the project's checks before and after, and publishes with an explicit `--force-with-lease`. The baseline-classification table, per-run rebase logs, publisher detection, and stack restacking are gone — on a repository whose publishing belongs to a stack manager, run that tool after the rebase rather than the skill's push. **What this asks of you:** nothing on a plain git repository.
+
 ## [0.129.0] - 2026-09-22
 
 ### Changed

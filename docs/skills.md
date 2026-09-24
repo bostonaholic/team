@@ -195,7 +195,7 @@ Grooms a project backlog and proposes tracker changes.
 
 Cleans PR state.
 
-**Used by:** `pr-rebase`, `team-worktree`
+**Used by:** `team-worktree`
 
 **Uses:** None
 
@@ -221,7 +221,7 @@ Rebases a branch onto its base.
 
 **Used by:** None
 
-**Uses:** `pr-cleanup`
+**Uses:** None
 
 ### [retro](https://github.com/bostonaholic/team/blob/main/skills/retro/SKILL.md)
 
