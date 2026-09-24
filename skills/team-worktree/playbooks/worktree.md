@@ -157,4 +157,5 @@ If worktree creation fails in any repo (shallow clones, certain CI systems):
 3. If creation fails in the home repo, the orchestrator proceeds with
    in-place work for the entire pipeline.
 
-Never block the pipeline because worktree creation failed.
+Never block the pipeline because worktree creation failed — isolation is
+a best-practice enhancement, not a hard requirement.
