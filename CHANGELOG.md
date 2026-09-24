@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `/pr-cleanup` is shorter to read. Its restated rules, repeated pitfalls, and background prose are gone, and the empty "Execution" reference file is deleted. It still verifies a merged PR by identity and containment before deleting anything, refuses protected and unsafe branch names, stops on a dirty tree, deletes remote branches only on an abandon request or your answer to its offer, and runs only the `.teamteardown` committed to the default branch. **What this asks of you:** nothing.
+
 ## [0.132.22] - 2026-09-25
 
 ### Changed
