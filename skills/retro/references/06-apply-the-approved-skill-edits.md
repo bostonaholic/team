@@ -77,8 +77,10 @@ rather than read back from an earlier block's variable.
   hold the same name, the plan names both paths and marks the shadowed one
   untouched.
 - **A creation** only ever targets `.claude/skills/<name>/SKILL.md` under the
-  repository, and only when that path does not exist. A missing parent
-  directory is created as part of the write.
+  repository, and only when that path does not exist. Adding a file to a
+  distributed plugin's own `skills/` directory is a release decision, so it
+  goes to Backlog instead. A missing parent directory is created as part of the
+  write.
 - **Every resolved real path must stay inside the repository**, so a symlinked
   directory cannot carry a write out of it.
 - **Never write** `~/.claude/**` (a plugin update overwrites cached skills), a
