@@ -76,7 +76,7 @@ comment's `databaseId`.
 - A `Needs your decision` item from a review summary or conversation comment
   shows "PR-level" in place of the file path and line.
 - An auto-applied item another author wrote carries 👍 on its one-line
-  entry.
+  entry. No item is reacted to twice.
 - Leave the working tree as you found it.
 - Items the current diff already resolves are called out (option **F**) —
   check with `git diff origin/<base>...HEAD -- <path>` before you
