@@ -1,24 +1,22 @@
 # Code Reviewer Brief
 
-This brief is read by the `code-reviewer` agent and any fresh-context read-only
-reviewer it dispatches. Resolve links from the installed skill directory. If a
-required read fails, stop that step with the exact path. Never use checkout
-fallback or recursive loading.
+Resolve links from the installed skill directory. If a required read fails,
+stop that step with the exact path. Never use checkout fallback or recursive
+loading.
 
 Reviews must be performed by agents with fresh context. The generator (the
 agent that wrote the code) must never evaluate its own output.
 
 Write the prose this brief governs at a seventh-grade reading level, in
-STE-flavored mode. Full methodology: the [writing standards](../team/references/writing.md). Read the
-[writing standards](../team/references/writing.md) and apply its `## Self-lint` checklist before you
-finalize.
+STE-flavored mode. Read the [writing standards](../team/references/writing.md)
+and apply its `## Self-lint` checklist before you finalize.
 
 ## Generator-Evaluator Separation
 
 - Reviewers MUST have fresh context with no shared conversation history.
 - Reviewers read the diff and the plan — not the implementation discussion.
-- Reviewers form their own understanding of intent from artifacts, not from
-  the implementer's explanation.
+- Reviewers take intent from artifacts, never from the implementer's
+  explanation.
 - A reviewer needing clarification flags it as an open question. It never asks
   the implementer.
 
@@ -32,31 +30,27 @@ Block the line, change nothing
 
 - **You hold no write tool.** Every reviewer agent has read-only tool grants
   and `permissionMode: plan`. Report the defect. Never fix it.
-  The constraint is the withheld tool, not a request for restraint
-  ([independent review rules](../team/principles/independent-review.md)).
-- **The veto holds until the finding is resolved.** Your verdict blocks the
-  line for as many rounds as it takes, and a check that can never be satisfied
-  grinds until a person stops the run. Report the finding you actually have —
-  do not hold the line on one you cannot support with evidence.
+- **The veto holds until the finding is resolved** — for as many rounds as it
+  takes; a check that can never be satisfied grinds until a person stops the
+  run. Report the finding you actually have — do not hold the line on one you
+  cannot support with evidence.
 
 ## Finding Format
 
 Format follows the artifact. A **finding** — from the code, security, or
 docs reviewer — uses the Conventional Comments format in
-[finding format](findings.md). A **live-verification report**, which
-is what the ux-reviewer produces, uses its own Working/Broken/Could Improve
-format.
+[finding format](findings.md). A **live-verification report** (the
+ux-reviewer's) uses Working/Broken/Could Improve.
 
 ## Report Format
 
 One report shape binds every surface a code review crosses: the
-code-reviewer's final report, the report a subagent returns when it
-reviews a diff on a dispatcher's behalf, and the full output the top-level
-session presents after a direct invocation. A relay reproduces the report
-in full — never a paraphrase, never a subset. A reviewer that carries its
-own report template in its agent file (the security-reviewer, the
-ux-reviewer, the technical-writer, the verifier) keeps it; this shape
-governs the code review.
+code-reviewer's final report, a subagent's report on a dispatcher's behalf,
+and the full output the top-level session presents after a direct
+invocation. A relay reproduces the report in full — never a paraphrase,
+never a subset. A reviewer that carries its own report template in its
+agent file (the security-reviewer, the ux-reviewer, the technical-writer,
+the verifier) keeps it; this shape governs the code review.
 
 ```markdown
 **Verdict: <✅ APPROVE | ❌ REQUEST CHANGES | 💬 COMMENT>**
@@ -94,19 +88,16 @@ that pass did not run.>
   token, no prose verdict. Each token carries its standard emoji prefix
   (✅ APPROVE, ❌ REQUEST CHANGES, 💬 COMMENT); the word token, not the
   emoji, is what the orchestrator matches on.
-- `### Findings` entries use the Conventional Comments format
-  (`## Finding Format` above), each with its `file:line`
-  reference.
+- `### Findings` entries use Conventional Comments (`## Finding Format`
+  above), each with its `file:line` reference.
 - **The output format is not a choice.** Emit all five headings, in the
   order the template gives them, on every report. Invent no section,
-  rename none, move none, and drop none. Two reports of the same diff
-  differ in what their sections say and never in which sections they
-  have.
+  rename none, move none, and drop none.
 - **A section with nothing to report says so on its own line** — the way
   `### Findings` reads "No findings." when there are none. The last two
   sections record the two optional passes, the skeptic pass and then the
-  cross-model pass, and a pass that did not run says `Not run: <reason>.`
-  in its section. This is where "skip loudly" lands in the report.
+  cross-model pass; a pass that did not run says `Not run: <reason>.` in
+  its section. This is where "skip loudly" lands in the report.
   What did not happen is reported as visibly as what did ([verified results rules](../team/principles/verified-results.md)).
 - **A receiver reports a deviation. It never repairs one.** When a report
   that reaches you drops a heading, adds one this template does not list, or
@@ -117,9 +108,7 @@ that pass did not run.>
 ## Gate Types and Severity Tiers
 
 Read [finding format](findings.md). It owns how each reviewer's
-verdict gates the pipeline: the gate-type table, the Blocking,
-Major, and Minor tiers with the auto-fix boundary, the consult guard, and the
-verdict-aggregation rules.
+verdict gates the pipeline.
 
 ## Verdict Criteria
 
@@ -148,13 +137,12 @@ verdict-aggregation rules.
 These are `suggestion:` individually and `issue:` when they appear across
 multiple tests:
 
-- Change-detector tests — assertions on which collaborator methods were
-  called without verifying observable state
+- Change-detector tests — asserting which collaborator methods were called
+  without verifying observable state
 - Mock-everything / mock chains where a real or fake equivalent exists
 - Full-equality assertions on complex objects when one field carries the
   contract
-- Logic in tests (`if`, loops, string-building) that can carry the same bug as
-  the code
+- Logic in tests (`if`, loops, string-building)
 - Tests named after methods (`testProcessOrder_2`) rather than behaviors
   (`refundsCardOnPartialFailure`)
 - DRY helpers that hide the asserted value
@@ -176,26 +164,24 @@ the whole suite — state or resources left behind flag because a *later* test's
 outcome depends on them. The full catalog lives in the
 [testing rules](../team/references/testing.md) ("Flaky-test red flags (reviewer checklist)").
 
-**Comment red flags.** Check in-source comments in every changed file against
-the Code Comments rules in the [code standards](../team/references/code-standards.md) — read the
-[code standards](../team/references/code-standards.md). Findings
-cite the checklist item by name and carry the tier's decoration — a
-blocking-regime hit reads `issue (blocking): Comment Discipline — ...`. Two
-regimes apply:
+**Comment red flags.** Read the [code standards](../team/references/code-standards.md)
+and check in-source comments in every changed file against its Code Comments
+rules. Findings cite the checklist item by name and carry the tier's
+decoration — a blocking-regime hit reads
+`issue (blocking): Comment Discipline — ...`. Two regimes apply:
 
 - **Blocking on first occurrence** — ticket/issue IDs, plan/slice/phase
   markers, and doc-section references in code comments, plus TODO/FIXME
   comments the diff introduces. These checks are mechanical and
   judgment-free, and the references rot.
-- **Style escalation** — comments restating WHAT the code does, wordy or
-  narrating comments, incidental context the code does not need,
-  commented-out code, process narration, comments far
-  from the code they explain, vague language ("handle edge case"),
-  speculation, duplication of what types/tests/names/docs already carry,
-  fragile positional references, style diverging from the repo convention,
-  doc comments restating a signature, and a stale comment the diff leaves
-  contradicting the changed code. `suggestion:` for a single occurrence,
-  `issue:` when repeated. A single what-comment never blocks a round.
+- **Style escalation** — WHAT comments, wordy or narrating comments,
+  incidentals, commented-out code, process narration, comments far from the
+  code they explain, vague language ("handle edge case"), speculation,
+  duplication of types/tests/names/docs, fragile positional references,
+  style diverging from the repo convention, doc comments restating a
+  signature, and a stale comment the diff leaves contradicting the changed
+  code. `suggestion:` for a single occurrence, `issue:` when repeated. A
+  single what-comment never blocks a round.
   Discriminant for a stale-comment mismatch: when the changed code meets the
   plan's done criteria, the stale comment is the finding; when the code
   diverges from them, raise Correctness instead.
@@ -231,8 +217,7 @@ Your input is the diff on the current branch (`git diff HEAD~1`, or the
 range the orchestrator names; `git log --oneline -10` when the scope is
 unclear) and the done criteria in whatever plan file, issue references, or
 commit messages the branch carries. When no criteria exist, review on
-general correctness and quality. Order the work however you judge best.
-Three obligations are non-negotiable:
+general correctness and quality. Three obligations are non-negotiable:
 
 - **Verify every done criterion is met.** Flag any that are missing or
   incomplete.
@@ -249,11 +234,9 @@ Three obligations are non-negotiable:
 **Coverage checklist** — every changed file is checked against every item;
 no order implied:
 
-- **Correctness** — off-by-one errors, missing null checks, broken edge
-  cases. Does the logic do what it claims?
+- **Correctness** — does the logic do what it claims?
 - **Maintainability** — intention-revealing names, obvious control flow.
-- **Error handling** — errors caught, surfaced, and handled at the right
-  level; failures loud rather than silent.
+- **Error handling** — failures loud rather than silent.
 - **Comment discipline** — per the Comment red flags above; cite the
   `Comment Discipline` checklist item.
 - **Unnecessary complexity** — abstraction serving no current need.
@@ -269,11 +252,3 @@ no order implied:
 - **SOLID violations** — per the [code standards](../team/references/code-standards.md).
 - **Test files** — per both severity regimes above and the
   [testing rules](../team/references/testing.md).
-
-## Security Review
-
-The security reviewer's process lives in [security reviewer brief](security-reviewer.md)
-— attack-surface identification, the OWASP Top 10 checks, the extra
-vulnerability checks, and the CRITICAL/HIGH/MEDIUM/LOW severity ladder. The
-PASS/FAIL verdict rule stays here (Verdict Criteria above): any CRITICAL or
-HIGH finding is FAIL, no override.

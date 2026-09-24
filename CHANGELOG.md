@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The code review briefs are shorter. The code, security, documentation, and UX reviewers read about 16% less text in each review round, and `/code-review` reads about 12% less. The gates, severity tiers, report format, screenshot rules, and commands are unchanged. **What this asks of you:** nothing.
+
 ## [0.132.8] - 2026-09-25
 
 ### Changed
