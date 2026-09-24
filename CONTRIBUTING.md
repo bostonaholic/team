@@ -24,7 +24,7 @@ expected to follow. It links out to the docs site rather than duplicating it.
 
 Team produces a **distributed plugin**, so two contexts coexist:
 
-- **Runtime** (`agents/`, `skills/`, `hooks/`, `.claude-plugin/`) ships to end
+- **Runtime** (`agents/`, `skills/`, `.claude-plugin/`) ships to end
   users. Changes here affect everyone who installs the plugin.
 - **Development** (`.claude/`) is our own workspace tooling (dev hooks, scripts,
   settings). Never distributed.

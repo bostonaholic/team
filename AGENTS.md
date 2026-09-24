@@ -14,13 +14,13 @@ Team is a plugin that orchestrates specialized agents to implement features end-
 
 This project produces a **distributed plugin**. Two contexts exist:
 
-**Runtime** (`agents/`, `skills/`, `hooks/`, `opencode/`, and the host manifests `.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/`, and the root `plugin.json`) ships to end users. Fires when someone installs the Team plugin and runs `/team`. Changes here affect all users.
+**Runtime** (`agents/`, `skills/`, `opencode/`, and the host manifests `.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/`, and the root `plugin.json`) ships to end users. Fires when someone installs the Team plugin and runs `/team`. Changes here affect all users.
 
 **Development** (`.claude/`) is our workspace tooling. Fires only when developing the plugin itself. Never distributed.
 
 | Concern | Where it lives | Who runs it |
 |---------|---------------|-------------|
-| Pipeline agents, skills, hooks, OpenCode adapter | `agents/`, `skills/`, `hooks/`, `opencode/` | End users |
+| Pipeline agents, skills, OpenCode adapter | `agents/`, `skills/`, `opencode/` | End users |
 | Plugin manifests | `.claude-plugin/` (Claude Code), `.codex-plugin/` + `.agents/plugins/` (Codex), root `plugin.json` (Antigravity) | End users |
 | Registry sync validation | `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
 | Pre-merge version gate | `.claude/hooks/pre-merge-guard.mjs` | Plugin developers |
@@ -30,7 +30,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Versioning & release automation | [docs/versioning.md](docs/versioning.md), `skills/version-bump/`, `.claude/scripts/next-version.sh`, `.github/workflows/` | Plugin developers |
 | Dev install, per harness | `script/dev-install`/`dev-uninstall` (Claude, Codex, Antigravity, OpenCode); [OpenCode lifecycle](docs/cross-host-portability.md#opencode) | Plugin developers |
 
-**Rule of thumb:** If it validates that the plugin is *built correctly*, it is a dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it is runtime (`hooks/`).
+**Rule of thumb:** If it validates that the plugin is *built correctly*, it is a dev concern (`.claude/`). If it runs *as part of the plugin's functionality*, it is runtime (`agents/`, `skills/`).
 
 ## Design philosophy
 
@@ -76,16 +76,7 @@ See `skills/*/SKILL.md`. Entry point skills double as slash commands. Some of th
 
 ## Hooks
 
-**Runtime** (8 hook programs distributed with the plugin — 4 canonical, 3 Codex duplicates under `hooks/codex/`, 1 Antigravity copy under `hooks/antigravity/` — plus 3 OpenCode adapters in `opencode/team.js`). Full matrix and per-host notes: [docs/hooks-portability.md](docs/hooks-portability.md).
-
-| Hook | Event | Registers on | Purpose |
-|------|-------|--------------|---------|
-| `pre-compact-anchor.mjs` | PreCompact | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy → stdout); OpenCode adapter `experimental.session.compacting` | Scan docs/plans/ for active topic, inject phase anchor before compaction |
-| `session-start-recover.mjs` | SessionStart | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy → stdout); OpenCode adapter `experimental.chat.system.transform` | Scan docs/plans/ for active topic, surface phase + suggested next command |
-| `post-write-validate.mjs` | PostToolUse(Write\|Edit) | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy, matcher `apply_patch`, exit 2); OpenCode adapter `tool.execute.after` | Structural validation of plugin files |
-| `validate-team-config.mjs` | UserPromptSubmit | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (reused canonical); Antigravity root `hooks.json` (`hooks/antigravity/` copy at `PreInvocation`, inject-only) | Validate `.team/config.json`; block the prompt (exit 2) when present and invalid on Claude/Codex |
-
-Antigravity has no `SessionStart` or `PreCompact` and its `PostToolUse` cannot block, so three of the four hooks are named gaps there. OpenCode has no prompt-block hook, so the config guard is a gap. Neither is stubbed silently.
+Team ships **no runtime hooks**. The distributed surface is agents, skills, the host manifests, and the OpenCode adapter. Session recovery lives in the orchestrator's Setup step: any `/team-*` command resolves the artifact directory and fast-forwards the ledger on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management).
 
 **Development** (in `.claude/hooks/`):
 
@@ -96,7 +87,7 @@ Antigravity has no `SessionStart` or `PreCompact` and its `PostToolUse` cannot b
 
 ## State
 
-State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite (session-scoped). Any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full compaction-defense explanation.
+State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite (session-scoped). Any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full state-management explanation.
 
 ## Learned rules
 

@@ -41,8 +41,7 @@
    it for resume detection and for the rest of the session (thread its
    absolute path into every downstream dispatch). If no worktree for `<id>`
    exists, fall back to the in-place home `docs/plans/<id>/` (the fallback
-   path from the leading WORKTREE phase). This is the orchestrator-side
-   mirror of the recovery hooks' worktree discovery.
+   path from the leading WORKTREE phase).
 7. **Resume detection.** If artifacts already exist for `<id>` under the
    canonical artifact directory resolved in step 6, fast-forward the
    ledger. Mark completed any phase whose artifacts are present. DESIGN is

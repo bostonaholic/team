@@ -84,8 +84,8 @@ claude plugin install team@team-dev
 ```
 
 The first command clones this repo as a marketplace; the second installs from
-it. Skills register as slash commands (`/team`, `/shipit`), and agents and hooks
-load with them.
+it. Skills register as slash commands (`/team`, `/shipit`), and agents load
+with them.
 
 #### Local git checkout installation
 
@@ -316,7 +316,7 @@ separate command and nothing to reinstall.
 
 **Supported:** native registration, skill discovery, canonical file-reading
 commands, and this lifecycle. Full QRSPI execution, specialist/nested dispatch,
-reviewer isolation, and hook behavior on OpenCode remain unverified. `/retro`
+and reviewer isolation on OpenCode remain unverified. `/retro`
 appears in the command menu and resolves OpenCode sessions from the host's
 SQLite store.
 Methodology skills marked `user-invocable: false` also appear as commands.

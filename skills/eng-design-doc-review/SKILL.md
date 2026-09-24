@@ -124,7 +124,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
   quoted verdict word from becoming the recorded verdict. The reviewer's
   output never becomes state on its own — the
   *orchestrator* records the verdict to `design-review-<n>.md` when the
-  pipeline gate runs the brief. The recovery hooks fail closed on anything
+  pipeline gate runs the brief. The pipeline gate fails closed on anything
   but a recorded passing verdict. The skill itself writes no artifacts.
   The toolset, not the prose, is the guarantee for writes ([independent review rules](../team/principles/independent-review.md)).
 - Standalone use blocks nothing: users may run `/team-design` or

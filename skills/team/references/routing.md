@@ -77,8 +77,8 @@ dispatching any agent ([artifact schema](references/artifacts.md)). This is task
 state, never neutral research input: `route` must not appear on `2-questions.md`.
 For a limited-scope route, set `routeStatus: complete` on `1-task.md` when its
 deliverable is written, so recovery reads a finished plan as finished rather
-than as permission to implement. The recovery hooks read `route` and `routeStatus`
-and never enter the feature phase table for a limited-scope route.
+than as permission to implement. Resume detection reads `route` and `routeStatus`
+and never enters the feature phase table for a limited-scope route.
 
 ## Continuation
 

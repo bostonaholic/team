@@ -101,7 +101,7 @@ move, and the displaced card when the ready column is full. On a premise-evapora
 the plan is the proposed closure instead:
 
 > "The plan is at `<path>/8-plan.md`: close #41 — the guard it asks for is already in
-> `hooks/post-write-validate.mjs`, observed today. The exact evidence comment is in
+> `<existing guard path>`, observed today. The exact evidence comment is in
 > `<path>/closure-evidence-41.md`. The closure needs its own answer. Nothing on the board
 > has changed."
 

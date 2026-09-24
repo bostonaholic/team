@@ -1,9 +1,8 @@
 // Single owner of the `.team/config.json` schema and validation.
 //
-// Both consumers import this module so the contract cannot drift: the resolver
-// (resolve-model.mjs) validates before selecting a model, and the session guard
-// (hooks/validate-team-config.mjs) validates before a prompt is processed.
-// Keep it pure and dependency-free: no I/O, no side effects, no host lookups.
+// The resolver (resolve-model.mjs) imports this module and validates before
+// selecting a model. Keep it pure and dependency-free: no I/O, no side
+// effects, no host lookups.
 
 export const HOSTS = ["codex", "antigravity"];
 export const TIERS = ["opus", "sonnet", "haiku"];

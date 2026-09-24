@@ -103,7 +103,7 @@ keeps the home checkout's `git status` clean for the entire run. No
 intermediate artifacts, test scaffolding, or commits ever touch the
 main working tree.
 
-Second, a leading worktree gives the recovery hooks a genuine first
+Second, a leading worktree gives resume detection a genuine first
 state to detect: "a worktree exists for `<id>`, no `1-task.md` yet" ⇒
 WORKTREE. The phase becomes inferable from the moment the run begins
 rather than only appearing midway through the pipeline.
