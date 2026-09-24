@@ -294,7 +294,7 @@ All six lines must show the **new** version. Zero may still show the old one.
 This **moves** the accumulated `[Unreleased]` body into a new dated section. It
 is the inverse of `release-on-merge.yml`'s `awk` extraction, because you write
 the section the release workflow later reads. In `CHANGELOG.md` (Keep a Changelog
-format, entry style per `skills/changelog/SKILL.md`):
+format, entry style per `skills/team-pr/references/changelog.md`):
 
 - Move the entire `[Unreleased]` body into a new `## [X.Y.Z] - YYYY-MM-DD`
   (today's date) section inserted directly **below** `## [Unreleased]`. Leave
@@ -306,13 +306,13 @@ format, entry style per `skills/changelog/SKILL.md`):
 This section becomes the GitHub release notes verbatim — write it for a reader
 deciding if the upgrade is worth it. Any links must be **absolute URLs**: relative paths (e.g.
 `docs/versioning.md`) render as dead links on the release page (see
-`skills/changelog/SKILL.md`).
+`skills/team-pr/references/changelog.md`).
 
 **Empty-`[Unreleased]` edge case.** A PR that reached this step passed step 0, so
 it *did* change runtime files. An empty `[Unreleased]` on it means nobody wrote
 the user-facing bullet.
 **Derive at least one bullet from the PR's runtime commits**
-(`feat:`/`fix:`/`perf:`/`security:` per `skills/changelog/SKILL.md` style). Never
+(`feat:`/`fix:`/`perf:`/`security:` per `skills/team-pr/references/changelog.md` style). Never
 write an empty section (`release-on-merge.yml` errors on empty release notes).
 
 Empty `[Unreleased]` **and** no runtime change is not this case. That PR must

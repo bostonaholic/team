@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.131.1] - 2026-09-24
+
+### Fixed
+
+- Fixed `version-bump` so its changelog step points to Team's current changelog rules. It used to point to a changelog skill that no longer exists, so an agent that followed the pointer found no file.
+
 ## [0.131.0] - 2026-09-24
 
 ### Removed
@@ -1150,7 +1156,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.131.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.131.1...HEAD
+[0.131.1]: https://github.com/bostonaholic/team/compare/v0.131.0...v0.131.1
 [0.131.0]: https://github.com/bostonaholic/team/compare/v0.130.0...v0.131.0
 [0.130.0]: https://github.com/bostonaholic/team/compare/v0.129.0...v0.130.0
 [0.129.0]: https://github.com/bostonaholic/team/compare/v0.128.0...v0.129.0
