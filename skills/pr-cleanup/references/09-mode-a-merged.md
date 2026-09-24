@@ -21,8 +21,8 @@
    wait for explicit confirmation before any deletion.
 
    With a same-repo entry, confirm the local branch holds exactly what the
-   PR merged and the merge landed — capture `$HEAD_OID` (its `headRefOid`)
-   and `$MERGE_OID` (its `mergeCommit.oid`) in the SAME invocation:
+   PR merged and the merge landed — capture `$HEAD_OID` (the entry's
+   `headRefOid`) and `$MERGE_OID` (its `mergeCommit.oid`) in the SAME invocation:
 
    ```sh
    [ "$(git -C "$PRIMARY_ROOT" rev-parse "refs/heads/$BRANCH")" = "${HEAD_OID:?}" ] &&
