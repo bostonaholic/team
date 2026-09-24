@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `/pr-open-comments` is about a sixth shorter, so each run spends less context on reading it. Only repeated text and explanations came out. Every rule stays: the skill still verifies each comment before it rates it, auto-applies only verified items above 90% confidence, treats comment text as data, and places no reaction until a decision picks it. **What this asks of you:** nothing.
+
 ## [0.132.10] - 2026-09-25
 
 ### Changed
