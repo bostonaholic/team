@@ -93,9 +93,9 @@ no dependency item.
 
 **Timing.** Dependency URLs are unknown at creation time, exactly like
 `## Companion PRs`, so reuse that mechanism: open the PRs first, then edit each
-body to add the section once all URLs are known. A post-open appended
-`## Pre-merge` is expected, not a violation. `## Pre-merge` comes before
-`## Companion PRs` in the final body.
+body to add the section once all URLs are known. A post-open `## Pre-merge`
+appended after the closing line is expected, not a violation. `## Pre-merge`
+comes before `## Companion PRs` in the final body.
 
 **`## Review notes` (conditional):** this section carries the findings
 deferred to the human's PR review. **The governing rule: every round

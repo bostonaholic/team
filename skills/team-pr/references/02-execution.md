@@ -22,8 +22,9 @@
    `## Screenshot Capture (UI projects)` UI-impact gate to the full branch
    diff, never this round's delta. A backend change that alters the interface
    counts. When UI impact is uncertain, capture. Only a branch that does not
-   change the interface omits the section. A branch that does change it must
-   carry the section, so capture when needed:
+   change the interface omits the section — non-UI changes are never forced to
+   include one. A branch that does change it must carry the section, so
+   capture when needed:
    - `$ARGUMENTS/screenshots/manifest.md` holding `## Captured` entries whose
      PNGs exist on disk is the manifest to render. Parse its frontmatter and
      `## Captured` / `## Skipped` body for the Screenshots section (see PR
