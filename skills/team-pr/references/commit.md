@@ -1,8 +1,6 @@
 # Commit discipline
 
-Before creating a commit, read this file and apply it. Write at seventh-grade, STE-flavored level; read the [writing standards](../team/references/writing.md) and apply its `## Self-lint` before finalizing.
-
-Each commit records one independently correct decision: what changed, why, and how to understand/revert it without surrounding context.
+Write at seventh-grade, STE-flavored level; read the [writing standards](../team/references/writing.md) and apply its `## Self-lint` before finalizing.
 
 ## The 50/72 Rule
 
@@ -14,35 +12,6 @@ Each commit records one independently correct decision: what changed, why, and h
 Use `<type>[optional scope]: <description>`, optional body, then optional footers. Allowed types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`, `ci`, `revert`. Scope names the component/module/layer, e.g. `feat(auth):`, `fix(api):`, `docs(readme):`.
 
 Breaking changes require a `BREAKING CHANGE:` footer or `!` in `feat!:` / `feat(api)!:`.
-
-```text
-<type>[optional scope]: <description>
-
-[optional body]
-
-[optional footer(s)]
-```
-
-| Type | Use |
-|---|---|
-| `feat` | User/API feature |
-| `fix` | Existing-behavior bug fix |
-| `refactor` | Restructure without behavior change |
-| `test` | Tests only |
-| `docs` | Documentation only |
-| `chore` | Build, tooling, dependencies |
-| `perf` | Performance improvement |
-| `ci` | CI/CD configuration |
-| `revert` | Prior-commit revert |
-
-Breaking-change example:
-
-```text
-feat(api): change authentication endpoint to use Bearer tokens
-
-BREAKING CHANGE: The /auth endpoint now expects Authorization: Bearer <token>
-instead of the previous X-API-Key header. Callers must update their headers.
-```
 
 ## Atomic Commits
 
@@ -73,5 +42,3 @@ New files:
 
 Closes #127
 ```
-
-Bad combined subject: `Fix login bug and add user profile endpoint`. Split it into a fix commit and a feature commit.

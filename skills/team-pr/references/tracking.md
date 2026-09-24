@@ -1,8 +1,5 @@
 # Tracking tickets
 
-Canonical tracker rules for pipeline pickup, PR linking, review state, and
-merge. Entry points keep only tracker-specific calls.
-
 ## Best-effort, tracker-agnostic, never blocking
 
 Every tracker interaction below is best-effort and tracker-agnostic: if
@@ -20,15 +17,13 @@ before any other work begins.
 ## PR open: link the PR to the ticket
 
 When the PR phase opens a pull request and `1-task.md`'s frontmatter has
-`ticketId` set, **link the PR to the ticket**. The tracker then closes
-the ticket when the PR merges, and any board automation moves it to its
-done state. On GitHub, render the link as a closing line emitted
-**as the final line of the PR body** (`Closes #<n>`). For another
-tracker use its PR↔issue link mechanism.
+`ticketId` set, **link the PR to the ticket**. On GitHub, render the link
+as a closing line emitted **as the final line of the PR body**
+(`Closes #<n>`). For another tracker use its PR↔issue link mechanism.
 
 ### Interpreting `ticketId`
 
-`ticketId` is interpreted where it is consumed — at PR-open time:
+`ticketId` is interpreted at PR-open time:
 
 - A bare number → `Closes #<n>` (a GitHub issue in the origin repo).
 - A qualified reference (`owner/repo#<n>`) or an issue URL → `Closes`
@@ -37,9 +32,8 @@ tracker use its PR↔issue link mechanism.
 - Any other non-null shape still goes in verbatim as the footer text, as
   `Closes` plus the value. Note the unrecognized shape in the completion
   report, and never block on it. On GitHub such a value (e.g.
-  `Closes ENG-1234`) auto-closes nothing — the footer is then a legible
-  reference only, and the tracker-move rules on this page are what
-  advance the ticket.
+  `Closes ENG-1234`) auto-closes nothing; the tracker-move rules on this
+  page are what advance the ticket.
 - Null, absent, empty, or whitespace-only → omit the closing line
   entirely. No placeholder, no empty footer.
 
@@ -55,9 +49,9 @@ issue in the same footer position, using the unambiguous qualified form
 Part of owner/repo#<n>
 ```
 
-A bare `#<n>` is repo-scoped — in a companion repo it names a
-*different* issue — and even a qualified *closing* form would close the
-ticket on the first companion merge, before the full change set lands.
+A bare `#<n>` in a companion repo names a *different* issue, and even a
+qualified *closing* form would close the ticket on the first companion
+merge, before the full change set lands.
 
 ## Ready for review: in-review only when the draft is promoted
 
