@@ -28,9 +28,10 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 
 - **If the command printed a path**, use it as `$ARGUMENTS` (tier 1 explicit arg,
   or tier 2 discovery). When the path came from tier 2 (no explicit arg),
-  announce the resolved directory to the user before proceeding. Discovery
-  resolves only the directory variable — the dispatch step below still
-  forwards exactly `{2-questions.md, 4-repos.md?}`.
+  announce the resolved directory to the user before proceeding, so an
+  auto-picked topic is never silent. Discovery resolves only the directory
+  variable — the dispatch step below still forwards exactly
+  `{2-questions.md, 4-repos.md?}`.
 - **If the command printed nothing** (tier 3 — no directory holds `2-questions.md`),
   do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
   options:
@@ -65,7 +66,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    Limit the root-owned envelope to eleven lines: five frontmatter lines, the
    required authority line, the two opening and two closing fences, and one
    source-grounded synthesis line after the blocks. Add no blank or authored
-   separator lines. Trace every substantive claim in the final
+   separator lines. The arithmetic is `80 + 60 + 11 = 151` for one repo and
+   `120 + 100 + 11 = 231` for multiple repos. Trace every substantive claim in the final
    artifact only to the completed returns. Add no claim from the task
    description or `1-task.md`.
 6. Write `$ARGUMENTS/5-research.md` with the necessary frontmatter (see the
