@@ -167,9 +167,10 @@ The version lives in **six places across five files**:
 
 Each host shows the version in its own manifest: Codex reads
 `.codex-plugin/plugin.json` in preference to the Claude manifest; Antigravity
-reads the root `plugin.json`, because that host resolves `skills/` and
-`agents/` as siblings of its manifest. A stale one makes the same release look
-like two different versions depending on the host.
+reads the root `plugin.json`, which sits at the root rather than in a directory
+of its own because that host resolves `skills/` and `agents/` as siblings of
+its manifest. A stale one makes the same release look like two different
+versions depending on the host.
 
 Edit all five files, then prove it:
 
