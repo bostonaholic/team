@@ -19,8 +19,9 @@ The receiver reads them before work. Missing resources stop that step with the e
    the built-in read-only type — and `model: sonnet`. Each prompt carries
    the `### Explorer brief` below, the question, and its assigned angle.
    If the `Agent` tool or the `Explore` type is unavailable, explore
-   every angle yourself inline. Never substitute a full-tool agent
-   silently.
+   every angle yourself inline — the fan-out is an optimization, never a
+   dependency ([focused work rules](../team/principles/focused-work.md)).
+   Never substitute a full-tool agent silently.
 
 4. **Synthesize.** Resolve contradictions by checking the code yourself.
    Claims about code carry a `file:line` citation, per the
@@ -43,5 +44,7 @@ say so explicitly rather than inventing the connection.
 
 Return your findings under these headings, and nothing else:
 **Components Found** (name, path, one-line role) · **Flow** (step by
-step, with files and functions) · **Files Read** · **Boundaries** ·
-**Non-Obvious Things** · **Open Questions** (what you could not trace).
+step, with files and functions) · **Files Read** · **Boundaries** (what
+goes in, what comes out) · **Non-Obvious Things** (surprising,
+historically shaped, or easy for a newcomer to get wrong) ·
+**Open Questions** (what you could not trace).

@@ -18,4 +18,4 @@ not raise, no restatement.
   Omit when there is nothing worth calling out.
 
 Claims about code carry `file:line`; a flow step names the function that
-runs it.
+runs it. When something is complex, explain why it is complex.
