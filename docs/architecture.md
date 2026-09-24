@@ -64,12 +64,10 @@ seeds and updates a TodoWrite ledger, and runs the gates.
   The artifacts are thus self-describing. The Structure (~2-page
   vertical-slice breakdown) and the Plan are not gated. They advance
   autonomously. The human's checkpoint is the PR review at the end.
-- **Hooks enforce discipline mechanically.** LLMs forget instructions
-  ~20% of the time. Hooks are deterministic.
 
 **Trust boundary.** The single human checkpoint, the end-of-run PR
 review, is a *code* checkpoint, and it happens **after** the run has
-already executed. Local Bash execution (implementer, verifier, hooks),
+already executed. Local Bash execution (implementer, verifier),
 branch creation, pushes to remotes, and any multi-repo worktree effects
 all occur before a human sees the PR. The PR review contains the diff,
 the design's recorded assumptions, and the deferred `## Review notes`. It
@@ -84,7 +82,7 @@ ready for review or merges it.
 > **Runtime canon:** the schema below is carried for agents by
 > [artifact schema](https://github.com/bostonaholic/team/blob/main/skills/team/references/artifacts.md). This section is the
 > doc-surface copy. The executable `ID_RE` / `PHASE_FILES` definitions
-> live in `hooks/session-start-recover.mjs`.
+> live in `skills/team/discover-topic.sh`.
 
 All phase artifacts live in `docs/plans/<id>/`, where `<id>` is one of:
 
@@ -121,14 +119,14 @@ orchestrator writes `docs/plans/<id>/design-review-<n>.md` (`<n>` 1-based
 per round) with frontmatter `topic`, `date`, `phase: design-review`, and
 `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`. The body carries the
 reviewer's findings verbatim. The `verdict` field is the deterministic
-read for hooks and resume detection. A design has passed review when the
+read for resume detection. A design has passed review when the
 highest-`<n>` file carries APPROVE or COMMENT.
 
 **Review loop** (REQUEST CHANGES): the design-author re-drafts with the
 reviewer's findings verbatim. The orchestrator increments
 `revision: <n+1>` in the new draft's frontmatter.
 
-**Phase inference** (orchestrator + hooks):
+**Phase inference** (orchestrator):
 
 | Latest artifact present                                | Current phase       |
 |--------------------------------------------------------|---------------------|
@@ -150,7 +148,7 @@ IMPLEMENT is confirmed only once there is
 commit means the run is still pre-IMPLEMENT.
 
 Two non-phase sibling outputs exist. Discovery keys only on the six
-`PHASE_FILES` names, so both are invisible to hooks and skills, and IMPLEMENT
+`PHASE_FILES` names, so both are invisible to discovery and skills, and IMPLEMENT
 still declares no phase artifact.
 
 `docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
@@ -653,10 +651,10 @@ completion message. For the 8 directory-consuming skills
 the `docs/plans/<id>/` argument is **optional**. Each skill resolves the
 directory through a three-tier chain: explicit `$ARGUMENTS` →
 newest-mtime convention discovery → `AskUserQuestion`. The middle tier
-filters by `ID_RE` and `PHASE_FILES`, ported from
-`hooks/session-start-recover.mjs` as a POSIX ERE translation, and by the
-skill's necessary predecessor artifact. The orchestrator or entry-point
-skill calls `AskUserQuestion` itself, never a subagent. Subagents never
+filters by `ID_RE` and `PHASE_FILES`, owned by the bundled discovery
+helper below, and by the skill's necessary predecessor artifact. The
+orchestrator or entry-point skill calls `AskUserQuestion` itself, never a
+subagent. Subagents never
 pause for user input. Standalone modes still exist. A partial skill
 invoked with no resolvable directory, or with a free-form description,
 bootstraps the missing upstream artifacts inline rather than hard-error.
@@ -981,50 +979,18 @@ means registered. Native config loading remains separate. New host processes rea
 live checkout edits. Concurrent checkout edits or external replacement without
 the lifecycle lock are unsupported.
 
-This adapter establishes discovery and lifecycle support. Full QRSPI execution,
-specialist/nested dispatch, reviewer isolation, and hook host-firing on OpenCode
-remain unverified; the hook adapter programs were probed by direct invocation
-(program contract verified, host-firing unverified — see
-[hooks-portability.md](hooks-portability.md)). `/retro` stays guarded and discoverable and resolves OpenCode
+This adapter establishes discovery and lifecycle support. Full QRSPI
+execution, specialist/nested dispatch, and reviewer isolation on OpenCode
+remain unverified. `/retro` stays guarded and discoverable and resolves OpenCode
 sessions from the host's SQLite store.
 
 ## 7. Hooks
 
-Runtime hooks (`hooks/`, distributed with the plugin): eight hook programs — four
-canonical, three Codex duplicates under `hooks/codex/`, and one Antigravity copy
-under `hooks/antigravity/` — plus three OpenCode adapters in `opencode/team.js`.
-The complete hook × host matrix is
-[hooks-portability.md](hooks-portability.md).
-
-| Hook                       | Event                    | Registers on                                                | Purpose                                                    |
-|----------------------------|--------------------------|-------------------------------------------------------------|------------------------------------------------------------|
-| `pre-compact-anchor.mjs`   | PreCompact               | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy → stdout); OpenCode `experimental.session.compacting` | Scan docs/plans/<id>/ for active topic. Inject a 4-line anchor. |
-| `session-start-recover.mjs`| SessionStart             | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy → stdout); OpenCode `experimental.chat.system.transform` | Scan docs/plans/<id>/ for active topic. Emit a recovery notice. |
-| `post-write-validate.mjs`  | PostToolUse(Write\|Edit) | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (`hooks/codex/` copy, matcher `apply_patch`, exit 2); OpenCode `tool.execute.after` | Structural validation of plugin component files            |
-| `validate-team-config.mjs` | UserPromptSubmit         | Claude `.claude-plugin/plugin.json`; Codex `hooks/hooks.json` (reused canonical); Antigravity root `hooks.json` (`hooks/antigravity/` copy at `PreInvocation`, inject-only) | Validate `.team/config.json`. Block the prompt (exit 2) while it is invalid. |
-
-The Codex copies move the recovery envelope to stdout with `hookEventName`, parse
-`apply_patch` stdin, and block with exit 2; the canonical config guard is reused
-unchanged because its stdin and exit-2 contract already match. Antigravity
-exposes only `PreInvocation`, which cannot block, so its config binding injects
-an ephemeral message and the prompt proceeds; the other three Antigravity events
-are named gaps. OpenCode drives the canonical recovery files through its plugin
-adapters. See [hooks-portability.md](hooks-portability.md) for the verified vs.
-unverified cells.
-
-Both `pre-compact-anchor.mjs` and `session-start-recover.mjs` work the
-same way. They list `docs/plans/*/` directories. They pick the most
-recent artifact directory by the mtime of any contained artifact. They
-infer the current phase from artifact presence and frontmatter. They then
-emit a short context message that names the phase, `<id>`, and the
-suggested next `/team-*` command. Both are stateless, exit 0 on any
-error, and return within the 5000ms hook budget.
-
-`validate-team-config.mjs` is the odd one out: it is a guard, not a notice. It
-reads `<project>/.team/config.json`, validates it through the same schema owner
-the resolver uses (`skills/team/references/model-config.mjs`), and blocks the
-prompt with exit 2 while the file is invalid. An absent file is valid — the
-overrides are optional. A hook bug exits 0 rather than stranding the session.
+Team ships **no runtime hooks**. The distributed plugin has no `hooks/` tree and
+registers no host hook events. Session recovery is the orchestrator's Setup step
+(section 5): any `/team-*` command resolves `docs/plans/<id>/` and rebuilds the
+ledger from artifact presence and frontmatter on entry. `.team/config.json` is
+validated by the resolver at dispatch time, not ahead of a prompt.
 
 Development hooks (`.claude/hooks/`, not distributed):
 
@@ -1066,10 +1032,10 @@ session-scoped, so the aggregate gate's round counts survive a restart.
 (frontmatter `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`) records each
 review round durably. The artifacts are self-describing.
 
-**Compaction defense:** the PreCompact hook scans `docs/plans/<id>/`
-directories for the active topic and injects a 4-line anchor (phase,
-`<id>`, suggested next `/team-*` command). The SessionStart hook does
-the same for new sessions.
+**Compaction defense:** when context is compacted or a fresh session begins,
+the durable record is the artifacts themselves. Re-invoking any `/team-*`
+command resolves the active `docs/plans/<id>/` directory from disk and
+rebuilds the ledger from artifact presence and frontmatter.
 
 **Artifact persistence:** during a run, files in `docs/plans/<id>/` live
 on disk in the worktree's working tree and

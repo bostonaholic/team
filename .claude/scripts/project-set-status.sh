@@ -6,7 +6,7 @@
 # Status field of that item on the "🤖 Team" board
 # (https://github.com/users/bostonaholic/projects/5).
 #
-# Dev-only, non-distributed (lives under .claude/, not hooks/) per the
+# Dev-only, non-distributed (lives under .claude/) per the
 # runtime-vs-development split in CLAUDE.md / AGENTS.md.
 #
 # Usage:

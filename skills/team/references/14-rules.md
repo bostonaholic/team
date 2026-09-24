@@ -59,7 +59,7 @@ The durable record of design-review passage is
 with frontmatter `topic`, `date`, `phase: design-review`, and
 `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`. A design has passed review
 when the highest-`<n>` file carries APPROVE or COMMENT. Downstream
-phases and the recovery hooks verify passage by reading that file —
+phases verify passage by reading that file —
 `6-design.md` itself carries no approval frontmatter.
 See [artifact schema](references/artifacts.md) for the full frontmatter
 convention.

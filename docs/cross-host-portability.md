@@ -29,6 +29,12 @@ nav_label: portability
 > Antigravity CLI as an alternate model backend rather than closed. The matrix
 > below scores the surviving hosts only.
 
+> **Runtime hooks removed (2026-09-24).** Team no longer ships or registers
+> runtime hooks. Every hook passage below is retained as the historical porting
+> record; the current distributed surface is agents, skills, host manifests, and
+> the OpenCode discovery adapter. See
+> [architecture](architecture.md#7-hooks) for the current state.
+
 ## Contents
 
 - [Current state](#current-state)
@@ -49,22 +55,17 @@ nav_label: portability
 ## Current state
 
 Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), skills
-(`skills/*/SKILL.md` + `registry.json`), and 8 hook programs (the four canonical
-`hooks/*.mjs` plus the `hooks/codex/` and `hooks/antigravity/` copies) plus three
-`opencode/team.js` adapters. Claude registers through
-`.claude-plugin/plugin.json`, Codex through `hooks/hooks.json`, and Antigravity
-through the root `hooks.json`; see [hooks-portability.md](hooks-portability.md).
-The orchestrator walks the QRSPI
+(`skills/*/SKILL.md` + `registry.json`), host manifests for Claude Code, Codex
+CLI, and Antigravity CLI, and an `opencode/team.js` discovery adapter. It ships
+no runtime hooks. The orchestrator walks the QRSPI
 phase table (`skills/team/SKILL.md`). It persists state as artifact files under
 `docs/plans/<id>/`. It coordinates agents through the Task tool and `SendMessage`
 resume.
 
-The portability surface splits cleanly. Four layers are already host-neutral:
+The portability surface splits cleanly. Three layers are already host-neutral:
 
 - The Markdown bodies of every agent and skill. They are plain prose and use no
   Claude Code APIs.
-- The `.mjs` hook *logic*. It uses the Node stdlib only, so `node:fs/promises`,
-  `node:child_process`, `node:path`, and `node:url`, with zero npm deps.
 - The artifact file I/O under `docs/plans/<id>/`.
 - The agent→orchestrator JSON-envelope convention.
 
@@ -112,23 +113,23 @@ through the portable definition contract in
 
 The consequence for this study: the "agent dispatch" primitive is reachable on
 every host that can spawn a subagent, without a per-host shim. The remaining
-per-host work includes hook registration and live verification of the permission
+per-host work includes live verification of the permission
 and execution contracts. Model selection is defined below.
 
 ## Desired end state
 
-Team shares agent and skill Markdown and Node hook logic across hosts. Claude,
+Team shares agent and skill Markdown across hosts. Claude,
 Codex, and Antigravity already install through native manifests; no generated
 core or binding-shim layer was needed for those installs. Body-loaded dispatch
 uses the shared agent body. OpenCode separately ships its discovery adapter.
-Hook and permission parity remain host work owned by #56 and #57.
+Permission parity remains host work owned by #56 and #57.
 
 The earlier proposal required one `.team/config.json` for models, host
 selection, parallelism, and repositories. Model resolution does not justify
 that combined configuration. Only optional model overrides ship, in
 `.team/config.json`, consumed by the installed resolver before body-loaded
-dispatch. Agent frontmatter stays native to Claude. The remaining parity target covers the four runtime hooks,
-parallel and nested subagents, and structured returns.
+dispatch. Agent frontmatter stays native to Claude. The remaining parity target
+covers parallel and nested subagents, and structured returns.
 
 ### Model selection
 
@@ -212,7 +213,7 @@ reporting, mismatch handling, and unsupported-host limits.
   `external-review.mjs`, `resolve-transcript.mjs`, `write-target.mjs`,
   `discover-topic.sh`, and `pr-screenshots`' `scripts/splice.mjs` plus its
   `scripts/*.sh`),
-  `hooks/*.mjs`, `.claude-plugin/`. The entire `.claude/`
+  `.claude-plugin/`. The entire `.claude/`
   tree, `docs/`, `.github/` never ship and are out of every
   port's scope.
 - **A bundled skill script names its own directory, never a host variable.**
@@ -230,11 +231,6 @@ reporting, mismatch handling, and unsupported-host limits.
   That command is Claude-Code-specific, but the pipeline it serves is not:
   nested dispatch degrades to its documented inline fallback on every other
   host (`skills/team/references/agent-dispatch.md`, "Optimization, never a dependency").
-- **Hooks already isolate portable logic from host contract.** Each `.mjs` reads
-  stdin, does Node-only work, then writes a host-shaped JSON result
-  (`session-start-recover.mjs:236-244`, `post-write-validate.mjs:29-37`). The scan
-  and git logic is the reusable core. Only the stdin field names and the result
-  envelope are the binding. The shim layer mirrors this seam.
 - **Agent definition format is already near-universal.** Claude `agents/*.md`,
   which is Markdown with YAML frontmatter, carries the same *system-prompt body*
   Codex reads through its TOML agent roles. The body ports. The frontmatter and
@@ -536,11 +532,9 @@ a file, and installing from a URL clones fresh so the socket never exists.
   `hooks.json`. `agents/` is discovered, and discovery is not dispatch — whether
   `agy` can dispatch an agent, and whether a structured return survives, has not
   been tested, which is why Team claims no pipeline support here.
-- Only `PreInvocation` has a Team binding. It cannot block, so the
-  `.team/config.json` guard injects an ephemeral message and the prompt proceeds.
-  There is no `SessionStart`, `PreCompact`, or blocking `PostToolUse`, so three
-  of the four hooks are named gaps in
-  [hooks-portability.md](hooks-portability.md).
+- Team no longer registers hooks on this host. When it did, only
+  `PreInvocation` had a binding; that event cannot block, so the
+  `.team/config.json` guard was inject-only.
 
 **`disable-model-invocation` is honored.** With the plugin installed, the
 probe (taken when the plugin shipped 54 skills, two of which set the key) had
@@ -594,7 +588,7 @@ invisible to `agy`.
 keeps a checkout's edits live. Dispatch is resolved host-neutrally, not by a
 per-host agent registration: the orchestrator reads each specialist's portable
 definition and dispatches it through the host's subagent facility (see
-[Agent dispatch](#agent-dispatch)). Hooks, commands, and rules
+[Agent dispatch](#agent-dispatch)). Commands and rules
 remain unported on this host. That work stays with
 [#56](https://github.com/bostonaholic/team/issues/56).
 
@@ -676,11 +670,9 @@ current checkout content. No generated catalog, cache copy, provider call, or
 persistent Team process is introduced.
 
 Native discovery was observed on OpenCode 1.18.20. Support covers registration,
-skill/command discovery, and the developer lifecycle. Three runtime hooks are
-bound in `opencode/team.js` — recovery, compaction, and write validation — and
-their program contracts are probed; the prompt-block `.team/config.json` guard
-is a named gap. Full QRSPI execution, specialist/nested-agent dispatch,
-translated reviewer permissions, and live host-firing of the adapters remain
+skill/command discovery, and the developer lifecycle. The adapter registers
+skills and commands only; it ships no runtime hooks. Full QRSPI execution,
+specialist/nested-agent dispatch, and translated reviewer permissions remain
 unverified. No provider, credentials, model-tier translation, or model-quality
 guarantee is installed. `/retro` resolves OpenCode sessions from the host's
 SQLite store.
@@ -696,7 +688,7 @@ SQLite store.
 - **Reduced-MVP parity.** Explicitly rejected: full parity is the target.
 - **Full OpenCode parity.** Its native installation/discovery adapter is covered
   separately above; the pipeline portability matrix does not certify OpenCode
-  execution, agent permissions, or hooks.
+  execution or agent permissions.
 - **Guaranteeing host API stability.** The young-API recency risk is surfaced and
   assigned to the shim layer plus version pinning, not eliminated.
 

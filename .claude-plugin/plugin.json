@@ -7,52 +7,5 @@
     "url": "https://matthewboston.com"
   },
   "homepage": "https://team.bostonaholic.dev",
-  "license": "MIT",
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-team-config.mjs\"",
-            "timeout": 5000
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/post-write-validate.mjs\"",
-            "timeout": 15000
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-compact-anchor.mjs\"",
-            "timeout": 5000
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start-recover.mjs\"",
-            "timeout": 5000
-          }
-        ]
-      }
-    ]
-  }
+  "license": "MIT"
 }

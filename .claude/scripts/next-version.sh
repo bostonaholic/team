@@ -25,7 +25,7 @@
 # versions when a stale PR statically claimed one (e.g. 0.5.1 -> 0.7.0, skipping
 # 0.6.0). Do not reintroduce it.
 #
-# Dev-only, non-distributed (lives under .claude/, not hooks/) per the
+# Dev-only, non-distributed (lives under .claude/) per the
 # runtime-vs-development split in CLAUDE.md / AGENTS.md.
 #
 # Usage:

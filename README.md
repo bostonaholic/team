@@ -27,8 +27,8 @@ claude plugin install team@team-dev
 ```
 
 The first command clones this repo as a marketplace; the second installs from
-it. Skills register as slash commands (`/team`, `/shipit`), and agents and hooks
-load with them.
+it. Skills register as slash commands (`/team`, `/shipit`), and agents load
+with them.
 
 #### Local git checkout installation
 
@@ -141,9 +141,8 @@ budgets its skill catalog, so it shortens the longest descriptions; the skills
 still work.
 
 Project-local hooks in a `.codex/` config load only when the directory is
-trusted; an untrusted directory skips them without warning. This gate applies to
-`.codex/` config hooks, not the plugin hooks installed above, and skills bypass
-it entirely. See [docs/hooks-portability.md](docs/hooks-portability.md).
+trusted; an untrusted directory skips them without warning. Skills bypass the
+gate entirely.
 
 Developing Team itself? Run the loop Codex documents for local plugins:
 
@@ -261,7 +260,7 @@ separate command and nothing to reinstall.
 
 **Supported:** native registration, skill discovery, canonical file-reading
 commands, and this lifecycle. Full QRSPI execution, specialist/nested dispatch,
-reviewer isolation, and hook behavior on OpenCode remain unverified. `/retro`
+and reviewer isolation on OpenCode remain unverified. `/retro`
 appears in the command menu and resolves OpenCode sessions from the host's
 SQLite store.
 Methodology skills marked `user-invocable: false` also appear as commands.
@@ -370,7 +369,6 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
 - **Entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/pr-verify`, `/pr-screenshots`, `/pr-rebase`, `/retro`, `/why`, and `/how` utilities, and shared methodologies
-- **8 hook programs** in `hooks/` (4 canonical, 3 Codex duplicates, 1 Antigravity) plus 3 OpenCode adapters in `opencode/team.js`: `docs/plans/`-aware compaction resilience, plugin-file validation, and a `.team/config.json` guard. See [docs/hooks-portability.md](docs/hooks-portability.md)
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
 

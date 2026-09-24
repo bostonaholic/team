@@ -4,7 +4,7 @@ This is the schema contract for durable pipeline state under `docs/plans/<id>/`.
 
 ## Artifact inventory
 
-`<id>` is `<TICKET>-<kebab-topic>` (for example `ENG-1234-add-rate-limiting`) or `<YYYY-MM-DD>-<kebab-topic>` (for example `2026-05-01-add-rate-limiting`). `hooks/session-start-recover.mjs` owns executable `ID_RE` and `PHASE_FILES` definitions ([durable state rules](principles/durable-state.md)).
+`<id>` is `<TICKET>-<kebab-topic>` (for example `ENG-1234-add-rate-limiting`) or `<YYYY-MM-DD>-<kebab-topic>` (for example `2026-05-01-add-rate-limiting`). `skills/team/discover-topic.sh` owns executable `ID_RE` and `PHASE_FILES` definitions ([durable state rules](principles/durable-state.md)).
 
 | Artifact | Path | Created by | Required |
 |---|---|---|---|
@@ -27,8 +27,8 @@ Every artifact starts with `topic: <kebab-case>`, `date: <YYYY-MM-DD>`, and `pha
   leading-argument route, recorded before dispatch. Optional; absent means the
   legacy unprefixed full feature workflow.
 - `routeStatus: complete` — present only when a limited-scope route
-  (`investigate`, `plan`, `prototype`) has finished its deliverable. The
-  recovery hooks read it so a finished plan is not mistaken for permission to
+  (`investigate`, `plan`, `prototype`) has finished its deliverable. Resume
+  detection reads it so a finished plan is not mistaken for permission to
   implement.
 
 `route` and `routeStatus` are task state, never neutral research input: neither

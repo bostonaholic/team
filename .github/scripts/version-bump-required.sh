@@ -26,7 +26,7 @@
 # PR lands, at which point the pre-merge guard denies the merge (PR #208).
 #
 # "Runtime" is the Runtime-vs-Development split in CLAUDE.md: the distributed
-# plugin is agents/, skills/, hooks/, opencode/, and host manifest content. A change
+# plugin is agents/, skills/, opencode/, and host manifest content. A change
 # under .claude-plugin/ counts as runtime only when a non-version line changed —
 # the bump itself edits the `"version"` field in plugin.json + marketplace.json,
 # and that edit must not be mistaken for a content change (else every bump would
@@ -99,7 +99,7 @@ changed_files=$(git diff --name-only "$MERGE_BASE" "$HEAD_SHA") \
   || die "could not diff merge-base..head"
 
 runtime_changed=false
-# agents/, skills/, hooks/, opencode/ — any touched file is a runtime change.
+# agents/, skills/, opencode/ — any touched file is a runtime change.
 if grep -qE "^($(IFS='|'; echo "${RUNTIME_DIRS[*]}"))/" <<<"$changed_files"; then
   runtime_changed=true
 fi

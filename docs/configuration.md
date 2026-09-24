@@ -92,26 +92,10 @@ For the dispatch procedure and the full validation contract, see
 [model selection](../skills/team/references/model-selection.md) and
 [cross-host portability](cross-host-portability.md#model-selection).
 
-## The pre-prompt guard
+## When validation runs
 
-A `UserPromptSubmit` hook validates `.team/config.json` before a prompt reaches
-the model. An absent file is valid. A present file that cannot be read, is not
-valid JSON, or fails the schema above blocks the prompt with exit 2 and shows
-the reason, so a config the resolver would reject is caught before any work
-starts rather than at dispatch time. Availability against the running host is
-still checked at dispatch; the guard covers syntax and schema only.
-
-The guard runs on every host that can express it, and each host names its own
-failure channel:
-
-- **Claude Code** — `.claude-plugin/plugin.json`, `UserPromptSubmit`, exit 2.
-- **Codex CLI** — `hooks/hooks.json`, `UserPromptSubmit`, exit 2, reusing the
-  canonical `hooks/validate-team-config.mjs` unchanged.
-- **Antigravity CLI** — root `hooks.json`, `PreInvocation`, **inject-only**. That
-  host cannot block a prompt, so an invalid config surfaces an `injectSteps`
-  ephemeral message and the prompt proceeds.
-- **OpenCode** — a named gap: there is no prompt-block hook, and the nearest
-  candidate is unprobed.
-
-The full matrix, with each cell's verification status, is
-[hooks-portability.md](hooks-portability.md).
+`.team/config.json` is validated at dispatch time, by the resolver, before a
+body-loaded model selection is applied. Nothing validates it ahead of a prompt:
+a present file that cannot be read, is not valid JSON, or fails the schema is
+reported when the first dispatch needs a selection, not before. An absent file
+is valid at every point.

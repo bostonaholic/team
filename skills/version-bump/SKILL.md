@@ -81,7 +81,7 @@ no matter what conventional-commit type it carries.
 
 Using the **Runtime vs. Development** split in `CLAUDE.md`:
 
-- **Runtime (bump-worthy):** `agents/`, `skills/`, `hooks/`, and host manifest
+- **Runtime (bump-worthy):** `agents/`, `skills/`, and host manifest
   *content* — `.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/` — meaning
   a real change to a manifest, not the bare `"version"` field. Every host's
   manifest ships to that host's end users, so a Codex-only manifest change is

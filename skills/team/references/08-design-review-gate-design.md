@@ -49,7 +49,7 @@ When the `design-author` returns a draft:
    the artifact directory substituted. Each round gets a fresh subagent
    context. `Explore` holds no Write/Edit tools, so the reviewer **cannot**
    change `6-design.md` or forge a verdict artifact. The verdict is written
-   by the orchestrator alone (step 4), and the recovery hooks fail closed
+   by the orchestrator alone (step 4), and downstream discovery fails closed
    on anything but a recorded passing verdict. If the environment lacks the
    `Explore` agent type, treat the dispatch failure like a reviewer crash
    (step 8) — never substitute a full-tool agent silently.
