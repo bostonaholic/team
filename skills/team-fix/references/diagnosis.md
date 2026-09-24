@@ -6,7 +6,7 @@ Read this when a failure is non-obvious, intermittent, or whose first fix would 
 
 ### Phase 1: OBSERVE
 
-Gather evidence before forming any theory. Reproduce the failure and record exact steps. When the trail leads to code that looks deliberate and the question becomes "why was it written this way" rather than "what broke", that is design-rationale archaeology — `skills/why/SKILL.md` owns it. Treat intermittency as evidence, not noise: record the failure rate, environment variance, and the timing, concurrency, resources, and shared state in the path.
+Gather evidence before forming any theory. Reproduce the failure and record exact steps. When the investigation leads to code that looks deliberate and the question becomes "why was it written this way" rather than "what broke", that is design-rationale archaeology — `skills/why/SKILL.md` owns it. Treat intermittency as evidence, not noise: record the failure rate, environment variance, and the timing, concurrency, resources, and shared state in the path.
 
 Do not hypothesize during OBSERVE.
 

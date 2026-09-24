@@ -22,7 +22,7 @@ for an inline fix, not this pipeline.
 
 ## Procedure references
 
-Read each reference completely when reaching that stage. Follow them in order.
+Read each reference completely when reaching that stage. Follow them in order; later stages depend on state and gates established earlier.
 
 1. [Input](references/01-input.md)
 2. [When to Use](references/02-when-to-use.md)
