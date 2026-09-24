@@ -140,11 +140,13 @@ An attach that exits non-zero may still have updated the PR, so never infer
 
 **Step C — harvest.** This runs inside step B's own loop, per entry, over the
 suffix of the body that appeared since the last read. It binds the entry only
-to an URL on the **attachment origin** — an `https://` URL whose path carries
-`/user-attachments/` and whose **host is on this run's allowlist**; the full
-test is the one `references/03-verify.md` asserts. More than one allowlisted
-candidate is `ambiguous attachment URL`; none is `no attachment URL`. The host
-allowlist is derived from the PR this run already resolved, never hardcoded:
+to an URL on the **attachment origin** — an `https://` URL whose **host is on
+this run's allowlist** and whose path, taken after the host is split off,
+begins `/user-attachments/assets/` (or, on the proxy host alone, has the proxy
+shape); the full test is the one `references/03-verify.md` asserts. More than
+one allowlisted candidate is `ambiguous attachment URL`; none is
+`no attachment URL`. The host allowlist is derived from the PR this run already
+resolved, never hardcoded:
 
 - `pr-host`, as `resolve-pr.sh` split and charset-tested it — `github.com`, or
   the GitHub Enterprise host the PR actually lives on;

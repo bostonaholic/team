@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `/pr-screenshots` is now 715 lines of instructions instead of 1,188, so a run reads nearly half as much. It keeps the same steps, commands, scripts, refusals, exit codes, outcomes, read-back assertions, and section wording. What came out is rationale for checks its bundled scripts already enforce and text its own files said twice. **What this asks of you:** nothing.
+- `/pr-screenshots` now gives a run nearly half as many bytes of instructions to read. It keeps the same steps, commands, scripts, refusals, exit codes, outcomes, read-back assertions, and section wording. What came out is rationale and design history, including the rationale for checks its bundled scripts already enforce, plus text its own files said twice. **What this asks of you:** nothing.
 
 ## [0.132.9] - 2026-09-25
 

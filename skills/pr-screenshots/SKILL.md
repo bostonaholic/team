@@ -52,9 +52,12 @@ is a single command.
   the only lines a replace may delete are the shapes this skill's own renderer
   emits — a `**caption**` line in the position the renderer puts one, an
   `![screenshot-NN]` image, a `> _note:_` note with its bare `>` separator, and
-  a `Not uploaded:` line. **Ownership is provenance, not shape:** a reviewer's
-  own blockquote or bold line refuses rather than being read as this skill's
-  output, with the offending line number named.
+  a `Not uploaded:` line. **Ownership is provenance, not shape:** the note's
+  `_note:_` marker and a caption's position directly above its own image mark
+  this skill's lines, so a reviewer's own blockquote or bold line refuses rather
+  than being read as this skill's output. Prose, an HTML comment, a raw HTML
+  container, an image in any form the splice cannot count, or a body shape the
+  splice does not model each refuse, with the offending line number named.
 - **Nothing leaves the declared root, and nothing that is not an image is
   uploaded.** Every entry's path must resolve inside the entries file's one
   **absolute** top-level `root`, and acceptance is decided by **content type**,
