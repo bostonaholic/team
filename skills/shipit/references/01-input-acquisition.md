@@ -1,10 +1,8 @@
 ## Input acquisition
 
-`shipit` lands the open PR for the **current branch**. Discover it with
-`gh pr view --json baseRefName,number,state,title` and a base-branch fallback.
-Never hardcode the base branch. The `title` is captured here because step 5
-lands it as the squash commit subject. Run this in one bash call (an agent
-thread resets cwd between calls):
+`shipit` lands the open PR for the **current branch**. Never hardcode the base
+branch. The `title` is captured here for step 5's squash commit subject. Run this
+in one bash call:
 
 ```bash
 PR_JSON=$(gh pr view --json number,baseRefName,state,title 2>/dev/null)
@@ -19,6 +17,5 @@ echo "BASE: $BASE"
   a clear message** and stop. `shipit` finalizes an existing PR — it does not
   open one. Tell the user to open the PR first.
 - **PR state is `MERGED` or `CLOSED`** (read from the discovery JSON above):
-  **refuse up front** with a clear message before doing any work — there is
-  nothing to land.
+  **refuse up front** with a clear message before doing any work.
 - An optional `<pr-number>` argument overrides the discovered PR.

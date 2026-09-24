@@ -1,71 +1,55 @@
 ## Land sequence
 
-The steps below are the whole sequence, and they are **scriptable end to end**:
-a pure push → wait → merge with no prompt in the middle. Nothing here waits on a
-human.
+Nothing here waits on a human: the steps run end to end with no prompt in the
+middle.
 
 ### 1. Pre-flight merge-button check
 
 Before relying on `--squash`, read the repo's merge strategy and report if
-squash merges are enabled. This is a **read-only** check, not enforcement:
+squash merges are enabled (a **read-only** check, not enforcement):
 
 ```bash
 gh repo view --json mergeCommitAllowed,rebaseMergeAllowed,squashMergeAllowed
 ```
 
-Stop and report **only** if `squashMergeAllowed` is `false`. Squash-merge is how
-the PR title, and any version it carries, lands as the commit subject. It also
-keeps linear history, because a squash commit is a normal commit and not a merge
-commit. It is thus the only acceptable strategy here. If squash merging is
+Stop and report **only** if `squashMergeAllowed` is `false`. If squash merging is
 available, proceed regardless of which other methods (`mergeCommitAllowed`,
 `rebaseMergeAllowed`) are enabled.
 
 ### 2. Run land-time versioning
 
 Run the `version-bump` skill before pushing. It owns all version, changelog, and
-title work. It decides from project context whether the PR needs a bump.
+title work and decides from project context whether the PR needs a bump.
 
 - If it commits a bump, continue.
 - If it reports no bump is required, continue with the plain PR title.
 - If it stops for a stale bump, invalid state, missing project contract, or
   failed check, stop. Do not push, wait for CI, or merge.
 
-`shipit` does not inspect changed files or edit version files itself. That
-logic lives in `version-bump`.
+`shipit` does not inspect changed files or edit version files itself.
 
 ### 3. Push any unpushed local commits
 
-The branch may carry commits made after the PR was opened (review fixups, a
-land-time version commit). Push them so CI runs against what will land:
+Push so CI runs against what will land:
 
 ```bash
 git push
 ```
 
-If the local branch and remote diverged because someone rebased the branch
-locally, see the force-with-lease guidance in step 5. Never use a bare
-`--force`.
+If the local branch and remote diverged after a local rebase, follow step 5's
+force-with-lease guidance. Never use a bare `--force`.
 
 ### 4. Wait for CI
 
-Three parts, in order: **settle**, **watch**, **verify**. The watch is how the
-wait is spent cheaply. It is not the verdict.
+Three parts, in order: **settle**, **watch**, **verify**. The watch is not the
+verdict: `gh pr checks --watch` exits 0 when nothing is pending *right now*,
+which also happens before a push's checks attach and before a gated job spawns.
+The verdict comes from GitHub's aggregate, which knows a check *suite* is still
+running.
 
-**Why the watch cannot be the verdict.** `gh pr checks --watch` exits when
-nothing is pending *right now*, and two different states produce that: every
-check finished, and no check has started yet. An exit code cannot tell them
-apart. Just after a push, workflows take seconds to attach to the head commit,
-so a watch started too early sees an empty or partial check set, calls it done,
-and exits 0 — a green light on CI that never ran. Checks also appear mid-run: a
-job gated on another job does not exist until that one finishes, so "nothing
-pending" can be premature long after the push. The verdict therefore comes from
-GitHub's own aggregate, which knows a check *suite* is still running even when
-every job it has created so far has passed.
-
-**4a — Settle.** Let the push's workflows register before watching. This is the
-wait shorter than a turn's overhead that
-[execution rules](../team/references/execution.md) names as its exception, so it
-runs inline rather than backgrounded:
+**4a — Settle.** Let the push's workflows register before watching. Run it
+inline, not backgrounded: it is the short-wait exception in
+[execution rules](../team/references/execution.md).
 
 ```bash
 for _ in 1 2 3 4 5 6; do
@@ -76,28 +60,22 @@ for _ in 1 2 3 4 5 6; do
 done
 ```
 
-A repo with no CI leaves `COUNT` at 0 for the full minute. That is a legitimate
-outcome, not a failure — fall through and let 4c decide.
+A repo with no CI leaves `COUNT` at 0 for the full minute. That is legitimate,
+not a failure — fall through and let 4c decide.
 
-**4b — Watch.** The bound is **mechanical, not prose**: `timeout` enforces the
-total cap and `--fail-fast` exits the instant a check fails. **Bounded, never
-infinite.** Defaults (overridable so a future automation loop can tune them):
-
-- **interval:** poll every 30s (`--interval 30`)
-- **total timeout:** 30 min cap = 1800s (`timeout 1800`)
+**4b — Watch.** **Bounded, never infinite**: `timeout` enforces the total cap
+and `--fail-fast` exits the instant a check fails. The defaults are overridable
+so a future automation loop can tune them:
 
 ```bash
 timeout 1800 gh pr checks <pr-number> --watch --fail-fast --interval 30
 WATCH_STATUS=$?
 ```
 
-**Run it with `run_in_background: true`.** The 1800s cap only applies to a
-backgrounded call: in the foreground the harness kills the watch at its own
-ceiling (600 s in Claude Code) with exit 143, so on any repo whose CI runs
-longer than ten minutes the stated 30-minute cap never applies and the watch
-is lost rather than timed out. Backgrounded, the harness reports the call when
-it exits and `WATCH_STATUS` is the real verdict. See
-[execution rules](../team/references/execution.md).
+**Run it with `run_in_background: true`.** In the foreground the harness kills
+the watch at its own ceiling (600 s in Claude Code) with exit 143, so the 1800 s
+cap applies only to a backgrounded call, whose real `WATCH_STATUS` the harness
+reports when it exits. See [execution rules](../team/references/execution.md).
 
 Map `WATCH_STATUS` first:
 
@@ -126,9 +104,8 @@ gh pr view <pr-number> --json mergeStateStatus --jq .mergeStateStatus
 - **anything else** (`BLOCKED`, `DIRTY`, `DRAFT`, …) → stop and report the
   status verbatim. Never merge on a status this list does not name.
 
-**Re-entry after a CI fix:** when re-running `/shipit` after fixing CI, the
-commits are already on the branch — `shipit` simply pushes any new ones, waits
-again, and merges. It is safe to re-run.
+**Re-entry after a CI fix:** the commits are already on the branch, so a re-run
+of `/shipit` pushes any new ones, waits again, and merges. It is safe to re-run.
 
 ### 5. Rebase if behind the base, then merge
 
@@ -136,55 +113,39 @@ again, and merges. It is safe to re-run.
 CI last ran. If the PR is **behind `<base>`**, bring it up to date:
 
 1. Rebase the branch onto the latest `<base>`.
-2. `git push --force-with-lease` the rebased branch — the force is necessary
-   because the rebase rewrote history. `--force-with-lease` refuses if the
-   remote moved underneath you (**never a bare `--force`**).
+2. `git push --force-with-lease` the rebased branch (**never a bare
+   `--force`**).
 3. Re-run the CI wait (step 4) against the rebased tree before merging.
 
-**Merge with `gh pr merge --squash`**, named explicitly. Squash lands the PR
+**Merge with `gh pr merge --squash`**, named explicitly: squash lands the PR
 title as the commit subject and keeps linear history, so it is the only
 acceptable merge strategy here. Build the subject explicitly from the PR title
-captured during discovery. Append `(#<number>)`, so every landed commit shows
-both the title (with any version it carries) and the PR number — exactly the
-`git log` shape the operator sees. Passing `--subject` is deliberate: it
-guarantees the PR title regardless of the repo's "default squash commit message"
-setting (an explicit `--subject` is **not** auto-suffixed with the PR number, so
-we add it ourselves):
+captured during discovery, so the repo's default squash commit message setting
+cannot replace it, and append `(#<number>)` yourself — an explicit `--subject`
+is **not** auto-suffixed with the PR number:
 
 ```bash
 TITLE=$(printf '%s' "$PR_JSON" | jq -r .title)
 gh pr merge <pr-number> --squash --subject "$TITLE (#<pr-number>)"
 ```
 
-The squash body defaults to the concatenated commit messages — leave it as-is
+Leave the squash body (by default the concatenated commit messages) as-is
 unless the operator asks otherwise.
 
 - On a **branch-protection rejection**, surface GitHub's rejection message
   **verbatim** to the user. **never force** the merge.
 
-Report the merge result. If it stopped short, report the reason: a failing
-check, a timeout, or branch protection. If the project publishes a release on
-merge, that runs asynchronously after the merge. Point the operator at
-`gh run watch`, or `gh run list`, so they can observe it rather than assume it
-is already done.
+Report the merge result, or the reason it stopped short: a failing check, a
+timeout, or branch protection. If the project publishes a release on merge, it
+runs asynchronously: point the operator at `gh run watch` or `gh run list`
+rather than assume it is already done.
 
 **On a merge that landed, run `/pr-cleanup`. Do not stop to recommend it.**
-The merge already happened. A resync of the default branch and a delete of
-the merged branch carry no decision. `/pr-cleanup` **Mode A** verifies the
-merged PR first, by identity and by containment, before it deletes anything.
-A handoff line here costs the operator a second command for no decision.
-
-Two limits hold, and both are load-bearing:
+Two limits hold:
 
 - **Only a landed merge reaches cleanup.** A run that stopped at a failing
   check, at the CI timeout, or at a branch-protection rejection merged
-  nothing. No merged branch exists to remove. `/pr-cleanup` must not run.
-- **Only Mode A is reachable this way.** Mode B (closed / abandoned) deletes
-  remote branches, worktrees, and planning scratch by force. An explicit
-  abandon request is its only gate. It stays user-triggered, and this
+  nothing, and `/pr-cleanup` must not run.
+- **Only Mode A is reachable this way.** Mode B (closed / abandoned) stays
+  user-triggered: an explicit abandon request is its only gate, and this
   chaining never reaches it.
-
-`shipit` touches no tracker or board — it stays generic. If the PR links a
-ticket (e.g. `Closes #<n>`), the tracker closes that ticket when the merge
-lands, and any board automation moves it to its done state on its own. That is a
-property of the link the PR phase added, not an action `shipit` performs.
