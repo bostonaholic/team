@@ -29,7 +29,9 @@ worktree about to be removed.
 
 ALL three AND-ed checks must hold; a failed or unrunnable check refuses.
 Passing one alone proves nothing — from inside a submodule the first
-passes while the other two fail.
+passes while the other two fail. If resolution or validation fails,
+refuse before any destructive step and tell the user to re-run from the
+primary clone.
 
 **This block re-runs in every Bash invocation that uses `$PRIMARY_ROOT`
 or `$REPO` (Hard Rule 11).** The `${VAR:?}` guards at the destructive

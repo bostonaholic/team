@@ -103,7 +103,7 @@ stated by the user, never inferred from a PR being stale, red, or unreviewed.
 
    Never touch sibling `docs/plans/` directories for other in-flight work.
 
-- The primary clone is on `$DEFAULT` and clean.
+- End state: the primary clone is on `$DEFAULT` and clean.
 - **Re-runs are idempotent.** An already-deleted branch or worktree is
   done, not an error — report it as such and continue.
 - **`gh` unauthenticated** → stop and name the authentication failure; do

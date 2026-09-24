@@ -63,7 +63,7 @@ from them rather than from any substitution this skill performs:
 ### Read it from the default branch, never from the checkout
 
 Only the copy committed to the default branch runs — `origin/$DEFAULT`, else
-`refs/heads/$DEFAULT` (step 1's block). The working-tree copy and the
+`refs/heads/$DEFAULT` (Step 1's block below). The working-tree copy and the
 finished branch's copy are never read: a PR that adds or edits
 `.teamteardown` would otherwise get arbitrary code execution from the act of
 cleaning up after it. On a fork PR against a public repo, that is anyone.
@@ -118,6 +118,9 @@ Remove a temp path only when the run wrote it down: a caller that made
 scratch under `$TMPDIR` records its absolute path in `docs/plans/<id>/`,
 and this step reads those paths back. A caller that recorded none has
 nothing to sweep, and the report says so rather than going looking.
+
+**Never delete a temp path the run did not record**, and never a path
+outside `${TMPDIR:-/tmp}`, containing `..`, or reached through a symlink.
 
 Each recorded path passes three checks before `rm -rf` sees it. Strip trailing
 slashes from the temp root first: on macOS `TMPDIR` ends in `/`, and the
