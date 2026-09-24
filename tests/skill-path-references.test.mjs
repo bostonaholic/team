@@ -1,12 +1,14 @@
 // Fails when a skills/**/*.md or agents/*.md file references a missing path in one of these forms:
 // - outside fenced code, from the file's directory or (under skills/) its skill root:
 //   [text](path) links, and code spans starting with references/, playbooks/, scripts/,
-//   resources/, or ../<skill>/. A span wrapped across lines is skipped.
+//   resources/, or ../<skill>/. A code span closes at the next backtick run of its opener's
+//   length; a span that wraps across lines is not checked, but text after it is.
 // - outside fenced code, from the plugin root: code spans starting with skills/.
 // - everywhere, fences included: ${CLAUDE_PLUGIN_ROOT}/path and <installed-team-root>/path
 //   from the plugin root, <skills-root>/path from skills/, <NAME-skill-dir>/path from
 //   skills/NAME, <refs-dir>/path from the file's directory, and <skill-dir>/path like a link.
-// Skips URLs, pure anchors, and paths holding < > { } [ ] * ? $ …. An unclosed fence fails.
+// Skips URLs, pure anchors, and paths holding < > { } [ ] * ? $ …. Fails on a fence still
+// open at EOF, or a code span still open at a blank line, fence, or EOF.
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, sep } from "node:path";
@@ -28,8 +30,9 @@ function references(file) {
   const local = tree === "skills" ? [dirname(file), join(tree, skill)] : [dirname(file)];
   const roots = { "skill-dir": local, "refs-dir": [dirname(file)], "skills-root": ["skills"], "installed-team-root": ["."] };
   const found = [];
+  const unclosed = (what, line) => found.push({ file, line, path: `unclosed code ${what}`, bases: [] });
   let fence = null;
-  let openSpan = false;
+  let span = null; // a code span still open at the end of the previous line
   readFileSync(file, "utf8").split(/\r?\n/).forEach((text, index) => {
     const add = (path, bases) => found.push({ file, line: index + 1, path: path.replace(/#.*$/, ""), bases });
     for (const [, path] of text.matchAll(/\$\{CLAUDE_PLUGIN_ROOT\}\/([^\s"'`)]+)/g)) add(path, ["."]);
@@ -45,30 +48,40 @@ function references(file) {
       }
       return;
     }
-    if (marker) {
-      fence = { marker: marker[1], line: index + 1 };
-      openSpan = false;
+    if (marker || !text.trim()) {
+      if (span) unclosed("span", span.line);
+      span = null;
+      if (marker) fence = { marker: marker[1], line: index + 1 };
       return;
     }
 
-    // Drop the parts of a code span that wraps across lines so backtick pairing stays aligned.
-    let prose = text;
-    if (!prose.trim()) openSpan = false;
-    if (openSpan) {
-      if (!prose.includes("`")) return;
-      prose = prose.slice(prose.indexOf("`") + 1);
+    // Split the line into prose and the code spans that open and close on it.
+    const spans = [];
+    let prose = "";
+    let cursor = 0;
+    let wrapped = span !== null;
+    for (const run of text.matchAll(/`+/g)) {
+      if (!span) {
+        prose += text.slice(cursor, run.index);
+        span = { length: run[0].length, line: index + 1 };
+      } else if (run[0].length === span.length) {
+        if (!wrapped) spans.push(text.slice(cursor, run.index));
+        span = null;
+        wrapped = false;
+      } else continue;
+      cursor = run.index + run[0].length;
     }
-    openSpan = (prose.match(/`/g) ?? []).length % 2 === 1;
-    if (openSpan) prose = prose.slice(0, prose.lastIndexOf("`"));
+    if (!span) prose += text.slice(cursor);
 
-    for (const [, span] of prose.matchAll(/`([^`]+)`/g)) {
-      const path = span.trim().split(/\s/)[0];
+    for (const code of spans) {
+      const path = code.trim().split(/\s/)[0];
       if (path.startsWith("skills/")) add(path, ["."]);
       else if (SKILL_LOCAL.test(path)) add(path, local);
     }
-    for (const [, target] of prose.replace(/`[^`]+`/g, "").matchAll(/\]\(([^)\s]+)/g)) add(target, local);
+    for (const [, target] of prose.matchAll(/\]\(([^)\s]+)/g)) add(target, local);
   });
-  if (fence) found.push({ file, line: fence.line, path: "unclosed code fence", bases: [] });
+  if (span) unclosed("span", span.line);
+  if (fence) unclosed("fence", fence.line);
   return found;
 }
 
