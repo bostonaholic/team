@@ -51,7 +51,8 @@
      test, review, suggestion, ux).
    - Append `Review round <n+1> (<b> Blocking, <m> Major open)` to the
      TodoWrite ledger, where `<b>` and `<m>` are the counts the tier sort
-     just produced.
+     just produced. The count starts on the round-2 item: the round-1 seed
+     is written before any aggregate has sorted anything.
    - Re-dispatch implementer with the typed class(es), then re-dispatch
      ALL 5 reviewers for a fresh review; reviewers carry no memory of
      earlier rounds.
@@ -63,10 +64,10 @@
    context-exhausted session: re-invoke `/team-implement` bare. The resume
    branch at step 2 skips the test and slice steps, so the phase re-enters
    at step 5, where the five reviewers re-derive the current finding set
-   for the loop above to fix. The round counter is session-scoped
-   (TodoWrite) and starts fresh on re-invocation. The re-invoked session's
-   ledger carries no `PR` phase item, so step 9 takes the standalone branch
-   and names `/team-pr`.
+   for the loop above to fix, at the cost of one round. The round counter
+   is session-scoped (TodoWrite) and starts fresh on re-invocation. The
+   re-invoked session's ledger carries no `PR` phase item, so step 9 takes
+   the standalone branch and names `/team-pr`.
 9. **Once Blocking and Major are clean:** record any **Minor-and-below**
    findings for the PR body's `## Review notes` section, tagged by source
    reviewer — never present them mid-run. Then present all review verdicts
@@ -74,5 +75,6 @@
    - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
      `/team` seeded it): do **not** end the turn. Proceed directly to the
      PR phase — call the Skill tool with `team-pr` — in the same turn.
+     Ending the turn with verdicts but no draft PR is a defect.
    - **Standalone**: suggest `/team-pr` — tell the user
      **"Next: run `/team-pr docs/plans/<id>/`"**.

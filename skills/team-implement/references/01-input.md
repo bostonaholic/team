@@ -18,7 +18,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 
 - **If the command printed a path**, use it as `$ARGUMENTS`. When the path
   came from tier 2 discovery (no explicit arg), announce the resolved
-  directory to the user before proceeding.
+  directory to the user before proceeding, so an auto-picked topic is never
+  silent.
 - **If the command printed nothing** (tier 3), do not hard-error. Fire
   `AskUserQuestion` with a `Setup` header and labeled options:
   - **Run the producer** — run `/team-plan docs/plans/<id>/` to produce the
