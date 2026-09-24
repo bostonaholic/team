@@ -11,7 +11,7 @@ item regardless of confidence.
 - If a batch contains exclusion items, apply the authorized items first.
   Then present the exclusions and stop the loop. The exclusions are
   declined, needs-clarification, could-not-apply, and
-  security-sensitive. Never watch past an open disagreement.
+  security-sensitive.
 - Never auto-push a change that introduces a new security-sensitive
   construct (exec/eval-like code, network calls, credential handling) —
   treat it as a loop-stopping exclusion: present it and stop.

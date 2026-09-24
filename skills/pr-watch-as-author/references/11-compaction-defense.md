@@ -1,20 +1,16 @@
 ### Compaction defense
 
-Most loop state is re-fetchable from GitHub. After a compaction,
-re-derive
-the baseline: fetch the current unresolved-thread ids, review-summary ids with
-their authors and submission times, conversation-comment ids with their authors
-and timestamps, `state`, and `reviewDecision`,
-then continue polling from the
-snapshot lines already in the transcript.
+After a compaction, re-derive the baseline from GitHub — unresolved-thread
+ids, review-summary ids with their authors and submission times,
+conversation-comment ids with their authors and timestamps, `state`, and
+`reviewDecision` — then continue polling from the snapshot lines already in
+the transcript.
 
-The triaged PR-level id set is the one piece GitHub cannot return, since
-a triaged review summary or conversation comment looks identical to an untriaged one. Recover it from
-the snapshot lines and batch reports in the transcript. When no copy
+GitHub cannot return the triaged PR-level id set. Recover it from the
+snapshot lines and batch reports in the transcript. When no copy
 survives, fail toward re-presenting rather than toward silence: treat
 the PR-level items as untriaged and triage them again, saying plainly that
-some items may repeat. A duplicated punch-list item costs the user a
-moment; a dropped one costs them the feedback.
+some items may repeat.
 
 Report:
 

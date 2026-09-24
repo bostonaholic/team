@@ -1,10 +1,6 @@
 ### 2. Bounded cycle mechanics
 
-Read the [watch loop](watch-loop.md). It owns the cycle timing,
-the 3-cycle soft cap, the handoff, and the three stop conditions that are
-loop mechanics rather than actions of this skill.
-
-Bind its three slots:
+Read the [watch loop](watch-loop.md). Bind its three slots:
 
 - **Poll command** — the step-3 poll.
 - **Cycle-0 subject** — feedback that already exists at arm time is

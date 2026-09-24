@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Shortened `/pr-watch-as-author` by about a fifth. Restated rules, reasons behind rules, and an empty stage file came out. The watch arms, polls, triages, stops, and hands off exactly as before. **What this asks of you:** nothing. [`skills/pr-watch-as-author/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
+
 ## [0.132.11] - 2026-09-25
 
 ### Changed
