@@ -335,3 +335,83 @@ test("a marker in a viewer review body does not clear a PR-level item", () => {
     logins: [],
   });
 });
+
+function followUpPageResponse(connectionName, connectionPage) {
+  const data = { repository: { pullRequest: { [connectionName]: connectionPage } } };
+  return { stdout: JSON.stringify({ data }), stderr: "", exitCode: 0 };
+}
+
+test("CLI fails the read on a malformed follow-up page", async (t) => {
+  await t.test("hasNextPage with no endCursor fails before any follow-up read", (st) => {
+    const run = runScript(st, {
+      args: [PR_URL],
+      responses: [
+        pageOneResponse({
+          latestOpinionatedReviews: connection([ALICE_WITH_THREADS]),
+          reviews: connection([ALICE_WITH_THREADS], { hasNextPage: true, endCursor: null }),
+        }),
+      ],
+    });
+    assert.deepEqual(run.lines, ["not-requested review-state-read-failed"]);
+    assert.equal(run.calls.length, 1);
+    assert.equal(run.status, 1);
+  });
+
+  await t.test("a follow-up page with a GraphQL errors key fails the read", (st) => {
+    const run = runScript(st, {
+      args: [PR_URL],
+      responses: [
+        pageOneResponse({
+          latestOpinionatedReviews: connection([ALICE_WITH_THREADS]),
+          reviews: connection([ALICE_WITH_THREADS], { hasNextPage: true, endCursor: "reviews-cursor-1" }),
+        }),
+        { stdout: JSON.stringify({ data: null, errors: [{ message: "timeout" }] }), stderr: "", exitCode: 0 },
+      ],
+    });
+    assert.deepEqual(run.lines, ["not-requested review-state-read-failed"]);
+    assert.equal(run.calls.length, 2);
+    assert.equal(run.status, 1);
+  });
+});
+
+test("CLI merges follow-up nodes into the pending check", (t) => {
+  const daveComment = { url: `${PR_URL}#issuecomment-12`, body: BODY_SENTINEL, author: { __typename: "User", login: "dave" } };
+  const run = runScript(t, {
+    args: [PR_URL],
+    responses: [
+      pageOneResponse({
+        latestOpinionatedReviews: connection([ALICE_WITH_THREADS]),
+        reviews: connection([ALICE_WITH_THREADS]),
+        comments: connection([], { hasNextPage: true, endCursor: "comments-cursor-1" }),
+      }),
+      followUpPageResponse("comments", connection([daveComment])),
+    ],
+  });
+  assert.deepEqual(run.lines, [`pending ${PR_URL}#issuecomment-12`, "not-requested pending-feedback"]);
+  assert.equal(run.calls.length, 2, "no POST while a follow-up page holds pending feedback");
+  assert.equal(run.calls[1].includes("after=comments-cursor-1"), true);
+  assert.equal(run.status, 0);
+});
+
+test("CLI passes --hostname on follow-up reads for a non-github.com host", (t) => {
+  const enterpriseAlice = changesRequested({
+    author: { __typename: "User", login: "alice" },
+    reviewId: 100,
+    prUrl: ENTERPRISE_PR_URL,
+  });
+  const run = runScript(t, {
+    args: [ENTERPRISE_PR_URL],
+    responses: [
+      pageOneResponse({
+        latestOpinionatedReviews: connection([], { hasNextPage: true, endCursor: "opinionated-cursor-1" }),
+        reviews: connection([enterpriseAlice]),
+      }),
+      followUpPageResponse("latestOpinionatedReviews", connection([enterpriseAlice])),
+      POST_SUCCEEDED,
+    ],
+  });
+  assert.deepEqual(run.lines, ["re-requested alice"]);
+  assert.deepEqual(run.calls[1].slice(0, 4), ["api", "graphql", "--hostname", "ghe.example.com"]);
+  assert.equal(run.calls[1].includes("after=opinionated-cursor-1"), true);
+  assert.equal(run.status, 0);
+});

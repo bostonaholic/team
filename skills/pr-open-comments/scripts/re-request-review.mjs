@@ -58,8 +58,13 @@
  * `#issuecomment-123` never clears `#issuecomment-12`. Another author's
  * marker clears nothing.
  *
- * Read limit: one GraphQL query that reads 100 nodes per connection. A
- * connection with more nodes makes the read incomplete, and nothing is sent.
+ * Read limits: the first query reads 100 nodes of each connection. Each
+ * connection with more nodes follows its `after` cursor, one follow-up query
+ * per page, up to MAX_PAGES_PER_CONNECTION pages. A run therefore makes at
+ * most 1 + 5 x 9 reads, plus one POST per login. A connection that still has
+ * pages after its last allowed page makes the read incomplete. A failed or
+ * unparseable page fails the read and never counts as an empty page. In both
+ * cases nothing is sent.
  *
  * Exit codes:
  *
@@ -93,6 +98,8 @@ const LOGIN_PATTERN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
 const HTTP_STATUS_PATTERN = /\(HTTP (\d{3})\)/;
 const OUTCOME_MARKER_PATTERN = /^<!-- feedback-outcome: (\S+) -->\r?$/gm;
 const MAX_PENDING_URL_LINES = 10;
+// execution.md requires every loop to declare its bound. 10 pages hold 1,000 nodes per connection.
+const MAX_PAGES_PER_CONNECTION = 10;
 const DEFAULT_HOST = "github.com";
 // execFile's default 1 MiB maxBuffer is too small for a page of 100 full comment bodies.
 const GH_OUTPUT_LIMIT_BYTES = 64 * 1024 * 1024;
@@ -101,41 +108,47 @@ const EXIT_OK = 0;
 const EXIT_FAILURE = 1;
 const EXIT_USAGE = 2;
 
-const CONNECTION_NAMES = ["latestOpinionatedReviews", "reviewRequests", "reviewThreads", "reviews", "comments"];
+const CONNECTION_SELECTIONS = {
+  latestOpinionatedReviews: "nodes { state url body comments { totalCount } author { __typename login } }",
+  reviewRequests: "nodes { requestedReviewer { __typename ... on User { login } } }",
+  reviewThreads: `nodes {
+    isResolved
+    firstComment: comments(first: 1) { nodes { url } }
+    latestComment: comments(last: 1) { nodes { author { login } body } }
+  }`,
+  reviews: "nodes { state submittedAt url body comments { totalCount } author { __typename login } }",
+  comments: "nodes { url body author { __typename login } }",
+};
+const CONNECTION_NAMES = Object.keys(CONNECTION_SELECTIONS);
+
+const connectionPage = (name, afterArgument) => `
+      ${name}(first: 100${afterArgument}) {
+        pageInfo { hasNextPage endCursor }
+        ${CONNECTION_SELECTIONS[name]}
+      }`;
 
 const REVIEW_STATE_QUERY = `
 query($owner: String!, $repo: String!, $number: Int!) {
   viewer { login }
   repository(owner: $owner, name: $repo) {
     pullRequest(number: $number) {
-      reviewDecision
-      latestOpinionatedReviews(first: 100) {
-        pageInfo { hasNextPage endCursor }
-        nodes { state url body comments { totalCount } author { __typename login } }
-      }
-      reviewRequests(first: 100) {
-        pageInfo { hasNextPage endCursor }
-        nodes { requestedReviewer { __typename ... on User { login } } }
-      }
-      reviewThreads(first: 100) {
-        pageInfo { hasNextPage endCursor }
-        nodes {
-          isResolved
-          firstComment: comments(first: 1) { nodes { url } }
-          latestComment: comments(last: 1) { nodes { author { login } body } }
-        }
-      }
-      reviews(first: 100) {
-        pageInfo { hasNextPage endCursor }
-        nodes { state submittedAt url body comments { totalCount } author { __typename login } }
-      }
-      comments(first: 100) {
-        pageInfo { hasNextPage endCursor }
-        nodes { url body author { __typename login } }
-      }
+      reviewDecision${CONNECTION_NAMES.map((name) => connectionPage(name, "")).join("")}
     }
   }
 }`;
+
+const FOLLOW_UP_QUERIES = Object.fromEntries(
+  CONNECTION_NAMES.map((name) => [
+    name,
+    `
+query($owner: String!, $repo: String!, $number: Int!, $after: String!) {
+  repository(owner: $owner, name: $repo) {
+    pullRequest(number: $number) {${connectionPage(name, ", after: $after")}
+    }
+  }
+}`,
+  ]),
+);
 
 /**
  * `reviewState`: `{viewerLogin, reviewDecision}` plus one node array per
@@ -273,53 +286,72 @@ function hostnameArgs({ host }) {
 }
 
 async function readReviewState(pullRequest) {
+  const firstPage = await readPage(pullRequest, REVIEW_STATE_QUERY, []);
+  if (firstPage === null) return { failure: "review-state-read-failed" };
+  const viewerLogin = firstPage.data?.viewer?.login;
+  const firstPullRequest = firstPage.data?.repository?.pullRequest;
+  if (typeof viewerLogin !== "string" || !isObject(firstPullRequest)) return { failure: "review-state-read-failed" };
+
+  const reviewState = { viewerLogin, reviewDecision: firstPullRequest.reviewDecision };
+  for (const name of CONNECTION_NAMES) {
+    const connection = await readConnection(pullRequest, name, firstPullRequest[name]);
+    if (connection.failure) return connection;
+    reviewState[name] = connection.nodes;
+  }
+  return { reviewState };
+}
+
+async function readConnection(pullRequest, name, firstPage) {
+  let page = firstPage;
+  const nodes = [];
+  for (let pagesRead = 1; ; pagesRead++) {
+    if (!isConnectionPage(page)) return { failure: "review-state-read-failed" };
+    nodes.push(...page.nodes);
+    if (!page.pageInfo.hasNextPage) return { nodes };
+    if (pagesRead === MAX_PAGES_PER_CONNECTION) return { failure: "review-state-incomplete" };
+
+    const response = await readPage(pullRequest, FOLLOW_UP_QUERIES[name], ["-f", `after=${page.pageInfo.endCursor}`]);
+    page = response?.data?.repository?.pullRequest?.[name];
+  }
+}
+
+async function readPage(pullRequest, query, extraArgs) {
   const { owner, repo, number } = pullRequest;
   const result = await runGh([
     "api",
     "graphql",
     ...hostnameArgs(pullRequest),
     "-f",
-    `query=${REVIEW_STATE_QUERY}`,
+    `query=${query}`,
     "-f",
     `owner=${owner}`,
     "-f",
     `repo=${repo}`,
     "-F",
     `number=${number}`,
+    ...extraArgs,
   ]);
   if (!result.ok) {
     process.stderr.write(result.stderr);
-    return { failure: "review-state-read-failed" };
+    return null;
   }
-
-  const page = parseReviewStatePage(result.stdout);
-  if (page === null) return { failure: "review-state-read-failed" };
-  if (CONNECTION_NAMES.some((name) => page.pullRequest[name].pageInfo.hasNextPage)) {
-    return { failure: "review-state-incomplete" };
-  }
-
-  const reviewState = { viewerLogin: page.viewerLogin, reviewDecision: page.pullRequest.reviewDecision };
-  for (const name of CONNECTION_NAMES) reviewState[name] = page.pullRequest[name].nodes;
-  return { reviewState };
-}
-
-function parseReviewStatePage(stdout) {
   let response;
   try {
-    response = JSON.parse(stdout);
+    response = JSON.parse(result.stdout);
   } catch {
     return null;
   }
-  if (response === null || typeof response !== "object" || "errors" in response) return null;
-  const viewerLogin = response.data?.viewer?.login;
-  const pullRequest = response.data?.repository?.pullRequest;
-  if (typeof viewerLogin !== "string" || pullRequest == null || typeof pullRequest !== "object") return null;
-  if (!CONNECTION_NAMES.every((name) => isConnection(pullRequest[name]))) return null;
-  return { viewerLogin, pullRequest };
+  if (!isObject(response) || "errors" in response) return null;
+  return response;
 }
 
-function isConnection(value) {
-  return Array.isArray(value?.nodes) && typeof value?.pageInfo?.hasNextPage === "boolean";
+function isObject(value) {
+  return value !== null && typeof value === "object";
+}
+
+function isConnectionPage(value) {
+  if (!Array.isArray(value?.nodes) || typeof value?.pageInfo?.hasNextPage !== "boolean") return false;
+  return !value.pageInfo.hasNextPage || typeof value.pageInfo.endCursor === "string";
 }
 
 async function requestReview(pullRequest, login) {
