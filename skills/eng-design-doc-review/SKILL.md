@@ -11,7 +11,7 @@ If a required resource is missing, stop and report its resolved path; never use 
 
 # Engineering Design Doc Review
 Before dispatch, resolve [independent review](../team/principles/independent-review.md), [verified results](../team/principles/verified-results.md), [focused work](../team/principles/focused-work.md). Pass their absolute installed paths with the retained brief. The receiver reads them before work.
-Before each consuming step, read its linked shared rules from this installed skill directory; if a required read fails, stop that step with the exact path.
+Before each consuming step, read its linked shared rules from this installed skill directory; if a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 Adversarially review a design document with fresh context.
 
@@ -39,7 +39,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
   `AskUserQuestion` with a `Setup` header and labeled options:
   - **Run the producer** — run `/team-design docs/plans/<id>/` to produce the
     missing `6-design.md`.
-  - **Give a path** — the user supplies the `docs/plans/<id>/` directory.
+  - **Give a path** — the user supplies the `docs/plans/<id>/` directory
+    directly (run `ls docs/plans/` to find your topic directory).
 
 ## Execution
 

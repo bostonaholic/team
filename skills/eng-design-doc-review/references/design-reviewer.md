@@ -63,7 +63,8 @@ format](../code-review/references/findings.md) — it defines their format.
      *what* was chosen?
    - Does the decision name its blast radius — the callers, siblings, and
      co-changing surfaces that must move with it?
-   Apply the [decision-record rules](../team/references/decisions.md).
+   Apply the [decision-record rules](../team/references/decisions.md) even
+   when the doc is not a formal ADR.
 
 4. **Verify edge-case enumeration.** The design must walk boundary values,
    invalid inputs, failure paths, concurrency, authorization, and resource
