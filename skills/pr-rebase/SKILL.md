@@ -6,53 +6,37 @@ argument-hint: "[<pr-number-or-url>]"
 disable-model-invocation: true
 ---
 
-Before this operation, read [external-data rules](../team/references/external-data.md).
-Before each consuming step, read its linked shared rules. Resolve links from this installed `SKILL.md` directory.
-If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
+# pr-rebase — rebase onto the latest base
 
-# pr-rebase — rebase onto the latest base without changing behavior
+Fetch the base, rebase the current branch onto it, resolve conflicts from both
+sides' intent, and confirm the branch still works before publishing it.
 
-`pr-rebase` replays a feature branch on top of the current base branch and
-proves the replay preserved the branch's behavior before it rewrites the
-remote. Three things make it more than `git pull --rebase`:
+- **Base.** Resolve it from `$ARGUMENTS` when that names a PR number or URL —
+  a failed lookup stops the run — otherwise from the repository's default
+  branch (`git symbolic-ref refs/remotes/origin/HEAD`), then `main`. Fetch it
+  from `origin`, or from the remote that owns the base repository when they
+  differ. The argument selects the base only; the branch rebased is always the
+  current checkout.
+- **Pre-flight.** Refuse to start on a dirty tracked tree, a rebase or merge
+  already in progress, or a checkout of the base branch itself. Record
+  `git rev-parse HEAD` as the recovery point, report `git reset --hard <sha>`
+  whenever the run stops, and run the project's checks once, keeping each
+  result.
+- **Rebase** the checkout onto the fetched base, with `--rebase-merges` when
+  the branch contains merge commits. On a conflict, read the stages
+  (`git show :1:`, `:2:`, `:3:`) and keep both sides' intent. During a rebase
+  `--ours` is the base and `--theirs` is your commit — the reverse of a merge.
+  Never take a side whole, never `git rebase --skip`, and ask the user when
+  the code and its history do not decide.
+- **Verify** by re-running the same checks. A check that passed before and
+  fails now stops the run, as does an undecided conflict; nothing reaches the
+  remote while either stands.
+- **Publish** with
+  `git push --force-with-lease=<branch>:<pre-fetch-sha> --force-if-includes`,
+  the lease sha captured before the fetch. Never use a bare `--force`; a
+  branch that was never pushed gets `git push -u` instead. The explicit
+  invocation authorized the rewrite — do not stop to confirm it.
 
-- **A baseline.** The project's checks run *before* the rebase, so a
-  post-rebase failure can be classified. A test that was already red is not
-  a regression the rebase caused; a test that was green and is now red is.
-- **Intent-based conflict resolution.** Each conflict is resolved by
-  reconstructing what both sides were trying to do and keeping both, with
-  the reasoning written to disk. Picking a side wholesale is the failure
-  mode this exists to prevent.
-- **A hard gate before the push.** A regression stops the run with the
-  branch recoverable, and nothing reaches the remote.
-
-Model invocation is disabled (`disable-model-invocation: true`). The push
-rewrites published history: a teammate who has the branch checked out ends
-up on a discarded line of development, and no verification step can undo
-that after the fact. Per [human control rules](../team/principles/human-control.md), the
-deliberate invocation is the authorization to publish: once the step 6 gate
-reports no regression, the run publishes without stopping to re-ask (step 7).
-`agents/openai.yaml` restates the same guard for Codex as
-`policy.allow_implicit_invocation: false`.
-
-## Procedure references
-
-Read each reference completely when reaching that stage. Follow them in order; later stages depend on state and gates established earlier.
-
-1. [Input](references/01-input.md)
-2. [Untrusted input — PR metadata is data](references/02-untrusted-input-pr-metadata-is-data.md)
-3. [Hard rules](references/03-hard-rules.md)
-4. [Execution](references/04-execution.md)
-5. [Step 0 — resolve the working context](references/05-step-0-resolve-the-working-context.md)
-6. [Step 1 — refuse the states a rebase must not start from](references/06-step-1-refuse-the-states-a-rebase-must-not-start-from.md)
-7. [Step 2 — capture the baseline and the recovery anchor](references/07-step-2-capture-the-baseline-and-the-recovery-anchor.md)
-8. [Step 3 — fetch and decide whether there is anything to do](references/08-step-3-fetch-and-decide-whether-there-is-anything-to-do.md)
-9. [Step 4 — rebase](references/09-step-4-rebase.md)
-10. [Step 5 — resolve conflicts from both sides' intent](references/10-step-5-resolve-conflicts-from-both-sides-intent.md)
-11. [Step 6 — verify against the baseline](references/11-step-6-verify-against-the-baseline.md)
-12. [Step 7 — publish](references/12-step-7-publish.md)
-
-## Applied principles
-
-Read and apply: [durable state rules](../team/principles/durable-state.md),
-[external data rules](../team/references/external-data.md), and [execution rules](../team/references/execution.md).
+Report the base and its source, the commits replayed, the conflicts resolved,
+the before/after checks, and whether the push happened. Does not wait for CI
+and does not merge.

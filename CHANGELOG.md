@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.130.0] - 2026-09-24
+
+### Changed
+
+- `/pr-rebase` is now a short procedure instead of 882 lines across thirteen files. It still discovers the base, rebases the current branch, resolves conflicts from both sides' intent, runs the project's checks before and after, and publishes with an explicit `--force-with-lease`. The baseline-classification table, per-run rebase logs, publisher detection, and stack restacking are gone — on a repository whose publishing belongs to a stack manager, run that tool after the rebase rather than the skill's push. **What this asks of you:** nothing on a plain git repository.
+
 ## [0.129.0] - 2026-09-22
 
 ### Changed
@@ -1138,7 +1144,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.129.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.130.0...HEAD
+[0.130.0]: https://github.com/bostonaholic/team/compare/v0.129.0...v0.130.0
 [0.129.0]: https://github.com/bostonaholic/team/compare/v0.128.0...v0.129.0
 [0.128.0]: https://github.com/bostonaholic/team/compare/v0.127.0...v0.128.0
 [0.127.0]: https://github.com/bostonaholic/team/compare/v0.126.0...v0.127.0
