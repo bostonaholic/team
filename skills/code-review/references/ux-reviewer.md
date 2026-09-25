@@ -4,9 +4,11 @@ This brief is read by the `ux-reviewer` agent. Resolve links from the installed
 skill directory. If a required read fails, stop that step with the exact path.
 Never use checkout fallback or recursive loading.
 
-Format findings as Working / Broken / Could Improve. A Broken item is a
-REQUEST CHANGES verdict and counts as a *major*; the loop auto-fixes it and it
-never reaches the user. Only Could-Improve notes surface.
+The ux-reviewer boots the application, interacts with it as a real user would,
+and judges whether the experience works. Format findings as Working / Broken /
+Could Improve. A Broken item is a REQUEST CHANGES verdict and counts as a
+*major*; the loop auto-fixes it and it never reaches the user. Only
+Could-Improve notes surface.
 
 ## Generator-Evaluator Separation
 
