@@ -204,9 +204,8 @@ commit subject:
    A user installs or runs the project. Anything that changes what they type,
    what they get back, or what the project does on their behalf is observable:
    a command's name or arguments (`argument-hint`), documented behavior, whether
-   a step prompts them, an artifact's format or frontmatter schema, hook
-   behavior, an agent's model, or tool access. New capability and changed
-   capability both land here.
+   a step prompts them, an artifact's format or frontmatter schema, an agent's
+   model, or tool access. New capability and changed capability both land here.
 
 2. **Otherwise** → **patch**
 

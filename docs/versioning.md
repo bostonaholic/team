@@ -157,7 +157,7 @@ is this workflow's convention, written to keep meaning the same thing after 1.0.
 
 | Level | When | Reachable pre-1.0 |
 |-------|------|-------------------|
-| **minor** | A plugin user can observe the difference: a command's name or arguments, documented behavior, an artifact format, hook behavior, an agent's model or tools. New *and* changed capability both. | yes |
+| **minor** | A plugin user can observe the difference: a command's name or arguments, documented behavior, an artifact format, an agent's model or tools. New *and* changed capability both. | yes |
 | **patch** | Internal-only and backward compatible — item 6's "internal change that fixes incorrect behavior", which needs both qualifiers. | yes |
 | **major** | Never, while the version starts `0.`. Item 8 is scoped `X > 0`, and 1.0.0 "defines the public API" (item 5). | **no** |
 

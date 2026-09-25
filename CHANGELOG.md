@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Removed the leftover references to the runtime hooks that v0.131.0 removed. The version-bump check no longer treats a root `hooks/` directory as a runtime change, and the version-bump criteria, README, and versioning docs no longer mention hook behavior.
+
 ## [0.131.1] - 2026-09-24
 
 ### Fixed
