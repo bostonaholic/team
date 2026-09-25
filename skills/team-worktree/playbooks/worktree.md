@@ -131,9 +131,9 @@ When teardown is warranted (post-merge or on explicit request):
 
 ## Gitignored Files
 
-A worktree is a fresh checkout without untracked files. To copy some in
-(e.g. `.env`, `.env.local`), list them in a `.worktreeinclude` file at the
-project root, in `.gitignore` syntax. Only files matching a pattern that are
+A worktree is a fresh checkout without untracked files. To copy these
+automatically (e.g. `.env`, `.env.local`), add a `.worktreeinclude` file to
+the project root, in `.gitignore` syntax. Only files matching a pattern that are
 also gitignored get copied. In multi-repo mode, each repo honors its own
 `.worktreeinclude` independently.
 
