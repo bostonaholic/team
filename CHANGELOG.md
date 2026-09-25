@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.131.2] - 2026-09-25
+
 ### Fixed
 
 - Removed the leftover references to the runtime hooks that v0.131.0 removed. The version-bump check no longer treats a root `hooks/` directory as a runtime change, and the version-bump criteria, README, and versioning docs no longer mention hook behavior.
@@ -1160,7 +1162,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.131.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.131.2...HEAD
+[0.131.2]: https://github.com/bostonaholic/team/compare/v0.131.1...v0.131.2
 [0.131.1]: https://github.com/bostonaholic/team/compare/v0.131.0...v0.131.1
 [0.131.0]: https://github.com/bostonaholic/team/compare/v0.130.0...v0.131.0
 [0.130.0]: https://github.com/bostonaholic/team/compare/v0.129.0...v0.130.0
