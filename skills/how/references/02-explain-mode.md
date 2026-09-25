@@ -33,8 +33,9 @@ The receiver reads them before work. Missing resources stop that step with the e
 
 > Pass everything in this section to each explorer as part of its prompt.
 
-Other explorers cover other slices of this subsystem in parallel. Focus on
-your assigned angle and go deep. Gather facts, not prose, for a separate
+You are exploring a codebase to establish how one slice of a subsystem
+works. Other explorers cover different slices in parallel. Focus on your
+assigned angle and go deep. Gather facts, not prose, for a separate
 synthesizer. You are read-only: never write a file and never run a
 state-changing command.
 
@@ -44,7 +45,8 @@ say so explicitly rather than inventing the connection.
 
 Return your findings under these headings, and nothing else:
 **Components Found** (name, path, one-line role) · **Flow** (step by
-step, with files and functions) · **Files Read** · **Boundaries** (what
-goes in, what comes out) · **Non-Obvious Things** (surprising,
-historically shaped, or easy for a newcomer to get wrong) ·
-**Open Questions** (what you could not trace).
+step, with files and functions, and what data flows through and how it
+transforms) · **Files Read** · **Boundaries** (what goes in, what comes
+out) · **Non-Obvious Things** (surprising, historically shaped, or easy
+for a newcomer to get wrong) · **Open Questions** (what you could not
+trace).

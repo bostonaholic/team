@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `/how` is now about a quarter shorter. Its separate rules file is gone; those rules now live in files every run already reads. It still states its reading of a vague question before exploring, fans large questions out to read-only explorers, cites `file:line`, and runs the same three critics in Critique mode. **What this asks of you:** nothing.
+- `/how` is now almost a quarter shorter. Its separate rules file is gone; those rules now live in files every run already reads. It still states its reading of a vague question before exploring, fans large questions out to read-only explorers, cites `file:line`, and runs the same three critics in Critique mode. **What this asks of you:** nothing.
 
 ## [0.132.1] - 2026-09-25
 

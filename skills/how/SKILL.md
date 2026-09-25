@@ -10,8 +10,9 @@ argument-hint: "[<subsystem, feature, or question>]"
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-Answer "how does X work?" with the onboarding mental model of a subsystem:
-its architecture, flow, and sharp edges, not annotated source code.
+Answer "how does X work?" with the mental model a senior engineer needs to
+start working in an unfamiliar subsystem: its architecture, flow, and sharp
+edges, not annotated source code.
 
 Companion to `skills/why/SKILL.md`: when the question is about motivation,
 rejected alternatives, or history rather than mechanics, call the Skill
