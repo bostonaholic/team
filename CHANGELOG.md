@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `/why`'s own files are about a fifth shorter, with the same rules. Its closing rules file restated rules the entry file and other references already give, so it is gone. Its one unique rule — hand a failure being diagnosed to the bug-diagnosis reference — now sits in the skill's entry file. It still anchors the question in git and PR history and fans out one read-only investigator per evidence source. It still sorts every claim into a confidence tier and names every source it skipped. **What this asks of you:** nothing.
+- `/why`'s own files are nearly a fifth shorter, with the same rules. Its closing rules file restated rules the entry file and other references already give, so it is gone. Its one unique rule — hand a failure being diagnosed to the bug-diagnosis reference — now sits in the skill's entry file. It still anchors the question in git and PR history and fans out one read-only investigator per evidence source. It still sorts every claim into a confidence tier and names every source it skipped. **What this asks of you:** nothing.
 
 ## [0.132.2] - 2026-09-25
 

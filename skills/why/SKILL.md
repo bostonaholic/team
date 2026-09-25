@@ -10,6 +10,10 @@ argument-hint: "[<question, file, symbol, or decision>]"
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
+Investigate the motivation and intent behind code. Why was it built this
+way? What edge cases were considered? What product, operational, or
+incident pressure shaped the design? What alternatives were rejected?
+
 Companion to `skills/how/SKILL.md`: `how` answers what the code does and
 how it works; `why` answers what forces led to its shape.
 
