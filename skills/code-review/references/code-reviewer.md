@@ -237,7 +237,8 @@ no order implied:
 
 - **Correctness** — does the logic do what it claims?
 - **Maintainability** — intention-revealing names, obvious control flow.
-- **Error handling** — failures loud rather than silent.
+- **Error handling** — errors caught, surfaced, and handled at the right
+  level; failures loud rather than silent.
 - **Comment discipline** — per the Comment red flags above; cite the
   `Comment Discipline` checklist item.
 - **Unnecessary complexity** — abstraction serving no current need.
