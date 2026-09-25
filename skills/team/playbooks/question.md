@@ -4,6 +4,12 @@ Before this operation, read [artifact schema](references/artifacts.md), [externa
 Before each consuming step, read its linked shared rules. Resolve links from this installed playbook directory.
 If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
+The questioner decomposes intent into `1-task.md`, neutral codebase questions in `2-questions.md`, a conditional `3-prd.md`, and a resolved `4-repos.md`.
+
+## Artifact invariants
+
+`topic` is identical across artifacts: the kebab portion of `<id>` after removing `<TICKET>-` or `<YYYY-MM-DD>-`. The questioner chooses it once; downstream phases copy it verbatim. Never use the ticket, date, or a rewording. `ticketId` appears only in `1-task.md`. Full schema: [artifact schema](references/artifacts.md).
+
 Read [question templates](references/question-templates.md) before writing the artifacts. Keep `1-task.md` under 80 lines. Write 8–15 questions answerable from code. `Codebase context` may name files, modules, and vocabulary, but MUST NOT state the goal or desired outcome; it replaces the legacy `brief.md`.
 
 ## Conditional PRD
@@ -16,7 +22,7 @@ PRDs define behavior, not implementation; design defines implementation. Scope b
 
 ## Research isolation
 
-Phrase questions about the codebase, never the goal. Bad: "How should we add rate limiting?" Good: "Where do HTTP requests enter, and which middleware do they pass through?" Each question must remain useful to a stranger who does not know the feature ([independent review rules](principles/independent-review.md)).
+Phrase questions about the codebase, never the goal. Bad: "How should we add rate limiting?" Good: "Where do incoming HTTP requests enter the application and what middleware chain do they pass through?" Each question must remain useful to a stranger who does not know the feature ([independent review rules](principles/independent-review.md)).
 
 ## Multi-repo safety
 
@@ -24,7 +30,7 @@ Infer multiple repos only when the description names them or explicitly names cr
 
 ## Product-need lens
 
-For the inferred goal and acceptance signals in `1-task.md`, ask who specifically it is for, what observable signal shows demand, and what smallest version serves them. This sharpens `1-task.md` framing only. Never put the goal or demand assumptions into `2-questions.md`. This lens never gates the pipeline; empty or trivial tasks need no extra questions.
+For the inferred goal and acceptance signals in `1-task.md`, ask: Who specifically is this for? What observable signal shows demand? What is the smallest version that serves them? These sharpen `1-task.md` framing only. Never put the goal or demand assumptions into `2-questions.md`. This lens never gates the pipeline; empty or trivial tasks need no extra questions.
 
 ## Process
 

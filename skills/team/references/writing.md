@@ -214,6 +214,7 @@ ideas in its own words.
 - **Do not stack auxiliaries.**
 - **Write one instruction per sentence.** Combine actions only when the reader
   must do them at the same time.
+- **Use the imperative for instructions.**
 - **Put the condition before the command, divided by a comma.**
 - **Give each word one meaning, and each thing one name.** No synonyms for
   variety.

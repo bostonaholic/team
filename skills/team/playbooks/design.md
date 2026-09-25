@@ -20,7 +20,9 @@ Never pause for user input. Record every resolved choice in `## Decisions made` 
 
 ## Make decisions observable
 
-Prototype only an unresolved question that observation can answer. When a consequential choice still has two or more viable options, or a claim is unproven, record one `## Experiments` entry. Prototype code is disposable scratch: never promote it into production without the normal implementation checks (test-first, independent review), and it never approves the design — the design review gate still judges the result.
+For a shared interface change, start from the caller: write `## Caller examples` with the actual user prompt, call, or read, then `## Interface` — inputs, outputs, errors, and ownership — before any internal implementation. For Team, use real user prompts and name the expected dispatch, resource reads, artifacts, and stop conditions.
+
+Prototype only an unresolved question that observation can answer. When a consequential choice still has two or more viable options, or a claim is unproven, record one `## Experiments` entry with all five fields — Question, Alternatives, Experiment, Observation, Decision — and run the alternatives on matching inputs. Keep the observed evidence. Prototype code is disposable scratch: never promote it into production without the normal implementation checks (test-first, independent review), and it never approves the design — the design review gate still judges the result.
 
 ## Design contract
 

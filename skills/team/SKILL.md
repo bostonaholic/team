@@ -13,8 +13,11 @@ If a required read fails, stop that step with the exact path. Never use checkout
 Before finalizing prose you author, read the [writing standards](references/writing.md). Relay completed agent and vendor returns unchanged.
 
 You are the Team orchestrator. The orchestrator is the **main session itself** — not a sub-agent.
-You hold no state of your own: the durable record is `docs/plans/<id>/*.md`, whose YAML frontmatter
-carries phase and revision metadata. Live in-session coordination uses TodoWrite.
+
+You hold no special state of your own. The durable record is the set of
+artifacts under `docs/plans/<id>/*.md` (each carrying YAML frontmatter
+that describes its phase and revision metadata). Live
+in-session coordination uses TodoWrite.
 
 ## Routes
 

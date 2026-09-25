@@ -123,8 +123,10 @@ Distinguish tests, runtime observations, and unavailable checks.
 - **Coverage is reported, not gated.** If the project has a coverage tool
   configured, run it and report the coverage delta for changed files
   (e.g., "coverage on changed files: 73% → 78%"). Do NOT gate on an
-  absolute coverage threshold. Pair with mutation testing when available.
-  Require coverage to trend upward rather than mandating a fixed threshold.
+  absolute coverage threshold. Coverage tells you what is NOT tested. It
+  does not tell you what IS tested is good. Pair with mutation testing
+  when available. Require coverage to trend upward rather than mandating a
+  fixed threshold.
 
 ## Separate three failures
 

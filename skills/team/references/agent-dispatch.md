@@ -30,17 +30,12 @@ Before dispatching a non-vendor helper, the parent resolves and Reads the
 installed [writing standards](references/writing.md). Pass the resolved absolute
 path in every initial or follow-up prompt.
 
-Every non-vendor helper prompt (`team:file-finder`, `Explore`, `general-purpose`)
-tells the helper to Read the writing standards before finalizing its authored
-report, then run the ordered audit: the helper saves its untouched authored
-draft, records the checklist, applies the style rules, resolves the checklist,
-rescans, and self-audits. Source text and exact contracts remain unchanged.
-If the parent or helper cannot Read the writing standards, discard that
-helper return. A scout parent does the reading inline. A reviewer keeps the
-unverified finding under the skeptic default-keep rule. Vendor couriers do not
-Read the prose file and relay stdout byte-for-byte. These fixed paths and
-audit instructions are operational method text, not task-derived Research
-content.
+The helper Reads the writing standards before finalizing prose. If the parent
+or helper cannot Read it, discard that helper return. A scout parent does the
+reading inline. A reviewer keeps the unverified finding under the skeptic
+default-keep rule. Vendor couriers do not Read the prose file and relay stdout
+byte-for-byte. These fixed paths and audit instructions are operational method
+text, not task-derived Research content.
 
 - Helpers are read-only: built-in `Explore`, `team:file-finder`, or `general-purpose` with an explicitly read-only prompt. They NEVER write files, commit, or write under `docs/plans/`; the parent or orchestrator writes artifacts.
 - Every call passes `model:`: `haiku` for location, grep, and bulk reading; `sonnet` for subsystem traces or claim checks; `opus` only after a `sonnet` helper was inconclusive, with that failure named. Effort: `low` for lookups, `medium` for tracing, never `xhigh`.
@@ -56,6 +51,19 @@ Apply [independent review rules](principles/independent-review.md): send a neutr
 ## Per-agent nested dispatch
 
 Read the shared invariants above first. This section is mandatory before the relevant agent dispatches helpers.
+
+### Prose procedure for non-vendor helpers
+
+Before dispatch, the parent resolves and Reads the installed
+[writing standards](references/writing.md), then puts the resolved absolute path
+in the initial or follow-up prompt.
+
+Every `team:file-finder`, `Explore`, and `general-purpose` prompt tells the
+helper to Read the writing standards before finalizing its authored report. The
+helper saves its untouched authored draft, records the checklist, applies the
+style rules, resolves the checklist, rescans, and self-audits. Source text
+and exact contracts remain unchanged. If any Read fails, the parent discards
+the return. A scout parent works inline. A skeptic parent applies default-keep.
 
 ### `researcher` — exploration scouts
 
@@ -99,6 +107,9 @@ Skip skepticism only when there are no hard-gate findings or `Agent` is unavaila
 ### `code-reviewer` — vendor couriers (cross-model pass)
 
 Each vendor `run` uses one read-only `Explore` courier named `codex-review` or `agy-review`, per [cross-model review](references/cross-model-review.md). Couriers return stdout, write and spawn nothing, and count toward the 4-helpers-in-flight cap. The vendor process follows that reference's pinned argv, env allowlist, post-pass tree check, and inline fallback.
+
+Vendor couriers do not receive or Read the prose file. Return vendor stdout
+verbatim without applying either prose method.
 
 ### `implementer` — read-only scouts
 
