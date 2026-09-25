@@ -128,11 +128,13 @@ State the bound honestly: containment bounds a *mistake*, never a chosen
 target, so with no trustworthy root any *image* anywhere on the machine is
 still uploadable — including an SVG, which is text carrying `image/svg+xml`.
 The check refuses a file that is not an image. It does not decide whether an
-image should be public, and nothing here does. A residual TOCTOU window also
-remains: the file at the resolved path can still be replaced between the
-content check and the attach, and closing it needs an open file descriptor the
-CLI does not accept, so it is accepted and recorded here rather than papered
-over.
+image should be public, and nothing here does.
+
+**The attach argument is the resolved path, never `$ENTRY_PATH`.** A residual
+TOCTOU window remains, because the file at that path can still be replaced
+between the content check and the attach; closing it needs an open file
+descriptor the CLI does not accept, so it is accepted and recorded here rather
+than papered over.
 
 An attach that exits non-zero may still have updated the PR, so never infer
 "nothing happened" from an exit code. Derive `assets`, `failures`, and
