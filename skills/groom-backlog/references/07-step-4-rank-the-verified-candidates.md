@@ -14,4 +14,5 @@ the tiebreaker. A residual tie names both candidates and recommends one.
 
 The pool draws only from the verified candidates of Step 3. An empty verified pool means the
 report names no candidate. An item the board's own rules exclude from promotion is outside
-the pool — on this repo's board, the `bug` label and its `Bugs` bucket.
+the pool — on this repo's board, the `bug` label and its `Bugs` bucket. Tier 1 thus catches
+shipped-behavior contradictions that do not carry that label.
