@@ -7,9 +7,9 @@
   the resolve are placed only on a verdict of addressed or answered, the
   rebuttal only on rejected, and every verdict is rendered against the
   branch by the step-4 re-review before any of them fires.
-- **The resolve never satisfies the gate it clears** — the
-  generator–evaluator collapse
-  [independent review rules](../team/principles/independent-review.md) names.
+- **The resolve never satisfies the gate it clears.** The skill closes
+  threads that count toward its own approval — the generator–evaluator
+  collapse [independent review rules](../team/principles/independent-review.md) names.
   The approval condition reads the **verdict**, not `isResolved` (step 2):
   a thread the skill resolved contributes the verdict that authorized the
   resolve, which came from the code. Two rules keep it true, and neither is

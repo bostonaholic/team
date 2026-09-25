@@ -91,9 +91,9 @@ The body states the three counts separately, and when `<S>` or `<C>` is non-zero
 names how those PR-level items were judged. `<R>` is the same disclosure
 for the resolves: an approval that counted threads the approver itself
 closed must say so. Drop that sentence when `<R>` is
-zero. When `<S>` and `<C>` are zero, drop both PR-level counts and that sentence
-entirely and say "all `<T>` review threads opened by @`<viewer>` are
-resolved" — no dead clause about a shape that did not appear.
+zero. When `<S>` and `<C>` are zero, drop both PR-level counts and the
+judged-how sentence entirely and say "all `<T>` review threads opened by
+@`<viewer>` are resolved" — no dead clause about a shape that did not appear.
 
 The body never names this skill, a slash command, or an agent.
 "Approved automatically" carries the automated-attribution disclosure
