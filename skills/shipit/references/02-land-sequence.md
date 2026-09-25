@@ -48,8 +48,8 @@ exits 0 even before a push's checks attach or before a gated job spawns. The
 verdict comes from GitHub's aggregate, which knows a check *suite* is still
 running.
 
-**4a — Settle.** Let the push's workflows register before watching. Run it
-inline, not backgrounded: it is the short-wait exception in
+**4a — Settle.** Let the push's workflows register before watching. Run this
+settle loop inline, not backgrounded: it is the short-wait exception in
 [execution rules](../team/references/execution.md).
 
 ```bash
