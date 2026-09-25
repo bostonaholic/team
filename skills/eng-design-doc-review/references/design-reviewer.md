@@ -35,12 +35,14 @@ refute, or mark unverifiable) and the disposition block you must emit.
 
 When you write your findings, also read the [finding
 format](../code-review/references/findings.md) — it defines their format.
+Read the [writing standards](../team/references/writing.md) before
+finalizing your own prose.
 
 ### Review process
 
 1. **Locate the document.** Read `$ARGUMENTS/6-design.md`. Also read the
    sibling artifacts (`1-task.md`, `2-questions.md`, `5-research.md`, `4-repos.md`)
-   when present.
+   when present — they ground the design in the work that produced it.
 
 2. **Evaluate structure against the design template.** Walk every section
    the [design template](../team/references/design-template.md) prescribes:
