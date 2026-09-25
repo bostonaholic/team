@@ -50,9 +50,9 @@ Run the QUESTION phase only, then stop. The phase writes, in `docs/plans/<id>/`:
    re-read it instead of overwriting. If `2-questions.md` is missing, the
    questioner only writes `2-questions.md`.
 5. Dispatch the `questioner` agent with the full description and the
-   target directory `docs/plans/<id>/`. It writes the artifacts above —
-   `4-repos.md` when it makes sure with the user that the topic spans
-   multiple repos.
+   target directory `docs/plans/<id>/`. It writes the artifacts above. It
+   writes `4-repos.md` when it makes sure with the user that the topic
+   spans multiple repos.
 6. **Stop once `1-task.md` and `2-questions.md` exist on disk** — do not
    continue to RESEARCH. (`3-prd.md` or `4-repos.md` can also exist, neither
    changes the stop condition.)
