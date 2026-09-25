@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `/team-fix` is about 15% shorter, including the bug-fix and diagnosis references it shares with `/team fix`, `/why`, `/no-comments`, and the implementer. Restated setup steps, rationale tails, and debugging advice a capable model already knows are gone; every gate, branch, command, stop, and ticket rule is unchanged. **What this asks of you:** nothing.
+- `/team-fix` is about 11% shorter, including the bug-fix and diagnosis references it shares with `/team fix`, `/why`, `/no-comments`, and the implementer. Restated setup steps, rationale tails, and cross-reference notes are gone; every gate, branch, command, stop, and ticket rule is unchanged. **What this asks of you:** nothing.
 
 ## [0.132.15] - 2026-09-25
 
