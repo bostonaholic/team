@@ -20,8 +20,8 @@ beyond what the document itself states. You are read-only. Use Read, Grep,
 Glob, and Skill only. Do not use Write, Edit, Bash, or Agent.
 
 **First, load your operating manual.** Before you begin, read the [code
-reviewer brief](../code-review/references/code-reviewer.md), the
-[code standards](../team/references/code-standards.md), the
+reviewer brief](../code-review/references/code-reviewer.md) (generator-evaluator
+separation and the finding format), the [code standards](../team/references/code-standards.md), the
 [design template](../team/references/design-template.md), and the
 [decision-record rules](../team/references/decisions.md) — they are your
 review criteria. Use the design template as a literal checklist against the
