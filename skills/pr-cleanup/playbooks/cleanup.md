@@ -33,11 +33,11 @@ pass at the same target is the ungated path those rules exist to prevent.
 | `BRANCH` | The branch the finished work lived on |
 | `WORKTREE` | Absolute path of the worktree that was removed, or empty when there was none |
 
-A caller that holds none of these derives `PRIMARY_ROOT` with
-`skills/pr-cleanup/SKILL.md` step 0 and `DEFAULT` with its step 1. Do not
-hand-roll either derivation, and do not accept an unvalidated `PRIMARY_ROOT`.
-Every invocation below re-derives what it uses in that same invocation, and
-every expansion feeding a removal or a command uses the `${VAR:?}` form.
+Derive missing repo/default values through `pr-cleanup` steps 0/1. A caller that holds
+none of these derives `PRIMARY_ROOT` with `skills/pr-cleanup/SKILL.md` step 0 and
+`DEFAULT` with its step 1. Do not hand-roll either derivation, and do not accept an
+unvalidated `PRIMARY_ROOT`. Every invocation below re-derives what it uses in that same
+invocation, and every expansion feeding a removal or a command uses the `${VAR:?}` form.
 
 ## The declaration: `.teamteardown`
 
