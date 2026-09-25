@@ -25,8 +25,8 @@ needs creation (single-repo mode where the detect step skipped the home
 repo), skip this dialog entirely — the reuse announcement above is
 sufficient. Proceed to Completion.
 
-Show each worktree to create (`<repo-name> @ <path>` per repo in multi-repo
-mode), the branch `<id>`, and `$ARGUMENTS/8-plan.md`.
+Show the count and each worktree to create (`<repo-name> @ <path>` per repo
+in multi-repo mode), the branch `<id>`, and `$ARGUMENTS/8-plan.md`.
 Use `AskUserQuestion` with a `Worktree` header and **Proceed** /
 **Cancel** options.
 
