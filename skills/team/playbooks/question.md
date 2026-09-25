@@ -8,11 +8,11 @@ Read [question templates](references/question-templates.md) before writing the a
 
 ## Conditional PRD
 
-Write `3-prd.md` when a request is vague/underspecified, spans multiple user stories, is cross-cutting, or replaces existing behavior. Skip it for simple, well-scoped requests.
+Write `3-prd.md` when a request is vague/underspecified, spans multiple user stories, is cross-cutting, or replaces existing behavior. Skip it for simple, well-scoped requests such as "add a `--verbose` flag to the CLI".
 
 Write `docs/plans/<id>/3-prd.md` with `phase: prd` and reference it from `1-task.md`. Read [PRD template](references/prd-template.md) before writing its required **Problem Statement**, **User Stories**, **Acceptance Criteria**, **Scope Boundaries**, and **Constraints**.
 
-Scope boundaries are commitments even when excluded work appears easy. The questioner owns the PRD; the design-author may surface acceptance-criterion questions but may not change criteria unilaterally.
+PRDs define behavior, not implementation; design defines implementation. Scope boundaries are commitments even when excluded work appears easy. The questioner owns the PRD; the design-author may surface acceptance-criterion questions but may not change criteria unilaterally.
 
 ## Research isolation
 

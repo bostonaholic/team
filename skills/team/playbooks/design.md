@@ -20,7 +20,7 @@ Never pause for user input. Record every resolved choice in `## Decisions made` 
 
 ## Make decisions observable
 
-When a consequential choice still has two or more viable options, or a claim is unproven, record one `## Experiments` entry. Prototype code is disposable scratch: never promote it into production without the normal implementation checks (test-first, independent review), and it never approves the design — the design review gate still judges the result.
+Prototype only an unresolved question that observation can answer. When a consequential choice still has two or more viable options, or a claim is unproven, record one `## Experiments` entry. Prototype code is disposable scratch: never promote it into production without the normal implementation checks (test-first, independent review), and it never approves the design — the design review gate still judges the result.
 
 ## Design contract
 
@@ -28,6 +28,7 @@ Read [design template](references/design-template.md) before drafting. The requi
 
 - Derive every closed set by grep, directory listing, or key-set comparison and record the command. Never list a blast radius or inventory from memory.
 - No implementation bodies or full type definitions; signatures are allowed only to fix a decision. Reference patterns by `file:line`, never duplicate them.
+- Prefer "follow `lib/foo.ts:30-60`" over copying those lines.
 - Prefer removing or replacing an existing mechanism over adding a parallel one; name what the change deletes in `## Decisions made` ([focused work rules](principles/focused-work.md)).
 - Existing rationale constrains changes to deliberate guards, thresholds, ownership, and layering. Default to `5-research.md`; use `skills/why/SKILL.md` for Preserve/Change/Avoid/Risk archaeology and `skills/how/SKILL.md` for current-state explanation when needed.
 

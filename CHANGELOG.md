@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `/team` and the shared rules it gives every agent are about 20% shorter, from 200 KB to 160 KB of Markdown. Each rule is stated once, and explanations that a capable model already knows are gone. Four empty or duplicate orchestrator references are gone too: `01-input.md`, `04-research-isolation-invariant.md`, `06-gate-handling.md`, and `09-structure-no-gate-autonomous.md`. Every gate, guard, refusal, and contract still holds. **What this asks of you:** nothing.
+- `/team` and the shared rules it gives every agent are about 9% shorter, from 200 KB to 183 KB of Markdown. The orchestrator references, playbooks, and templates state each rule once and drop explanations that a capable model already knows. Four empty or duplicate orchestrator references are gone too: `01-input.md`, `04-research-isolation-invariant.md`, `06-gate-handling.md`, and `09-structure-no-gate-autonomous.md`. Every gate, guard, refusal, and contract still holds. **What this asks of you:** nothing.
 
 ## [0.132.19] - 2026-09-25
 

@@ -1,6 +1,9 @@
 # Model selection for body-loaded agents
 
-These mappings make no claim about OpenCode model support.
+Read this procedure for Codex and Antigravity body-loaded dispatch. Claude's
+named-agent path keeps its native `model:` and `effort:` frontmatter unchanged.
+Other hosts retain their reported default-model substitution; these mappings
+make no claim about OpenCode model support.
 
 ## Resolve before spawning
 
@@ -9,12 +12,28 @@ Read the agent's `model:` and `effort:` before stripping its frontmatter.
 entries in [bundled model selections](model-defaults.json) on other hosts.
 
 Use the home project root established at run entry, including for later slice
-worktrees and companion repositories. Its `.team/config.json` is optional; do not
-create the file automatically.
+worktrees and companion repositories. Read only that root's optional
+`.team/config.json`; do not search ancestors or create the file automatically.
+Its entries replace individual bundled selections, not the whole map:
 
+```json
+{
+  "codex": {
+    "sonnet": { "model": "gpt-5.6-terra", "reasoning_effort": "medium" }
+  },
+  "antigravity": {
+    "sonnet": { "model": "flash" }
+  }
+}
+```
+
+Only `codex` and `antigravity`, their three tier keys, and the illustrated fields
+are accepted. An override must contain `model`. Codex's optional
+`reasoning_effort` replaces the agent effort; otherwise preserve the agent effort.
 Antigravity has no independent effort argument on `invoke_subagent`: its host
 selects effort with the native model tier. Record that limitation, rather than
-claiming the agent's Claude effort was applied.
+claiming the agent's Claude effort was applied. Explicit `inherit` is permitted
+for Antigravity only; it deliberately chooses the parent model.
 
 Capture current capabilities from the host before the first dispatch, and again
 if its provider or model configuration changes. For Codex, use its exposed model
@@ -26,13 +45,23 @@ cannot expose the required capabilities, stop this dispatch and report why.
 
 Prepare request JSON in the run's scratch directory. Read-only callers instead
 supply the JSON on stdin with `-`, using a quoted heredoc and no file write.
-The request carries `projectRoot` (absolute), `host`, `tier`, `effort`, and `available`.
 `available` maps each
 currently available model ID to its supported efforts, or each Antigravity tier
-to `[]`.
+to `[]`. Example shape, with the catalog populated from the running host:
+
+```json
+{
+  "projectRoot": "/absolute/home/project",
+  "host": "codex",
+  "tier": "opus",
+  "effort": "high",
+  "available": { "gpt-6-astra": ["low", "medium", "high", "xhigh"] }
+}
+```
 
 Run `node "<installed-team-root>/skills/team/references/resolve-model.mjs" "<request.json>"`.
-Nonzero exit means no spawn: report its error. Missing or invalid
+The [resolver](resolve-model.mjs) validates the config, model availability, and
+Codex effort. Nonzero exit means no spawn: report its error. Missing or invalid
 mappings and unsupported values never trigger a default substitution.
 
 Apply the returned `spawn` fields to the actual host tool call:
@@ -65,6 +94,6 @@ leave observed values unknown. Do not label a configured or sent value resolved.
 A tool error or failed child is `failed`, even if the CLI exits zero. A Codex
 model/effort mismatch is `mismatch`: stop before consuming that result and report
 both requested and observed values. For Antigravity, record the resolved ID
-without assuming a fixed ID behind a floating tier. The selections neither prove
-equal quality to Claude's tiers nor preserve a literal Claude model pin on
-another provider.
+without assuming a fixed ID behind a floating tier. The model selections preserve
+distinct host tiers; they do not prove equal quality to Claude's tiers or preserve
+a literal Claude model pin on another provider.

@@ -19,14 +19,18 @@ carries phase and revision metadata. Live in-session coordination uses TodoWrite
 ## Routes
 
 First read [routing](references/routing.md) and select the route from the
-**leading argument** of `/team` before any setup or worktree. A route with no task
-requests the task before any mutation. Never scan issue bodies or quoted text for route words.
+**leading argument** of `/team` before any setup or worktree. An unprefixed
+`/team <description>` keeps the full feature pipeline; a leading route selects a
+limited-scope outcome (`investigate`, `plan`, `prototype`) that stops at its
+deliverable, or a full outcome (`feature`, `fix`, `refactor`) that ends in a
+draft PR. A route with no task requests the task before any mutation. Never
+scan issue bodies or quoted text for route words.
 
 ## Core contracts
 
 - Walk this phase table in order: `Worktree → Question → Research → Design → Structure → Plan → Implement → PR`.
 - There are **no mid-run human gates**. Continue until the draft PR exists.
-- At PR creation, use [tracking rules](../team-pr/references/tracking.md) for the in-review transition and the multi-repo home-only closing rule.
+- For a picked-up ticket, read [tracking rules](../team-pr/references/tracking.md) and move the ticket to in-progress. At PR creation, use the same reference for the in-review transition and the multi-repo home-only closing rule.
 - Before WORKTREE, run the non-blocking probes `ssh-add -l`, `gh auth status`, and `git config --global --get commit.gpgsign`; no result blocks the run.
 - Read [design reviewer brief](../eng-design-doc-review/references/design-reviewer.md) and dispatch its review brief with the artifact directory substituted.
 - Read `references/15-host-dispatch.md` before the first dispatch and resolve every agent through it.

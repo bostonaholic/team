@@ -1,5 +1,15 @@
 # Slicing Work Reference
 
+The structure-planner's methodology: break a reviewed design into vertical
+slices, each end-to-end, independently testable, and atomically committable.
+
+## Why vertical slices
+
+Models love to write horizontal plans: all the migrations, then all the APIs,
+then all the UI. By the time everything is wired together, 1200 lines of
+code exist with nothing testable between them. Structure forces the opposite:
+each slice exercises every layer it needs and ships behavior, not infrastructure.
+
 A slice is **vertical** if you can demo the change after that slice is done,
 even if the demo is narrow.
 
@@ -30,28 +40,72 @@ In multi-repo mode, if the slice spans repos, use a separate
 ...
 
 ## Cross-slice concerns
-<things that span slices (shared types, configuration, feature flags): pull
-each into the earliest slice that needs it, or call it out explicitly. In
-multi-repo mode, name each contract between repos (API schemas, shared types,
-protobufs) and the slice that defines it.>
+<things that span slices — shared types, configuration, feature flags. Each
+should be either pulled into the earliest slice that needs it, or called out
+explicitly. In multi-repo mode, contracts between repos (API schemas,
+shared types, protobufs) are common cross-slice concerns — name the
+contract and the slice that defines it.>
 
 ## Out of structure
-<the design's "out of scope" work, restated so the planner does not
-accidentally include it>
+<work the design called out as "out of scope" — restated here so the planner
+does not accidentally include it>
 ```
 
 ## Rules
 
-- Pull edge cases from `6-design.md`'s `## Edge cases` section into the slice
-  that ships that behavior. A happy-path-only test list is incomplete: add the
-  missing edge-case tests or, if the design declared them out of scope, cite
-  that decision in the slice notes.
-- Over ~200 lines means too many slices: consolidate, or push some out of
-  scope and run a fresh design review.
-- Walking skeleton: for a new flow, slice 1 is the thinnest end-to-end
-  version; mock or hardcoded internals are fine, but the user-visible surface
-  must work.
-- Multi-repo: a slice that needs the API and the UI shipped together to demo is
-  one slice touching two repos, not two slices. Record them in its
-  `**Repos:**` field and produce one atomic commit per repo; the slice as a
-  whole ships when both commits land.
+- **Every slice ends in a passing test.** If a slice cannot be demonstrated
+  with a test (or a manually-runnable check), it is infrastructure scaffolding
+  — fold it into the next slice.
+- **Each slice has 1–3 acceptance tests.** A slice with 10 tests is too big.
+  A slice with 0 tests is too horizontal.
+- **Acceptance tests cover edge cases, not just happy paths.** Pull the
+  relevant scenarios from `6-design.md`'s `## Edge cases` section into the
+  slice that ships that behavior — boundary values, invalid inputs, failure
+  paths, concurrency, auth, and resource limits. A slice whose test list
+  reads as happy-path only is incomplete. Either add the missing edge-case
+  tests or, if the design declared them out of scope, cite that decision in
+  the slice notes.
+- **Order by user value.** First slice should ship the smallest piece of
+  user-visible behavior. Pure-infrastructure slices push integration risk to
+  the end — that is the failure mode QRSPI exists to prevent.
+- **Reference design decisions.** When a slice's approach is non-obvious, cite
+  the design decision that justified it.
+- **No implementation code.** Slice descriptions name files and behaviors,
+  not function bodies.
+- **Stay under ~200 lines.** If you need more, you have too many slices —
+  consolidate, or push some out of scope and run a fresh design review.
+
+## Heuristics for slicing
+
+- **Slice by user-facing capability**, not by technical layer. "Add the
+  endpoint and return mocked data" is a valid first slice. "add all database
+  migrations" is not.
+- **Walking-skeleton first**: if there is a new flow that does not exist
+  yet, slice 1 should be the thinnest end-to-end version (mock or hardcoded
+  internals are fine, but the user-visible surface must work).
+- **Migrations alone are never a slice.** A migration without a consumer is
+  infrastructure scaffolding. Pair it with the read/write that uses it.
+- **Multi-repo: a slice may span repos.** A vertical slice that needs the API
+  and the UI shipped together to demo is one slice that touches two repos,
+  not two slices. Record this in the slice's `**Repos:**` field and produce
+  one atomic commit per repo (each commit is its own atomic unit. The slice
+  as a whole ships when both commits land).
+- **Multi-repo: contract-first when ordering matters.** If repo A's
+  consumer depends on repo B's contract, the slice that defines the
+  contract goes first, and the slice that consumes it cites it.
+- **A slice carrying a destructive, irreversible, or externally-visible
+  mutation may deserve its own PR.** Slices decide what commits atomically;
+  this asks a separate question the structure is the last place to ask it:
+  what ships together. Where one slice introduces a first — a delete, a
+  public write, a credential, an outbound message, anything a person cannot
+  quietly take back — and the others do not, their review costs differ by an
+  order of magnitude. The dangerous one earns rounds of adversarial
+  attention, and everything bundled with it waits through every round. Split
+  them and the cheap work lands while the expensive work is still being
+  argued about.
+
+  This is a judgment call, not a rule, and the cost runs both ways: two PRs
+  mean two reviews, two land-time bumps, and a dependency between them if the
+  safe work builds on the dangerous work. Weigh it and **state the call in
+  `## Cross-slice concerns` either way**, so the planner and the human both
+  know it was decided rather than overlooked.

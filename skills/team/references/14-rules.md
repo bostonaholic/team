@@ -7,14 +7,21 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
   substitutes for it — never supplements it. Same items in the same
   order, rewritten in place as their states change, seeded once the
   leading WORKTREE phase creates the directory; frontmatter per
-  [artifact schema](references/artifacts.md). Report which of the two the run used
+  [artifact schema](references/artifacts.md). On disk it is durable rather
+  than session-scoped, so the review-round counts the aggregate gate
+  tracks survive a restart. Report which of the two the run used
   ([verified results rules](principles/verified-results.md)).
 - **Subagents never pause for user input.** Each one resolves its own open
-  questions autonomously by picking the option it would have recommended,
-  and records every such choice as an explicit assumption in its artifact.
-  No subagent prompts the user, directly or through the orchestrator.
+  questions autonomously, and picks the option it would have recommended.
+  It records every such choice as an explicit assumption in its artifact,
+  so the guess stays auditable at PR review. No subagent prompts the user,
+  directly or through the orchestrator.
 - Never present the structure or plan for approval. The structure and plan
-  are autonomous tactical artifacts.
+  are autonomous tactical artifacts. The structure artifact carries no
+  `approved`/`approved_at`/ `revision` frontmatter.
+- The phase loop never pauses mid-run. Advance phases within the same turn.
+  IMPLEMENT → PR is not a stopping point. A turn that ends with review
+  verdicts but no draft PR URL is a defect.
 - The research-isolation invariant is non-negotiable. If a researcher's
   context contains the user's original description, the pipeline has a
   defect. Stop and report.

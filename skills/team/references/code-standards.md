@@ -1,5 +1,8 @@
 # Code Standards
 
+The design and implementation bar for planner, implementer, and code-reviewer.
+Read this file before planning, implementing, or reviewing production code.
+
 ## Core Philosophy
 
 - **Hickey:** simple immutable data and pure functions.
@@ -9,19 +12,29 @@
 - **Liskov:** honor contracts; subtypes substitute for base types.
 - **Ousterhout:** deep modules with simple interfaces; keep complexity inside.
 
+Weigh benefit against maintenance, runtime, false-positive, and cognitive costs.
 Apply Rule of Three: tolerate the second duplication; extract on the third.
 
 ## SOLID design principles
 
-Apply when writing new code and reviewing diffs: **Single Responsibility**,
-**Open/Closed**, **Liskov Substitution**, **Interface Segregation**, and
-**Dependency Inversion**. Business logic never imports database, HTTP, or
-filesystem APIs directly.
+Apply when writing new code and reviewing diffs.
+
+- **Single Responsibility** — one actor or stakeholder is the one reason to
+  change. A function you cannot name without "and" has too many jobs.
+- **Open/Closed** — open for extension, closed for modification. Define an
+  interface for varying behavior; add implementations instead of branches.
+- **Liskov Substitution** — subtypes substitute for base types. Keep every
+  advertised contract; prefer composition when "is-a" fails.
+- **Interface Segregation** — no client depends on unused methods. Split
+  interfaces; compose small contracts.
+- **Dependency Inversion** — high- and low-level modules depend on
+  abstractions. Business logic never imports database, HTTP, or filesystem
+  APIs directly.
 
 ## Code Comments
 
-These rules govern source comments, not review findings ([finding
-format](../code-review/references/findings.md)). Comments never explain WHAT
+These rules govern source comments; review findings use the [finding
+format](../code-review/references/findings.md). Comments never explain WHAT
 code does. Permit only non-obvious WHY—constraints, workarounds, surprising
 requirements—when names, structure, and tests cannot carry it.
 
@@ -36,15 +49,15 @@ requirements—when names, structure, and tests cannot carry it.
 - Remove obsolete comments in the same diff; preserve repo style.
 - The why-only rule covers in-body comments. Doc comments on exported/public interfaces must add contract facts absent from the signature; restating a signature is a WHAT comment.
 
-Keep a comment only if it will remain true as nearby code changes.
+Decision test: Does this explain why? Can code/tests carry it? Is it true now without process context? Will it remain true as nearby code changes?
 
 ## Design-First Workflow
 
 1. **Understand Requirements.** Enumerate boundary values (empty, zero, max), invalid inputs, timeouts/partial writes, concurrency, authorization, and resource limits.
 2. **Design First.** Sketch interfaces, data structures, and module boundaries.
-3. **Implement Incrementally.** Commit small, verified working checkpoints.
+3. **Implement Incrementally.** Use small verified steps; commit working checkpoints.
 4. **Self-Review.** Apply every Quality Checklist item to every touched file.
-5. **Explain Decisions.** State trade-offs and non-obvious choices.
+5. **Explain Decisions.** State decisions, trade-offs, and non-obvious choices.
 
 ## Quality Checklist
 
@@ -55,6 +68,7 @@ Every item gates progress: **Single Responsibility**; **Clear Naming**; **No Mag
 - **Construct with collaborators, call with work.** Constructors take long-lived clock, DB, logger, or HTTP client dependencies; methods take per-request work. Constructors do no I/O, static lookup, or expensive work. Prefer `ReportGenerator(reportingDb, clock).generate(startDate, endDate)` over putting the date range in the constructor. Never instantiate collaborators inside work methods.
 - Keep one abstraction level per function; extract lower-level work behind names at the caller's level. A function calls functions one level below its own, never two or more.
 - Catch only the exact throwing call and specific exception; chain the original cause. Never wrap a large block in `catch (Exception e)`.
+- Follow neighboring project style, naming, and patterns.
 - Remove what the change replaces or leaves unused before adding its replacement; add no guard the spec does not demand ([focused work rules](principles/focused-work.md)).
 
 ## When Reviewing
@@ -69,7 +83,7 @@ Every item gates progress: **Single Responsibility**; **Clear Naming**; **No Mag
 
 Refactor before an imminent change that current structure obstructs, on the third duplication (Rule of Three tolerates the second), or before debugging unreadable code. Do not refactor while tests fail, without an imminent need, or under a live deadline; record the smell and continue.
 
-Never combine refactoring and feature work in one commit.
+Change internal structure without changing observable behavior. Every step keeps tests green. Never combine refactoring and feature work in one commit.
 
 ## Safe refactoring procedure
 
@@ -79,4 +93,4 @@ Never combine refactoring and feature work in one commit.
 4. Commit the passing checkpoint.
 5. Repeat to the required structure.
 
-Refactor first in its own commit, then add the feature; touch only in-scope code. Name the smell/refactoring in the commit (`refactor: extract user validation into UserValidator (Long Method)`). When uncertain, leave it.
+Refactor first in its own commit, then add the feature. Touch only code required by current scope. Name the smell/refactoring in the commit, e.g. `refactor: extract user validation into UserValidator (Long Method)`. When uncertain, leave it.

@@ -1,5 +1,9 @@
 ### Orchestrator-Emit Gate (leading worktree)
 
+This phase exists so a `/team` run authors `docs/plans/<id>/` inside an isolated
+worktree on branch `<id>` from phase 1. The home checkout's `git status` thus
+stays clean for the whole run.
+
 0. **Preflight the environment, then continue regardless.** Run these three
    read-only checks once and report what they say. **None of them blocks the
    run.**
@@ -38,7 +42,8 @@
    (see "Detect existing worktree" in `skills/team-worktree/SKILL.md`). If
    that worktree is on the default branch, stop rather than implement on
    it.
-2. **Create `docs/plans/<id>/` inside the worktree.**
+2. **Create `docs/plans/<id>/` inside the worktree.** The artifact directory
+   lives in the worktree from the start, so no copy is ever needed.
 3. **Compute the worktree's absolute path once** and thread it into every
    downstream dispatch as the worktree-rooted `docs/plans/<id>/` path. The
    main session does NOT `cd` into the worktree.
@@ -47,4 +52,6 @@
 5. **Edge — home-worktree creation fails.** Report loudly and fall back to
    **in-place for the entire run**. Author `docs/plans/<id>/` at the
    home-repo root, and thread that root downstream as the absolute path.
-   Never block the pipeline because worktree creation failed.
+   Never block the pipeline because worktree creation failed (mirror the
+   best-effort fallback in `skills/team-worktree/playbooks/worktree.md` →
+   "Fallback").

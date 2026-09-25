@@ -12,8 +12,14 @@ Eight sequential phases; none are skippable.
 |---|---|---|
 | **WORKTREE** | branch `<id>` worktree from `origin/HEAD`; author `docs/plans/<id>/` inside it | HARD: exists before QUESTION |
 | **QUESTION** | `1-task.md` (full, human-only) and `2-questions.md` (neutral codebase context; no goal) | HARD: both on disk |
+| **RESEARCH** | `5-research.md` | HARD: on disk |
+| **DESIGN** | `6-design.md` (~200 lines) and `design-review-<n>.md` each round | REVIEW: APPROVE/COMMENT advance; REQUEST CHANGES redrafts and reviews again |
+| **STRUCTURE** | `7-structure.md` (~2 pages, vertical slices) | NONE: autonomous |
+| **PLAN** | `8-plan.md` | SOFT: no approval; reviewed design is contract |
+| **IMPLEMENT** | code, passing tests, per-slice commits | AGGREGATE: security, verifier, code-review hard gates |
+| **PR** | GitHub draft PR | terminal: record URL; close ledger |
 
-For a zero-behavior-change refactor, the IMPLEMENT mechanical gate inverts to a reproduced green pre-change baseline, and the test-architect dispatch is skipped with a recorded reason.
+WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`. IMPLEMENT has four sub-phases: test-architect writes failing acceptance tests; a mechanical gate requires assertion failures rather than crashes plus passing static checks, inverting to a reproduced green pre-change baseline for a zero-behavior-change refactor, whose test-architect dispatch is skipped with a recorded reason; implementer commits green slices; 5 parallel code/security/docs/ux/verifier reviews return typed failures until no Blocking/Major remains.
 
 ## Artifact and isolation invariants
 
@@ -27,9 +33,14 @@ Research is blind ([independent review rules](principles/independent-review.md))
 
 Block until satisfied or explicitly overridden by the user. Examples: REQUEST CHANGES, gating security findings, test failures.
 
+### SOFT
+
+Add eligible findings to PR `## Review notes`; never ask mid-run. The
+[finding format](../code-review/references/findings.md) "Severity Tiers and the Auto-Fix Boundary" alone defines gating, auto-fix, and which lower-tier findings qualify ([durable state rules](principles/durable-state.md)). Human owns the ends ([human control rules](principles/human-control.md)).
+
 ### ADVISORY
 
-Non-blocking; no acknowledgment, e.g. documentation-gap analysis or style suggestions.
+Non-blocking; no acknowledgment, e.g. documentation-gap analysis or style suggestions. Deterministic checks enforce rules where possible ([verified results rules](principles/verified-results.md)).
 
 ## State and transitions
 

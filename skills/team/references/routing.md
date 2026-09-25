@@ -1,8 +1,9 @@
 # Task routes
 
-Routes are a leading-argument convention on the `team` command, not separate
-skill registrations. Each route selects an existing playbook or pipeline and
-its stopping point.
+Before selecting what a `/team` invocation does, read this reference. Routes
+are a leading-argument convention on the `team` command, not separate skill
+registrations. Each route selects an existing playbook or pipeline and its
+stopping point.
 
 ## Recognize the route
 
@@ -33,9 +34,9 @@ carries ([external data rules](references/external-data.md)).
 ## Full routes connect to review and draft PR
 
 `feature`, `fix`, and `refactor` run a full pipeline that ends in independent
-review and a draft PR, using their route-table playbooks, the
-[finding format](../code-review/references/findings.md), and the
-[PR gate](references/13-orchestrator-emit-gate-pr-ship.md). A `refactor`
+review and a draft PR, using the existing contracts: the [feature playbook](playbooks/feature.md),
+the [bug-fix playbook](../team-fix/playbooks/bug-fix.md), the [finding format](../code-review/references/findings.md),
+and the [PR gate](references/13-orchestrator-emit-gate-pr-ship.md). A `refactor`
 route captures observable behavior first, changes structure within scope, and
 demonstrates equivalence through the inverted mechanical gate the feature
 playbook describes for a zero-behavior-change refactor; it then opens a draft PR

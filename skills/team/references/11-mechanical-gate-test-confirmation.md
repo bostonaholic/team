@@ -21,12 +21,15 @@ write: the current suite is the acceptance suite, and its correct state
 throughout is green, not red. The gate's polarity inverts:
 
 1. Capture the baseline — the suite and every static check — **before** any
-   file moves. A check that could not run at all is UNKNOWN, never a pass
-   ([durable state rules](principles/durable-state.md)).
+   file moves. A baseline taken after the first move measures the change
+   rather than the pre-image ([durable state rules](principles/durable-state.md)), and a check that
+   could not run at all is UNKNOWN, never a pass.
 2. Skip the `test-architect` dispatch and record the reason on a named line
-   ([verified results rules](principles/verified-results.md)).
+   ([verified results rules](principles/verified-results.md)). A silent skip is indistinguishable from a
+   forgotten one.
 3. Advance only when the checks **reproduce that baseline**. A check red
-   before the change stays red; a new failure is a regression.
+   before the change stays red; a new failure is a regression, not an
+   assertion the implementer is about to satisfy.
 
 Structural checks carry the acceptance criteria the tests cannot express
 here: a `grep` with an exact expected match count, a path that must no longer

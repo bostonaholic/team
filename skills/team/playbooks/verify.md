@@ -28,16 +28,21 @@ A plan step must name the behavior it proves and the surface it exercises.
 ## Reuse the project's own tools
 
 Locate the project's existing run/test/control tools before adding anything:
-scripts, CI steps, seed data, auth setup, and cleanup procedure. Reuse them
-first. Add only a missing scoped helper, and prove it works. Never build a
-generic workflow engine or a new CLI to wrap existing scripts.
+package scripts, Makefile targets, CI steps, seed data, auth setup, and cleanup
+procedure. Reuse them first. Add only a missing scoped helper, and prove it
+works. Never build a generic workflow engine or a new CLI to wrap existing
+scripts.
 
 ## Maintain the capability index
 
-Keep a project-local capability index. Each entry records its **invocation**,
-**prerequisites**, **expected behavior**, **evidence** (where output and
-records land), and **cleanup** (how owned state is torn down, and that
-evidence survives cleanup).
+Keep a project-local capability index. Each
+entry records:
+
+- **invocation** — the command or interaction that drives the capability
+- **prerequisites** — install, seed data, credentials, services it needs
+- **expected behavior** — the observable result
+- **evidence** — where output and records land
+- **cleanup** — how owned state is torn down, and that evidence survives cleanup
 
 Start with the affected capabilities. Do not catalog an entire application
 before its first useful run.
@@ -46,7 +51,7 @@ before its first useful run.
 
 Inspect project configuration to find runnable checks:
 
-- `package.json` scripts
+- `package.json` scripts (format, lint, typecheck, build, test)
 - `Makefile` targets
 - CI configuration (`.github/workflows/`, `.circleci/`, etc.)
 - Tool configuration files (`.eslintrc`, `tsconfig.json`, `prettier.config`,
@@ -57,16 +62,17 @@ Inspect project configuration to find runnable checks:
 Execute each detected check, fastest first:
 
 1. **Format** — Prettier, Biome format, or equivalent (`--check` mode)
-2. **Lint** — ESLint, Clippy, or equivalent
+2. **Lint** — ESLint, Biome lint, Clippy, or equivalent
 3. **Type check** — TypeScript `tsc --noEmit`, mypy, or equivalent
 4. **Build** — Production build command
 5. **Test** — Test suite execution
 
-A production build and a dev-server-backed browser suite share one build
-directory in most frameworks that have one; back-to-back in a single sequence,
-the second reads the first's state and fails like a regression. Clear the
-build directory and run the browser suite alone. A suite that boots its own
-servers is unsafe beside anything else, another agent's dev server included.
+Checks interfere. A production build and a dev-server-backed browser suite
+share one build directory in most frameworks that have one, so back-to-back
+in a single sequence the second reads state the first wrote and fails on
+assertions that read exactly like regressions. Clear the build directory and
+run the browser suite alone. A suite that boots its own servers is unsafe
+beside anything else, another agent's dev server included.
 
 ## Record evidence
 
@@ -87,8 +93,10 @@ Distinguish tests, runtime observations, and unavailable checks.
   exercised on its surface (at least one check must exist).
 - **FAIL** — One or more detected checks failed, or a claimed behavior could
   not be reproduced. List every failure.
-- **FAIL** — No checks detected at all. Report what is missing and recommend
-  configuring at least format, lint, and test scripts.
+- **FAIL** — No checks detected at all. A project with zero configured quality
+  checks (no linter, no type checker, no test suite, no build) cannot pass
+  verification. Report what is missing and recommend configuring at least
+  format, lint, and test scripts.
 - **UNKNOWN** — A required tool or capability is unavailable. Never report an
   unexecuted, skipped, or unavailable check as passed. Distinguish failed
   behavior (a product defect) from unavailable tooling (an environment gap).
@@ -101,14 +109,17 @@ Distinguish tests, runtime observations, and unavailable checks.
 - Do NOT interpret results beyond pass/fail. No suggestions, no opinions.
 - If a check hangs for more than 120 seconds, kill it and report TIMEOUT.
 - **Do NOT retry to mask intermittent failures.** Each check runs once. If
-  you happen to know the same test passed in a previous run (e.g., the
-  orchestrator re-dispatched after a code fix), note the intermittency in the
-  report (`### Notes — Intermittent: testFoo passed on retry, the underlying race condition is unresolved`).
-  A red → green rerun without a code change is evidence of a flake or a real
-  intermittent bug, not a verdict of PASS.
+  a test or check fails, report it. If you happen to know the same test
+  passed in a previous run (e.g., the orchestrator re-dispatched after a
+  code fix), note the intermittency in the report
+  (`### Notes — Intermittent: testFoo passed on retry, the underlying race condition is unresolved`).
+  Reruns that turn red → green without a code change are evidence of a
+  flake or a real intermittent bug, not a verdict of PASS.
 - **A baseline is comparable only under the same isolation.** When this run is
   the before side of a before/after comparison ([durable state rules](principles/durable-state.md)),
-  run both sides the same way.
+  run both sides the same way. A false red recorded as the pre-change state
+  reclassifies a later regression as pre-existing — a failure in the safe
+  direction, which is why it goes unnoticed.
 - **Coverage is reported, not gated.** If the project has a coverage tool
   configured, run it and report the coverage delta for changed files
   (e.g., "coverage on changed files: 73% → 78%"). Do NOT gate on an

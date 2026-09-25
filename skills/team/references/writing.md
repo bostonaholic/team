@@ -45,16 +45,19 @@ normative force, permission, or possibility.
 
 ## Rules
 
-Pattern detection and meaning preservation come before sentence mechanics.
+Pattern detection and meaning preservation come first; sentence mechanics such
+as plain words, active voice, sentence length, filler, and consistent names
+follow.
 
 ### Claims must earn their place
 
 - Remove a claim when the available evidence does not support it. A participle
   such as "ensuring" or "showcasing" does not prove an effect.
-- Name the source of a claim. Replace "experts say" with a citation, or remove
-  the attribution.
+- Name the source of a claim. Replace "experts say" or "reports suggest" with
+  a citation, or remove the attribution.
 - Replace praise, importance claims, and generic conclusions with a fact,
   instruction, measurement, or cited decision.
+- Keep real uncertainty. Do not make evidence sound stronger than it is.
 
 ### State facts directly
 
@@ -70,8 +73,8 @@ Pattern detection and meaning preservation come before sentence mechanics.
 
 ### Name the concrete subject
 
-- Remove stock AI vocabulary such as "holistic" or "transformative" when it
-  contributes no technical meaning.
+- Remove stock AI vocabulary such as "seamless", "robust", "holistic", or
+  "transformative" when it contributes no technical meaning.
 - Replace vague metaphors with the file, function, service, boundary, action, or
   measured effect they hide.
 - In particular, rewrite "center of gravity", "moves the needle", "surface
@@ -112,27 +115,44 @@ An explanation carries the point and the evidence for it. Delete the rest.
 When the reader asked for history or rationale, that material is the subject,
 not an incidental.
 
+### Decide whether a rewrite passes
+
+A rewrite passes only when it removes the pattern and preserves the original
+claim, evidence, normative force, uncertainty, and time relation. If a style
+change would alter any of those, keep the original wording. Protected source
+text stays byte-identical.
+
 ## One busy reader
 
+The rules that follow govern sentences. This one governs the whole document.
+
 Kenneth Roman and Joel Raphaelson wrote *Writing That Works: How to Communicate
-Effectively in Business* about memos and proposals. Apply these rules to any
-text that asks a reader to decide or act. A consuming skill's format contract
-outranks them: when a brief requires the verdict or decision as the terminal
-line, keep the supporting detail above it.
+Effectively in Business* about memos and proposals. A pull request description
+is the same job: one busy reader, one decision, no time. So are a design
+summary, a changelog entry, a review comment, and a status report. Apply these
+rules to any text that asks a reader to decide or act. A consuming skill's
+format contract outranks them: when a brief requires the verdict or decision as
+the terminal line, keep the supporting detail above it.
 
 - **Lead with the recommendation.** Put the recommendation, the finding, or the
-  request in the first sentence.
+  request in the first sentence. Support follows it. A reader who stops after
+  the first paragraph must still know what you want.
 - **Make the title say something.** A PR title states the change, not the area
   it touches.
 - **Name the action, the owner, and the date.** Close with what the reader does
-  next.
-- **Cut the throat-clearing.** Delete every sentence that describes the
-  document instead of the subject.
+  next. A document that asks for nothing gets nothing.
+- **Cut the throat-clearing.** Delete "The purpose of this document is to" and
+  every other sentence that describes the document instead of the subject.
 - **Write to a person.** Use "you" and "we". Answer the reader's question: what
   does this change for me?
-- **Take a stand.** State the recommendation you hold.
+- **Be specific.** Give the number, the date, the file, or the measurement. A
+  generality is a claim the reader cannot check.
+- **Take a stand.** State the recommendation you hold. A hedge hands the
+  decision back to the reader.
 - **Keep it to one page.** A longer document opens with a summary that stands
   alone. Headings and lists carry the rest.
+- **Read it aloud before you send it.** Rewrite each sentence you cannot say
+  out loud.
 
 ## Plain language
 
@@ -141,7 +161,7 @@ line, keep the supporting detail above it.
 - **Define acronyms at first use.** Write the full name when the acronym first
   appears.
 - **One idea per sentence.** Prefer one plain verb to a nominalization.
-- **Use American spelling.**
+- **Use American spelling.** "color", not "colour"; "analyze", not "analyse".
 
 ### No unexplained specialist terms
 
@@ -173,6 +193,10 @@ A consuming skill's format contract wins. These modes govern sentence prose.
 
 ## Simplified Technical English (ASD-STE100)
 
+STE removes ambiguity for every reader, including readers whose first language
+is not English. Plain language above is the foundation; STE adds mechanical
+rules.
+
 The delete-list idea, the two-mode split, and the self-lint structure come
 from the "cure for AI slop" writing kit at
 <https://github.com/woosal1337/blog/tree/main/videos/ep01-the-cure-for-ai-slop>.
@@ -201,8 +225,9 @@ ideas in its own words.
 - **Keep paragraphs short.** No more than six sentences, one topic each, topic
   sentence first.
 - **Put warnings and cautions before the step they protect.**
-- **Name the thing.** "The component" → "the UserProfile component". Put
-  commands, paths, and identifiers in code blocks.
+- **Name the thing.** "The component" → "the UserProfile component". "The
+  file" → "`config/database.yml`". Put commands, paths, and identifiers in
+  code blocks.
 
 ### STE word substitutions
 
@@ -254,13 +279,13 @@ Modals are not substitutions: `must`, `shall`, `should`, `may`, `might`, and
 `could` are governed by [Preserve meaning](#preserve-meaning), never by this
 table. Keep the modal the sentence requires.
 
-Restricted meanings:
+Restricted meanings writers commonly get wrong:
 
 - *check* is approved only as a noun: "do a check of the logs", never "check
   the logs".
 - *follow* means only "come after": "obey the instructions".
-- *select* means choose from alternatives. *set* means put a control in a
-  state.
+- *select* means choose from alternatives; *set* means put a control in a
+  state ("set the flag to TEST").
 - *since* is approved for time only; for causation write *because*.
 - *or* never means "otherwise". Write a separate sentence.
 - *monitor* means to check something over a period of time for change.
@@ -277,7 +302,8 @@ These add no meaning. Delete them. Do not replace them.
   worth noting", "please note that", "as mentioned above".
 - **Filler:** "in order to", "a variety of", "in the event that", "due to the
   fact that", "aforementioned", "henceforth".
-- **False ease:** "simply", "just", "of course", "obviously".
+- **False ease:** "simply", "just", "of course", "obviously" — they imply an
+  ease the reader may not feel.
 
 A delete-list word survives in three places only: verbatim quotes and cited
 external text; code, identifiers, and proper nouns (`spin_up()`, "Leverage
@@ -285,7 +311,8 @@ API"); and established terms of art where the substitute changes the technical
 meaning ("robust statistics").
 
 Evaluative prose gets no exemption. Delete the adjective and state the
-measurable property.
+measurable property: "the error handling is robust" becomes "the error
+handling retries twice, then surfaces the error".
 
 ## Self-lint
 
@@ -310,7 +337,8 @@ Do not self-lint quoted counter-examples. Review disagreements use the
 
 ## Mechanical score
 
-A bundled script scores mechanical-rule violations per 100 words:
+A bundled script scores prose against the mechanical rules, as violations per
+100 words:
 
 ```bash
 node "<skill-dir>/ste-lint.mjs" --breakdown --cap 25 "<file>"
@@ -331,15 +359,19 @@ prose. The score is a drift signal, not a gate. Nothing runs it automatically.
 
 When reviewing documentation, evaluate three dimensions:
 
-- **Accuracy.** Do the examples still run? Do the APIs and flags still exist?
-  Does documented behavior match actual behavior? Flag a stale version
-  reference even when behavior has not changed, and flag "as of the latest
-  release" wording.
-- **Completeness.** Assess whether failure cases, edge cases, and common
-  mistakes are covered, whether prerequisites are stated upfront, and whether
-  adjacent concepts the reader needs are linked or explained.
-- **Readability.** Hold prose to the rules above. Check that a reader can
-  locate the answer to a specific question in under 30 seconds.
+- **Accuracy.** Stale documentation is worse than missing documentation
+  because it actively misleads. Do the examples still run? Do the APIs and
+  flags still exist? Does documented behavior match actual behavior? Flag a
+  stale version reference even when behavior has not changed — and flag
+  "as of the latest release" wording, which names no version at all.
+- **Completeness.** Most documentation covers only the happy path. Assess
+  whether failure cases, edge cases, and common mistakes are covered, whether
+  prerequisites are stated upfront, and whether adjacent concepts the reader
+  needs are linked or explained.
+- **Readability.** Hold prose to the rules above — strict mode for instruction
+  text, STE-flavored for descriptive prose, applied per sentence. Check that
+  one concept carries one name throughout, and that a reader can locate the
+  answer to a specific question in under 30 seconds.
 
 For documentation-gap review and `REQUIRED`/`RECOMMENDED` classification, read
 `../code-review/references/documentation-reviewer.md`.
