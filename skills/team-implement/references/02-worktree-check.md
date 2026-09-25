@@ -1,9 +1,9 @@
 Before any agent dispatch, decide where to work:
 
 1. If `$ARGUMENTS/4-repos.md` is present (multi-repo mode), a worktree must
-   exist in **every** listed repo (read its `## Worktrees` section). If any
-   is missing, tell the user to run `/team-worktree [docs/plans/<id>/]` and
-   stop.
+   exist in **every** listed repo (read the `## Worktrees` section of
+   `4-repos.md`). If any is missing, tell the user to run
+   `/team-worktree [docs/plans/<id>/]` and stop.
 2. Run `git rev-parse --absolute-git-dir`. If the path contains
    `/worktrees/`, you are already inside a linked worktree — proceed in
    place. In multi-repo mode this should be the home repo's worktree.

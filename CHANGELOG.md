@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `/team-implement` now costs less text to read: 10,281 bytes across four files instead of 14,453 across six, a 29% cut. The quality-loop diagram and the standalone-mode notes are gone, their unique clauses folded into the execution steps, and the input, worktree, and execution steps drop restated rules and rationale. Every gate, refusal, resume jump, and handoff is unchanged: the mechanical gate, the no-consult review loop, the blockquoted cross-model record, recovery by re-invoking the command bare, and the same-turn `team-pr` handoff in a full pipeline. **What this asks of you:** nothing.
+- `/team-implement` now costs less text to read: 10,297 bytes across four files instead of 14,453 across six, a 29% cut. The quality-loop diagram and the standalone-mode notes are gone, their unique clauses folded into the execution steps, and the input, worktree, and execution steps drop restated rules and rationale. Every gate, refusal, resume jump, and handoff is unchanged: the mechanical gate, the no-consult review loop, the blockquoted cross-model record, recovery by re-invoking the command bare, and the same-turn `team-pr` handoff in a full pipeline. **What this asks of you:** nothing.
 
 ## [0.132.16] - 2026-09-25
 
