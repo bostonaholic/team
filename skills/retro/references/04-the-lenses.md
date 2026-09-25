@@ -16,9 +16,13 @@ Three read-only passes over `transcript.jsonl`, each looking for one thing:
 
 Each lens runs as one `team:file-finder` subagent — `Read, Grep, Glob`,
 `permissionMode: plan`, no `Bash` and no `Write`. **A lens target holding
-`Bash` is refused, whatever else it can or cannot do.** **On the dispatch
-path** the guarantee is the target's toolset, not the prose telling it to
-behave.
+`Bash` is refused, whatever else it can or cannot do.** Each prompt carries the
+*path* to the normalized transcript and the lens opens the file itself, so the
+untrusted spans inside it cannot be fenced the way a quoted block can. A
+command sink in reach of an imperative embedded in one of those spans writes
+files and files issues, which is the one invariant this whole skill rests on. So
+**on the dispatch path** the guarantee is the target's toolset, not the prose
+telling it to behave.
 
 Each lens prompt states three overrides outright: the normalized transcript
 path is the lens's **only** input and replaces `2-questions.md` as its scope,
@@ -78,12 +82,15 @@ is reported **unrun**, never counted as a zero.
 
 ### Rejected lens targets
 
-`team:researcher` holds `Agent` and `SendMessage`, and its preloaded
-`skills/team/references/agent-dispatch.md` authorizes it to dispatch `Explore`,
-which holds `Bash`, or `general-purpose`, which holds every tool. Aiming a lens
-at the researcher would restore by delegation the command sink the toolset
-guarantee above exists to starve.
+`team:researcher` runs on a stronger model and would need the same scope
+override, since it carries the same `2-questions.md` binding — so the
+differentiator is the toolset, not the fit. It holds `Agent` and `SendMessage`
+and `team:file-finder` holds neither, and its preloaded
+`skills/team/references/agent-dispatch.md` authorizes it to dispatch `Explore`, which holds
+`Bash`, or `general-purpose`, which holds every tool. Aiming a lens at the
+researcher would restore by delegation the command sink the toolset guarantee
+above exists to starve.
 
 `agents/file-finder.md` grants no `Agent` tool and preloads only the prose
-skills, so it has no delegation path to restore it through. That, and not the
-quality of the fit, is what picks the target.
+skills, so it has no delegation path to restore it
+through. That, and not the quality of the fit, is what picks the target.
