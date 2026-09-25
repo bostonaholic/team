@@ -53,7 +53,7 @@ SEMVER_RE='^[0-9]+\.[0-9]+\.[0-9]+$'
 PLUGIN_JSON='.claude-plugin/plugin.json'
 
 # Distributed-plugin directories whose ANY change is a runtime change.
-RUNTIME_DIRS=(agents skills hooks opencode)
+RUNTIME_DIRS=(agents skills opencode)
 
 # Host manifest directories. Each host reads its own: Claude Code takes
 # .claude-plugin/, Codex prefers .codex-plugin/ and .agents/plugins/ over it.
