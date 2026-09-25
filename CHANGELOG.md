@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `/team-pr` got about a quarter smaller without losing a rule. The duplicated PR body template, restated changelog and commit rules, most worked examples, and history notes are gone. Every gate, stop, and PR-safety rule it had still applies. **What this asks of you:** nothing.
+- `/team-pr` got about a fifth smaller without losing a rule. The duplicated PR body template, restated changelog and commit rules, most worked examples, and history notes are gone. Every gate, stop, and PR-safety rule it had still applies. **What this asks of you:** nothing.
 
 ## [0.132.17] - 2026-09-25
 

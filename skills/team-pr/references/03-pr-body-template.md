@@ -40,6 +40,9 @@ Keep detail proportional to the change. Include Design Decisions only for a revi
 Omit Changes when it adds nothing beyond Summary.
 
 Place useful representations beside their explanation in Changes or Design Decisions.
+Choose pseudocode for logic, call trees for order, component trees for ownership, or shallow file trees for responsibilities.
+Use focused diffs for changed structure, or state tables and fenced Mermaid for relationships.
+Use complete small blocks when omitted context hides ownership or order.
 Omit representations that only repeat the prose. Fence code and component syntax.
 Do not add raw HTML, diagram uploads, or representations inside the uploader-owned Screenshots section.
 

@@ -4,6 +4,8 @@
 discovery command below resolves it for the **resume** path (discovery only
 augments resume — the standalone path is unchanged).
 
+Use the branch diff to establish what changed.
+
 In both resume and standalone modes, gather these inputs for each changed repository:
 
 - Read existing project documentation for established project terms, limited to documentation relevant to the changed behavior.

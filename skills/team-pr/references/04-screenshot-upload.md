@@ -87,6 +87,9 @@ re-uploads the same image once per repo and orphans the extra assets.
 When the returned `section` is non-null, copy that exact string into each
 companion PR's body, one companion at a time.
 
+This loop is the home write run once per companion, so it runs the same
+committed scripts the home write runs rather than restating them.
+
 1. Bind that companion's own values with `resolve-pr.sh` over the companion's
    URL. The host is not optional: `--repo "$OWNER/$REPO"` resolves against
    whichever host `gh` considers default, so on an Enterprise PR every call

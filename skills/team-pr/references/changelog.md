@@ -29,6 +29,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - ...
 ```
 
+Section meanings:
+
+| Section | Use |
+|---|---|
+| `Added` | New features, commands, or options |
+| `Changed` | Existing behavior users notice |
+| `Deprecated` | Features scheduled for later removal |
+| `Removed` | Features removed in this release |
+| `Fixed` | Bug fixes |
+| `Security` | Vulnerability fixes; always include |
+
 ## Candidate selection
 
 ### Find the baseline

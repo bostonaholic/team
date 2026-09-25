@@ -1,5 +1,8 @@
 # Tracking tickets
 
+Canonical tracker rules for pipeline pickup, PR linking, review state, and
+merge. Entry points keep only tracker-specific calls.
+
 ## Best-effort, tracker-agnostic, never blocking
 
 Every tracker interaction below is best-effort and tracker-agnostic: if
