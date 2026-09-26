@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.22] - 2026-09-25
+
+### Changed
+
+- `/shipit` is 26% shorter to read and lands a PR the same way. It still fires only on explicit ship intent, runs `version-bump` before pushing, waits for CI through the bounded settle, watch, and verify gate, rebases a branch that fell behind with `--force-with-lease`, squash-merges with the PR title as the commit subject, and runs `/pr-cleanup` only after a merge that landed. The removed text explained why the rules exist or repeated them. **What this asks of you:** nothing.
+
 ## [0.132.21] - 2026-09-25
 
 ### Changed
@@ -1294,7 +1300,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.21...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.22...HEAD
+[0.132.22]: https://github.com/bostonaholic/team/compare/v0.132.21...v0.132.22
 [0.132.21]: https://github.com/bostonaholic/team/compare/v0.132.20...v0.132.21
 [0.132.20]: https://github.com/bostonaholic/team/compare/v0.132.19...v0.132.20
 [0.132.19]: https://github.com/bostonaholic/team/compare/v0.132.18...v0.132.19
