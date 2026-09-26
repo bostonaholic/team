@@ -5,22 +5,13 @@ effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 
+# Team Implement
+
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 Before artifact work, read [artifact schema](../team/references/artifacts.md).
-
-# Team Implement — Execute the Plan
-
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
-
 Before finalizing prose you author, read the [writing standards](../team/references/writing.md). Relay completed reviewer reports unchanged.
-
-Run the IMPLEMENT phase. Three internal sub-steps:
-
-1. **Test-first** — `test-architect` writes failing acceptance tests
-2. **Slice execution** — `implementer` executes vertical slices with
-   per-slice commits
-3. **Code review** — 5 parallel reviewers + aggregate hard-gate retry loop
 
 ## Core contracts
 
@@ -35,13 +26,11 @@ Run the IMPLEMENT phase. Three internal sub-steps:
 
 ## Procedure references
 
-Read each reference completely when reaching that stage. Follow them in order; later stages depend on state and gates established earlier.
+Read each reference completely when reaching that stage. Follow them in order.
 
 1. [Input](references/01-input.md)
 2. [Worktree Check](references/02-worktree-check.md)
 3. [Execution](references/03-execution.md)
-4. [Quality Loop](references/04-quality-loop.md)
-5. [Standalone Mode Tradeoffs](references/05-standalone-mode-tradeoffs.md)
 
 ## Applied principles
 

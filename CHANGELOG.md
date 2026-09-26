@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.17] - 2026-09-25
+
+### Changed
+
+- `/team-implement` now costs less text to read: 10,297 bytes across four files instead of 14,453 across six, a 29% cut. The quality-loop diagram and the standalone-mode notes are gone, their unique clauses folded into the execution steps, and the input, worktree, and execution steps drop restated rules and rationale. Every gate, refusal, resume jump, and handoff is unchanged: the mechanical gate, the no-consult review loop, the blockquoted cross-model record, recovery by re-invoking the command bare, and the same-turn `team-pr` handoff in a full pipeline. **What this asks of you:** nothing.
+
 ## [0.132.16] - 2026-09-25
 
 ### Changed
@@ -1264,7 +1270,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.16...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.17...HEAD
+[0.132.17]: https://github.com/bostonaholic/team/compare/v0.132.16...v0.132.17
 [0.132.16]: https://github.com/bostonaholic/team/compare/v0.132.15...v0.132.16
 [0.132.15]: https://github.com/bostonaholic/team/compare/v0.132.14...v0.132.15
 [0.132.14]: https://github.com/bostonaholic/team/compare/v0.132.13...v0.132.14
