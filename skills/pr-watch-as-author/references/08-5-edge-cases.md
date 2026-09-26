@@ -1,17 +1,12 @@
 ### 5. Edge cases
 
 - If a wake finds zero unresolved threads, no untriaged review summaries or
-  conversation comments,
-  and no other change (for
-  example, a reviewer resolved their own thread), re-arm silently and
-  present nothing. Check the untriaged PR-level item set before taking this
-  path: a wake caused by new non-thread feedback has zero unresolved threads
-  by definition, so a thread-only reading of this rule would silently
-  swallow exactly the feedback that woke the loop.
+  conversation comments, and no other change (for example, a reviewer
+  resolved their own thread), re-arm silently and present nothing. Check
+  the untriaged PR-level item set before taking this path.
 - If a CHANGES_REQUESTED review arrives with an empty body and no
-  threads, there is no verifiable ask to triage. Emit a status line that
-  names the reviewer and the requested-changes state, then treat it as a
-  needs-clarification exclusion and stop the loop. Suggest that the user
-  ask the reviewer when the ask itself is unclear. Otherwise, present
-  the choice to the user when the user owns it, as this report already
-  does. Watching past it would hide a blocking signal.
+  threads, emit a status line that names the reviewer and the
+  requested-changes state, then treat it as a needs-clarification
+  exclusion and stop the loop. Suggest that the user ask the reviewer when
+  the ask itself is unclear. Otherwise, present the choice to the user
+  when the user owns it.

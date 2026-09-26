@@ -3,12 +3,9 @@
 Before each consuming step, read its linked shared rules from this installed reference directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-The cycle timing, bound, and handoff every PR watch loop runs. A consuming
-skill owns what each cycle *does*; this reference owns how the loop is paced,
-bounded, and ended. `pr-watch-as-author` and `pr-watch-as-reviewer` both
-read it.
-
-A consumer binds three slots and nothing else:
+A consuming skill owns what each cycle *does*; this reference owns how the
+loop is paced, bounded, and ended. A consumer binds three slots and nothing
+else:
 
 | Slot | What the consumer supplies |
 | --- | --- |
@@ -21,9 +18,7 @@ A consumer binds three slots and nothing else:
 - **Cycle 0 polls immediately** — the condition that already holds at arm
   time is handled at once, on the consumer's cycle-0 subject.
 - Each later cycle is **one backgrounded Bash call** that sleeps the
-  interval and then runs the consumer's poll command, so the cycle costs
-  one turn and the poll output is in hand when the harness reports the
-  call:
+  interval and then runs the consumer's poll command:
 
   ```bash
   sleep 1860; <the poll command>
@@ -59,15 +54,13 @@ each is reported by name:
   loop.
 - **3 consecutive poll failures** — stop and name the error.
 
-A consumer adds its own terminal conditions (an approval, a merge or
-close, a state its gate depends on) and reports them the same way. It
-never restates the three above.
+A consumer adds its own terminal conditions and reports them the same way.
+It never restates the three above.
 
 ## Third-party definition
 
-Both watch loops share one term for a stop condition each owns. This
-section defines it once. Neither loop gains a fourth mechanics-owned
-condition from it.
+Each watch loop owns its own third-party stop; this section only defines the
+term, and neither loop gains a fourth mechanics-owned condition from it.
 
 A **third login** is a comment author login on a thread that is neither
 the viewer's login nor the login of the thread's earliest non-viewer

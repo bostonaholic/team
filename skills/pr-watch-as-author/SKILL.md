@@ -10,46 +10,27 @@ argument-hint: "[<pr-number-or-url>]"
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-`pr-watch-as-author` closes the gap between "PR open" and "ship it". It promotes the
-PR out of draft, takes a baseline snapshot, and polls GitHub on a bounded
-cycle. When new review feedback arrives, it runs the triage procedure in
-`skills/pr-open-comments/SKILL.md`. The interactive session holds the
-watch for 3 cycles (~90 minutes), then hands off to the scheduled
-pr-watch job so the session is free again. The user can interrupt at
-any time, and each individual command stays small and observable.
-
-Feedback arrives in three disjoint shapes and all are triaged:
-
-- an **inline review thread**, anchored to a diff line and carrying a
-  resolved/unresolved bit.
-- a **plain PR comment** on the conversation tab, carrying no resolution
-  bit at all.
-- a **review summary** submitted with a review, separate from its inline
-  comments and also carrying no resolution bit.
-
-The distinction matters because the unresolved-thread set cannot
-represent either non-thread shape. A review summary or conversation comment
-is triaged **once**, keyed by its id, and is done when it has been triaged; it
-never joins a gate waiting to be resolved, because nothing can resolve it. Treating one as a thread
-would leave the watch waiting forever on a bit that does not exist;
-ignoring one would silently drop real feedback, which is the failure
-this shape is most prone to.
+Feedback arrives in three disjoint shapes, all triaged: an **inline review
+thread** (anchored to a diff line, with a resolved/unresolved bit), a **plain
+PR comment** (conversation comment), and a **review summary** (separate from
+its inline comments). Only the thread carries a resolution bit. A review
+summary or conversation comment is triaged **once**, keyed by its id, and
+never joins a gate waiting to be resolved.
 
 ## Procedure references
 
 Read each reference completely when reaching that stage. Follow them in order; later stages depend on state and gates established earlier.
 
 1. [Input](references/01-input.md)
-2. [Execution](references/02-execution.md)
-3. [1. Arm](references/03-1-arm.md)
-4. [2. Bounded cycle mechanics](references/04-2-bounded-cycle-mechanics.md)
-5. [3. Poll and change detection](references/05-3-poll-and-change-detection.md)
-6. [4. On new feedback — run the triage procedure](references/06-4-on-new-feedback-run-the-triage-procedure.md)
-7. [Authorized mode — apply, resolve, resume](references/07-authorized-mode-apply-resolve-resume.md)
-8. [5. Edge cases](references/08-5-edge-cases.md)
-9. [6. Stop conditions](references/09-6-stop-conditions.md)
-10. [7. On approval — hand off, never land](references/10-7-on-approval-hand-off-never-land.md)
-11. [Compaction defense](references/11-compaction-defense.md)
+2. [1. Arm](references/03-1-arm.md)
+3. [2. Bounded cycle mechanics](references/04-2-bounded-cycle-mechanics.md)
+4. [3. Poll and change detection](references/05-3-poll-and-change-detection.md)
+5. [4. On new feedback — run the triage procedure](references/06-4-on-new-feedback-run-the-triage-procedure.md)
+6. [Authorized mode — apply, resolve, resume](references/07-authorized-mode-apply-resolve-resume.md)
+7. [5. Edge cases](references/08-5-edge-cases.md)
+8. [6. Stop conditions](references/09-6-stop-conditions.md)
+9. [7. On approval — hand off, never land](references/10-7-on-approval-hand-off-never-land.md)
+10. [Compaction defense](references/11-compaction-defense.md)
 
 ## Applied principles
 
