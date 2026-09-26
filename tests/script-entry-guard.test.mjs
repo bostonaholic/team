@@ -50,6 +50,24 @@ test("splice.mjs run through a symlinked directory reaches its usage error", (t)
   assert.match(run.stderr, /^splice\.mjs: usage: splice\.mjs /);
 });
 
+test("supports-nesting.mjs run through a symlinked directory reports unsupported for a missing version", (t) => {
+  const run = runScript(join(symlinkedDir(t, "skills/team/references"), "supports-nesting.mjs"));
+  assert.equal(run.status, 1);
+  assert.equal(run.stdout, "unsupported\n");
+});
+
+test("resolve-model.mjs run through a symlinked directory reaches its usage error", (t) => {
+  const run = runScript(join(symlinkedDir(t, "skills/team/references"), "resolve-model.mjs"));
+  assert.equal(run.status, 1);
+  assert.match(run.stderr, /^usage: node resolve-model\.mjs </);
+});
+
+test("external-review.mjs run through a symlinked directory reaches its usage error", (t) => {
+  const run = runScript(join(symlinkedDir(t, "skills/team/references"), "external-review.mjs"));
+  assert.equal(run.status, 2);
+  assert.match(run.stderr, /^missing or malformed arguments\nusage: external-review\.mjs /);
+});
+
 test("importing resolve-transcript.mjs through a symlinked directory has no side effects", (t) => {
   const run = importModule(t, join(symlinkedDir(t, "skills/retro/resources"), "resolve-transcript.mjs"));
   assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
@@ -62,5 +80,20 @@ test("importing write-target.mjs through a symlinked directory has no side effec
 
 test("importing splice.mjs through a symlinked directory has no side effects", (t) => {
   const run = importModule(t, join(symlinkedDir(t, "skills/pr-screenshots/scripts"), "splice.mjs"));
+  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
+});
+
+test("importing supports-nesting.mjs through a symlinked directory has no side effects", (t) => {
+  const run = importModule(t, join(symlinkedDir(t, "skills/team/references"), "supports-nesting.mjs"));
+  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
+});
+
+test("importing resolve-model.mjs through a symlinked directory has no side effects", (t) => {
+  const run = importModule(t, join(symlinkedDir(t, "skills/team/references"), "resolve-model.mjs"));
+  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
+});
+
+test("importing external-review.mjs through a symlinked directory has no side effects", (t) => {
+  const run = importModule(t, join(symlinkedDir(t, "skills/team/references"), "external-review.mjs"));
   assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
 });
