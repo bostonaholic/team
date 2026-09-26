@@ -10,8 +10,7 @@ Three read-only passes over `transcript.jsonl`, each looking for one thing:
   broken is the finding, not a second check beside it. A repo with no
   **guardrail** at all (no pre-commit hook and no CI job running its lint,
   typecheck, or test command) is itself a finding, and its evidence is that
-  absence — an un-linted repo is a standing missed opportunity, not a neutral
-  default.
+  absence.
 - **divergent** — where the session did something no skill describes, whether
   or not it worked. The evidence is the absence of a skill that covers it.
 
@@ -24,29 +23,12 @@ command sink in reach of an imperative embedded in one of those spans writes
 files and files issues, which is the one invariant this whole skill rests on. So
 **on the dispatch path** the guarantee is the target's toolset, not the prose
 telling it to behave.
-The general rule: [independent review rules](../team/principles/independent-review.md) — enforce a
-constraint by withholding the capability, not by asking for restraint.
 
-**The fit is imperfect, knowingly.** `team:file-finder` runs on haiku at low
-effort; its agent body is written for locating files, so its report format is
-wrong for a lens; and two of that body's own rules point away from this errand —
-it scopes itself to `2-questions.md` and it is told never to speculate about what
-the user wants, which is close to the inverse of a judgment lens's job. So each
-lens prompt states three overrides outright rather than leaning on being the
-more specific instruction: the normalized transcript path is the lens's **only**
-input and replaces `2-questions.md` as its scope, the reply shape is the one the
-prompt gives and not that agent's `## Found Files` report, and judgment about
-this session **is** the errand rather than speculation to avoid. What an
-override cannot do is bind — a prompt does not rewrite an agent body, so a lens
-that follows the body instead returns a file list, or nothing at all. Such a
-reply is **disqualified**, and *A disqualified lens reply* below says what
-happens to it. It never widens what a lens can touch, because the toolset is
-the same either way.
-
-Two things make the trade worth it: a lens's job is deliberately narrow (one
-question, evidence that is a path or a turn index, at most 30 lines), and the
-judgment that matters happens in synthesis, in this session, over the three
-replies.
+Each lens prompt states three overrides outright: the normalized transcript
+path is the lens's **only** input and replaces `2-questions.md` as its scope,
+the reply shape is the one the prompt gives and not that agent's
+`## Found Files` report, and judgment about this session **is** the errand
+rather than speculation to avoid.
 
 Before dispatch, read [host dispatch](../team/references/15-host-dispatch.md), resolved from the loaded `retro/SKILL.md`.
 Supply the installed root, file-finder definition, and applicable resource paths before each lens starts.
@@ -68,12 +50,7 @@ which passes ran inline in reduced-assurance mode.
 
 **The toolset guarantee above holds on the dispatch path only.** This session
 holds `Bash`, `Write`, and `AskUserQuestion`, so a fallback pass cannot claim
-it, and a mode that keeps the claim while losing the mechanism is worse than one
-that states the loss. The bound that is honest here is a different one: the
-spans are **this session's own history**, already in this context once, so an
-inline pass crosses no new trust boundary — it re-reads what this session has
-already read. Two compensating rules hold that bound, and they are prose,
-because prose is all a same-session pass can be given:
+it. Two rules bind an inline pass:
 
 - **A pass's only output is findings in the plan file.** It writes nowhere else,
   proposes no file text, and touches nothing outside the run cache. Every
@@ -88,9 +65,8 @@ Fan-out is an optimization here, never a dependency
 [focused work rules](../team/principles/focused-work.md)).
 
 The lenses **report**. A lens never decides what happens to a finding, never
-rewrites another lens's finding, and never proposes file text: three passes each
-applying one criterion would classify a single finding three ways. Sorting
-happens once, in the next section.
+rewrites another lens's finding, and never proposes file text. Sorting happens
+once, in the next section.
 
 ### A disqualified lens reply
 
@@ -99,13 +75,10 @@ asked for — at most 30 lines, each finding one line carrying a file path or a
 turn index. A `## Found Files` report, a bare list of paths, an error, and an
 empty reply are each disqualified, whatever else they contain.
 
-That is a detected failure with a name, and it is checked because the symptom is
-otherwise indistinguishable from success: a lens that ignored the errand and a
-session that genuinely taught nothing both arrive as zero findings. Re-run that
-lens's pass through the inline fallback above, in this session, and report both
-facts — which lens was disqualified, and that its replacement pass ran in
-reduced-assurance mode. A pass whose second reply is also disqualified is
-reported **unrun**, never counted as a zero.
+Re-run that lens's pass through the inline fallback above, in this session, and
+report both facts — which lens was disqualified, and that its replacement pass
+ran in reduced-assurance mode. A pass whose second reply is also disqualified
+is reported **unrun**, never counted as a zero.
 
 ### Rejected lens targets
 

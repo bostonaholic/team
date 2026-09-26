@@ -13,22 +13,17 @@ If a required read fails, stop that step with the exact path. Never use checkout
 
 A long session teaches things that die with it: the guidance that was missing,
 the command that cost four retries, the thing you did that no skill describes.
-`/retro` reads the transcript of the session it was invoked from and proposes
-each durable learning as a change someone can accept or reject. Three things
-make it more than "summarize this session":
+`/retro` proposes each durable learning as a change someone can accept or
+reject.
 
-- **It reads the session, not its own memory.** Compaction has already
-  discarded the early turns from context, and those turns are where the
-  corrections live. So the run resolves the session's transcript on disk and
-  works from that file — its own, identified by the id the host exported or,
-  where the host exports none, by the run cache path — whether that host is
-  Claude Code, Codex, or OpenCode and whether any of those runs inside
-  Conductor. What the file does not carry is reported as missing, never
-  filled in from memory.
-- **Three lenses, then one list.** The lenses look for different things and
-  report what they find. Sorting the findings — accepted, rejected, or handed
-  to the tracker — happens once, afterwards, so one finding cannot be
-  classified three ways.
+- **It reads the session, not its own memory.** The run works from this
+  session's transcript file on disk — identified by the id the host exported
+  or, where the host exports none, by the run cache path — on Claude Code,
+  Codex, or OpenCode, inside Conductor or not. What the file does not carry is
+  reported as missing, never filled in from memory.
+- **Three lenses, then one list.** The lenses report what they find. Sorting
+  the findings — accepted, rejected, or handed to the tracker — happens once,
+  afterwards, so one finding cannot be classified three ways.
 - **Nothing mutates before you answer.** The read-and-plan phase writes only
   inside its own run cache and prints where. Every change to a file you own,
   and every issue on a tracker, waits on an explicit approval.
