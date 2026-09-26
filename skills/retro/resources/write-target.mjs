@@ -92,7 +92,8 @@ export function preferredEditRoot(query) {
 
 // CLI entry point — runs only when executed directly, never on import, so a
 // test import has no side effects (the supports-nesting.mjs shape).
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Node realpaths import.meta.url but not argv[1], so a symlinked path needs realpathSync.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const repoRoot = process.argv[2] ?? "";
   const name = process.argv[3] ?? "";
 

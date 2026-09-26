@@ -21,6 +21,7 @@
  * attempting a dispatch that cannot work.
  */
 
+import { realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 /** The Claude Code release that introduced nested sub-agents. Single source of truth. */
@@ -56,7 +57,8 @@ export function meetsMinimum(raw, min = MIN_VERSION) {
 // CLI entry point — runs only when executed directly, not when imported by a
 // test. process.argv[1] is the test runner under `bun test`, so the import is
 // side-effect free.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Node realpaths import.meta.url but not argv[1], so a symlinked path needs realpathSync.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const supported = meetsMinimum(process.argv[2] ?? "");
   process.stdout.write(supported ? "supported\n" : "unsupported\n");
   process.exit(supported ? 0 : 1);

@@ -231,6 +231,13 @@ reporting, mismatch handling, and unsupported-host limits.
   That command is Claude-Code-specific, but the pipeline it serves is not:
   nested dispatch degrades to its documented inline fallback on every other
   host (`skills/team/references/agent-dispatch.md`, "Optimization, never a dependency").
+- **Bundled scripts compare real paths in their CLI entry guard.** Node resolves
+  symlinks in `import.meta.url` but leaves `process.argv[1]` as typed. Through
+  a symlinked path, such as macOS `/tmp` or a symlinked install, a guard that
+  compares them as-is never matches. The script then exits 0 with no output.
+  Compare against `pathToFileURL(realpathSync(process.argv[1])).href`, as
+  `supports-nesting.mjs` does. `tests/script-entry-guard.test.mjs` runs each
+  guarded script through a symlink.
 - **Agent definition format is already near-universal.** Claude `agents/*.md`,
   which is Markdown with YAML frontmatter, carries the same *system-prompt body*
   Codex reads through its TOML agent roles. The body ports. The frontmatter and

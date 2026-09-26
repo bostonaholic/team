@@ -13,7 +13,7 @@ tool outside the plugin would have to read.
    router names Linear, Jira, or a project board with its own field rules.
 2. **An authenticated `gh` with issues enabled**, when the router named no
    tracker: `gh auth status` succeeds and
-   `gh repo view --repo <owner/repo> --json hasIssuesEnabled` reports true.
+   `gh repo view <owner/repo> --json hasIssuesEnabled` reports true.
 3. **print-only**, when neither resolved. The items print verbatim and the
    summary marks them unfiled.
 
