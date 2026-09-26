@@ -32,8 +32,6 @@ Search rules:
 
 Answer every neutral question in `2-questions.md` with objective, compressed, file-referenced findings. Scope by its `Codebase context` and by repo slug/path in `4-repos.md` when present.
 
-Investigation contract:
-
 - Every claim comes from code read in this run and cites `file:line`; trace runtime behavior beyond suggestive names ([verified results rules](principles/verified-results.md)).
 - Record visible versions per repo, for example `frontend: React 18; api: Go 1.22`.
 - In multi-repo mode, record shared types/API schemas under `## Constraints` and differing conventions under `## Patterns Observed`.

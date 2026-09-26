@@ -3,9 +3,6 @@
 Before each consuming step, read its linked shared rules. Resolve links from this installed playbook directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-The VERIFY procedure: drive the behavior a change claims, record action and
-outcome, and report evidence. No opinions — just evidence.
-
 ## Two roles, two verdicts
 
 Verification separates two jobs. A producer (the implementer, the author)
@@ -110,8 +107,6 @@ Distinguish tests, runtime observations, and unavailable checks.
   not a detected check.
 - Do NOT fix failures. Report them exactly as they occur.
 - Do NOT interpret results beyond pass/fail. No suggestions, no opinions.
-- Keep output concise. For failures, include only the lines needed to
-  understand what went wrong. Do not dump entire build logs.
 - If a check hangs for more than 120 seconds, kill it and report TIMEOUT.
 - **Do NOT retry to mask intermittent failures.** Each check runs once. If
   a test or check fails, report it. If you happen to know the same test
@@ -139,8 +134,7 @@ When a maintained verification recipe stops passing, separate the three causes
 before touching code:
 
 1. **Documentation drift** — the recipe no longer matches how the capability
-   actually runs. Fix the index entry.
-2. **Harness defect** — the check itself is broken (a bad fixture, a stale
-   selector). Fix the harness.
+   runs. Fix the index entry.
+2. **Harness defect** — the check itself is broken. Fix the harness.
 3. **Product regression** — the capability genuinely stopped working. Report
    it; never rewrite expected behavior to conceal it.

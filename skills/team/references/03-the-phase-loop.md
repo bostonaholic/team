@@ -16,29 +16,22 @@ loop:
      (`references/15-host-dispatch.md`).
      Subagents never pause for user input — each resolves its own open
      questions and records them as assumptions in its artifact.
-     Dispatch so the agent's result comes back to you **in full**. Some
-     dispatch modes return only a truncated notice and hold the body
-     elsewhere; that loses a return-only agent's entire output (see
-     "Where a phase agent's output lives" below).
   5. Write each returned artifact to docs/plans/<id>/<name>.md
      with the YAML frontmatter the agent specifies (see the agent file
      and [artifact schema](references/artifacts.md)).
   6. Run the gate for this phase:
-     - REVIEW (design): dispatch the adversarial design review (see
-       "Design Review Gate (design)" below); write the verdict to
-       `design-review-<n>.md`. On APPROVE or COMMENT, advance. On
-       REQUEST CHANGES, re-dispatch design-author with the findings
-       verbatim and `revision: <n+1>`; a fresh review round follows.
+     - REVIEW (design): run "Design Review Gate (design)" below. On APPROVE
+       or COMMENT, advance. On REQUEST CHANGES, re-dispatch design-author with
+       the findings verbatim and `revision: <n+1>`; a fresh review round follows.
      - MECHANICAL (tests-failing): run the suite and require
        `Expected results derived independently: YES` in the test-architect
-       report. On assertion-only failure with that report line, advance. For a
-       zero-behavior-change refactor this gate inverts — see "Mechanical Gate
-       (test confirmation)" below.
+       report; advance on assertion-only failure with that line. A
+       zero-behavior-change refactor inverts this gate ("Mechanical Gate
+       (test confirmation)" below).
      - ROUTER-EMIT (worktree, PR): perform the action.
-     - AGGREGATE (5 reviewers): dispatch in parallel, collect results,
-       sort findings into severity tiers; auto-loop while any Blocking or
-       Major finding remains (never consulting the user), tracking the
-       round count in TodoWrite; record Minor-and-below for the PR body's
+     - AGGREGATE (5 reviewers): dispatch in parallel and sort findings into
+       severity tiers; auto-loop while any Blocking or Major finding remains
+       (never consulting the user); record Minor-and-below for the PR body's
        `## Review notes`.
   7. Update TodoWrite — mark current phase `completed` and the next one
      `in_progress`.
@@ -57,6 +50,9 @@ loop:
 | PLAN       | `planner`                                               | `docs/plans/<id>/7-structure.md`                                  | IMPLEMENT          |
 | IMPLEMENT  | `test-architect`, `implementer`, 5 reviewers (parallel) | `docs/plans/<id>/8-plan.md`                                       | PR                 |
 | PR         | (orchestrator-emit)                                     | aggregate gate passed                                           | SHIPPED            |
+
+For QUESTION, pass the questioner the full description. When it returns, make
+sure `1-task.md` and `2-questions.md` exist in `docs/plans/<id>/`.
 
 For RESEARCH, dispatch `file-finder` and `researcher` in parallel passing
 each only the `docs/plans/<id>/2-questions.md` path. Combine their returned
@@ -90,6 +86,6 @@ stated contract is zero behavior change has nothing to write — the current
 suite is the acceptance suite — so that dispatch is skipped with a recorded
 reason and the mechanical gate runs in its inverted form.
 
-`skills/team/registry.json` is an inventory of the 13 specialist agents
-for documentation purposes only. The orchestrator dispatches based on
-the phase table above, not on registry contents.
+`skills/team/registry.json` inventories the 13 specialist agents for
+documentation only. The orchestrator dispatches based on the phase table
+above, not on registry contents.

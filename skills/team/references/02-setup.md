@@ -10,6 +10,14 @@
    agent, and set `routeStatus: complete` when a limited-scope route finishes.
 1. **Resolve `$ARGUMENTS`** to a description (fetch issue through `gh` if a
    URL. Lookup tracker if a ticket-only ID. Otherwise use as-is).
+   After routing, `$ARGUMENTS` (or its remaining task tokens) may be:
+   - A ticket identifier (e.g. `ENG-1234`) — used as `<id>` prefix and
+     recorded as `ticketId` on `1-task.md`.
+   - An issue URL (e.g. `https://github.com/org/repo/issues/42`) — fetched
+     through `gh issue view` to extract the title and body.
+   - Free-form text — used directly as the feature description.
+
+   If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
 2. **Capture `ticketId`** — if `$ARGUMENTS` starts with a ticket-like
    pattern (e.g., `<system>-<id>`), set it aside as `ticketId` for
    `1-task.md`. Otherwise leave `ticketId` as `null`.
@@ -55,6 +63,6 @@
    in-progress work (data loss).
    Resume is an idempotent re-run: already-done is done, never an error ([durable state rules](principles/durable-state.md)).
 
-You hold the description in your own context. Downstream of QUESTION the
+**Research-isolation invariant.** You hold the description in your own context. Downstream of QUESTION the
 description must NEVER appear in any artifact or agent payload outside
 `1-task.md` and the questioner's own outputs.

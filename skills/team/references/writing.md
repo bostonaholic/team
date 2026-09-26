@@ -45,9 +45,9 @@ normative force, permission, or possibility.
 
 ## Rules
 
-Use these checks on prose you author. Pattern detection and meaning
-preservation come first; sentence mechanics such as plain words, active voice,
-sentence length, filler, and consistent names follow.
+Pattern detection and meaning preservation come first; sentence mechanics such
+as plain words, active voice, sentence length, filler, and consistent names
+follow.
 
 ### Claims must earn their place
 
@@ -80,7 +80,6 @@ sentence length, filler, and consistent names follow.
 - In particular, rewrite "center of gravity", "moves the needle", "surface
   area", "shape of the problem", "the right seam", "unlocks", and "tees up".
 - Do not personify code or use an aphorism where a literal statement works.
-- Keep one name for one concept. Do not rotate synonyms for variety.
 
 ### Format only for structure
 
@@ -163,7 +162,6 @@ the terminal line, keep the supporting detail above it.
   appears.
 - **One idea per sentence.** Prefer one plain verb to a nominalization.
 - **Use American spelling.** "color", not "colour"; "analyze", not "analyse".
-- Use one consistent name for each thing.
 
 ### No unexplained specialist terms
 

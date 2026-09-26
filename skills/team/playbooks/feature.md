@@ -4,11 +4,7 @@ Before this operation, read [artifact schema](references/artifacts.md).
 Before each consuming step, read its linked shared rules. Resolve links from this installed playbook directory.
 If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
-Eight sequential phases; none are skippable:
-
-```text
-WORKTREE -> QUESTION -> RESEARCH -> DESIGN -> STRUCTURE -> PLAN -> IMPLEMENT -> PR
-```
+Eight sequential phases; none are skippable.
 
 ## Phase Sequence
 
@@ -27,9 +23,9 @@ WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/
 
 ## Artifact and isolation invariants
 
-[artifact schema](references/artifacts.md) owns `<id>`, inventory, `3-prd.md`, `4-repos.md`, topic, and `ticketId` schemas. Topic matches across all artifacts. `4-repos.md` presence enables multi-repo; absence means single-repo. `3-prd.md` is autonomous and ungated.
+[artifact schema](references/artifacts.md) owns `<id>`, inventory, `3-prd.md`, `4-repos.md`, topic, and `ticketId` schemas.
 
-Research is blind ([independent review rules](principles/independent-review.md)). The orchestrator passes researcher/file-finder only `2-questions.md`, never the description or `1-task.md`; their prompts also forbid reading `1-task.md`. They have `Read`/`Grep`/`Glob` with `permissionMode: plan`, so prompt adherence enforces this. Missing context becomes an open question; no user pause. Any intent leak is critical: stop and report.
+Research is blind ([independent review rules](principles/independent-review.md)).
 
 ## Gates
 
@@ -48,28 +44,20 @@ Non-blocking; no acknowledgment, e.g. documentation-gap analysis or style sugges
 
 ## State and transitions
 
-Files, never conversation memory, are the phase interface ([durable state rules](principles/durable-state.md)). Rebuild state from `docs/plans/<id>/*.md` frontmatter and TodoWrite on every `/team-*` entry.
+These rows add to Setup step 7 resume detection:
 
 | Latest durable state | Next/current phase |
 |---|---|
 | worktree exists; no `1-task.md` | WORKTREE |
-| `1-task.md` + `2-questions.md` | RESEARCH |
-| `5-research.md` | DESIGN |
-| `6-design.md`; no passing `design-review-<n>.md` | DESIGN review |
-| passing design review | STRUCTURE |
-| `7-structure.md` | PLAN |
-| `8-plan.md` + ≥1 commit on `<id>` since merge-base | IMPLEMENT |
-| `8-plan.md` with no commit on `<id>` yet | PLAN |
 | topic commits plus clean verifier | PR |
 | PR(s) open or commits shipped | SHIPPED |
 
-Worktree check: `git worktree list --porcelain | grep -q <id>`; multi-repo paths come from `4-repos.md`. Latest `review-<n>.md` records verifier status. Each transition: verify required artifacts (including passing design review), complete/current next TodoWrite items, then dispatch agents named by `SKILL.md`.
+Worktree check: `git worktree list --porcelain | grep -q <id>`; multi-repo paths come from `4-repos.md`. Latest `review-<n>.md` records verifier status.
 Confirm IMPLEMENT only when `git log <merge-base>..<id>` is non-empty; a worktree and `8-plan.md` alone remain PLAN.
 
 ## Scope and sequencing rules
 
-- Always QUESTION before RESEARCH. Review DESIGN (~200 lines), never tactical PLAN (~1000 lines). STRUCTURE/PLAN are autonomous.
 - Reject horizontal database/API/UI layering; slices must be end-to-end, testable, atomic (playbooks/structure.md). Never implement without structure.
 - Add no feature, test, or abstraction beyond structure. Expand the artifact first; material expansion returns to DESIGN review ([human control rules](principles/human-control.md)).
 - Move backward one phase only. A structure flaw returns to STRUCTURE; a design flaw to DESIGN.
-- Never enter PR while a HARD gate, Blocking, or Major finding remains. Fix loops never consult the user; Minor-and-below eligible findings become review notes.
+- Never enter PR while a HARD gate, Blocking, or Major finding remains.

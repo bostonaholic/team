@@ -62,15 +62,3 @@ phase: questions
 ## Reference points
 - What representative similar implementation exists, and where?
 ```
-
-## `3-prd.md`
-
-This artifact is autonomous and ungated, so it has no `approved` or `revision`.
-
-```yaml
----
-topic: <kebab-case-topic>
-date: <YYYY-MM-DD>
-phase: prd
----
-```

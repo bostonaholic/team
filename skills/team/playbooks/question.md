@@ -18,14 +18,7 @@ Write `3-prd.md` when a request is vague/underspecified, spans multiple user sto
 
 Write `docs/plans/<id>/3-prd.md` with `phase: prd` and reference it from `1-task.md`. Read [PRD template](references/prd-template.md) before writing its required **Problem Statement**, **User Stories**, **Acceptance Criteria**, **Scope Boundaries**, and **Constraints**.
 
-- Stories use `As a [user type], I want to [action], so that [outcome].` They describe what users need, never ASTs, methods, or other implementation.
-- Criteria use `GIVEN`/`WHEN`/`THEN` or a checklist. Each is testable, unambiguous, and complete across happy, error, and edge cases.
-- Scope lists In Scope commitments, Out of Scope exclusions, and Future Scope deferrals.
-- Constraints state non-negotiable performance, compatibility, security, and operational requirements.
-
 PRDs define behavior, not implementation; design defines implementation. Scope boundaries are commitments even when excluded work appears easy. The questioner owns the PRD; the design-author may surface acceptance-criterion questions but may not change criteria unilaterally.
-
-Downstream, the design-author reads `3-prd.md` first, maps every acceptance criterion to a design decision, and treats scope boundaries as the scope fence. The structure-planner derives vertical-slice acceptance tests from these criteria.
 
 ## Research isolation
 

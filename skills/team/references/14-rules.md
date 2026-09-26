@@ -26,6 +26,8 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
 - There are **no mid-run human gates**. The design is gated by an
   adversarial design review. Never present the structure or plan for
   approval. The structure and plan are autonomous tactical artifacts.
+  The structure artifact carries no `approved`/`approved_at`/ `revision`
+  frontmatter.
 - The phase loop never pauses mid-run. Advance phases within the same turn.
   IMPLEMENT → PR is not a stopping point. A turn that ends with review
   verdicts but no draft PR URL is a defect.

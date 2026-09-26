@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.20] - 2026-09-25
+
+### Changed
+
+- `/team` and the shared rules it gives every agent are about 5% shorter, from 200 KB to 190 KB of Markdown. The orchestrator references, playbooks, and templates state each rule once and drop explanations that a capable model already knows. Four empty or duplicate orchestrator references are gone too: `01-input.md`, `04-research-isolation-invariant.md`, `06-gate-handling.md`, and `09-structure-no-gate-autonomous.md`. Every gate, guard, refusal, and contract still holds. **What this asks of you:** nothing.
+
 ## [0.132.19] - 2026-09-25
 
 ### Changed
@@ -1282,7 +1288,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.19...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.20...HEAD
+[0.132.20]: https://github.com/bostonaholic/team/compare/v0.132.19...v0.132.20
 [0.132.19]: https://github.com/bostonaholic/team/compare/v0.132.18...v0.132.19
 [0.132.18]: https://github.com/bostonaholic/team/compare/v0.132.17...v0.132.18
 [0.132.17]: https://github.com/bostonaholic/team/compare/v0.132.16...v0.132.17

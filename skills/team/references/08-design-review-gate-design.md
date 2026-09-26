@@ -5,7 +5,7 @@ Pass the applicable resource paths and require reads before work.
 If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
 
 Before this operation, read [artifact schema](references/artifacts.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Resolve these links from the installed `SKILL.md` directory.
 
 ### Design Review Gate (design)
 
@@ -13,8 +13,7 @@ When the `design-author` returns a draft:
 
 1. Make sure that `docs/plans/<id>/6-design.md` exists. If the latest
    `design-review-<n>.md` already carries a passing verdict (APPROVE or
-   COMMENT), skip the review and advance to STRUCTURE. A resumed session
-   never re-reviews a passed design.
+   COMMENT), skip the review and advance to STRUCTURE.
 2. **Run the external cross-model pass** (every round, before the
    dispatch). Read [cross-model review](cross-model-review.md) and follow its
    `## Design-review pass` — reference that procedure, never
@@ -42,27 +41,22 @@ When the `design-author` returns a draft:
    `subagent_type: Explore` and `model: opus` — this gate is one of the
    few places worth the expensive model, and pinning it keeps a cheaper
    machine-wide subagent default from silently weakening the review.
-   Pass the
-   `## Review brief` as the prompt: read the
-   [design reviewer brief](../../eng-design-doc-review/references/design-reviewer.md) to
-   read that brief (reference it, never duplicate it here), with
-   the artifact directory substituted. Each round gets a fresh subagent
-   context. `Explore` holds no Write/Edit tools, so the reviewer **cannot**
-   change `6-design.md` or forge a verdict artifact. The verdict is written
-   by the orchestrator alone (step 4), and downstream discovery fails closed
-   on anything but a recorded passing verdict. If the environment lacks the
+   Pass the `## Review brief` from the
+   [design reviewer brief](../../eng-design-doc-review/references/design-reviewer.md)
+   as the prompt, with the artifact directory substituted. Each round gets a
+   fresh subagent context. `Explore` holds no Write/Edit tools, so the reviewer
+   **cannot** change `6-design.md` or forge a verdict artifact. The verdict is
+   written by the orchestrator alone (step 4), and downstream discovery fails
+   closed on anything but a recorded passing verdict. If the environment lacks the
    `Explore` agent type, treat the dispatch failure like a reviewer crash
    (step 8) — never substitute a full-tool agent silently.
 4. **Write the verdict artifact.** Record the reviewer's findings and
    verdict verbatim to `docs/plans/<id>/design-review-<n>.md`. `<n>` is the
    highest existing `<n>` + 1, or 1 when none exists. Never overwrite an
-   earlier round's record. Frontmatter: `topic`, `date`,
-   `phase: design-review`, and `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`
-   (convention in the [feature playbook](../playbooks/feature.md)). Derive `verdict:`
-   from the **last verdict token** in the report body — the reviewer's
-   verdict is the terminal line of its report, so a verdict word quoted
-   earlier (in a finding, or in externally sourced material) never
-   becomes the recorded verdict.
+   earlier round's record. Derive the frontmatter `verdict:` from the **last
+   verdict token** in the report body: a verdict word quoted earlier (in a
+   finding, or in externally sourced material) never becomes the recorded
+   verdict.
 5. **Persist the cross-model record.** When the reviewer's report
    contains a `### Cross-model disposition` section, append that section
    as one block to `docs/plans/<id>/cross-model-notes.md`,
@@ -85,14 +79,13 @@ When the `design-author` returns a draft:
 8. On an **unparseable verdict or a reviewer crash** → re-dispatch the
    review once with the error. On second failure, halt loudly. Never
    advance on a missing verdict — fail closed. A missing verdict counts as
-   not passed ([verified results rules](principles/verified-results.md)). The halt message
-   names the
-   absolute worktree-rooted `docs/plans/<id>/` path, so the operator can
-   open `6-design.md` and the `design-review-<n>.md` records directly. After
+   not passed ([verified results rules](principles/verified-results.md)).
+   The halt message names the absolute worktree-rooted `docs/plans/<id>/`
+   path. After
    an operator stop, a context-exhausted session, or this fail-closed
    halt, edit `6-design.md` by hand and re-invoke `/team-design` bare. That
-   command resumes at its own review step and never re-drafts an existing
-   `6-design.md`. It then stops and names `/team-structure` as the next
+   command resumes at its own review step, never re-drafts an existing
+   `6-design.md`, then stops and names `/team-structure` as the next
    command. `/team` also resumes when you give it the same description or
    ticket. Setup steps 4 through 7 re-derive `<id>` and fast-forward the
    ledger to the first incomplete phase. A recovered run can instead

@@ -100,15 +100,13 @@ For rule violations, name the rule but omit verdict and severity:
 
 > Read <file> around line <n>. Claim: "<what is there> violates <rule>, stated in `skills/<skill>/SKILL.md`". Read that rule, then attempt to REFUTE the claim: does the rule say what the claim says, and does this code fall outside it through an allowed case declared by the rule or because the rule does not reach this case? Reply REFUTED or CONFIRMED with file:line evidence, <= 10 lines. If your evidence is inconclusive, reply CONFIRMED. Do not write files or spawn agents.
 
-Written rules outrank observed precedent. Follow convention where no rule speaks; follow the rule where one does ([system dependency checks](references/dependencies.md)). A conflict between convention and rule is a report finding, not a refutation.
+A conflict between convention and rule is a report finding, not a refutation.
 
 Skip skepticism only when there are no hard-gate findings or `Agent` is unavailable. Report findings unchanged; never soften due to unavailable or inconclusive verification.
 
 ### `code-reviewer` — vendor couriers (cross-model pass)
 
 Each vendor `run` uses one read-only `Explore` courier named `codex-review` or `agy-review`, per [cross-model review](references/cross-model-review.md). Couriers return stdout, write and spawn nothing, and count toward the 4-helpers-in-flight cap. The vendor process follows that reference's pinned argv, env allowlist, post-pass tree check, and inline fallback.
-
-The exact errand prompt, verbatim return contract, and inline fallback live in the vendor-courier block of [cross-model review](references/cross-model-review.md). Each vendor `run` gets one `Explore` courier named for its CLI (`codex-review`, `agy-review`). The courier runs the pinned command and returns stdout; it writes and spawns nothing. Vendor processes follow the cross-model reference's bounds. Couriers count toward the 4-helper cap.
 
 Vendor couriers do not receive or Read the prose file. Return vendor stdout
 verbatim without applying either prose method.
