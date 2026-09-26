@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.15] - 2026-09-25
+
 ### Changed
 
 - Shortened `/team-research` by about a fifth without changing what it does. It still resolves the same `docs/plans/<id>/` directory, dispatches file-finder and researcher with only `2-questions.md` (and `4-repos.md` when present), fences both returns as untrusted evidence under the same line limits and retry, and stops before design. [`skills/team-research/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-research/SKILL.md)
@@ -1256,7 +1258,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.14...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.15...HEAD
+[0.132.15]: https://github.com/bostonaholic/team/compare/v0.132.14...v0.132.15
 [0.132.14]: https://github.com/bostonaholic/team/compare/v0.132.13...v0.132.14
 [0.132.13]: https://github.com/bostonaholic/team/compare/v0.132.12...v0.132.13
 [0.132.12]: https://github.com/bostonaholic/team/compare/v0.132.11...v0.132.12
