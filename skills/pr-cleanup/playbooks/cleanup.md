@@ -122,21 +122,19 @@ nothing to sweep, and the report says so rather than going looking.
 **Never delete a temp path the run did not record**, and never a path
 outside `${TMPDIR:-/tmp}`, containing `..`, or reached through a symlink.
 
-Each recorded path passes three checks before `rm -rf` sees it. Strip trailing
-slashes from the temp root first: on macOS `TMPDIR` ends in `/`, and the
-unstripped prefix pattern would refuse every path.
+Resolve `<pr-cleanup-skill-dir>` to this skill's absolute directory. Pass each
+recorded path, one per call, to the committed guard, which checks it and runs
+`rm -rf` only when every check passes:
 
 ```sh
-TMPROOT="${TMPDIR:-/tmp}"
-while [ "${TMPROOT%/}" != "$TMPROOT" ]; do TMPROOT="${TMPROOT%/}"; done
-case "$P" in
-  "$TMPROOT"/?*) ;;
-  *) echo "refusing: '$P' is not under $TMPROOT" >&2; continue ;;
-esac
-case "$P" in *..*) echo "refusing: '$P' contains '..'" >&2; continue ;; esac
-[ -L "$P" ] && { echo "refusing: '$P' is a symlink" >&2; continue; }
-rm -rf "${P:?}"
+"<pr-cleanup-skill-dir>/scripts/remove-temp-path.sh" "$P"
 ```
+
+Exit 0 prints `removed: <path>` or `absent: <path>`. Exit 1 prints
+`refusing: '<path>' <check>` and deletes nothing. The guard resolves physical
+directories, so a symlink anywhere between the temp root and the path is
+refused, while a temp root that is itself a symlink (macOS `/var`) still works.
+Never delete a refused path by other means.
 
 **Never wildcard-sweep the temp directory** (for example
 `rm -rf "$TMPROOT"/groom-backlog.*`): it cannot tell a dead run's directory
