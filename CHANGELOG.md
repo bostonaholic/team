@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.21] - 2026-09-25
+
 ### Changed
 
 - `version-bump` is about a third shorter. The restated land-process overview, the runtime-vs-dev file list the gate script already decides, precedent commit hashes, a worked example, and rationale paragraphs are gone. Every guard stays: explicit land intent, the fail-closed invariant run and its exact-match verdicts, the six version strings, the changelog cut, the consistency assertion, and the title reset. **What this asks of you:** nothing.
@@ -1292,7 +1294,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.20...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.21...HEAD
+[0.132.21]: https://github.com/bostonaholic/team/compare/v0.132.20...v0.132.21
 [0.132.20]: https://github.com/bostonaholic/team/compare/v0.132.19...v0.132.20
 [0.132.19]: https://github.com/bostonaholic/team/compare/v0.132.18...v0.132.19
 [0.132.18]: https://github.com/bostonaholic/team/compare/v0.132.17...v0.132.18
