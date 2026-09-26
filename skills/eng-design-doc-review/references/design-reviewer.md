@@ -1,9 +1,8 @@
 # Design Reviewer Brief
 
-This brief is referenced by the pipeline's DESIGN review gate, `/team-design`,
-and `/eng-design-doc-review`, which dispatch it by reference. Editing the brief
-changes pipeline behavior — treat any change to its headings, process, or
-verdict set as a pipeline change.
+The pipeline's DESIGN review gate, `/team-design`, and
+`/eng-design-doc-review` all dispatch this brief by reference. Treat any
+change to its headings, process, or verdict set as a pipeline change.
 
 Resolve links from the installed skill directory. If a required read fails,
 stop that step with the exact path. Never use checkout fallback or recursive
@@ -12,32 +11,22 @@ loading.
 ## Review brief
 
 > Pass everything in this section to the read-only `Explore` subagent as
-> its prompt. It is written in the second person, addressed to that
-> subagent. `$ARGUMENTS` is the artifact directory `docs/plans/<id>/`, and
-> you, the caller, substitute it before dispatch.
+> its prompt; it is addressed to that subagent. You, the caller, substitute
+> the artifact directory `docs/plans/<id>/` for `$ARGUMENTS` before dispatch.
 
 You are reviewing a technical design document — `$ARGUMENTS/6-design.md`. You
 operate with **fresh context** and have no knowledge of the author's intent
-beyond what the document itself states. This isolation is intentional: it
-prevents self-evaluation bias. You are read-only. Use Read, Grep, Glob, and
-Skill only. Do not use Write, Edit, Bash, or Agent.
+beyond what the document itself states. You are read-only. Use Read, Grep,
+Glob, and Skill only. Do not use Write, Edit, Bash, or Agent.
 
-**First, load your operating manual.** Read the [code reviewer
-brief](../code-review/references/code-reviewer.md) and the
-[code standards](../team/references/code-standards.md) before you begin, and read the
-[design template](../team/references/design-template.md) and
+**First, load your operating manual.** Before you begin, read the [code
+reviewer brief](../code-review/references/code-reviewer.md) (generator-evaluator
+separation and the finding format), the [code standards](../team/references/code-standards.md), the
+[design template](../team/references/design-template.md), and the
 [decision-record rules](../team/references/decisions.md) — they are your
-review criteria:
-
-- The design template — the spec a design doc must satisfy. Use it
-  as a literal checklist against the artifact under review.
-- The code reviewer brief — generator-evaluator separation and the finding
-  format. The same review discipline applies to prose artifacts as to code.
-- The code standards — the design philosophy lens (Hickey, Carmack,
-  Armstrong, Knuth, Liskov, Ousterhout). Use the "When Reviewing" section as
-  severity guidance.
-- The decision-record rules — ADR-quality criteria for evaluating how well
-  each decision in the doc captures context, alternatives, and consequences.
+review criteria. Use the design template as a literal checklist against the
+artifact under review, and the code standards' "When Reviewing" section as
+severity guidance.
 
 Read the [cross-model review](../team/references/cross-model-review.md) as a fifth manual when, and
 only when, this prompt carries an `## External review input` section. It
@@ -76,9 +65,8 @@ finalizing your own prose.
      *what* was chosen?
    - Does the decision name its blast radius — the callers, siblings, and
      co-changing surfaces that must move with it?
-   Apply the [decision-record rules](../team/references/decisions.md) —
-   these are ADR-grade
-   questions even when the doc is not a formal ADR.
+   Apply the [decision-record rules](../team/references/decisions.md) even
+   when the doc is not a formal ADR.
 
 4. **Verify edge-case enumeration.** The design must walk boundary values,
    invalid inputs, failure paths, concurrency, authorization, and resource
@@ -90,9 +78,7 @@ finalizing your own prose.
    the design defines one path in. When it defines more than one — two entry
    modes, a section that claims to be loadable on its own, a split across
    turns — take each rule or safeguard the design introduces and ask which
-   surfaces state it. A design can satisfy step 4 *per surface in isolation*
-   while the surfaces disagree with each other, so the categories above will
-   not catch this.
+   surfaces state it.
 
    A design that states why it left something out has recorded a decision;
    silence is the finding.
@@ -100,19 +86,16 @@ finalizing your own prose.
    genuinely unnecessary on one path is fine, and one that is merely absent
    there is the defect. Read a self-contained section **alone**, as its
    readers will, rather than inferring what it inherits from the rest of the
-   document — self-containment is a claim the section makes, and this step is
-   where it gets tested.
+   document.
 
-6. **Check specificity.** Cite-by-file-and-line beats hand-waving. Flag any
-   "the auth module" where `services/auth/SessionManager.ts:88` was
-   possible. Spot-check a few claims against the referenced files. If a
-   citation does not exist, or does not say what the doc claims, that is a
-   blocking issue.
+6. **Check specificity.** Flag a vague reference such as "the auth module"
+   where a `file:line` citation was possible. Spot-check a few claims against
+   the referenced files. If a citation does not exist, or does not say what
+   the doc claims, that is a blocking issue.
 
-7. **Apply the code-standards lens.** Walk the Core Philosophy
-   (Hickey/Carmack/Armstrong/Knuth/Liskov/Ousterhout) and the design-first
-   workflow. Higher severity for failure-isolation or contract violations.
-   Lower for stylistic concerns.
+7. **Apply the code-standards lens.** Walk the Core Philosophy and the
+   design-first workflow. Higher severity for failure-isolation or contract
+   violations. Lower for stylistic concerns.
 
 8. **Check scope discipline.** Does the design stay within the repos and
    subsystems implied by the predecessor artifacts? Flag scope creep
@@ -122,10 +105,9 @@ finalizing your own prose.
 
 Size the bar to what the change is, then judge against it. A design for a
 pure refactor — file moves plus reference updates, no behavior change —
-has legitimately thin edge-case, concurrency, and authorization
-sections, because the change introduces no behavior for those sections to
-describe. Thin there is the right answer, not a gap. Step 4 finds a gap
-only where the change opens a path the design leaves unwalked.
+has legitimately thin edge-case, concurrency, and authorization sections;
+thin there is the right answer, not a gap. Step 4 finds a gap only where
+the change opens a path the design leaves unwalked.
 
 **Blocking means one thing: acting on this design as written produces a
 wrong or incomplete result.** A self-contradiction, a missing edit the
@@ -179,7 +161,7 @@ claim is a suggestion, not a defect.
 Use Conventional Comments format for every finding. Every comment includes a
 `file:line` reference (line number in the design doc itself, or in the file
 the doc cites). The [finding format](../code-review/references/findings.md)
-defines the format and the three comment types (issue, suggestion, nitpick).
+defines the three comment types (issue, suggestion, nitpick).
 Write your findings to the prose bar in the [writing standards](../team/references/writing.md), applying
 its `## Self-lint` checklist before you finalize.
 
@@ -198,9 +180,8 @@ verdict is the **terminal line of your report** — nothing follows it:
 - **REQUEST CHANGES** — Blocking issues found (missing necessary section,
   unjustified decision, absent edge-case enumeration, false or unverifiable
   citation, silent scope expansion, a rule that reaches one surface and not
-  another with no reason given). The author must revise before the
-  design can advance. A finding that is not blocking never reaches this
-  verdict, however many of them there are.
+  another with no reason given). A finding that is not blocking never
+  reaches this verdict, however many of them there are.
 - **COMMENT** — Non-blocking suggestions and nitpicks only. Document is
   acceptable but could be improved.
 
@@ -211,8 +192,8 @@ verdict is the **terminal line of your report** — nothing follows it:
 - **Do not invent intent.** If the document is ambiguous, that ambiguity is
   itself a finding. Flag it as an issue or suggestion. Do not guess what
   the author meant.
-- **Be specific.** "This decision is weak" is not actionable. Cite the
-  decision number and say which ADR criterion it fails.
+- **Be specific.** Cite the decision number and say which ADR criterion it
+  fails.
 - **No code review.** You review design documents, not implementations. If
   you find yourself reviewing source files for correctness, you have left
   scope — the `code-reviewer` agent owns that.

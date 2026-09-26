@@ -9,41 +9,21 @@ Before review dispatch, supply the installed plugin root and resolved `skills/en
 Pass the applicable resource paths and require reads before work.
 If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
 
-# Engineering Design Doc Review — Independent Fresh-Context Audit
-Before dispatch, resolve [independent review](../team/principles/independent-review.md), [verified results](../team/principles/verified-results.md), [focused work](../team/principles/focused-work.md). Pass their absolute installed paths with the retained brief. The receiver reads them before work. Missing resources stop that step with the exact path, without source fallback.
-Before each consuming step, read its linked shared rules from this installed skill directory. If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
-Adversarially review a design document with fresh context. The brief this
-skill dispatches lives in `skills/eng-design-doc-review/references/design-reviewer.md`, and the
-orchestrator loads the same brief for the DESIGN phase's adversarial
-review gate. Invoking this skill standalone remains supported whenever
-you want an independent, fresh-context audit of a design document.
+# Engineering Design Doc Review
+Before dispatch, resolve [independent review](../team/principles/independent-review.md), [verified results](../team/principles/verified-results.md), [focused work](../team/principles/focused-work.md). Pass their absolute installed paths with the retained brief. The receiver reads them before work.
+Before each consuming step, read its linked shared rules from this installed skill directory; if a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+
+Adversarially review a design document with fresh context.
 
 Write the prose this skill governs at a seventh-grade reading level, in
-STE-flavored mode — short sentences, common words, no unexplained jargon.
-Full methodology: the [writing standards](../team/references/writing.md). Before
-you finalize prose this skill governs, read the
+STE-flavored mode. Before you finalize it, read the
 [writing standards](../team/references/writing.md) and apply its `## Self-lint` checklist.
-
-There is **no custom review agent**. This skill loads the review brief
-from `references/design-reviewer.md` and dispatches the built-in read-only
-`Explore` subagent through the `Agent` tool. That subagent boots with a
-**clean context** and no shared conversation history with the design-author
-— that isolation is the whole point. It prevents self-evaluation bias.
-`Explore` holds no Write/Edit tools, so the reviewer structurally cannot
-change the artifacts it judges.
-Fresh context plus veto-without-authorship is the generator-evaluator rule ([independent review rules](../team/principles/independent-review.md)).
 
 ## Input
 
 `$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`. If empty, the
-discovery command below resolves it.
-
-The review reads:
-
-- `$ARGUMENTS/6-design.md` — the document under review (required)
-- `$ARGUMENTS/1-task.md`, `$ARGUMENTS/2-questions.md`,
-  `$ARGUMENTS/5-research.md`, `$ARGUMENTS/4-repos.md` — predecessor artifacts
-  (read for grounding when present, missing siblings are not a hard error)
+discovery command below resolves it. `$ARGUMENTS/6-design.md` is required;
+missing sibling artifacts are not a hard error.
 
 Resolve `<team-skill-dir>` to the absolute directory containing
 `skills/team/SKILL.md`. From the repository root, run:
@@ -52,13 +32,11 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 "<team-skill-dir>/discover-topic.sh" "${ARGUMENTS:-}" "6-design.md"
 ```
 
-- **If the command printed a path**, use it as `$ARGUMENTS` for the rest of
-  this skill. That is tier 1 explicit arg, or tier 2 discovery. When the
-  path came from tier 2, with no explicit arg, announce the resolved
-  directory to the user first. An auto-picked topic is then never silent.
-- **If the command printed nothing** (tier 3 — no directory holds `6-design.md`),
-  do not hard-error. Fire `AskUserQuestion` with a `Setup` header and labeled
-  options:
+- **If the command printed a path**, use it as `$ARGUMENTS`. When the path
+  came from tier 2 discovery, with no explicit arg, announce the resolved
+  directory to the user first, so an auto-picked topic is never silent.
+- **If the command printed nothing**, do not hard-error. Fire
+  `AskUserQuestion` with a `Setup` header and labeled options:
   - **Run the producer** — run `/team-design docs/plans/<id>/` to produce the
     missing `6-design.md`.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
@@ -69,64 +47,43 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 1. Use the directory resolved in `## Input`.
 2. **Run the external cross-model pass.** Read the
    [cross-model review](../team/references/cross-model-review.md) and follow
-   its `## Design-review pass` —
-   reference that procedure, never duplicate it here. You, the invoking
-   session, are the actor: you hold Bash for the runner
-   (`external-review.mjs`, resolved per that section) and the `Agent`
-   tool for the dispatch — each vendor `run` goes through its own named
-   courier sub-agent per that reference's vendor-courier block, with its
-   inline fallback. Fence each CLI's raw output as a `DATA` block
-   at capture time (fence longer than any backtick run in the output,
-   per that section) and hold one `## External review input` section —
-   opening with the untrusted-content line that section specifies —
-   carrying those blocks, for step 3 to append to the brief it dispatches. Any
-   skip continues with the reviewer alone. **No artifact is written** on
-   this surface: a standalone run records nothing — no notes append, no raw
-   file — and the raw vendor text stays in the invoking session. Name
-   any unavailable CLI to the user per that reference's `## When a vendor
-   CLI is unavailable`. Edge cases ride the shared section: an
-   unauthenticated CLI exits non-zero and reads as an ordinary skip.
+   its `## Design-review pass`. You, the invoking session, are the actor:
+   you hold Bash for the runner (`external-review.mjs`, resolved per that
+   section) and the `Agent` tool for the dispatch — each vendor `run` goes
+   through its own named courier sub-agent per that reference's
+   vendor-courier block, with its inline fallback. Fence each CLI's raw
+   output as a `DATA` block at capture time (fence longer than any backtick
+   run in the output, per that section) and hold one
+   `## External review input` section — opening with the untrusted-content
+   line that section specifies — carrying those blocks, for step 3 to append
+   to the brief it dispatches. Any skip continues with the reviewer alone.
+   **No artifact is written** on this surface: a standalone run records
+   nothing — no notes append, no raw file — and the raw vendor text stays in
+   the invoking session. Name any unavailable CLI to the user per that
+   reference's `## When a vendor CLI is unavailable`. An unauthenticated CLI
+   exits non-zero and reads as an ordinary skip.
 3. **Dispatch the review.** Read the [design reviewer brief](references/design-reviewer.md)
    `## Review brief`. Then call the `Agent` tool with
-   `subagent_type: Explore` and `model: opus` — pinning the model keeps a
-   cheaper machine-wide subagent default from silently weakening this
-   gate — and pass that brief to the `Explore` subagent as the prompt,
-   with the artifact directory substituted for `$ARGUMENTS`. Do **not**
-   define or reference a project agent — the built-in read-only type is
-   the whole mechanism. Its clean context is what makes the review
-   independent, and its lack of Write/Edit tools keeps the reviewer
-   structurally unable to touch the artifacts. If the environment lacks
-   the `Explore` agent type, report the dispatch failure — never
-   substitute a full-tool agent silently.
-4. **Present the verdict in full.** The subagent returns Conventional
-   Comments findings (issue / suggestion / nitpick, each with a
-   `file:line` reference) followed by one of APPROVE, REQUEST CHANGES, or
-   COMMENT. Relay it verbatim — the subagent's output is not shown to the
-   user directly.
+   `subagent_type: Explore` and `model: opus`, and pass that brief to the
+   `Explore` subagent as the prompt, with the artifact directory substituted
+   for `$ARGUMENTS`. Do **not** define or reference a project agent — the
+   built-in read-only type is the whole mechanism. If the environment lacks
+   the `Explore` agent type, report the dispatch failure — never substitute
+   a full-tool agent silently.
+4. **Present the verdict in full.** Relay the subagent's report verbatim —
+   the subagent's output is not shown to the user directly.
 5. **Do not auto-revise.** This skill does not loop the design-author. On
    REQUEST CHANGES, surface the findings and let the user decide if to
    re-enter `/team-design` with that feedback.
 
 ## Rules
 
-- The brief lives in `skills/eng-design-doc-review/references/design-reviewer.md`, and changing it
-  is a pipeline change — that file states the rule.
 - This skill is **read-only, structurally for writes**. The `Explore`
   subagent holds no Write/Edit tools, so it cannot change `6-design.md`, the
   artifact directory, or any verdict record. Residual tools — a `Bash`
   grant included, when the host's `Explore` type carries one — are
   governed by the brief's read-only instruction, and that residual is
-  accepted because the prompt's untrusted vendor content is bounded three
-   ways: the fence-length containment rule in
-   `skills/team/references/cross-model-review.md` keeps vendor text inside its
-   `DATA` block, the paraphrase-only disposition keeps vendor sentences
-  out of the report, and the last-verdict-token derivation keeps a
-  quoted verdict word from becoming the recorded verdict. The reviewer's
-  output never becomes state on its own — the
-  *orchestrator* records the verdict to `design-review-<n>.md` when the
-  pipeline gate runs the brief. The pipeline gate fails closed on anything
-  but a recorded passing verdict. The skill itself writes no artifacts.
-  The toolset, not the prose, is the guarantee for writes ([independent review rules](../team/principles/independent-review.md)).
+  accepted. The skill itself writes no artifacts.
 - Standalone use blocks nothing: users may run `/team-design` or
   `/team-structure` without ever invoking this skill directly.
 

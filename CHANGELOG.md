@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.8] - 2026-09-25
+
+### Changed
+
+- `/eng-design-doc-review` is about a fifth shorter, counting the design reviewer brief it shares with the pipeline's design-review gate. Restated rules, rationale, and notes on why each manual is read came out; every guard stayed — the fail-closed missing-read stops, discovery with its `Setup` fallback, the cross-model pass's `DATA` fencing and its record-nothing standalone scope, the `Explore` dispatch pinned to `model: opus` with no full-tool substitute, the reviewer's read-only tool limits, and every review step, blocking rule, finding class, and verdict. **What this asks of you:** nothing.
+
 ## [0.132.7] - 2026-09-25
 
 ### Changed
@@ -1210,7 +1216,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.7...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.8...HEAD
+[0.132.8]: https://github.com/bostonaholic/team/compare/v0.132.7...v0.132.8
 [0.132.7]: https://github.com/bostonaholic/team/compare/v0.132.6...v0.132.7
 [0.132.6]: https://github.com/bostonaholic/team/compare/v0.132.5...v0.132.6
 [0.132.5]: https://github.com/bostonaholic/team/compare/v0.132.4...v0.132.5
