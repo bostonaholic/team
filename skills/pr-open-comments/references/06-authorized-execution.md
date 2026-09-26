@@ -70,51 +70,26 @@ mutation($threadId: ID!) {
 The shared step 2 query supplies the thread node `id` and every inline
 comment's `databaseId`.
 
-- Every item in step 3's open-feedback set appears in the output exactly once
-  — under `Auto-applied` or `Needs your decision` — and the punch-list blocks
-  are globally numbered. Use GraphQL node ids to prevent duplicates.
-- Every auto-applied item cleared the bar. It had confidence above 90%
-  assigned after verification, a `STILL RELEVANT` verdict, and no
-  exclusion hit. Its change stayed bounded to the anchored file and
-  lines, and its report line names its confidence and landing commit SHA.
-- Each `Needs your decision` item shows the file path and line, or
-  "PR-level" for review summaries and conversation comments. It also shows the author handle, body
-  excerpt, URL, and a verification verdict with evidence. It ends with a
-  menu of 2–4 tailored options and exactly one recommendation with a
-  one-line rationale. Auto-applied items are one-line entries with
-  confidence and commit SHA.
-- Every item carries a step 4 verdict backed by evidence. Where the claim
-  is behavioral, the evidence is a specific named test with its run
-  result. Otherwise current code, diff, or a commit SHA. No comment is
-  triaged on the assumption that it is still accurate.
-- No reaction went out ahead of the decision that picks it. An
-  auto-applied item another author wrote carries 👍 on its one-line
-  entry. A punch-list item carries none yet, and its menu names the
-  reaction each option would place. No item is reacted to twice, and no
-  reaction failure stopped the triage.
-- Delete throwaway reproduction tests written during verification before
-  step 6 (auto-apply) runs, and always before any commit. Leave the
-  working tree as you found it.
+- Every item in step 3's open-feedback set appears in the output exactly
+  once — under `Auto-applied` or `Needs your decision`. Use GraphQL node ids
+  to prevent duplicates.
+- A `Needs your decision` item from a review summary or conversation comment
+  shows "PR-level" in place of the file path and line.
+- An auto-applied item another author wrote carries 👍 on its one-line
+  entry. No item is reacted to twice.
+- Leave the working tree as you found it.
 - Items the current diff already resolves are called out (option **F**) —
   check with `git diff origin/<base>...HEAD -- <path>` before you
   recommend F.
 - Nothing is silently dropped. Ambiguous items surface as
   `NEEDS CLARIFICATION`, not guesses.
-- In default mode the turn ends with an explicit hand-off prompt. No file
-  edits, replies, or thread resolutions occur in that turn for items that
-  did not clear the auto-apply bar.
 
-- Do not rely on `gh pr view --json reviews` for resolution state — reviews
-  do not expose thread resolution. Follow the shared pull-request comment
-  retrieval from step 2 for all three shapes.
 - Do not treat `isOutdated` as resolved. An outdated thread can still be
   blocking if the concern survived the rebase.
-- `gh api repos/{owner}/{repo}/pulls/{n}/comments` returns every inline
-  comment ever made on the PR, including resolved ones. Prefer the GraphQL
-  `reviewThreads` query.
+- `gh api repos/{owner}/{repo}/pulls/{n}/comments` also returns resolved
+  inline comments. Prefer the GraphQL `reviewThreads` query.
 - Pagination: any of the three top-level connections, or a thread's comment
   connection, can exceed 100 nodes. Complete every `after:` cursor before
   triage.
-- A thread can hold many comments — the first comment is usually the ask.
-  Later comments can already answer it. Scan the full thread before you
-  classify.
+- The first comment of a thread is usually the ask, but later comments can
+  already answer it. Scan the full thread before you classify.

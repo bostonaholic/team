@@ -33,15 +33,13 @@ comments from both a review summary and its review thread.
 
 Review summaries and conversation comments carry no resolved flag. Their
 items stay open until the author's code and follow-up clearly address them.
-There is nothing to resolve for either shape: an applied item ends with a
-reply, and must never call `resolveReviewThread`. Keep `isOutdated` threads but
-flag them — the code they reference can have moved.
+An applied item of either shape ends with a reply and must never call
+`resolveReviewThread`. Keep `isOutdated` threads but flag them.
 
 ### Step 4 — Verify each comment (trust but verify)
 
 Do this first for each feedback item, before any classification or
-recommendation. Reviewers comment against a snapshot of the diff. The
-code can have moved since. For every open item:
+recommendation:
 
 1. **Read the current code** at `path` (around `line`/`startLine`) for an
    inline thread. For a review summary or conversation comment, identify and
@@ -58,8 +56,8 @@ code can have moved since. For every open item:
    cited by file path and test name — plus its run result:
    - Prefer an existing test that proves the claim: cite
      `<test-file>:<line>` and the test name, run it, and record pass or
-     fail. The test must exercise the claimed behavior — a nearby test
-     that touches the same code does not count.
+     fail. It must exercise the claimed behavior — a nearby test that
+     touches the same code does not count.
    - Otherwise write a throwaway reproduction test, run it, and record
      pass or fail. Then delete it — never stage or commit it — and quote
      the test body or its key assertion in the evidence. A test that
@@ -70,30 +68,19 @@ code can have moved since. For every open item:
      data), fall back to code-reading evidence and say so in the verdict
      line.
 4. **Assign a verdict**:
-   - `STILL RELEVANT` — the code the comment targets is unchanged and the
-     ask still applies.
+   - `STILL RELEVANT` — the targeted code is unchanged and the ask still
+     applies.
    - `ALREADY ADDRESSED` — a later commit resolved the concern (cite the
      commit SHA as bare text).
    - `STALE` — the referenced code was removed or rewritten, so the
      comment no longer applies as written.
-   - `INACCURATE` — the comment's claim does not hold against the actual
-     code (for example, the "bug" cannot occur); note the evidence.
-5. **Rate confidence in the recommendation.** Assign the rating only
-   after the verdict (Hard Rule 1). Only a `STILL RELEVANT` verdict
-   reaches the auto-apply bar. For a behavioral claim, a rating
-   above 90% rests on the red-green proof: the named reproduction test
-   fails before the fix and passes
-   after the fix is applied, with the passing run
-   happening before any push. Without that proof the rating caps at 90%.
+   - `INACCURATE` — the claim does not hold against the actual code; note
+     the evidence.
+5. **Rate confidence in the recommendation** per Hard Rule 1.
 
-**Post nothing during verification.** A verdict is your reading of the
-code, not the author's answer to the reviewer, and the two can disagree —
-the user may take a comment you rated `STILL RELEVANT` and decline it, or
-answer an `INACCURATE` one with a question instead of a 👎. A reaction is
-public and cannot be honestly retracted, so it waits for the decision that
-picks it: step 6 for an item the agent auto-applies, and the user's chosen
-option for everything on the punch list. Step 7 states each option's
-reaction in the menu, so choosing an option is choosing the signal it sends.
+**Post nothing during verification.** A reaction waits for the decision
+that picks it: step 6 for an item the agent auto-applies, and the user's
+chosen option for everything on the punch list.
 
 The verdict feeds steps 5–7. `ALREADY ADDRESSED` maps to option **F**.
 `STALE` and `INACCURATE` usually map to a reply that answers the reviewer
@@ -106,16 +93,10 @@ commit that proves it.
 
 ### Step 5 — Classify each open thread
 
-For every unresolved thread, decide what it asks for:
-
-| Class | Signal |
-|-------|--------|
-| **Code change** | "please rename", "this should", "bug: …", suggested diff block |
-| **Question** | "?" / "why …" / "what about …" |
-| **Suggestion (optional)** | "nit:", "consider", "maybe" |
-| **Praise / FYI** | "nice", "+1", no ask |
-| **Blocking** | "blocking:", "must fix", reviewer requested changes |
-| **Outdated** | `isOutdated: true` |
+For every unresolved thread, decide what it asks for: **Code change**
+(including a suggested diff block), **Question**, **Suggestion (optional)**
+("nit:", "consider"), **Praise / FYI** (no ask), **Blocking** ("blocking:",
+"must fix", or the reviewer requested changes), or **Outdated** (`isOutdated: true`).
 
 The class drives which options step 7 offers. If the class is ambiguous,
 keep both candidate classes and flag `NEEDS CLARIFICATION` so the user can
@@ -124,16 +105,13 @@ disambiguate before any action.
 ### Step 6 — Auto-apply items above the bar
 
 Run the Authorized Execution path automatically for each item that clears
-the auto-apply bar (Hard Rule 2). Such an item rates above 90%
-confidence, is `STILL RELEVANT`, and hits no exclusion. Apply the change
-bounded to the thread's anchored file and lines, push, post the SHA-cited
-reply, and resolve. Record each auto-applied item with its confidence and
-the landing commit SHA for the step 7 report.
+the auto-apply bar (Hard Rule 2): apply the change bounded to the thread's
+anchored file and lines, push, post the SHA-cited reply, and resolve.
+Record each auto-applied item with its confidence and the landing commit
+SHA for the step 7 report.
 
 Add 👍 `THUMBS_UP` to the comment that opened the thread as the change
-lands. The decision here is the agent's to make — the item cleared the bar
-— and applying the fix is what the reaction claims, so the two go
-together. Never react to a comment you wrote yourself.
+lands. Never react to a comment you wrote yourself.
 
 ### Step 7 — Present the report and punch list (the deliverable)
 
@@ -157,31 +135,28 @@ Standard option menu (pick the options that apply):
 - **F. Mark resolved as-is** — current code already addresses it (cite commit/line).
 - **G. Needs clarification** — ask the reviewer when the ask itself is unclear, present the choice to the user when the user owns it, before acting.
 
-**C answers, G asks.** C is the answer to a reviewer's question you
-understood, and it posts a reply. G covers two different blockers: your
-question about an ask you did not understand, or a one-way-door choice
-the user owns rather than you. The first posts a reply; the second
-presents the choice to the user instead and touches no code either way.
-Only G is a Hard Rule 3 exclusion, so only a G item can never auto-apply
-at any confidence.
+**C answers, G asks.** C replies to a reviewer's question you understood.
+G covers two blockers: an ask you did not understand, which posts a reply
+asking the reviewer, or a one-way-door choice the user owns, which presents
+the choice to the user instead; G touches no code either way. Only G is a
+Hard Rule 3 exclusion, so only a G item can never auto-apply at any
+confidence.
 
-Each option also carries the reaction it places on the thread's opening
-comment, and the menu states it, so the user picks the signal along with
-the action. Nothing is posted until they do.
+Each option places the reaction below on the thread's opening comment, and
+the menu states it. Nothing is posted until the user picks.
 
 | Option | Reaction |
 |--------|----------|
 | A. Apply the change | 👍 `THUMBS_UP` |
 | B. Apply a variation | 👍 `THUMBS_UP` |
-| C. Reply with the answer | none — the thread is still a conversation |
+| C. Reply with the answer | none |
 | D. Decline (will not fix) | 👎 `THUMBS_DOWN` when the decline rests on an `INACCURATE` verdict; none when the ask is sound and only the priority or scope is wrong |
 | E. Defer | 👍 `THUMBS_UP` |
 | F. Mark resolved as-is | 👍 `THUMBS_UP` |
-| G. Needs clarification | none — the ask is not understood well enough to judge, or the choice belongs to the user |
+| G. Needs clarification | none |
 
-The user can override any of these — say so when presenting a 👎, since
-that is the one signal a reviewer reads as a rejection. A reaction is never
-a substitute for the reply the chosen option calls for.
+The user can override any of these — say so when presenting a 👎. A
+reaction is never a substitute for the reply the chosen option calls for.
 
 Block format:
 
@@ -203,8 +178,7 @@ Block format:
 ```
 
 Group blocks by file. List `NEEDS CLARIFICATION` items last. Number
-blocks globally so the user can say "do 3, 5, and 7 with the
-recommendation. On 4 go with option B."
+blocks globally so the user can pick by number.
 
 ### Step 8 — Stop and hand off
 
