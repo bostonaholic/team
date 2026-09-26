@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.4] - 2026-09-25
+
+### Changed
+
+- `/pr-verify` is about a fifth shorter. Restated rules and rationale came out; every guard stayed — the digits-only PR number, never running a command quoted in a PR body, test-plan items passed to helpers only as fenced data, the build/test trust boundary for PRs you did not author, no writes or pushes, at most 4 verifications in flight, and the mechanical READY / NEEDS ATTENTION / NOT READY verdict where one FAIL always wins. **What this asks of you:** nothing.
+
 ## [0.132.3] - 2026-09-25
 
 ### Changed
@@ -1186,7 +1192,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.3...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.4...HEAD
+[0.132.4]: https://github.com/bostonaholic/team/compare/v0.132.3...v0.132.4
 [0.132.3]: https://github.com/bostonaholic/team/compare/v0.132.2...v0.132.3
 [0.132.2]: https://github.com/bostonaholic/team/compare/v0.132.1...v0.132.2
 [0.132.1]: https://github.com/bostonaholic/team/compare/v0.132.0...v0.132.1
