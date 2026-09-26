@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.7] - 2026-09-25
+
 ### Changed
 
 - Shortened `/team-design` by about a fifth without changing what it does. It still discovers the same `docs/plans/<id>/` directory, resumes at review when a design already exists, runs the cross-model pass and the adversarial review each round, records every verdict, re-drafts on REQUEST CHANGES with no round cap, and fails closed on a missing verdict. [`skills/team-design/SKILL.md`](https://github.com/bostonaholic/team/blob/main/skills/team-design/SKILL.md)
@@ -1208,7 +1210,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.6...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.7...HEAD
+[0.132.7]: https://github.com/bostonaholic/team/compare/v0.132.6...v0.132.7
 [0.132.6]: https://github.com/bostonaholic/team/compare/v0.132.5...v0.132.6
 [0.132.5]: https://github.com/bostonaholic/team/compare/v0.132.4...v0.132.5
 [0.132.4]: https://github.com/bostonaholic/team/compare/v0.132.3...v0.132.4
