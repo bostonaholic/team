@@ -7,6 +7,7 @@ import {
   lstatSync,
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   realpathSync,
   rmSync,
   symlinkSync,
@@ -207,4 +208,36 @@ test("exits 3, not 1, when rm cannot fully remove the path", (t) => {
   } finally {
     chmodSync(locked, 0o755);
   }
+});
+
+// $( ) strips trailing newlines, so without a sentinel y -> "y\n" would read as y.
+test("refuses a last-parent symlink to a sibling named with a trailing newline", (t) => {
+  const { root, canary } = scratch(t);
+  const target = runDir(join(root, "x", "y\n", "name"));
+  symlinkSync("y\n", join(root, "x", "y"));
+  assertRefused(guard(root, join(root, "x", "y", "name")), canary);
+  assert.ok(existsSync(join(target, "scratch.txt")));
+});
+
+test("removes a recorded path when TMPDIR has a doubled slash inside it", (t) => {
+  const { base } = scratch(t);
+  const path = runDir(join(base, "tmp", "run.9"));
+  const run = guard(`${base}//tmp`, `${base}//tmp//run.9`);
+  assert.equal(run.status, 0, run.stderr);
+  assert.equal(existsSync(path), false);
+});
+
+// Removing /bin/pwd needs root, so run a copy whose candidate list names no real file.
+test("refuses with a clear message when no external pwd exists", (t) => {
+  const { base, root, canary } = scratch(t);
+  const source = readFileSync(GUARD, "utf8");
+  const copy = source.replace("for c in /bin/pwd /usr/bin/pwd; do", "for c in /nonexistent/pwd; do");
+  assert.notEqual(copy, source, "candidate list not found in the guard");
+  const script = join(base, "remove-temp-path.sh");
+  writeFileSync(script, copy, { mode: 0o755 });
+  const path = runDir(join(root, "run.10"));
+  const run = spawnSync("/bin/bash", [script, path], { encoding: "utf8", env: { ...process.env, TMPDIR: `${root}/` } });
+  assertRefused(run, canary);
+  assert.match(run.stderr, /cannot be checked: no external pwd at \/bin\/pwd or \/usr\/bin\/pwd$/m);
+  assert.ok(existsSync(path));
 });
