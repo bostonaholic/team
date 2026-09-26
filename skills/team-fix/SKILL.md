@@ -10,9 +10,6 @@ argument-hint: "<ticket id, issue URL, or bug description>"
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-Run the compressed bug-fix pipeline. Goes straight to test-driven fix
-discipline without the full QRSPI ceremony.
-
 Invocation is guarded per [human control rules](../team/principles/human-control.md): the
 pipeline fires only on stated pipeline intent — a plain "fix this bug" asks
 for an inline fix, not this pipeline.

@@ -31,7 +31,7 @@ Identify the root cause, not the proximate symptom. Make the original reproducti
 
 #### Root Cause Analysis (5 Whys)
 
-Ask why from symptom to a cause you can change. Anchor every link in OBSERVE evidence; branch when a link has multiple causes; stop at a cause you can change. The chain can be length one — five is the technique's name, not its quota. Fix the root link, not a proximate link above it. The mutation check proves the regression test depends on the fix. Blame the process, not the person.
+Ask why from the symptom and stop at a cause you can change. Anchor every link in OBSERVE evidence; branch when a link has multiple causes. The chain can be length one — five is the technique's name, not its quota. Fix the root link, not a proximate link above it. Blame the process, not the person.
 
 ## Escalation rules
 
