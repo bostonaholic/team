@@ -9,9 +9,7 @@ lacks one: a thread that resolved during a confirmation wait, a comment
 engaged during that wait, a verdict
 voided by a reopen, or verdicts lost to a compaction. When the head
 moved after a verdict was recorded, re-check the threads whose `path`
-the new commits touch — an addressed verdict can be un-fixed by a later
-push, and a verdict rendered at head B proves nothing about head C's
-version of that file. **Tracked review summaries and conversation comments have no `path`, so they cannot be
+the new commits touch. **Tracked review summaries and conversation comments have no `path`, so they cannot be
 narrowed that way: re-check every tracked PR-level item whenever the head
 moved after its verdict.** Failing closed on the whole set is the only
 sound option when the item does not say which files it covers. A
@@ -28,10 +26,7 @@ stands tests threads only — then, on the loop path resume polling, or
 on the immediate path stop and report the open dispute rather than
 starting a loop that was not asked for. A pending
 verdict here means the approval condition does not hold: never cast, and
-on the loop path resume polling. A thread the skill itself resolved is
-re-checked here on exactly the same terms as one the author resolved:
-its resolved bit proves nothing about head C, and re-reading the branch
-is the only thing that does.
+on the loop path resume polling.
 
 Run the pre-cast merge-safety checks when the approval condition holds.
 This covers the loop path and the immediate path. On the immediate path
@@ -44,19 +39,14 @@ confirmation before casting. A declined confirmation is the
 check was declined.
 
 - **Head drift.** Compare the arm-time `headRefOid` against the
-  `headRefOid` from the final poll. When they differ, the author pushed
-  commits after you armed. The approval would then cover code your
-  threads never gated on. When the head moved, with auto-merge enabled
-  or not, require an explicit confirmation before casting. Name both
-  SHAs in the approval body and the completion report. With auto-merge
-  on, an unconfirmed cast would merge code no human re-read,
-  irreversibly.
+  `headRefOid` from the final poll. When the head moved, with auto-merge
+  enabled or not, require an explicit confirmation before casting. Name
+  both SHAs in the approval body and the completion report.
 - **Auto-merge without an arm-time confirmation.** When the final poll
   shows auto-merge enabled and no auto-merge confirmation exists from
   arm, require an explicit confirmation before casting. This holds even
   when the head never moved. Either it was off at arm and flipped on
-  mid-watch, or the arm-time record is unrecoverable. The arm-time gate
-  cannot have covered a state that did not exist at arm.
+  mid-watch, or the arm-time record is unrecoverable.
 - **Unrecoverable drift baseline (fail closed).** The drift check's
   baseline is the arm-time head SHA printed in the arm report and
   repeated in every snapshot line. When a compaction left no copy
@@ -65,10 +55,7 @@ check was declined.
   never approve unconfirmed: require an explicit confirmation that names
   the missing baseline, or stop.
 
-**A granted confirmation is itself a stale read.** The checks above run
-against a poll that precedes the confirmation wait. An unattended "yes"
-can arrive hours later. That is time enough for auto-merge to flip on,
-for the head to move again, or for a resolved thread to reopen. After
+**A granted confirmation is itself a stale read.** After
 any granted confirmation, re-run the step-4 poll, which becomes the
 final poll. That covers a confirmation from one of these checks, and one
 from the immediate path. Then re-evaluate the step-2 approval condition
@@ -101,20 +88,14 @@ GH_APPROVE_EOF
 ```
 
 The body states the three counts separately, and when `<S>` or `<C>` is non-zero it
-names how those PR-level items were judged. That sentence is the audit trail
-for the weaker evidence: a reader can otherwise not tell whether the
-approval rested on resolves the author clicked or on inferences the
-watch drew. `<R>` is the same disclosure for the resolves: an approval
-that counted threads the approver itself closed must say so, or a reader
-auditing it cannot tell the two apart. Drop that sentence when `<R>` is
-zero. When `<S>` and `<C>` are zero, drop both PR-level counts and that sentence
-entirely and say "all `<T>` review threads opened by @`<viewer>` are
-resolved" — a thread-only approval should read exactly as it did before
-PR-level feedback was tracked, with no dead clause about a shape that did
-not appear.
+names how those PR-level items were judged. `<R>` is the same disclosure
+for the resolves: an approval that counted threads the approver itself
+closed must say so. Drop that sentence when `<R>` is
+zero. When `<S>` and `<C>` are zero, drop both PR-level counts and the
+judged-how sentence entirely and say "all `<T>` review threads opened by
+@`<viewer>` are resolved" — no dead clause about a shape that did not appear.
 
-The body never names this skill, a slash command, or an agent — internal
-tooling names mean nothing to the reader and read as process noise.
+The body never names this skill, a slash command, or an agent.
 "Approved automatically" carries the automated-attribution disclosure
 without naming any tooling; the rest of the body states substance only:
 what was verified and at which SHAs. A user or project convention may
@@ -125,15 +106,12 @@ time. That SHA is the `headRefOid` from the final
 poll, and the confirmation rule above guarantees no wait separates that
 poll from the cast. The body also carries the arm-time head SHA and the
 settled-item counts. When the two SHAs are equal, collapse the two SHA
-sentences into "Head commit at arm and approval time: <head-SHA>." An
-unexplained automated approval is unauditable, and an approval that
-hides head drift is unauditable too. When `<T>`, `<S>`, or `<C>` differs from the
+sentences into "Head commit at arm and approval time: <head-SHA>." When `<T>`, `<S>`, or `<C>` differs from the
 matching arm-time tracked count, items were deleted or added mid-watch —
 a gate
 cleared by deletion must not read as one cleared by settlement — so name
 both counts for the shape that changed, in the body and the completion
-report, the way the two head
-SHAs are handled. When the arm-time SHA was unrecoverable and the user
+report. When the arm-time SHA was unrecoverable and the user
 confirmed the cast anyway, say so in the body in place of the arm-time
 SHA — never invent one.
 

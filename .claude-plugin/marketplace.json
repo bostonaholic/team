@@ -5,13 +5,13 @@
   },
   "metadata": {
     "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
-    "version": "0.132.12"
+    "version": "0.132.13"
   },
   "plugins": [
     {
       "name": "team",
       "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
-      "version": "0.132.12",
+      "version": "0.132.13",
       "source": "./",
       "author": {
         "name": "Matthew Boston",
