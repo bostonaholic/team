@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.3] - 2026-09-25
+
+### Changed
+
+- `/why`'s own files are nearly a fifth shorter, with the same rules. Its closing rules file restated rules the entry file and other references already give, so it is gone. Its one unique rule — hand a failure being diagnosed to the bug-diagnosis reference — now sits in the skill's entry file. It still anchors the question in git and PR history and fans out one read-only investigator per evidence source. It still sorts every claim into a confidence tier and names every source it skipped. **What this asks of you:** nothing.
+
 ## [0.132.2] - 2026-09-25
 
 ### Changed
@@ -1180,7 +1186,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.2...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.3...HEAD
+[0.132.3]: https://github.com/bostonaholic/team/compare/v0.132.2...v0.132.3
 [0.132.2]: https://github.com/bostonaholic/team/compare/v0.132.1...v0.132.2
 [0.132.1]: https://github.com/bostonaholic/team/compare/v0.132.0...v0.132.1
 [0.132.0]: https://github.com/bostonaholic/team/compare/v0.131.2...v0.132.0
