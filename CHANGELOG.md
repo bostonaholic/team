@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.19] - 2026-09-25
+
 ### Changed
 
 - `/team-worktree` is about 30% shorter. Restated rules, a benefit list, and rationale came out; every guard stayed — reuse-or-stop inside an existing linked worktree, slash-free branch names, the standalone-only confirmation, the multi-repo containment check, the `## Worktrees` record, the numbered teardown with its residue sweep, and the never-block fallback. **What this asks of you:** nothing.
@@ -1280,7 +1282,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.18...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.19...HEAD
+[0.132.19]: https://github.com/bostonaholic/team/compare/v0.132.18...v0.132.19
 [0.132.18]: https://github.com/bostonaholic/team/compare/v0.132.17...v0.132.18
 [0.132.17]: https://github.com/bostonaholic/team/compare/v0.132.16...v0.132.17
 [0.132.16]: https://github.com/bostonaholic/team/compare/v0.132.15...v0.132.16
