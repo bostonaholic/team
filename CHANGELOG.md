@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.18] - 2026-09-25
+
 ### Changed
 
 - `/team-pr` got about a fifth smaller without losing a rule. The duplicated PR body template, restated changelog and commit rules, most worked examples, and history notes are gone. Every gate, stop, and PR-safety rule it had still applies. **What this asks of you:** nothing.
@@ -1274,7 +1276,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.17...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.18...HEAD
+[0.132.18]: https://github.com/bostonaholic/team/compare/v0.132.17...v0.132.18
 [0.132.17]: https://github.com/bostonaholic/team/compare/v0.132.16...v0.132.17
 [0.132.16]: https://github.com/bostonaholic/team/compare/v0.132.15...v0.132.16
 [0.132.15]: https://github.com/bostonaholic/team/compare/v0.132.14...v0.132.15
