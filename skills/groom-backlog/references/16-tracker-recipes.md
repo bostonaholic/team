@@ -1,10 +1,8 @@
 ## Tracker recipes
 
 GitHub Projects v2, the worked example. **Every prose value travels by file** — no
-description, body, or comment text is ever typed into a command line. See the shell-safety
-hard rule for why. `jq -n --arg` escapes a request body and `--input` hands it over. `jq -r`
-lifts a cached value into a variable rather than pasting prose. Grouping constructs live on
-the repository, not the project:
+description, body, or comment text is ever typed into a command line. Grouping constructs
+live on the repository, not the project:
 
 ```bash
 # Create one. Re-describing an existing one is the same shape: build a JSON body
@@ -14,8 +12,7 @@ jq -n --arg title "$MILESTONE_TITLE" --arg description "$DESCRIPTION" \
   due_on: $due_on}' > "$RUN_DIR/milestone-new.json"
 gh api "repos/$OWNER/$REPO/milestones" --method POST \
   --input "$RUN_DIR/milestone-new.json"
-# Attach an issue. The title reaches the command only as an expanded variable, which
-# the shell does not re-parse.
+# Attach an issue. The title reaches the command only as an expanded variable.
 MILESTONE_TITLE=$(jq -r --argjson m "$M" '.[] | select(.number == $m) | .title' \
   "$RUN_DIR/milestones.json")
 gh issue edit "$N" --repo "$OWNER/$REPO" --milestone "$MILESTONE_TITLE"
@@ -46,15 +43,13 @@ gh issue edit "$N" --repo "$OWNER/$REPO" --add-label "wontfix"
 gh issue close "$N" --repo "$OWNER/$REPO" --reason "not planned"
 ```
 
-Dependency links are REST, keyed by **database id, not issue number**. This is the one place
-here where those two diverge without warning. Both are integers, so a number passed as an id
-resolves to some unrelated issue rather than fail:
+Dependency links are REST, keyed by **database id, not issue number**. Both are integers,
+so a number passed as an id resolves to some unrelated issue rather than fail:
 
 ```bash
 # $N is blocked by $BLOCKER. An undeclared blocker's number comes out of tracker
-# text, so match it against the loaded board before it reaches a path. An issue
-# reference is not prose, so the shell-safety hard rule does not reach it, and a
-# value like `7/../../..` would re-target the request.
+# text, so match it against the loaded board before it reaches a path: a value
+# like `7/../../..` would re-target the request.
 jq -e --argjson b "$BLOCKER" 'any(.[].number; . == $b)' "$RUN_DIR/issues.json" \
   || { echo "blocker #$BLOCKER is not on the loaded board — stopping" >&2; exit 1; }
 # Resolve the blocker's database id — not its number, and not the `id` on the
@@ -75,10 +70,8 @@ gh api --method DELETE \
 ```
 
 The board column is a single-select field, so it needs GraphQL. Resolve the item, field, and
-option ids, write, then re-read — the resolve-write-verify shape of
-`.claude/scripts/project-item-id.sh` and `project-set-status.sh`. Every id goes over `-f`,
-which sends a string. `-F` types its value, so an all-digit id would fail the `String!`
-variable.
+option ids, write, then re-read. Every id goes over `-f`, which sends a string. `-F` types
+its value, so an all-digit id would fail the `String!` variable.
 
 ```bash
 gh api graphql -f query='mutation($project: ID!, $item: ID!, $field: ID!,
@@ -102,8 +95,7 @@ On **Linear**, `sq agent-tools linear` covers issues, states, priority, and labe
 through its `execute-graphql` subcommand against `projectMilestone`. Priority `0` means unset
 rather than urgent. Linear models dependencies as typed issue relations, so a link goes
 through `execute-graphql` as well (`issueRelationCreate`, type `blocks`). Which issue is the
-relation's source carries the direction. That is the same place a backwards link hides. No
-**Jira** CLI is named for this repo, so work Jira at capability level. Set status through a
-transition rather than by a write to the field. The REST API (`/rest/api/3/issue/{key}`) is
-the escape hatch. Jira dependency links are `/rest/api/3/issueLink`, whose
-`inwardIssue`/`outwardIssue` pair encodes the direction.
+relation's source carries the direction. No **Jira** CLI is named for this repo, so work Jira
+at capability level. Set status through a transition rather than by a write to the field. The
+REST API (`/rest/api/3/issue/{key}`) is the escape hatch. Jira dependency links are
+`/rest/api/3/issueLink`, whose `inwardIssue`/`outwardIssue` pair encodes the direction.
