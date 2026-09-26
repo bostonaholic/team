@@ -27,9 +27,12 @@ function runDir(dir) {
   return dir;
 }
 
-// /bin/bash, so macOS exercises its stock bash 3.2.
-function guard(tmpRoot, path) {
-  return spawnSync("/bin/bash", [GUARD, path], { encoding: "utf8", env: { ...process.env, TMPDIR: `${tmpRoot}/` } });
+// /bin/bash, so macOS exercises its stock bash 3.2. TMPDIR ends in /, as on macOS.
+function guard(tmpRoot, path, env = {}) {
+  return spawnSync("/bin/bash", [GUARD, path], {
+    encoding: "utf8",
+    env: { ...process.env, ...env, TMPDIR: `${tmpRoot}/` },
+  });
 }
 
 function assertRefused(run, canary) {
@@ -99,18 +102,59 @@ test("removes a recorded path when the temp root itself is a symlink (macOS /var
 
 // groom-backlog and retro record `mktemp -d "${TMPDIR:-/tmp}/<name>.XXXXXXXX"`, which keeps
 // the doubled slash when TMPDIR ends in / (the macOS default).
-test("removes a recorded path made by the callers' mktemp idiom (doubled slash)", (t) => {
-  const { root } = scratch(t);
-  const made = spawnSync("/bin/sh", ["-c", 'mktemp -d "${TMPDIR:-/tmp}/groom-backlog.XXXXXXXX"'], {
-    encoding: "utf8",
-    env: { ...process.env, TMPDIR: `${root}/` },
+for (const name of ["groom-backlog", "retro"]) {
+  test(`removes a recorded path made by the ${name} mktemp idiom (doubled slash)`, (t) => {
+    const { root } = scratch(t);
+    const made = spawnSync("/bin/sh", ["-c", `mktemp -d "\${TMPDIR:-/tmp}/${name}.XXXXXXXX"`], {
+      encoding: "utf8",
+      env: { ...process.env, TMPDIR: `${root}/` },
+    });
+    assert.equal(made.status, 0, made.stderr);
+    const path = made.stdout.trim();
+    assert.ok(path.startsWith(`${root}//${name}.`), `expected ${root}//${name}.* but got ${path}`);
+    const run = guard(root, path);
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(existsSync(path), false);
   });
-  assert.equal(made.status, 0, made.stderr);
-  const path = made.stdout.trim();
-  assert.ok(path.includes("//"), `expected a doubled slash in ${path}`);
-  const run = guard(root, path);
+}
+
+test("removes a recorded path written with doubled or trailing slashes", (t) => {
+  const { root } = scratch(t);
+  for (const [dir, recorded] of [
+    ["run.4", `${root}//run.4`],
+    ["run.5", `${root}///run.5`],
+    ["run.6", `${root}/run.6/`],
+    ["run.7", `${root}//run.7//`],
+  ]) {
+    runDir(join(root, dir));
+    const run = guard(root, recorded);
+    assert.equal(run.status, 0, `${recorded}: ${run.stderr}`);
+    assert.equal(existsSync(join(root, dir)), false, `${recorded} was not removed`);
+  }
+});
+
+// A fake rm on PATH swaps the checked parent for a symlink out of the root just before the
+// real rm runs, standing in for a race between the check and the delete.
+test("deletes from the verified directory when its path is swapped for a symlink before rm", (t) => {
+  const { base, root, canary } = scratch(t);
+  const parent = join(root, "run");
+  runDir(join(parent, "victim"));
+  const shims = join(base, "shims");
+  mkdirSync(shims);
+  writeFileSync(
+    join(shims, "rm"),
+    '#!/bin/sh\nmv "$SWAP_DIR" "$SWAP_DIR.moved" && ln -s "$SWAP_TARGET" "$SWAP_DIR" && exec /bin/rm "$@"\n',
+    { mode: 0o755 },
+  );
+  const run = guard(root, join(parent, "victim"), {
+    PATH: `${shims}:${process.env.PATH}`,
+    SWAP_DIR: parent,
+    SWAP_TARGET: resolve(canary, ".."),
+  });
+  assert.ok(existsSync(join(canary, "keep.txt")), "canary outside the temp root was deleted");
   assert.equal(run.status, 0, run.stderr);
-  assert.equal(existsSync(path), false);
+  assert.ok(lstatSync(parent).isSymbolicLink(), "the fake rm did not swap the parent");
+  assert.equal(existsSync(join(`${parent}.moved`, "victim")), false);
 });
 
 test("refuses an intermediate symlink written with doubled slashes", (t) => {
