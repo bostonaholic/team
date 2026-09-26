@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.9] - 2026-09-25
+
 ### Changed
 
 - The code review briefs are shorter. The code, security, documentation, and UX reviewers read about 14% less review-brief text each round, and `/code-review` reads about 11% less of its own files. The gates, severity tiers, report format, screenshot rules, and commands are unchanged. **What this asks of you:** nothing.
@@ -1220,7 +1222,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.8...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.9...HEAD
+[0.132.9]: https://github.com/bostonaholic/team/compare/v0.132.8...v0.132.9
 [0.132.8]: https://github.com/bostonaholic/team/compare/v0.132.7...v0.132.8
 [0.132.7]: https://github.com/bostonaholic/team/compare/v0.132.6...v0.132.7
 [0.132.6]: https://github.com/bostonaholic/team/compare/v0.132.5...v0.132.6
