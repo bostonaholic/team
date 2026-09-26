@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed two `/retro` failures. Its tracker check ran `gh repo view --repo`, a flag `gh repo view` does not have, so filing to GitHub issues never resolved; it now passes the repository as a positional argument. Its transcript resolver, and the `write-target.mjs` and `/pr-screenshots` `splice.mjs` scripts, exited silently with no output when run through a symlinked path such as macOS `/tmp`; they now run from any path.
+
 ## [0.131.2] - 2026-09-25
 
 ### Fixed

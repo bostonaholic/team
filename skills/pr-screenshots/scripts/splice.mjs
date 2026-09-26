@@ -53,7 +53,7 @@
  * reaches the caller as a stack trace on the refusal code.
  */
 
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 /** GitHub's PR-body ceiling, in characters. Rule 5 refuses above it. */
@@ -806,7 +806,8 @@ export function splice(body, section, options = {}) {
 }
 
 // CLI entry point — runs only on direct execution, never on import.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Node realpaths import.meta.url but not argv[1], so a symlinked path needs realpathSync.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const argv = process.argv.slice(2);
   // A flag whose next token is itself a flag has no value: returning that
   // token would bind `--body-file --landed 2` to the string "--landed" and

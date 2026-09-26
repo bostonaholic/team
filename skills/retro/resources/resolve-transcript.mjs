@@ -41,7 +41,7 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, mkdirSync, openSync, readFileSync, readSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
@@ -871,7 +871,8 @@ export function normalizeOpencode({ dbPath, sessionId }) {
 
 // CLI entry point — runs only when executed directly, never on import, so a
 // test import has no side effects (the supports-nesting.mjs shape).
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Node realpaths import.meta.url but not argv[1], so a symlinked path needs realpathSync.
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const runDir = process.argv[2] ?? "";
   const storeOverride = process.argv[3] ?? "";
 
