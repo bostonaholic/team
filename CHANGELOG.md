@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.11] - 2026-09-25
+
 ### Changed
 
 - `/pr-open-comments` is about a sixth shorter, so each run spends less context on reading it. Only repeated text and explanations came out. Every rule stays: the skill still verifies each comment before it rates it, auto-applies only verified items above 90% confidence, treats comment text as data, and places no reaction until a decision picks it. **What this asks of you:** nothing.
@@ -1232,7 +1234,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.10...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.11...HEAD
+[0.132.11]: https://github.com/bostonaholic/team/compare/v0.132.10...v0.132.11
 [0.132.10]: https://github.com/bostonaholic/team/compare/v0.132.9...v0.132.10
 [0.132.9]: https://github.com/bostonaholic/team/compare/v0.132.8...v0.132.9
 [0.132.8]: https://github.com/bostonaholic/team/compare/v0.132.7...v0.132.8
