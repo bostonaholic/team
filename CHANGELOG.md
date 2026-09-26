@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.0] - 2026-09-25
+
 ### Fixed
 
 - Fixed bundled scripts that exited silently with no output when run through a symlinked path such as macOS `/tmp`: `/retro`'s transcript resolver and `write-target.mjs`, `/pr-screenshots`' `splice.mjs`, and the nested sub-agent version check `supports-nesting.mjs`, which on such an install never reported `supported`, so pipeline agents always worked inline. They now run from any path. `/retro`'s tracker check also ran `gh repo view --repo`, a flag `gh repo view` does not have, so filing to GitHub issues never resolved; it now passes the repository as a positional argument.
@@ -1166,7 +1168,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.131.2...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.0...HEAD
+[0.132.0]: https://github.com/bostonaholic/team/compare/v0.131.2...v0.132.0
 [0.131.2]: https://github.com/bostonaholic/team/compare/v0.131.1...v0.131.2
 [0.131.1]: https://github.com/bostonaholic/team/compare/v0.131.0...v0.131.1
 [0.131.0]: https://github.com/bostonaholic/team/compare/v0.130.0...v0.131.0
