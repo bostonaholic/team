@@ -4,6 +4,8 @@ Emit the prompt with the sections below, in this order, and replace every
 `<placeholder>`. Prefer the shortest prompt a competent agent can execute;
 delete any line that does not carry a fact.
 
+Keep `## Title and one-line goal` literal; put the title text beneath it, not in a heading.
+
 ## Title and one-line goal
 
 `<Imperative title>`. `<One sentence: the outcome, and for whom.>`
