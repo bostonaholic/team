@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.23] - 2026-09-25
+
+### Changed
+
+- `/pr-cleanup` is shorter to read. Its restated rules, repeated pitfalls, and background prose are gone, and the empty "Execution" reference file is deleted. It still verifies a merged PR by identity and containment before deleting anything, refuses protected and unsafe branch names, stops on a dirty tree, deletes remote branches only on an abandon request or your answer to its offer, and runs only the `.teamteardown` committed to the default branch. **What this asks of you:** nothing.
+
 ## [0.132.22] - 2026-09-25
 
 ### Changed
@@ -1300,7 +1306,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.22...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.23...HEAD
+[0.132.23]: https://github.com/bostonaholic/team/compare/v0.132.22...v0.132.23
 [0.132.22]: https://github.com/bostonaholic/team/compare/v0.132.21...v0.132.22
 [0.132.21]: https://github.com/bostonaholic/team/compare/v0.132.20...v0.132.21
 [0.132.20]: https://github.com/bostonaholic/team/compare/v0.132.19...v0.132.20

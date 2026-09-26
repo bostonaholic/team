@@ -20,10 +20,9 @@
    ("no merged PR found for `$BRANCH` in this repo — delete anyway?") and
    wait for explicit confirmation before any deletion.
 
-   With a same-repo entry, confirm the merge actually landed and the
-   local branch holds exactly what the PR merged — capture `$HEAD_OID`
-   (the entry's `headRefOid`) and `$MERGE_OID` (its `mergeCommit.oid`) in
-   the SAME invocation:
+   With a same-repo entry, confirm the local branch holds exactly what the
+   PR merged and the merge landed — capture `$HEAD_OID` (the entry's
+   `headRefOid`) and `$MERGE_OID` (its `mergeCommit.oid`) in the SAME invocation:
 
    ```sh
    [ "$(git -C "$PRIMARY_ROOT" rev-parse "refs/heads/$BRANCH")" = "${HEAD_OID:?}" ] &&
@@ -32,14 +31,13 @@
    ```
 
    Containment is checked on the **merge commit**, not the branch tip — a
-   squash merge rewrites the history, so the branch tip is never an
-   ancestor of the default branch. Either check failing halts the block
-   with `exit 1` — never a warning to continue past. On that non-zero
-   exit, STOP: report which check failed, ask the user whether to delete
-   anyway, and wait for the answer before running any later step. Only
-   the user's explicit delete-anyway confirmation (Hard Rule 1) re-enters
-   the flow, and the completion report must state that the gate was
-   overridden.
+   squash merge means the tip is never an ancestor of the default branch.
+   Either check failing halts the block with `exit 1` — never a warning
+   to continue past. On that non-zero exit, STOP: report which check
+   failed, ask the user whether to delete anyway, and wait for the answer
+   before running any later step. Only the user's explicit delete-anyway
+   confirmation (Hard Rule 1) re-enters the flow, and the completion
+   report must state that the gate was overridden.
 
 2. **Remove the branch's worktree, try-then-confirm.** Detect it and
    capture its path in the same invocation as the removal:
@@ -58,12 +56,11 @@
 
    Empty `$WORKTREE_PATH` → the branch lives in no worktree; skip this
    step. A `$WORKTREE_PATH` outside the repository's `.claude/worktrees/`
-   was created by something other than Team — a workspace manager, or the
-   user by hand — and is not this skill's to remove: skip this step, say
-   so, and name the path; that tool's own teardown removes it. The
-   remaining steps (resync, branch delete, prune) still run, except that a
-   branch checked out in such a worktree is left for that teardown too.
-   Otherwise:
+   (a workspace manager's, or made by hand) is not this skill's to remove:
+   skip this step, say so, and name the path; that tool's own teardown
+   removes it. The remaining steps (resync, branch delete, prune) still
+   run, except that a branch checked out in such a worktree is left for
+   that teardown too. Otherwise:
 
    ```sh
    cd "$PRIMARY_ROOT"
@@ -89,9 +86,7 @@
    never auto-resolve.
 
 4. **Delete the local branch** — only after an exact-case match against a
-   real local branch (Hard Rule 10). On a case-insensitive filesystem
-   `git branch -D` resolves `Main` to `main`, so the name must exist byte
-   for byte before `-D` runs:
+   real local branch (Hard Rule 10):
 
    ```sh
    git -C "$PRIMARY_ROOT" for-each-ref --format='%(refname:short)' refs/heads |
@@ -105,16 +100,13 @@
    deletion if it does. Then run the local-state sweep and the scratch
    removal exactly as Mode B steps 5 and 6 describe them.
 
-6. **Sever the stale tracking ref, and offer to reclaim the space.**
-   Deleting a branch does not release its commits. When GitHub deletes the
-   head branch on merge — or `gh pr close --delete-branch` deletes it
-   through the API — the deletion happens server-side, and the local
-   `refs/remotes/origin/$BRANCH` survives. That ref keeps every commit on
-   the branch **reachable**, so the repo looks clean while still pinning
-   the objects: `git fsck` reports zero unreachable, and
-   `git gc --prune=now` collects nothing, because from git's view nothing
-   is garbage yet. Pruning the tracking ref is what turns those commits
-   into garbage:
+6. **Sever the stale tracking ref, and offer to reclaim the space.** When
+   the head branch is deleted server-side — GitHub on merge, or
+   `gh pr close --delete-branch` — the local `refs/remotes/origin/$BRANCH`
+   survives and keeps every commit on the branch **reachable**: `git fsck`
+   reports zero unreachable and `git gc --prune=now` collects nothing, yet
+   that is not "already clean". Pruning the tracking ref is what turns
+   those commits into garbage:
 
    ```sh
    git -C "$PRIMARY_ROOT" remote prune origin
@@ -131,15 +123,10 @@
    git -C "$PRIMARY_ROOT" gc --prune=now
    ```
 
-   The reflog expiry drops every repository-wide reflog entry pointing at
-   an unreachable commit, so anything not reachable from a branch, tag,
-   stash, or worktree HEAD becomes unrecoverable — a botched rebase's
-   pre-rebase state, an abandoned experiment, a detached HEAD. Commits and
-   uncommitted work still referenced by a live ref are untouched. Offer
-   these two only when reclaiming space is the actual goal, and run them
-   only on explicit confirmation; cleaning up one merged branch never
-   requires them.
-
-   Order is load-bearing. Run `gc` before the prune and it sees a
-   reachable branch and no-ops, leaving the objects exactly where they
-   were — a cleanup that reports success and frees nothing.
+   The reflog expiry makes anything not reachable from a branch, tag,
+   stash, or worktree HEAD unrecoverable, repository-wide — a botched
+   rebase's pre-rebase state, an abandoned experiment, a detached HEAD.
+   Offer these two only when reclaiming space is the actual goal, and run
+   them only on explicit confirmation; cleaning up one merged branch never
+   requires them. Order is load-bearing: run `gc` before the prune and it
+   sees a reachable branch and no-ops.

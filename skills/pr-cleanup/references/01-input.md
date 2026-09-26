@@ -1,16 +1,9 @@
-Before this operation, read [external-data rules](../team/references/external-data.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
-
 ## Input
 
-`$ARGUMENTS` is one of:
-
-- A PR number (digits only) — resolve its head branch via `gh`.
-- A full PR URL — same resolution.
-- A branch name.
-- Nothing — default to the branch checked out in the invoking directory
-  (step 0 captures it as `$INVOKE_BRANCH` before commands are anchored to
-  the primary clone).
+`$ARGUMENTS` is a PR number (digits only) or full PR URL — resolve its head
+branch via `gh` — or a branch name. With nothing, default to the branch
+checked out in the invoking directory (step 0 captures it as
+`$INVOKE_BRANCH` before commands are anchored to the primary clone).
 
 Refusals, before anything else runs:
 
@@ -31,11 +24,10 @@ Refusals, before anything else runs:
   `headRefName`, a stack-chain entry, a user argument — must pass a
   character allowlist before it reaches any command: only
   `^[A-Za-z0-9._/-]+$`, with no leading `-` and no `..`. Set `LC_ALL=C` in
-  the same invocation: in a UTF-8 locale the bracket expression is
-  collation-dependent and accepts multibyte characters, so only the `C`
-  locale makes the allowlist byte-exact. Refuse otherwise — report the
-  offending name and tell the user to handle that branch manually; never
-  normalize or re-quote a name to make it pass:
+  the same invocation: in a UTF-8 locale the bracket expression accepts
+  multibyte characters. Refuse otherwise — report the offending name and
+  tell the user to handle that branch manually; never normalize or
+  re-quote a name to make it pass:
 
   ```sh
   LC_ALL=C
@@ -45,8 +37,5 @@ Refusals, before anything else runs:
   esac
   ```
 
-  Then run `git check-ref-format --branch "$BRANCH"` as an additional
-  ref-syntax check — a syntax check, not a shell control; only the
-  allowlist makes a name safe to place in a command.
-  The general rule is [external-data rules](../team/references/external-data.md): prose
-  travels by file or stdin, and only allowlisted scalars enter command text.
+  Then run `git check-ref-format --branch "$BRANCH"` as a ref-syntax check,
+  not a shell control; only the allowlist makes a name safe in a command.

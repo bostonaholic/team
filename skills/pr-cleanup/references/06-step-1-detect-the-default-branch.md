@@ -11,6 +11,4 @@ Run, in order, the first that succeeds — the result is `$DEFAULT`:
 4. Neither exists → stop and ask the user.
 
 Like the step 0 block, this detection re-runs in every Bash invocation
-that consumes `$DEFAULT` (Hard Rule 11) — a fresh invocation that assumed
-`$DEFAULT` survived from an earlier one would run its guards against an
-empty value.
+that consumes `$DEFAULT` (Hard Rule 11).
