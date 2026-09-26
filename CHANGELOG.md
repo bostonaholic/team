@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.132.6] - 2026-09-25
+
 ### Changed
 
 - `groom-backlog` is about a sixth shorter. Rationale paragraphs, a worked domain example, citations of this repository's dev-only board scripts, and rules stated twice within the skill are gone. Every gate stays: one question per mutation class, a separate answer for each new issue and each closure, the plan file written before the question, the untrusted-input and shell-safety rules, the pre-image and pre-close re-reads, the Ready limit of 5, the `bug` refusal, and every tracker command. **What this asks of you:** nothing.
@@ -1202,7 +1204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.5...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.132.6...HEAD
+[0.132.6]: https://github.com/bostonaholic/team/compare/v0.132.5...v0.132.6
 [0.132.5]: https://github.com/bostonaholic/team/compare/v0.132.4...v0.132.5
 [0.132.4]: https://github.com/bostonaholic/team/compare/v0.132.3...v0.132.4
 [0.132.3]: https://github.com/bostonaholic/team/compare/v0.132.2...v0.132.3
