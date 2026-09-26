@@ -1,7 +1,17 @@
 // Fails when pr-cleanup's temp-path guard deletes a recorded path that is outside the temp
 // root, contains `..`, or is reached through a symlink, or refuses a legitimate path.
 import assert from "node:assert/strict";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -167,4 +177,34 @@ test("reports an already-absent recorded path without failing", (t) => {
   const { root } = scratch(t);
   const run = guard(root, join(root, "gone"));
   assert.equal(run.status, 0, run.stderr);
+});
+
+test("refuses a missing path reached through an intermediate symlink", (t) => {
+  const { root, canary } = scratch(t);
+  symlinkSync(resolve(canary, ".."), join(root, "hop"));
+  assertRefused(guard(root, join(root, "hop", "nothing")), canary);
+});
+
+test("refuses every path when TMPDIR is /", (t) => {
+  const { canary } = scratch(t);
+  const run = guard("", canary);
+  assertRefused(run, canary);
+  assert.match(run.stderr, /temp root '\/' is empty or not absolute/);
+});
+
+test("exits 3, not 1, when rm cannot fully remove the path", (t) => {
+  if (process.getuid?.() === 0) return t.skip("root ignores directory permissions");
+  const { root } = scratch(t);
+  const path = runDir(join(root, "run.8"));
+  const locked = runDir(join(path, "locked"));
+  chmodSync(locked, 0o555);
+  try {
+    const run = guard(root, path);
+    assert.equal(run.status, 3, run.stderr);
+    assert.match(run.stderr, /^failed: '.*' was not fully removed$/m);
+    assert.doesNotMatch(run.stderr, /^refusing: /m);
+    assert.ok(existsSync(join(locked, "scratch.txt")));
+  } finally {
+    chmodSync(locked, 0o755);
+  }
 });
