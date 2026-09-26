@@ -122,24 +122,26 @@ nothing to sweep, and the report says so rather than going looking.
 **Never delete a temp path the run did not record**, and never a path
 outside `${TMPDIR:-/tmp}`, containing `..`, or reached through a symlink.
 
-Each recorded path passes three checks before `rm -rf` sees it. Strip trailing
-slashes from the temp root first: on macOS `TMPDIR` ends in `/`, and the
-unstripped prefix pattern would refuse every path.
+Resolve `<pr-cleanup-skill-dir>` to this skill's absolute directory. Pass each
+recorded path, one per call, to the committed guard, which checks it and runs
+`rm -rf` only when every check passes:
 
 ```sh
-TMPROOT="${TMPDIR:-/tmp}"
-while [ "${TMPROOT%/}" != "$TMPROOT" ]; do TMPROOT="${TMPROOT%/}"; done
-case "$P" in
-  "$TMPROOT"/?*) ;;
-  *) echo "refusing: '$P' is not under $TMPROOT" >&2; continue ;;
-esac
-case "$P" in *..*) echo "refusing: '$P' contains '..'" >&2; continue ;; esac
-[ -L "$P" ] && { echo "refusing: '$P' is a symlink" >&2; continue; }
-rm -rf "${P:?}"
+"<pr-cleanup-skill-dir>/scripts/remove-temp-path.sh" "$P"
 ```
 
+Exit 0 prints `removed: <path>` or `absent: <path>`. Exit 1 prints
+`refusing: '<path>' <check>` and deletes nothing. Exit 3 prints
+`failed: '<path>' was not fully removed` after `rm`'s own errors: the path may
+be partly removed, so name it and those errors in the report. Any other exit
+is a failure too: 2 is a usage error, and 126 or 127 means the script could
+not run. Report it with its status and stderr. The guard resolves physical
+directories, so a symlink anywhere between the temp root and the path is
+refused, while a temp root that is itself a symlink (macOS `/var`) still
+works. Never delete a refused or failed path by other means.
+
 **Never wildcard-sweep the temp directory** (for example
-`rm -rf "$TMPROOT"/groom-backlog.*`): it cannot tell a dead run's directory
+`rm -rf "${TMPDIR:-/tmp}"/groom-backlog.*`): it cannot tell a dead run's directory
 from a live one's, and deleting a live one kills a run in progress. An
 unrecorded temp path is left on disk and named in the report instead.
 
@@ -170,6 +172,8 @@ One line per thing that happened, and nothing else:
   or `TIMEOUT`.
 - Each temp path removed.
 - Each refusal, with the check that fired.
+- Each temp path the guard failed on (any exit but 0 or 1), with its exit
+  status and stderr.
 - `No .teamteardown on <default> — nothing declared.` when the file is absent,
   rather than silence that reads as a clean sweep.
 - `No recorded temp paths.` when the caller recorded none.

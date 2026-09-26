@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `/pr-cleanup` no longer deletes outside the temp directory when a recorded temp path runs through a symlinked directory. The sweep checked only the path's last component for a symlink, so `rm -rf` followed a linked directory in the middle of the path to whatever it pointed at. A committed guard script now resolves every directory between the temp root and the path and refuses the path if any of them is a symlink. A temp root that is itself a symlink, like macOS `/var`, still works. **What this asks of you:** nothing, unless your host has neither `/bin/pwd` nor `/usr/bin/pwd` (e.g. NixOS or Guix). There the cleanup now leaves its temp directories in place and reports each one as "cannot be checked".
+
 ## [0.132.23] - 2026-09-25
 
 ### Changed
