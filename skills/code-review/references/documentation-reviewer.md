@@ -1,8 +1,8 @@
 # Documentation Reviewer Brief
 
 The gate is ADVISORY: findings are recorded, never block. Format findings per
-[finding format](findings.md) and apply the prose principles below. Compare the
-diff with existing docs and classify each gap.
+[finding format](findings.md). Compare the diff with existing docs and
+classify each gap.
 
 ## Applying Prose Principles to Reviews
 
@@ -20,57 +20,40 @@ documentation quality, apply the [writing standards](../team/references/writing.
 
 ## Documentation-Gap Review Process
 
-The technical-writer's procedure for reviewing a diff against existing
-documentation:
+1. **Read the diff.** Run `git diff HEAD~1` (or the applicable range).
 
-1. **Read the diff.** Run `git diff HEAD~1` (or the applicable range) to
-   understand what changed.
-
-2. **Inventory existing documentation.** Search for:
-   - Project README files (`**/README*`)
-   - Documentation directories (`docs/`, `doc/`)
-   - Inline documentation (JSDoc, docstrings, type definitions)
-   - API documentation (OpenAPI specs, route comments)
-   - Configuration documentation (environment variable docs, setup guides)
-   - Changelog or release notes
+2. **Inventory existing documentation:** READMEs (`**/README*`), `docs/` or
+   `doc/`, inline docs, API docs, configuration docs, and changelogs or
+   release notes.
 
    If a repository has no root `CHANGELOG.md`, do not report its absence or
    recommend creating one unless the repository documentation or user
    explicitly requires it.
 
-3. **Analyze the changes for documentation impact:**
-   - **New public APIs** — Functions, classes, endpoints, CLI commands, or
-     configuration options that are part of the public interface.
-   - **Changed behavior** — Existing functionality that now works differently.
-   - **Removed functionality** — Features, APIs, or options that no longer exist.
-   - **New dependencies** — Libraries, services, or tools that users or
-     contributors need to know about.
-   - **Changed setup or configuration** — New environment variables, build
-     steps, or prerequisites.
+3. **Analyze documentation impact:** new public APIs (part of the public
+   interface), changed behavior, removed functionality, new dependencies
+   users or contributors need to know about, and changed setup or
+   configuration.
 
-4. **Cross-reference.** For each change identified above, check if existing
-   documentation accurately reflects the new state. Look for:
-   - Documentation that references removed code or old behavior
-   - Code examples that no longer work
-   - Setup instructions that are now incomplete
-   - Type definitions or interfaces that changed but whose docs did not
+4. **Cross-reference.** Check that existing documentation accurately reflects
+   each change: references to removed code or old behavior, broken code examples,
+   incomplete setup instructions, and changed types or interfaces whose docs
+   did not change.
 
 ## Doc-Change Classification
 
 ### REQUIRED
 
-The documentation gap would cause users or contributors to fail. Examples:
-- New public API with no documentation at all
-- Setup instructions that are now incorrect
-- Removed feature still documented as available
-- New necessary environment variable not documented
+The documentation gap would cause users or contributors to fail. Examples: a
+new public API with no documentation at all, setup instructions that are now
+incorrect, a removed feature still documented as available, a new necessary
+environment variable not documented.
 
 ### RECOMMENDED
 
-The documentation gap could cause confusion but would not block usage. Examples:
-- Complex feature that works but lacks usage examples
-- Prose that carries incidentals — background, discovery narration, or
-  restatement the reader did not ask for
-- Inline comments that are now stale
-- Missing entry in a changelog the project already maintains for a notable change
-- Type definitions that could benefit from JSDoc
+The documentation gap could cause confusion but would not block usage.
+Examples: a complex feature that works but lacks usage examples; prose that
+carries incidentals — background, discovery narration, or restatement the
+reader did not ask for; inline comments that are now stale; a missing entry in
+a changelog the project already maintains for a notable change; type
+definitions that could benefit from JSDoc.

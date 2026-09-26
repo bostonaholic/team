@@ -8,8 +8,7 @@ The ux-reviewer boots the application, interacts with it as a real user would,
 and judges whether the experience works. Format findings as Working / Broken /
 Could Improve. A Broken item is a REQUEST CHANGES verdict and counts as a
 *major*; the loop auto-fixes it and it never reaches the user. Only
-Could-Improve notes surface. Screenshot failure is Could Improve, never
-REQUEST CHANGES.
+Could-Improve notes surface.
 
 ## Generator-Evaluator Separation
 
@@ -17,7 +16,7 @@ Reviews must be performed with fresh context. The generator (the agent that
 wrote the change) must never evaluate its own output. Read the
 [code reviewer brief](code-reviewer.md) for the shared canon; the severity and
 verdict-aggregation tier map lives in the [finding format](findings.md), which
-the orchestrator applies. Do not change code or test unrelated behavior.
+the orchestrator applies.
 
 ## Detection and surface
 
@@ -36,45 +35,31 @@ is browser.
 - A **marker-matched** project that can also render web keeps the browser
   checks whenever the diff reaches a web surface.
 
-| Project type | Exercise | Evidence |
-| --- | --- | --- |
-| UI | start the dev server, fetch changed routes, interact, capture screenshots | status codes, rendered HTML, interaction outcomes, PNGs |
-| API | start the server, send real requests | status codes, headers, bodies, error cases |
-| CLI | run the command, inspect filesystem and stdio | exit code, stdout/stderr, files created or changed |
-| Library | build a real consumer program that imports it | compile/run output, returned values, files written |
-
-Library and CLI cases receive this surface-appropriate verification and never a
-screenshot. A library has no runnable server; a consumer program is its
-verification surface.
-
 ## UI Project Verification
 
 Two entry paths, selected in `## Detection and surface`.
 
-**Browser path — steps 1-6.** A project that renders web keeps the HTTP checks:
+**Browser path — steps 1-6**, for a project that renders web:
 
-1. **Start the dev server.** Find the applicable start command from
-   `package.json` scripts, `Makefile`, or equivalent. Run it in the
-   background. Wait for the server to be ready (watch for "ready" or
-   "listening" output, or poll the port).
+1. **Start the dev server** (`package.json` scripts, `Makefile`, or
+   equivalent) in the background. Wait until it is ready: "ready" or
+   "listening" output, or a port poll.
 
-2. **Verify the home route.** Use `curl` to fetch the main page. Check that
-   the response status is 200, the body contains expected HTML structure, and
-   no server-side error messages are present.
+2. **Verify the home route.** `curl` the main page: status 200, expected HTML
+   structure, no server-side error messages.
 
-3. **Check relevant pages.** If the implementation changed specific routes or
-   pages, verify those routes return successfully.
+3. **Check relevant pages.** Verify each route or page the implementation
+   changed returns successfully.
 
-4. **Check for console errors.** If the project has a test or health endpoint,
-   hit it. Look for error indicators in the server output.
+4. **Check for console errors.** Hit the project's test or health endpoint if
+   it has one. Look for error indicators in the server output.
 
 5. **Capture screenshots** while the server is still up — follow
    `## Screenshot Capture (UI projects)` below.
 
 6. **Stop the dev server** when verification is complete.
 
-**Native path — build, install, launch.** A native-only project skips HTTP
-steps 1-4, because no HTTP response renders the app. Run, in order:
+**Native path — build, install, launch.** Run, in order:
 
 1. **Start the JavaScript bundler** for a React Native debug build: Metro
    serves the JavaScript bundle, so it starts before launch and stops after
@@ -99,19 +84,24 @@ steps 1-4, because no HTTP response renders the app. Run, in order:
    600-second bound, or the project's own bound when it names one. Both sit
    outside the capture budget, which starts when the app is foregrounded.
 
-Then follow `## Screenshot Capture (UI projects)` below.
+Then follow `## Screenshot Capture (UI projects)` below, with no dev server.
+
+**Failure severity (both paths).** A build failure caused by the branch is
+Broken — a REQUEST CHANGES verdict. An unavailable toolchain is Could Improve,
+never Broken. When a native-only run produces no PNGs because build, boot, or
+capture failed, record manifest `status: partial` and list each failure under
+`## Skipped`. team-pr treats a manifest with no captured PNGs on disk as a
+capture gap — it re-runs capture — so `partial` records the miss for the
+reader; it does not suppress the next attempt.
 
 ## API Project Verification
 
-1. **Start the server.** Find and run the applicable start command in the
-   background. Wait for it to be ready.
+1. **Start the server** in the background and wait until it is ready.
 
-2. **Send real HTTP requests** with `curl` to the endpoints affected by the
-   implementation:
-   - Verify response status codes are correct (200, 201, 404, etc.)
-   - Verify response headers (Content-Type, CORS, etc.)
-   - Verify response body structure matches expectations
-   - Test error cases (invalid input, missing auth, not found)
+2. **Send real HTTP requests** with `curl` to the endpoints the implementation
+   affected. Verify status codes (200, 201, 404, etc.), headers
+   (Content-Type, CORS, etc.), and body structure. Test error cases (invalid
+   input, missing auth, not found).
 
 3. **Check edge cases:** empty request bodies where a body is expected,
    malformed input, missing necessary parameters.
@@ -249,27 +239,3 @@ means every planned shot is present. `partial` means some were skipped.
   [system dependency lens](../team/references/dependencies.md) `## When reviewing`
   section: verify flows that share the changed components, not only the
   changed screen.
-
-## Surfaces
-
-Two entry modes, selected by project marker in `## Detection and surface`.
-
-| Safeguard | Browser UI (web) | Native UI (iOS/Android) |
-| --- | --- | --- |
-| Entry | steps 1-6: dev server, `curl` route checks, screenshots | build, install, launch, screenshots |
-| Capture | Playwright CLI | `adb exec-out screencap`; `xcrun simctl io ... screenshot` |
-| Locate and tap | Playwright locators | Android `uiautomator` + `input tap`; iOS screenshot-only |
-| Bundler | the dev server serves the app | Metro for RN debug builds: start before launch, stop after capture |
-| Shutdown | stop the dev server | `xcrun simctl shutdown` / `adb emu kill`, only devices this review booted |
-
-A native-only project reaches capture without the dev server, so it names its
-own bundler, build, launch, and shutdown.
-
-**Failure severity.** A build failure caused by the branch is Broken — a
-REQUEST CHANGES verdict. An unavailable toolchain is Could Improve, never
-Broken; screenshot or capture failure stays Could Improve like any other
-capture miss. When a native-only run produces no PNGs because build, boot, or
-capture failed, record manifest `status: partial` and list each failure under
-`## Skipped`. team-pr treats a manifest with no captured PNGs on disk as a
-capture gap — it re-runs capture — so `partial` records the miss for the
-reader; it does not suppress the next attempt.
