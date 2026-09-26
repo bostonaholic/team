@@ -97,6 +97,28 @@ test("removes a recorded path when the temp root itself is a symlink (macOS /var
   assert.equal(existsSync(join(realpathSync(realRoot), "run.3")), false);
 });
 
+// groom-backlog and retro record `mktemp -d "${TMPDIR:-/tmp}/<name>.XXXXXXXX"`, which keeps
+// the doubled slash when TMPDIR ends in / (the macOS default).
+test("removes a recorded path made by the callers' mktemp idiom (doubled slash)", (t) => {
+  const { root } = scratch(t);
+  const made = spawnSync("/bin/sh", ["-c", 'mktemp -d "${TMPDIR:-/tmp}/groom-backlog.XXXXXXXX"'], {
+    encoding: "utf8",
+    env: { ...process.env, TMPDIR: `${root}/` },
+  });
+  assert.equal(made.status, 0, made.stderr);
+  const path = made.stdout.trim();
+  assert.ok(path.includes("//"), `expected a doubled slash in ${path}`);
+  const run = guard(root, path);
+  assert.equal(run.status, 0, run.stderr);
+  assert.equal(existsSync(path), false);
+});
+
+test("refuses an intermediate symlink written with doubled slashes", (t) => {
+  const { root, canary } = scratch(t);
+  symlinkSync(resolve(canary, ".."), join(root, "hop"));
+  assertRefused(guard(root, `${root}//hop//victim`), canary);
+});
+
 test("reports an already-absent recorded path without failing", (t) => {
   const { root } = scratch(t);
   const run = guard(root, join(root, "gone"));

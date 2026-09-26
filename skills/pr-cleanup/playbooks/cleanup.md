@@ -137,7 +137,7 @@ refused, while a temp root that is itself a symlink (macOS `/var`) still works.
 Never delete a refused path by other means.
 
 **Never wildcard-sweep the temp directory** (for example
-`rm -rf "$TMPROOT"/groom-backlog.*`): it cannot tell a dead run's directory
+`rm -rf "${TMPDIR:-/tmp}"/groom-backlog.*`): it cannot tell a dead run's directory
 from a live one's, and deleting a live one kills a run in progress. An
 unrecorded temp path is left on disk and named in the report instead.
 
