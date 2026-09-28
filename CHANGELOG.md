@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `/oracle` dispatches a fresh, read-only advisor for one engineering second opinion.
+
 ## [0.132.23] - 2026-09-25
 
 ### Changed
