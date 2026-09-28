@@ -101,3 +101,11 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 All work, including features, bugs, and chores, is tracked on the [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1). It is the single source of truth. If work is not on the board, it is not tracked. Create a GitHub issue in `bostonaholic/team` and add it to the project. Then move its card across the kanban (**Backlog → Ready → In progress → In review → Done**) as the work progresses. See [docs/project-tracking.md](docs/project-tracking.md) for the full workflow.
 
 **Every issue carries a `Priority`** (`P0`, `P1`, or `P2`), set when it is created. An unprioritized issue is untriaged. **Every `bug` is `P0`**, because bugs take precedence over features and enhancements. See [docs/project-tracking.md](docs/project-tracking.md#creating-work).
+
+## Cursor Cloud specific instructions
+
+Node 22 is already on the image. The environment install puts Ruby 3.3.6 and Bundler 2.7.1 on `PATH`. Docs gems install into gitignored `docs/vendor/bundle`.
+
+- Plugin checks, from the repo root: `node --test tests/*.test.mjs` and `git diff --check`. There is no `npm test` script.
+- Docs, from `docs/`: `bundle exec jekyll build`, or `bundle exec jekyll serve --host 0.0.0.0 --port 4000` at http://localhost:4000. The `docs` terminal starts that server.
+- OpenCode dev install: `script/dev-install opencode` registers `opencode/team.js`. The Claude Code, Codex, and Antigravity CLIs are not installed, so `claude plugin validate .` cannot run here.
