@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `/paparazzi` captures screenshots of a branch's UI changes. It traces the diff to the screens and states the change reaches. It shoots each one as a before/after pair, with the before side taken from the merge-base in a throwaway worktree. Both sides use one fixed browser setup: frozen animations, loaded fonts, a fixed viewport, scale, locale, and timezone, and masked volatile content. Every frame goes through mechanical gates (blank, oversized, error status, identical pair) and then a visual check. The pair diff also reports visual changes the diff does not explain. The output is PNGs and a manifest that `team-pr` renders and `/pr-screenshots` uploads. It never commits, pushes, or edits a PR. **What this asks of you:** nothing. For browser capture it installs Playwright into `~/.cache/team-paparazzi` when your project lacks it, and falls back to an installed Google Chrome when the browser download fails.
+
 ## [0.133.0] - 2026-09-28
 
 ### Changed
