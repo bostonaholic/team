@@ -14,6 +14,9 @@
       })();
     </script>
     {%- seo -%}
+    {% if page.url == "/404.html" %}
+    <meta name="robots" content="noindex">
+    {% endif %}
     <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
   </head>
   <body {% if page.url == '/' %}class="home"{% endif %}>
