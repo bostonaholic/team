@@ -211,17 +211,17 @@ Verifies a PR test plan with evidence-rated verdicts.
 
 Attaches local images to a PR body.
 
-**Used by:** `paparazzi`, `pr-open-comments`, `team-fix`, `team-pr`
+**Used by:** `pr-open-comments`, `team-fix`, `team-pr`
 
 **Uses:** None
 
 ### [paparazzi](https://github.com/bostonaholic/team/blob/main/skills/paparazzi/SKILL.md)
 
-Captures verified screenshots of an app, or before/after pairs of a branch change.
+Captures verified screenshots of an app.
 
 **Used by:** None
 
-**Uses:** `pr-screenshots`
+**Uses:** None
 
 ### [pr-rebase](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
 
