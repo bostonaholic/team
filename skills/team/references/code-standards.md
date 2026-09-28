@@ -59,6 +59,10 @@ Decision test: Does this explain why? Can code/tests carry it? Is it true now wi
 4. **Self-Review.** Apply every Quality Checklist item to every touched file.
 5. **Explain Decisions.** State decisions, trade-offs, and non-obvious choices.
 
+## Type contracts
+
+Define interfaces so their accepted values and valid states match runtime behavior. Validate untrusted values at the boundary that owns them, then rely on that guarantee. Avoid unchecked conversions, forced assertions, and optional values that conceal a required input. Use the language's type or contract mechanisms to distinguish valid alternatives when they rule out an invalid state.
+
 ## Quality Checklist
 
 Every item gates progress: **Single Responsibility**; **Clear Naming**; **No Magic Numbers**; **Explicit Error Handling**; **Low Coupling**; **Testability**; **Readability** (new developer understands in 5 minutes); **DRY** under Rule of Three; **Performance Awareness**; **Functional Core, Imperative Shell**; **No Primitive Obsession** (Money, Duration, EmailAddress, OrderId instead of raw `string`/`int`); **Failures are actionable** (prefer `assert_eq(actual, expected)` over opaque `assert(predicate)`); **Comment Discipline**.

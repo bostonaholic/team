@@ -4,6 +4,7 @@ Support verdicts with observed command results, `file:line` evidence, or a fresh
 An exit code proves command acceptance, not resulting state. Re-query before claiming the mutation succeeded.
 Verify third-party claims before adopting them. Reviewer or model agreement supplies corroboration, never proof.
 For dependency claims, load the lowest admitted version and call the API. A version range or changelog cannot prove compatibility.
+For recommendations, distinguish checked facts, inferences, and caller-provided claims. State any material assumption or default that determines the advice and how the advice changes if it is false.
 
 ## Gates
 

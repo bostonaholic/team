@@ -5,6 +5,7 @@ Use one predecessor when sufficient. Never inspect undeclared agent state.
 The dispatcher persists reports that must survive the turn and owns relayed content.
 Keep routing, sibling retries, and the phase table in the orchestrator. Split utility agents that perform unrelated jobs.
 Helpers work directly without further sub-agents and obey their declared reply limits.
+For advisory investigation, start with the target diff or execution path. Make each further read answer a specific uncertainty; stop when the requested recommendation is supported. Complete any required coverage checklist.
 
 ## Minimum scoped change
 
