@@ -175,6 +175,7 @@ test("planFrames refuses an unusable shot list before anything launches", () => 
   const origin = "http://127.0.0.1:4100";
   const refusals = [
     [{ shots: [{ name: "01-a", path: "/" }] }, /origin/],
+    [{ origins: { after: origin }, shots: [{ name: "01-a", path: "/" }] }, /^origins: unknown field/],
     [{ origin, shots: [{ name: "01-a", path: "/", sides: ["after"] }] }, /unknown field/],
     [{ origin, shots: [{ name: "settings", path: "/" }] }, /name/],
     [{ origin, shots: [{ name: "01-a", path: "/" }, { name: "01-a", path: "/b" }] }, /duplicate name/],

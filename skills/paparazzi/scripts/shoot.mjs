@@ -34,6 +34,7 @@ export const DEFAULT_CONTEXT = {
 };
 
 const NAME = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const LIST_KEYS = new Set(["origin", "defaults", "shots"]);
 const SHOT_KEYS = new Set(["name", "path", "actions", "waitFor", "target", "fullPage", "mask", "hide", "expectStatus", ...Object.keys(DEFAULT_CONTEXT)]);
 const LOCATOR_ACTIONS = ["click", "hover", "check", "scroll", "fill"];
 
@@ -104,6 +105,7 @@ function checkOrigin(origin, where) {
  */
 export function planFrames(list, outDir) {
   if (!isObject(list)) fail("shot list", "must be a JSON object");
+  for (const key of Object.keys(list)) if (!LIST_KEYS.has(key)) fail(key, "unknown field");
   const { origin, defaults = {}, shots } = list;
   checkOrigin(origin, "origin");
   if (!isObject(defaults)) fail("defaults", "must be an object");
