@@ -217,7 +217,7 @@ Attaches local images to a PR body.
 
 ### [paparazzi](https://github.com/bostonaholic/team/blob/main/skills/paparazzi/SKILL.md)
 
-Captures deterministic before/after screenshots of a branch's UI changes and verifies every frame.
+Captures verified screenshots of an app, or before/after pairs of a branch change.
 
 **Used by:** None
 

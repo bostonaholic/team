@@ -1,4 +1,4 @@
 interface:
   display_name: "Paparazzi"
-  short_description: "Capture before/after screenshots of UI changes"
-  default_prompt: "Use $paparazzi to capture before/after screenshots of UI changes."
+  short_description: "Capture verified screenshots of an app"
+  default_prompt: "Use $paparazzi to capture verified screenshots of an app."
