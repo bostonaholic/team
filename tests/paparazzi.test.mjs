@@ -184,25 +184,49 @@ test("planFrames expands a shot into a before frame then an after frame with ide
   assert.deepEqual(plan.frames[0].context, plan.frames[1].context);
   assert.deepEqual(plan.frames[0].context, { ...DEFAULT_CONTEXT, colorScheme: "dark", viewport: { width: 390, height: 844 } });
   assert.deepEqual(plan.pairs, ["01-settings-populated"]);
+});
 
-  const [frame] = planFrames({ origins: { after: "http://127.0.0.1:4100" }, shots: [{ name: "01-a", path: "//evil.example/" }] }, "/out").frames;
-  assert.equal(new URL(frame.url).host, "127.0.0.1:4100");
+test("planFrames expands a single-origin list into one plain frame per shot", () => {
+  const plan = planFrames(
+    {
+      origin: "http://127.0.0.1:4100",
+      shots: [
+        { name: "01-pricing-populated", path: "/pricing", fullPage: true },
+        { name: "02-escape-populated", path: "//evil.example/" },
+      ],
+    },
+    "/out",
+  );
+  assert.deepEqual(
+    plan.frames.map(({ name, side, url, file }) => [name, side, url, file]),
+    [
+      ["01-pricing-populated", null, "http://127.0.0.1:4100/pricing", join("/out", "01-pricing-populated.png")],
+      ["02-escape-populated", null, "http://127.0.0.1:4100//evil.example/", join("/out", "02-escape-populated.png")],
+    ],
+  );
+  assert.deepEqual(plan.pairs, []);
 });
 
 test("planFrames refuses an unusable shot list before anything launches", () => {
-  const origins = { after: "http://127.0.0.1:4100" };
+  const origin = "http://127.0.0.1:4100";
+  const origins = { before: "http://127.0.0.1:4101", after: origin };
   const refusals = [
-    [{ origins, shots: [{ name: "settings", path: "/" }] }, /name/],
-    [{ origins, shots: [{ name: "01-a", path: "/" }, { name: "01-a", path: "/b" }] }, /duplicate name/],
-    [{ origins, shots: [{ name: "01-a", path: "relative" }] }, /start with/],
-    [{ origins, shots: [{ name: "01-a", path: "/", sides: ["before"] }] }, /no origin/],
-    [{ origins, shots: [{ name: "01-a", path: "/", actions: [{ fill: "#q" }] }] }, /string value/],
-    [{ origins, shots: [{ name: "01-a", path: "/", actions: [{ drag: "#q" }] }] }, /unknown action/],
-    [{ origins, shots: [{ name: "01-a", path: "/", target: { role: "button", nth: 2 } }] }, /locator/],
-    [{ origins, shots: [{ name: "01-a", path: "/", fullPage: true }] }, /unknown field/],
-    [{ origins, shots: [{ name: "01-a", path: "/", deviceScaleFactor: 4 }] }, /deviceScaleFactor/],
-    [{ origins: { after: "file:///etc" }, shots: [{ name: "01-a", path: "/" }] }, /http/],
-    [{ origins, shots: [] }, /non-empty/],
+    [{ shots: [{ name: "01-a", path: "/" }] }, /exactly one of origin/],
+    [{ origin, origins, shots: [{ name: "01-a", path: "/" }] }, /exactly one of origin/],
+    [{ origins: { after: origin }, shots: [{ name: "01-a", path: "/" }] }, /both a before and an after/],
+    [{ origin, shots: [{ name: "01-a", path: "/", sides: ["after"] }] }, /only to a before\/after/],
+    [{ origins, shots: [{ name: "01-a", path: "/", sides: ["during"] }] }, /before and after/],
+    [{ origin, shots: [{ name: "settings", path: "/" }] }, /name/],
+    [{ origin, shots: [{ name: "01-a", path: "/" }, { name: "01-a", path: "/b" }] }, /duplicate name/],
+    [{ origin, shots: [{ name: "01-a", path: "relative" }] }, /start with/],
+    [{ origin, shots: [{ name: "01-a", path: "/", actions: [{ fill: "#q" }] }] }, /string value/],
+    [{ origin, shots: [{ name: "01-a", path: "/", actions: [{ drag: "#q" }] }] }, /unknown action/],
+    [{ origin, shots: [{ name: "01-a", path: "/", target: { role: "button", nth: 2 } }] }, /locator/],
+    [{ origin, shots: [{ name: "01-a", path: "/", fullPage: true, target: "#card" }] }, /exclusive/],
+    [{ origin, shots: [{ name: "01-a", path: "/", zoom: 2 }] }, /unknown field/],
+    [{ origin, shots: [{ name: "01-a", path: "/", deviceScaleFactor: 4 }] }, /deviceScaleFactor/],
+    [{ origin: "file:///etc", shots: [{ name: "01-a", path: "/" }] }, /http/],
+    [{ origin, shots: [] }, /non-empty/],
   ];
   for (const [list, message] of refusals) {
     assert.throws(() => planFrames(list, "/out"), (error) => error instanceof InputError && message.test(error.message), JSON.stringify(list));
@@ -215,7 +239,7 @@ test("shoot exits 2 on an unusable list and 3 when no Playwright resolves", (t) 
   const bad = join(dir, "bad.json");
   const good = join(dir, "good.json");
   writeFileSync(bad, "{ not json");
-  writeFileSync(good, JSON.stringify({ origins: { after: "http://127.0.0.1:9" }, shots: [{ name: "01-home-populated", path: "/" }] }));
+  writeFileSync(good, JSON.stringify({ origin: "http://127.0.0.1:9", shots: [{ name: "01-home-populated", path: "/" }] }));
 
   const unusable = run(SHOOT, [bad, join(dir, "out")], { cwd: dir, env });
   assert.equal(unusable.status, 2);
@@ -251,6 +275,13 @@ function serve(t, html) {
   return new Promise((done) => server.listen(0, "127.0.0.1", () => done(`http://127.0.0.1:${server.address().port}`)));
 }
 
+/** Async, because a synchronous spawn would block the event loop serving the origins. */
+function shootAsync(list, outDir) {
+  return new Promise((done) => {
+    execFile(process.execPath, [SHOOT, list, outDir], (error, stdout, stderr) => done({ status: error?.code ?? 0, stdout, stderr }));
+  });
+}
+
 const PAGE = (label) => `<!doctype html><body style="margin:0;font:16px sans-serif"><h1>Settings</h1><button>${label}</button></body>`;
 
 test("shoot captures a before/after pair and locates the change", { skip: !playwrightAvailable() && "no playwright package resolves" }, async (t) => {
@@ -271,10 +302,7 @@ test("shoot captures a before/after pair and locates the change", { skip: !playw
     }),
   );
 
-  // Async, because a synchronous spawn would block the event loop serving both origins.
-  const shot = await new Promise((done) => {
-    execFile(process.execPath, [SHOOT, list, join(dir, "out")], (error, stdout, stderr) => done({ status: error?.code ?? 0, stdout, stderr }));
-  });
+  const shot = await shootAsync(list, join(dir, "out"));
   assert.equal(shot.status, 1, shot.stderr);
   const report = JSON.parse(shot.stdout);
   const byFile = Object.fromEntries(report.frames.map((frame) => [`${frame.name}-${frame.side}`, frame]));
@@ -288,4 +316,25 @@ test("shoot captures a before/after pair and locates the change", { skip: !playw
   assert.equal(pair.changed, true);
   assert.ok(pair.changedBox.y > 40 && pair.changedBox.width < 200, JSON.stringify(pair.changedBox));
   assert.deepEqual(decodePng(readFileSync(byFile["01-settings-populated-after"].file)).width, 400);
+});
+
+test("shoot captures a plain full-page frame from a single origin", { skip: !playwrightAvailable() && "no playwright package resolves" }, async (t) => {
+  const dir = scratch(t);
+  const origin = await serve(t, `<!doctype html><body style="margin:0"><h1>Docs</h1><div style="height:900px"></div><p>Footer</p></body>`);
+  const list = join(dir, "shots.json");
+  writeFileSync(
+    list,
+    JSON.stringify({
+      origin,
+      defaults: { deviceScaleFactor: 1, viewport: { width: 400, height: 300 } },
+      shots: [{ name: "01-docs-populated", path: "/", fullPage: true }],
+    }),
+  );
+
+  const shot = await shootAsync(list, join(dir, "out"));
+  assert.equal(shot.status, 0, shot.stderr);
+  const [frame] = JSON.parse(shot.stdout).frames;
+  assert.equal(frame.side, null);
+  assert.equal(frame.file, join(dir, "out", "01-docs-populated.png"));
+  assert.ok(decodePng(readFileSync(frame.file)).height > 900);
 });

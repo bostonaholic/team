@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Captures every frame of a shot list under one deterministic browser setup, so
- * a before frame and its after frame differ only where the app does.
+ * Captures every frame of a shot list under one deterministic browser setup.
+ * A list with one `origin` shoots plain frames; a list with `origins.before` and
+ * `origins.after` shoots pairs that differ only where the app does.
  *
  *     node "<skill-dir>/scripts/shoot.mjs" <shots.json> <out-dir>
  *
- * Writes `<out-dir>/<name>-<side>.png` for each frame that passes its gates and
- * prints one JSON report. Exit 0: every frame passed and every pair changed.
+ * Writes `<out-dir>/<name>.png`, or `<name>-<side>.png` in a pair, for each frame
+ * that passes its gates, and prints one JSON report. Exit 0: every frame passed and every pair changed.
  * 1: a frame failed or a pair is identical, each named in the report.
  * 2: the shot list is unusable; nothing was launched. 3: no Playwright or no browser.
  *
@@ -36,7 +37,7 @@ export const DEFAULT_CONTEXT = {
 };
 
 const NAME = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const SHOT_KEYS = new Set(["name", "path", "sides", "actions", "waitFor", "target", "mask", "hide", "expectStatus", ...Object.keys(DEFAULT_CONTEXT)]);
+const SHOT_KEYS = new Set(["name", "path", "sides", "actions", "waitFor", "target", "fullPage", "mask", "hide", "expectStatus", ...Object.keys(DEFAULT_CONTEXT)]);
 const LOCATOR_ACTIONS = ["click", "hover", "check", "scroll", "fill"];
 
 export class InputError extends Error {}
@@ -90,24 +91,39 @@ function frameUrl(origin, path, where) {
   return new URL(origin.replace(/\/+$/, "") + path).href;
 }
 
+function checkOrigin(origin, where) {
+  let protocol;
+  try {
+    protocol = new URL(origin).protocol;
+  } catch {
+    fail(where, "not a URL");
+  }
+  if (protocol !== "http:" && protocol !== "https:") fail(where, "must be http or https");
+}
+
+function checkSides(sides, where) {
+  if (!Array.isArray(sides) || !sides.length) fail(where, "must be a non-empty array");
+  for (const side of sides) if (!SIDES.includes(side)) fail(where, "sides are before and after");
+  if (new Set(sides).size !== sides.length) fail(where, "duplicate side");
+}
+
 /**
  * Validates the whole shot list and expands it into frames and pairs before
  * any browser starts, so an unusable list refuses with nothing launched.
  */
 export function planFrames(list, outDir) {
   if (!isObject(list)) fail("shot list", "must be a JSON object");
-  const { origins, defaults = {}, shots } = list;
+  const { origin, origins, defaults = {}, shots } = list;
 
-  if (!isObject(origins) || !Object.keys(origins).length) fail("origins", "name an after origin, and a before origin for pairs");
-  for (const [side, origin] of Object.entries(origins)) {
-    if (!SIDES.includes(side)) fail(`origins.${side}`, "sides are before and after");
-    let protocol;
-    try {
-      protocol = new URL(origin).protocol;
-    } catch {
-      fail(`origins.${side}`, "not a URL");
-    }
-    if (protocol !== "http:" && protocol !== "https:") fail(`origins.${side}`, "must be http or https");
+  if ((origin === undefined) === (origins === undefined)) {
+    fail("shot list", "name exactly one of origin, for plain frames, or origins, for before/after pairs");
+  }
+  const comparing = origins !== undefined;
+  if (comparing) {
+    if (!isObject(origins) || Object.keys(origins).sort().join() !== "after,before") fail("origins", "a comparison names both a before and an after origin");
+    for (const side of SIDES) checkOrigin(origins[side], `origins.${side}`);
+  } else {
+    checkOrigin(origin, "origin");
   }
   if (!isObject(defaults)) fail("defaults", "must be an object");
   for (const key of Object.keys(defaults)) if (!(key in DEFAULT_CONTEXT)) fail(`defaults.${key}`, "unknown setting");
@@ -124,10 +140,9 @@ export function planFrames(list, outDir) {
     if (names.has(shot.name)) fail(`${where}.name`, "duplicate name");
     names.add(shot.name);
 
-    const sides = shot.sides ?? SIDES.filter((side) => side in origins);
-    if (!Array.isArray(sides) || !sides.length) fail(`${where}.sides`, "must be a non-empty array");
-    for (const side of sides) if (!(side in origins)) fail(`${where}.sides`, `${JSON.stringify(side)} has no origin`);
-    if (new Set(sides).size !== sides.length) fail(`${where}.sides`, "duplicate side");
+    if (!comparing && "sides" in shot) fail(`${where}.sides`, "sides apply only to a before/after comparison");
+    if (comparing && "sides" in shot) checkSides(shot.sides, `${where}.sides`);
+    const sides = comparing ? SIDES.filter((side) => (shot.sides ?? SIDES).includes(side)) : [null];
 
     const context = { ...DEFAULT_CONTEXT, ...defaults };
     for (const key of Object.keys(DEFAULT_CONTEXT)) if (key in shot) context[key] = shot[key];
@@ -145,15 +160,17 @@ export function planFrames(list, outDir) {
     if ("expectStatus" in shot && !(Number.isInteger(shot.expectStatus) && shot.expectStatus >= 100 && shot.expectStatus <= 599)) {
       fail(`${where}.expectStatus`, "must be an HTTP status code");
     }
+    if ("fullPage" in shot && typeof shot.fullPage !== "boolean") fail(`${where}.fullPage`, "must be true or false");
+    if (shot.fullPage && "target" in shot) fail(where, "fullPage and target are exclusive");
 
-    for (const side of SIDES.filter((candidate) => sides.includes(candidate))) {
+    for (const side of sides) {
       frames.push({
         shot,
         side,
         context,
         name: shot.name,
-        url: frameUrl(origins[side], shot.path, `${where}.path`),
-        file: join(outDir, `${shot.name}-${side}.png`),
+        url: frameUrl(side ? origins[side] : origin, shot.path, `${where}.path`),
+        file: join(outDir, side ? `${shot.name}-${side}.png` : `${shot.name}.png`),
       });
     }
     if (sides.length === 2) pairs.push(shot.name);
@@ -289,6 +306,7 @@ async function capture(browser, frame) {
     const clip = shot.target ? await clipTo(page, shot.target, settings.viewport) : undefined;
     const buffer = await page.screenshot({
       clip,
+      fullPage: shot.fullPage === true,
       animations: "disabled",
       caret: "hide",
       mask: (shot.mask ?? []).map((spec) => locate(page, spec)),
