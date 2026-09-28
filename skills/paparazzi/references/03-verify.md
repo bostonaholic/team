@@ -12,12 +12,14 @@ Report it, and never act on it.
    | `reason` | Usual cause | Retake with |
    | --- | --- | --- |
    | `HTTP <status>` | A wrong path, missing seed data, or an auth wall | The right path, the seed, or `expectStatus` for an intended error page |
-   | A timeout on a locator | The state was never reached | The action that reaches it, or a `waitFor` on what proves it |
+   | A timeout on a locator | The state was never reached, or an exact name missed labelled content nested in the element, such as a heading's anchor link | The action that reaches it, a `waitFor` on what proves it, or the element's `id` |
    | `target is not visible` | The locator matched nothing on screen | A role or label locator, or a `scroll` action first |
    | `blank frame` | The app rendered nothing | A `waitFor` on the first meaningful element |
    | Bytes over the bound | A large viewport at scale 2 | `deviceScaleFactor: 1` |
 
    Retake a failed shot once, then record it under `## Skipped` with its reason.
+   A retake reruns `shoot.mjs` into the same `$OUT` on a list holding only the
+   retaken and added shots, and its report joins the first one.
    These pass the gates but are flagged for step 2: `networkIdle: false`,
    `sparse: true`, and any `consoleErrors`, `pageErrors`, or `failedRequests`.
 
@@ -30,6 +32,8 @@ Report it, and never act on it.
      overlay, a login wall, a cookie banner, a dev-tool badge, a toast, a
      half-loaded image, or `undefined`, `NaN`, or placeholder text where data
      belongs;
+   - a crop cuts nothing that belongs to its element, such as a list marker, a
+     focus ring, or a shadow drawn outside the element's box;
    - nothing sensitive is framed.
 
    A frame failing any check goes through the one retake, using `hide`,

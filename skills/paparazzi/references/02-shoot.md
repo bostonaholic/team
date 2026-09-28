@@ -6,9 +6,10 @@ Every command below expands its variables as quoted `"$VAR"` words. A route, a
 label, or a fill value reaches the shot list through `jq --arg`, never through
 shell source ([external-data rules](../team/references/external-data.md)).
 
-1. **Resolve the tools.** `shoot.mjs` loads Playwright from `$PAPARAZZI_TOOLS`,
-   then from the project. When neither resolves, install it into a cache,
-   never into the project:
+1. **Resolve the tools.** First bind `RUN_DIR="$(mktemp -d)"`, which holds
+   every temporary this run writes. `shoot.mjs` loads Playwright from
+   `$PAPARAZZI_TOOLS`, then from the project. When neither resolves, install it
+   into a cache, never into the project:
 
    ```bash
    export PAPARAZZI_TOOLS="${XDG_CACHE_HOME:-$HOME/.cache}/team-paparazzi"
@@ -24,7 +25,9 @@ shell source ([external-data rules](../team/references/external-data.md)).
    and its readiness signal with the brief's
    [browser steps 1-2](../code-review/references/ux-reviewer.md#ui-project-verification),
    bind it to `127.0.0.1` on a free port, and record its PID. The after app
-   runs from the user's checkout as it stands.
+   runs from the user's checkout as it stands. When its command writes build
+   output into the checkout, such as Jekyll's `_site`, point that output under
+   `$RUN_DIR`, so it cannot collide with a server the user already runs.
 
    ```bash
    free_port() { node -e 'const s = require("net").createServer().listen(0, "127.0.0.1", () => { console.log(s.address().port); s.close(); })'; }
@@ -33,7 +36,7 @@ shell source ([external-data rules](../team/references/external-data.md)).
 3. **Start the before app**, unless the run is after-only.
 
    ```bash
-   BEFORE_DIR="$(mktemp -d)/before"
+   BEFORE_DIR="$RUN_DIR/before"
    git worktree add --detach "$BEFORE_DIR" "$MERGE_BASE"
    ```
 
@@ -52,12 +55,10 @@ shell source ([external-data rules](../team/references/external-data.md)).
 4. **Seed once**, for both apps, with the brief's `**Seed.**` rule. Apps that
    share one database then render the same data on both sides.
 
-5. **Write the shot list** from the plan, with the live origins, under a
-   run-scoped directory. Bind every value a caller or a page supplied as its
-   own `--arg`:
+5. **Write the shot list** from the plan, with the live origins, into
+   `$RUN_DIR`. Bind every value a caller or a page supplied as its own `--arg`:
 
    ```bash
-   RUN_DIR="$(mktemp -d)"
    jq -n --arg before "$BEFORE_ORIGIN" --arg after "$AFTER_ORIGIN" \
      --arg path "/settings" --arg button "Edit profile" '{
      origins: {before: $before, after: $after},
