@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.134.0] - 2026-09-28
+
+### Added
+
+- `/paparazzi` captures verified screenshots of an app. It shoots the screens, states, elements, and variants you name, viewport-sized, cropped to an element, or full page. Every frame uses one fixed browser setup: frozen animations, loaded fonts, a fixed viewport, scale, locale, and timezone, and masked volatile content. Every frame goes through mechanical gates (blank, oversized, error status) and then a visual check against its caption. The output is PNGs and a manifest. What the frames are for is up to you or the calling skill; it never commits, pushes, or edits a PR. **What this asks of you:** nothing. For browser capture it installs Playwright into `~/.cache/team-paparazzi` when your project lacks it, and falls back to an installed Google Chrome when the browser download fails.
+
 ## [0.133.0] - 2026-09-28
 
 ### Changed
@@ -1312,7 +1318,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.133.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.134.0...HEAD
+[0.134.0]: https://github.com/bostonaholic/team/compare/v0.133.0...v0.134.0
 [0.133.0]: https://github.com/bostonaholic/team/compare/v0.132.23...v0.133.0
 [0.132.23]: https://github.com/bostonaholic/team/compare/v0.132.22...v0.132.23
 [0.132.22]: https://github.com/bostonaholic/team/compare/v0.132.21...v0.132.22

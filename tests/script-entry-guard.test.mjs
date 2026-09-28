@@ -97,3 +97,25 @@ test("importing external-review.mjs through a symlinked directory has no side ef
   const run = importModule(t, join(symlinkedDir(t, "skills/team/references"), "external-review.mjs"));
   assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
 });
+
+test("png-check.mjs run through a symlinked directory reaches its usage error", (t) => {
+  const run = runScript(join(symlinkedDir(t, "skills/paparazzi/scripts"), "png-check.mjs"));
+  assert.equal(run.status, 2);
+  assert.match(run.stderr, /^png-check\.mjs: usage: png-check\.mjs /);
+});
+
+test("shoot.mjs run through a symlinked directory reaches its usage error", (t) => {
+  const run = runScript(join(symlinkedDir(t, "skills/paparazzi/scripts"), "shoot.mjs"));
+  assert.equal(run.status, 2);
+  assert.match(run.stderr, /^shoot\.mjs: usage: shoot\.mjs /);
+});
+
+test("importing png-check.mjs through a symlinked directory has no side effects", (t) => {
+  const run = importModule(t, join(symlinkedDir(t, "skills/paparazzi/scripts"), "png-check.mjs"));
+  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
+});
+
+test("importing shoot.mjs through a symlinked directory has no side effects", (t) => {
+  const run = importModule(t, join(symlinkedDir(t, "skills/paparazzi/scripts"), "shoot.mjs"));
+  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
+});
