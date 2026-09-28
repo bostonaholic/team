@@ -107,5 +107,5 @@ All work, including features, bugs, and chores, is tracked on the [GitHub Projec
 Node 22 is already on the image. The environment install puts Ruby 3.3.6 and Bundler 2.7.1 on `PATH`. Docs gems install into gitignored `docs/vendor/bundle`.
 
 - Plugin checks, from the repo root: `node --test tests/*.test.mjs` and `git diff --check`. There is no `npm test` script.
-- Docs, from `docs/`: `bundle exec jekyll build`, or `bundle exec jekyll serve --host 0.0.0.0 --port 4000` at http://localhost:4000. The `docs` terminal starts that server.
+- Docs, from `docs/`: `bundle exec jekyll build`, or `bundle exec jekyll serve --host 0.0.0.0 --port 4000` at http://localhost:4000. The environment start command detaches that server when port 4000 is free.
 - OpenCode dev install: `script/dev-install opencode` registers `opencode/team.js`. The Claude Code, Codex, and Antigravity CLIs are not installed, so `claude plugin validate .` cannot run here.
