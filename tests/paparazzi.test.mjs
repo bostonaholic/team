@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
 import { deflateSync } from "node:zlib";
-import { MAX_BYTES, compare, decodePng, inspect } from "../skills/paparazzi/scripts/png-check.mjs";
+import { MAX_BYTES, decodePng, inspect } from "../skills/paparazzi/scripts/png-check.mjs";
 import { DEFAULT_CONTEXT, InputError, planFrames } from "../skills/paparazzi/scripts/shoot.mjs";
 
 const PNG_CHECK = resolve("skills/paparazzi/scripts/png-check.mjs");
@@ -124,98 +124,58 @@ test("inspect fails a frame over the attachment bound", () => {
   assert.match(inspect(padded).failures.join(), new RegExp(String(MAX_BYTES)));
 });
 
-test("compare reports the bounding box of changed pixels and counts a size change as changed area", () => {
-  const before = encodePng(grid(10, 8, () => WHITE));
-  assert.deepEqual(compare(before, before), { changed: false, changedShare: 0, changedBox: null, sizeChanged: false });
-
-  const after = encodePng(grid(10, 8, (x, y) => (x >= 2 && x <= 4 && y >= 3 && y <= 6 ? INK : WHITE)));
-  const diff = compare(after, before);
-  assert.equal(diff.changed, true);
-  assert.deepEqual(diff.changedBox, { x: 2, y: 3, width: 3, height: 4 });
-  assert.equal(diff.changedShare, 0.15);
-
-  const taller = compare(encodePng(grid(10, 9, () => WHITE)), before);
-  assert.equal(taller.sizeChanged, true);
-  assert.deepEqual(taller.changedBox, { x: 0, y: 8, width: 10, height: 1 });
-});
-
-test("png-check exits 0 on a passing frame, 1 on an identical pair, and 2 on a non-PNG or bad usage", (t) => {
+test("png-check exits 0 on a passing frame, 1 on a failed gate, and 2 on a non-PNG or bad usage", (t) => {
   const dir = scratch(t);
-  const before = join(dir, "before.png");
-  const after = join(dir, "after.png");
+  const frame = join(dir, "frame.png");
+  const blank = join(dir, "blank.png");
   const text = join(dir, "notes.png");
-  writeFileSync(before, encodePng(grid(6, 6, (x) => (x ? WHITE : INK))));
-  writeFileSync(after, encodePng(grid(6, 6, (x) => (x > 1 ? WHITE : INK))));
+  writeFileSync(frame, encodePng(grid(6, 6, (x) => (x ? WHITE : INK))));
+  writeFileSync(blank, encodePng(grid(6, 6, () => WHITE)));
   writeFileSync(text, "not an image");
 
-  const passing = run(PNG_CHECK, [after, "--against", before]);
+  const passing = run(PNG_CHECK, [frame]);
   assert.equal(passing.status, 0, passing.stderr);
-  assert.equal(JSON.parse(passing.stdout).changed, true);
+  assert.deepEqual(JSON.parse(passing.stdout).failures, []);
 
-  const identical = run(PNG_CHECK, [before, "--against", before]);
-  assert.equal(identical.status, 1);
-  assert.equal(JSON.parse(identical.stdout).failures.length, 1);
+  const failing = run(PNG_CHECK, [blank]);
+  assert.equal(failing.status, 1);
+  assert.equal(JSON.parse(failing.stdout).failures.length, 1);
 
   assert.equal(run(PNG_CHECK, [text]).status, 2);
-  assert.equal(run(PNG_CHECK, [after, "--against"]).status, 2);
+  assert.equal(run(PNG_CHECK, [frame, "extra"]).status, 2);
   assert.equal(run(PNG_CHECK, []).status, 2);
 });
 
-test("planFrames expands a shot into a before frame then an after frame with identical settings", () => {
-  const plan = planFrames(
+test("planFrames expands a shot list into one frame per shot under shared defaults", () => {
+  const frames = planFrames(
     {
-      origins: { before: "http://127.0.0.1:4101/docs/", after: "http://127.0.0.1:4100/docs" },
+      origin: "http://127.0.0.1:4100/docs/",
       defaults: { colorScheme: "dark" },
       shots: [
         { name: "01-settings-populated", path: "/settings", viewport: { width: 390, height: 844 } },
-        { name: "02-billing-empty", path: "/billing", sides: ["after"] },
+        { name: "02-pricing-populated", path: "/pricing", fullPage: true },
+        { name: "03-escape-populated", path: "//evil.example/" },
       ],
     },
     "/out",
   );
   assert.deepEqual(
-    plan.frames.map(({ name, side, url, file }) => [name, side, url, file]),
+    frames.map(({ name, url, file }) => [name, url, file]),
     [
-      ["01-settings-populated", "before", "http://127.0.0.1:4101/docs/settings", join("/out", "01-settings-populated-before.png")],
-      ["01-settings-populated", "after", "http://127.0.0.1:4100/docs/settings", join("/out", "01-settings-populated-after.png")],
-      ["02-billing-empty", "after", "http://127.0.0.1:4100/docs/billing", join("/out", "02-billing-empty-after.png")],
+      ["01-settings-populated", "http://127.0.0.1:4100/docs/settings", join("/out", "01-settings-populated.png")],
+      ["02-pricing-populated", "http://127.0.0.1:4100/docs/pricing", join("/out", "02-pricing-populated.png")],
+      ["03-escape-populated", "http://127.0.0.1:4100/docs//evil.example/", join("/out", "03-escape-populated.png")],
     ],
   );
-  assert.deepEqual(plan.frames[0].context, plan.frames[1].context);
-  assert.deepEqual(plan.frames[0].context, { ...DEFAULT_CONTEXT, colorScheme: "dark", viewport: { width: 390, height: 844 } });
-  assert.deepEqual(plan.pairs, ["01-settings-populated"]);
-});
-
-test("planFrames expands a single-origin list into one plain frame per shot", () => {
-  const plan = planFrames(
-    {
-      origin: "http://127.0.0.1:4100",
-      shots: [
-        { name: "01-pricing-populated", path: "/pricing", fullPage: true },
-        { name: "02-escape-populated", path: "//evil.example/" },
-      ],
-    },
-    "/out",
-  );
-  assert.deepEqual(
-    plan.frames.map(({ name, side, url, file }) => [name, side, url, file]),
-    [
-      ["01-pricing-populated", null, "http://127.0.0.1:4100/pricing", join("/out", "01-pricing-populated.png")],
-      ["02-escape-populated", null, "http://127.0.0.1:4100//evil.example/", join("/out", "02-escape-populated.png")],
-    ],
-  );
-  assert.deepEqual(plan.pairs, []);
+  assert.deepEqual(frames[0].context, { ...DEFAULT_CONTEXT, colorScheme: "dark", viewport: { width: 390, height: 844 } });
+  assert.deepEqual(frames[1].context, { ...DEFAULT_CONTEXT, colorScheme: "dark" });
 });
 
 test("planFrames refuses an unusable shot list before anything launches", () => {
   const origin = "http://127.0.0.1:4100";
-  const origins = { before: "http://127.0.0.1:4101", after: origin };
   const refusals = [
-    [{ shots: [{ name: "01-a", path: "/" }] }, /exactly one of origin/],
-    [{ origin, origins, shots: [{ name: "01-a", path: "/" }] }, /exactly one of origin/],
-    [{ origins: { after: origin }, shots: [{ name: "01-a", path: "/" }] }, /both a before and an after/],
-    [{ origin, shots: [{ name: "01-a", path: "/", sides: ["after"] }] }, /only to a before\/after/],
-    [{ origins, shots: [{ name: "01-a", path: "/", sides: ["during"] }] }, /before and after/],
+    [{ shots: [{ name: "01-a", path: "/" }] }, /origin/],
+    [{ origin, shots: [{ name: "01-a", path: "/", sides: ["after"] }] }, /unknown field/],
     [{ origin, shots: [{ name: "settings", path: "/" }] }, /name/],
     [{ origin, shots: [{ name: "01-a", path: "/" }, { name: "01-a", path: "/b" }] }, /duplicate name/],
     [{ origin, shots: [{ name: "01-a", path: "relative" }] }, /start with/],
@@ -223,7 +183,6 @@ test("planFrames refuses an unusable shot list before anything launches", () => 
     [{ origin, shots: [{ name: "01-a", path: "/", actions: [{ drag: "#q" }] }] }, /unknown action/],
     [{ origin, shots: [{ name: "01-a", path: "/", target: { role: "button", nth: 2 } }] }, /locator/],
     [{ origin, shots: [{ name: "01-a", path: "/", fullPage: true, target: "#card" }] }, /exclusive/],
-    [{ origin, shots: [{ name: "01-a", path: "/", zoom: 2 }] }, /unknown field/],
     [{ origin, shots: [{ name: "01-a", path: "/", deviceScaleFactor: 4 }] }, /deviceScaleFactor/],
     [{ origin: "file:///etc", shots: [{ name: "01-a", path: "/" }] }, /http/],
     [{ origin, shots: [] }, /non-empty/],
@@ -282,59 +241,37 @@ function shootAsync(list, outDir) {
   });
 }
 
-const PAGE = (label) => `<!doctype html><body style="margin:0;font:16px sans-serif"><h1>Settings</h1><button>${label}</button></body>`;
-
-test("shoot captures a before/after pair and locates the change", { skip: !playwrightAvailable() && "no playwright package resolves" }, async (t) => {
+test("shoot captures viewport, element, and full-page frames and fails an error page", { skip: !playwrightAvailable() && "no playwright package resolves" }, async (t) => {
   const dir = scratch(t);
-  const before = await serve(t, PAGE("Save"));
-  const after = await serve(t, PAGE("Save changes"));
-  const list = join(dir, "shots.json");
-  writeFileSync(
-    list,
-    JSON.stringify({
-      origins: { before, after },
-      defaults: { deviceScaleFactor: 1, viewport: { width: 400, height: 300 } },
-      shots: [
-        { name: "01-settings-populated", path: "/" },
-        { name: "02-settings-button", path: "/", target: { role: "button" } },
-        { name: "03-missing-error", path: "/missing", sides: ["after"] },
-      ],
-    }),
-  );
-
-  const shot = await shootAsync(list, join(dir, "out"));
-  assert.equal(shot.status, 1, shot.stderr);
-  const report = JSON.parse(shot.stdout);
-  const byFile = Object.fromEntries(report.frames.map((frame) => [`${frame.name}-${frame.side}`, frame]));
-
-  assert.equal(byFile["01-settings-populated-before"].ok, true);
-  assert.equal(byFile["01-settings-populated-after"].ok, true);
-  assert.equal(byFile["03-missing-error-after"].ok, false);
-  assert.match(byFile["03-missing-error-after"].reason, /HTTP 404/);
-
-  const pair = report.pairs.find((entry) => entry.name === "01-settings-populated");
-  assert.equal(pair.changed, true);
-  assert.ok(pair.changedBox.y > 40 && pair.changedBox.width < 200, JSON.stringify(pair.changedBox));
-  assert.deepEqual(decodePng(readFileSync(byFile["01-settings-populated-after"].file)).width, 400);
-});
-
-test("shoot captures a plain full-page frame from a single origin", { skip: !playwrightAvailable() && "no playwright package resolves" }, async (t) => {
-  const dir = scratch(t);
-  const origin = await serve(t, `<!doctype html><body style="margin:0"><h1>Docs</h1><div style="height:900px"></div><p>Footer</p></body>`);
+  const origin = await serve(t, `<!doctype html><body style="margin:0;font:16px sans-serif"><h1>Settings</h1><button>Save</button><div style="height:900px"></div><p>Footer</p></body>`);
   const list = join(dir, "shots.json");
   writeFileSync(
     list,
     JSON.stringify({
       origin,
       defaults: { deviceScaleFactor: 1, viewport: { width: 400, height: 300 } },
-      shots: [{ name: "01-docs-populated", path: "/", fullPage: true }],
+      shots: [
+        { name: "01-settings-populated", path: "/" },
+        { name: "02-settings-button", path: "/", target: { role: "button", name: "Save" } },
+        { name: "03-settings-full", path: "/", fullPage: true },
+        { name: "04-missing-error", path: "/missing" },
+      ],
     }),
   );
 
   const shot = await shootAsync(list, join(dir, "out"));
-  assert.equal(shot.status, 0, shot.stderr);
-  const [frame] = JSON.parse(shot.stdout).frames;
-  assert.equal(frame.side, null);
-  assert.equal(frame.file, join(dir, "out", "01-docs-populated.png"));
-  assert.ok(decodePng(readFileSync(frame.file)).height > 900);
+  assert.equal(shot.status, 1, shot.stderr);
+  const frames = Object.fromEntries(JSON.parse(shot.stdout).frames.map((frame) => [frame.name, frame]));
+  const size = (name) => {
+    const { width, height } = decodePng(readFileSync(frames[name].file));
+    return [width, height];
+  };
+
+  assert.equal(frames["01-settings-populated"].file, join(dir, "out", "01-settings-populated.png"));
+  assert.deepEqual(size("01-settings-populated"), [400, 300]);
+  assert.ok(size("02-settings-button")[0] < 200, JSON.stringify(size("02-settings-button")));
+  assert.ok(size("03-settings-full")[1] > 900);
+  assert.equal(frames["04-missing-error"].ok, false);
+  assert.equal(frames["04-missing-error"].file, null);
+  assert.match(frames["04-missing-error"].reason, /HTTP 404/);
 });

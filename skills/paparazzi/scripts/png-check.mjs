@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Mechanical gates for a captured frame, and the pixel diff of a before/after pair.
+ * Mechanical gates for a captured frame.
  *
- *     node "<skill-dir>/scripts/png-check.mjs" <png> [--against <before-png>]
+ *     node "<skill-dir>/scripts/png-check.mjs" <png>
  *
  * Prints one JSON object. Exit 0: every gate passed. 1: a gate failed, named in
  * `failures`. 2: the file is unreadable, not a PNG, or a PNG shape this decoder
@@ -155,53 +155,14 @@ export function inspect(buffer) {
   };
 }
 
-/**
- * The pixels that differ between two frames, over the union of both sizes, so a
- * frame that grew or shrank counts its extra area as changed. `changedBox` is in
- * image pixels; divide by the device scale factor for CSS pixels.
- */
-export function compare(afterBuffer, beforeBuffer) {
-  const after = decodePng(afterBuffer);
-  const before = decodePng(beforeBuffer);
-  const width = Math.max(after.width, before.width);
-  const height = Math.max(after.height, before.height);
-  const pixelAt = (frame, x, y) => (x < frame.width && y < frame.height ? frame.rgba[y * frame.width + x] : -1);
-
-  let changed = 0;
-  let box = null;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (pixelAt(after, x, y) === pixelAt(before, x, y)) continue;
-      changed++;
-      box = box
-        ? { left: Math.min(box.left, x), top: Math.min(box.top, y), right: Math.max(box.right, x), bottom: Math.max(box.bottom, y) }
-        : { left: x, top: y, right: x, bottom: y };
-    }
-  }
-
-  const total = width * height;
-  return {
-    changed: changed > 0,
-    changedShare: total ? Number((changed / total).toFixed(4)) : 0,
-    changedBox: box && { x: box.left, y: box.top, width: box.right - box.left + 1, height: box.bottom - box.top + 1 },
-    sizeChanged: after.width !== before.width || after.height !== before.height,
-  };
-}
-
 function main(argv) {
-  const [path, flag, againstPath, ...rest] = argv;
-  if (!path || (flag !== undefined && (flag !== "--against" || !againstPath)) || rest.length) {
-    process.stderr.write("png-check.mjs: usage: png-check.mjs <png> [--against <before-png>]\n");
+  const [path, ...rest] = argv;
+  if (!path || rest.length) {
+    process.stderr.write("png-check.mjs: usage: png-check.mjs <png>\n");
     return 2;
   }
   try {
-    const buffer = readFileSync(path);
-    const report = { file: path, ...inspect(buffer) };
-    if (againstPath) {
-      report.against = againstPath;
-      Object.assign(report, compare(buffer, readFileSync(againstPath)));
-      if (!report.changed) report.failures.push("identical to the before frame: the change is not in this frame");
-    }
+    const report = { file: path, ...inspect(readFileSync(path)) };
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     return report.failures.length ? 1 : 0;
   } catch (error) {

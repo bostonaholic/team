@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 
 /**
- * Captures every frame of a shot list under one deterministic browser setup.
- * A list with one `origin` shoots plain frames; a list with `origins.before` and
- * `origins.after` shoots pairs that differ only where the app does.
+ * Captures every frame of a shot list under one deterministic browser setup, so
+ * the same list shot again renders the same pixels wherever the app does.
  *
  *     node "<skill-dir>/scripts/shoot.mjs" <shots.json> <out-dir>
  *
- * Writes `<out-dir>/<name>.png`, or `<name>-<side>.png` in a pair, for each frame
- * that passes its gates, and prints one JSON report. Exit 0: every frame passed and every pair changed.
- * 1: a frame failed or a pair is identical, each named in the report.
+ * Writes `<out-dir>/<name>.png` for each frame that passes its gates and prints
+ * one JSON report. Exit 0: every frame passed. 1: a frame failed, named in the report.
  * 2: the shot list is unusable; nothing was launched. 3: no Playwright or no browser.
  *
  * Playwright resolves from `$PAPARAZZI_TOOLS`, then from the working directory.
@@ -19,9 +17,8 @@ import { mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { compare, inspect } from "./png-check.mjs";
+import { inspect } from "./png-check.mjs";
 
-export const SIDES = ["before", "after"];
 export const SHOT_TIMEOUT_MS = 30_000;
 const NETWORK_IDLE_MS = 5_000;
 const TARGET_PADDING = 16;
@@ -37,7 +34,7 @@ export const DEFAULT_CONTEXT = {
 };
 
 const NAME = /^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const SHOT_KEYS = new Set(["name", "path", "sides", "actions", "waitFor", "target", "fullPage", "mask", "hide", "expectStatus", ...Object.keys(DEFAULT_CONTEXT)]);
+const SHOT_KEYS = new Set(["name", "path", "actions", "waitFor", "target", "fullPage", "mask", "hide", "expectStatus", ...Object.keys(DEFAULT_CONTEXT)]);
 const LOCATOR_ACTIONS = ["click", "hover", "check", "scroll", "fill"];
 
 export class InputError extends Error {}
@@ -101,36 +98,19 @@ function checkOrigin(origin, where) {
   if (protocol !== "http:" && protocol !== "https:") fail(where, "must be http or https");
 }
 
-function checkSides(sides, where) {
-  if (!Array.isArray(sides) || !sides.length) fail(where, "must be a non-empty array");
-  for (const side of sides) if (!SIDES.includes(side)) fail(where, "sides are before and after");
-  if (new Set(sides).size !== sides.length) fail(where, "duplicate side");
-}
-
 /**
- * Validates the whole shot list and expands it into frames and pairs before
- * any browser starts, so an unusable list refuses with nothing launched.
+ * Validates the whole shot list and expands it into frames before any browser
+ * starts, so an unusable list refuses with nothing launched.
  */
 export function planFrames(list, outDir) {
   if (!isObject(list)) fail("shot list", "must be a JSON object");
-  const { origin, origins, defaults = {}, shots } = list;
-
-  if ((origin === undefined) === (origins === undefined)) {
-    fail("shot list", "name exactly one of origin, for plain frames, or origins, for before/after pairs");
-  }
-  const comparing = origins !== undefined;
-  if (comparing) {
-    if (!isObject(origins) || Object.keys(origins).sort().join() !== "after,before") fail("origins", "a comparison names both a before and an after origin");
-    for (const side of SIDES) checkOrigin(origins[side], `origins.${side}`);
-  } else {
-    checkOrigin(origin, "origin");
-  }
+  const { origin, defaults = {}, shots } = list;
+  checkOrigin(origin, "origin");
   if (!isObject(defaults)) fail("defaults", "must be an object");
   for (const key of Object.keys(defaults)) if (!(key in DEFAULT_CONTEXT)) fail(`defaults.${key}`, "unknown setting");
   if (!Array.isArray(shots) || !shots.length) fail("shots", "must be a non-empty array");
 
   const frames = [];
-  const pairs = [];
   const names = new Set();
   shots.forEach((shot, index) => {
     const where = `shots[${index}]`;
@@ -139,10 +119,6 @@ export function planFrames(list, outDir) {
     if (typeof shot.name !== "string" || !NAME.test(shot.name)) fail(`${where}.name`, "must match NN-lowercase-words, such as 01-settings-empty");
     if (names.has(shot.name)) fail(`${where}.name`, "duplicate name");
     names.add(shot.name);
-
-    if (!comparing && "sides" in shot) fail(`${where}.sides`, "sides apply only to a before/after comparison");
-    if (comparing && "sides" in shot) checkSides(shot.sides, `${where}.sides`);
-    const sides = comparing ? SIDES.filter((side) => (shot.sides ?? SIDES).includes(side)) : [null];
 
     const context = { ...DEFAULT_CONTEXT, ...defaults };
     for (const key of Object.keys(DEFAULT_CONTEXT)) if (key in shot) context[key] = shot[key];
@@ -163,19 +139,15 @@ export function planFrames(list, outDir) {
     if ("fullPage" in shot && typeof shot.fullPage !== "boolean") fail(`${where}.fullPage`, "must be true or false");
     if (shot.fullPage && "target" in shot) fail(where, "fullPage and target are exclusive");
 
-    for (const side of sides) {
-      frames.push({
-        shot,
-        side,
-        context,
-        name: shot.name,
-        url: frameUrl(side ? origins[side] : origin, shot.path, `${where}.path`),
-        file: join(outDir, side ? `${shot.name}-${side}.png` : `${shot.name}.png`),
-      });
-    }
-    if (sides.length === 2) pairs.push(shot.name);
+    frames.push({
+      shot,
+      context,
+      name: shot.name,
+      url: frameUrl(origin, shot.path, `${where}.path`),
+      file: join(outDir, `${shot.name}.png`),
+    });
   });
-  return { frames, pairs };
+  return frames;
 }
 
 function loadPlaywright() {
@@ -274,7 +246,7 @@ function note(list, text) {
 
 async function capture(browser, frame) {
   const { shot, context: settings } = frame;
-  const result = { name: frame.name, side: frame.side, url: frame.url, file: null, ok: false, status: null, networkIdle: null, consoleErrors: [], pageErrors: [], failedRequests: [], reason: null };
+  const result = { name: frame.name, url: frame.url, file: null, ok: false, status: null, networkIdle: null, consoleErrors: [], pageErrors: [], failedRequests: [], reason: null };
   const context = await browser.newContext({ ...settings, reducedMotion: "reduce" });
   try {
     const page = await context.newPage();
@@ -321,7 +293,6 @@ async function capture(browser, frame) {
       return result;
     }
     writeFileSync(frame.file, buffer);
-    result.buffer = buffer;
     Object.assign(result, { file: frame.file, ok: true });
     return result;
   } catch (error) {
@@ -339,9 +310,9 @@ async function main(argv) {
     return 2;
   }
 
-  let plan;
+  let planned;
   try {
-    plan = planFrames(JSON.parse(readFileSync(listPath, "utf8")), resolve(outDir));
+    planned = planFrames(JSON.parse(readFileSync(listPath, "utf8")), resolve(outDir));
   } catch (error) {
     process.stderr.write(`shoot.mjs: ${error.message}\n`);
     return 2;
@@ -363,21 +334,14 @@ async function main(argv) {
   mkdirSync(resolve(outDir), { recursive: true });
   const frames = [];
   try {
-    for (const frame of plan.frames) frames.push(await capture(launched.browser, frame));
+    for (const frame of planned) frames.push(await capture(launched.browser, frame));
   } finally {
     await launched.browser.close();
   }
 
-  const pairs = plan.pairs.map((name) => {
-    const [before, after] = SIDES.map((side) => frames.find((frame) => frame.name === name && frame.side === side));
-    if (!before.ok || !after.ok) return { name, compared: false, changed: null };
-    return { name, compared: true, ...compare(after.buffer, before.buffer) };
-  });
-  for (const frame of frames) delete frame.buffer;
-
-  const report = { playwright: loaded.from, browser: launched.channel, frames, pairs };
+  const report = { playwright: loaded.from, browser: launched.channel, frames };
   process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-  return frames.every((frame) => frame.ok) && pairs.every((pair) => pair.changed) ? 0 : 1;
+  return frames.every((frame) => frame.ok) ? 0 : 1;
 }
 
 // Node realpaths import.meta.url but not argv[1], so a symlinked path needs realpathSync.
