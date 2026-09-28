@@ -1,4 +1,0 @@
-interface:
-  display_name: "Oracle"
-  short_description: "Get a read-only engineering second opinion"
-  default_prompt: "Use $oracle to get a read-only engineering second opinion."

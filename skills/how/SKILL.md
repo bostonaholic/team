@@ -36,5 +36,6 @@ Read each reference completely when reaching that stage. Follow them in order; l
 
 ## Applied principles
 
-Read and apply: [independent review rules](../team/principles/independent-review.md) and
-[focused work rules](../team/principles/focused-work.md).
+Read and apply: [independent review rules](../team/principles/independent-review.md),
+[focused work rules](../team/principles/focused-work.md), and
+[verified results rules](../team/principles/verified-results.md).

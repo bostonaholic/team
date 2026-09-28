@@ -59,6 +59,10 @@ Decision test: Does this explain why? Can code/tests carry it? Is it true now wi
 4. **Self-Review.** Apply every Quality Checklist item to every touched file.
 5. **Explain Decisions.** State decisions, trade-offs, and non-obvious choices.
 
+## Type contracts
+
+For TypeScript, model values the code accepts at runtime. Validate untrusted input at the owning boundary, then rely on that invariant. Avoid `any`, casts, non-null assertions, and optional fields when they hide a real requirement; use required fields or discriminated unions when they prevent an invalid state.
+
 ## Quality Checklist
 
 Every item gates progress: **Single Responsibility**; **Clear Naming**; **No Magic Numbers**; **Explicit Error Handling**; **Low Coupling**; **Testability**; **Readability** (new developer understands in 5 minutes); **DRY** under Rule of Three; **Performance Awareness**; **Functional Core, Imperative Shell**; **No Primitive Obsession** (Money, Duration, EmailAddress, OrderId instead of raw `string`/`int`); **Failures are actionable** (prefer `assert_eq(actual, expected)` over opaque `assert(predicate)`); **Comment Discipline**.

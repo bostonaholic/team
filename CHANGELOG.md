@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Changed
 
-- `/oracle` dispatches a fresh, read-only advisor for one engineering second opinion.
+- Engineering reviews and investigations now distinguish evidence from assumptions, prioritize high-risk behavior, inspect TypeScript types against runtime values, and trace bad values to their source.
 
 ## [0.132.23] - 2026-09-25
 

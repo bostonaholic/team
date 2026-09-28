@@ -35,6 +35,8 @@ Explain first — run `## Explain mode` in full.
    **Act on** (worth fixing now), **Consider** (real, unclear
    cost/benefit), **Noted** (valid, low priority), or **Dismissed**
    (wrong, missing context, or style preference — say which).
+   For each **Act on** item, name the smallest corrective change, its rough
+   effort, a material trade-off, and the fact that would change the advice.
 
 3. **Present.** The explanation first, standing on its own; the critique
    verdict below it.

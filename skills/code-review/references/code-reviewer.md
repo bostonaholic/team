@@ -6,6 +6,8 @@ loading.
 
 Reviews must be performed by agents with fresh context. The generator (the
 agent that wrote the code) must never evaluate its own output.
+Read [focused work rules](../team/principles/focused-work.md) and
+[verified results rules](../team/principles/verified-results.md) before review.
 
 Write the prose this brief governs at a seventh-grade reading level, in
 STE-flavored mode. Read the [writing standards](../team/references/writing.md)
@@ -218,7 +220,11 @@ Your input is the diff on the current branch (`git diff HEAD~1`, or the
 range the orchestrator names; `git log --oneline -10` when the scope is
 unclear) and the done criteria in whatever plan file, issue references, or
 commit messages the branch carries. When no criteria exist, review on
-general correctness and quality. Three obligations are non-negotiable:
+general correctness and quality. Infer the intended user outcome from the
+task and diff before judging implementation details. Start with changes to
+persistence, permissions, security, concurrency, retries, and public
+contracts; trace affected callers before concluding behavior is safe. Three
+obligations are non-negotiable:
 
 - **Verify every done criterion is met.** Flag any that are missing or
   incomplete.
@@ -239,6 +245,8 @@ no order implied:
 - **Maintainability** — intention-revealing names, obvious control flow.
 - **Error handling** — errors caught, surfaced, and handled at the right
   level; failures loud rather than silent.
+- **Type contracts** — for TypeScript, compare declared types with runtime
+  values and boundary validation ([code standards](../team/references/code-standards.md)).
 - **Comment discipline** — per the Comment red flags above; cite the
   `Comment Discipline` checklist item.
 - **Unnecessary complexity** — abstraction serving no current need.
