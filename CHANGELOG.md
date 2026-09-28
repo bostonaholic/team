@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Engineering reviews and investigations now distinguish evidence from assumptions, prioritize high-risk behavior, inspect TypeScript types against runtime values, and trace bad values to their source.
+- Engineering reviews and investigations now distinguish evidence from assumptions, prioritize high-risk behavior, compare type contracts with runtime values, and trace bad values to their source.
 
 ## [0.132.23] - 2026-09-25
 

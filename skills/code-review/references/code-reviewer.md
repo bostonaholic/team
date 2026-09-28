@@ -245,7 +245,7 @@ no order implied:
 - **Maintainability** — intention-revealing names, obvious control flow.
 - **Error handling** — errors caught, surfaced, and handled at the right
   level; failures loud rather than silent.
-- **Type contracts** — for TypeScript, compare declared types with runtime
+- **Type contracts** — compare declared or enforced contracts with runtime
   values and boundary validation ([code standards](../team/references/code-standards.md)).
 - **Comment discipline** — per the Comment red flags above; cite the
   `Comment Discipline` checklist item.

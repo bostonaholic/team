@@ -61,7 +61,7 @@ Decision test: Does this explain why? Can code/tests carry it? Is it true now wi
 
 ## Type contracts
 
-For TypeScript, model values the code accepts at runtime. Validate untrusted input at the owning boundary, then rely on that invariant. Avoid `any`, casts, non-null assertions, and optional fields when they hide a real requirement; use required fields or discriminated unions when they prevent an invalid state.
+Define interfaces so their accepted values and valid states match runtime behavior. Validate untrusted values at the boundary that owns them, then rely on that guarantee. Avoid unchecked conversions, forced assertions, and optional values that conceal a required input. Use the language's type or contract mechanisms to distinguish valid alternatives when they rule out an invalid state.
 
 ## Quality Checklist
 
