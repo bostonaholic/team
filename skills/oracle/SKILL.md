@@ -11,7 +11,7 @@ Get one independent engineering recommendation. The advisor reads relevant evide
 
 ## Input
 
-Use the user's question or review target. For "current changes," inspect the working diff; for "last commit," inspect the last commit. Pass the user's actual request, repository path, any attached files, and necessary conversation facts. Do not pass your proposed answer or unverified conclusions.
+Use the user's question or review target. For "current changes," include staged, unstaged, and untracked changes. For a branch review, resolve the PR base, then `origin/HEAD`, then `main`, and include committed changes since that base. For "last commit," inspect the last commit. Pass the user's actual request, repository path, any attached files, and necessary conversation facts. Do not pass your proposed answer or unverified conclusions.
 
 If the target is unclear and repository evidence cannot resolve it, ask one question before dispatch.
 
