@@ -10,7 +10,7 @@ Each poll is one Bash call that combines:
   and each thread's comment connection at `first: 100`, selecting each
   comment's `id` and `author { login }`. Past 100 threads or past 100 comments on a
   single thread, paginate with `after:` cursors (see the pagination
-  pitfall in `skills/pr-open-comments/SKILL.md`). An unfetched page on
+  pitfall in `skills/pr-open-comments/references/06-authorized-execution.md`). An unfetched page on
   any connection is a poll failure, never a short participant list —
   the third-party check below must never run against a truncated
   comment list.

@@ -57,9 +57,11 @@ Report:
   rejected verdict, with what the last rebuttal argued and how the
   author answered, plus the by-hand follow-up options (make the argument
   yourself, take the author's position and resolve, approve manually, or
-  resume the watch as the scheduled pr-watch job)
+  resume the watch as a headless job under an external scheduler, if the
+  user runs one)
 - the handoff — path-dependent. On approval there is no follow-on
   reviewer skill. On
-  the soft cap, print the tracked-set state and the resume command for
-  the scheduled pr-watch job. On interrupt or a declined confirmation,
+  the soft cap, print the tracked-set state and the command to resume the
+  watch as a headless job under an external scheduler, if the user runs
+  one. On interrupt or a declined confirmation,
   offer to re-arm the watch.

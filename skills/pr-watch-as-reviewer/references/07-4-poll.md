@@ -68,7 +68,7 @@ deliberately carries no user or free-text field.
 
 Past 100 nodes, paginate every top-level connection and every thread's comment
 connection with `after:` cursors (the same pagination
-pitfall `skills/pr-open-comments/SKILL.md` documents). Step 2's rule
+pitfall `skills/pr-open-comments/references/06-authorized-execution.md` documents). Step 2's rule
 applies — an unfetched page is a poll failure, never an empty gate.
 
 A **tracked PR-level item** — review summary or conversation comment — settles only when both hold:
@@ -281,7 +281,7 @@ verdict lands on a different comment. Select
 `reactionGroups { content viewerHasReacted }` alongside `id` on the
 comments the re-review already fetches, and skip any subject already
 carrying your reaction. The mutation is in
-`skills/pr-open-comments/SKILL.md`, `## Reaction mechanics`.
+`skills/pr-open-comments/references/05-reaction-mechanics.md`.
 
 A reaction failure never stops the watch and never blocks the approval:
 warn, note it in the snapshot line, and keep polling.
