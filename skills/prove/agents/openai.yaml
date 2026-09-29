@@ -1,4 +1,4 @@
 interface:
   display_name: "Prove"
-  short_description: "Verify a PR's test plan with evidence"
-  default_prompt: "Use $prove to verify a PR's test plan with evidence."
+  short_description: "Prove claims or a PR test plan with evidence"
+  default_prompt: "Use $prove to prove claims or a PR test plan with evidence."

@@ -201,11 +201,11 @@ Cleans PR state.
 
 ### [prove](https://github.com/bostonaholic/team/blob/main/skills/prove/SKILL.md)
 
-Verifies a PR test plan with evidence-rated verdicts.
+Proves claims a person or another skill passes in, such as a behavior, a fact about the code, or a PR's test plan, with evidence-rated verdicts. It tries to disprove each claim with the strongest evidence it can reach, and calls other skills when a claim needs screenshots, a walkthrough, or design history.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `how`, `paparazzi`, `why`
 
 ### [pr-screenshots](https://github.com/bostonaholic/team/blob/main/skills/pr-screenshots/SKILL.md)
 
@@ -219,7 +219,7 @@ Attaches local images to a PR body.
 
 Captures verified screenshots of an app.
 
-**Used by:** None
+**Used by:** `prove`
 
 **Uses:** None
 
@@ -243,7 +243,7 @@ Mines a session for durable learnings.
 
 Investigates design rationale behind code.
 
-**Used by:** `code-review`, `how`, `team`, `team-fix`
+**Used by:** `code-review`, `how`, `prove`, `team`, `team-fix`
 
 **Uses:** `how`
 
@@ -251,7 +251,7 @@ Investigates design rationale behind code.
 
 Explains subsystem architecture and runtime flow.
 
-**Used by:** `team`, `why`
+**Used by:** `prove`, `team`, `why`
 
 **Uses:** `why`
 
