@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `/shipit` now lands PRs in projects that have no land-time versioning setup. It used to stop before merging because `version-bump` ran a version check script that only exists in this plugin's own repository. A project without that script now lands with no version bump and its PR title unchanged. **What this asks of you:** nothing.
+
 ## [0.137.0] - 2026-09-28
 
 ### Fixed
