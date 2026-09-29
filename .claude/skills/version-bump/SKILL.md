@@ -5,8 +5,6 @@ description: 'Use for version bumps on explicit request or during PR landing thr
 
 # Version Bump — version a project at land time
 
-Follow [execution rules](../../../skills/team/references/execution.md).
-
 This repository's own versioning procedure. `AGENTS.md` declares it as a
 pre-merge step, so `/shipit` runs it before merging. Tagging and the GitHub
 release are **not** part of it; `release-on-merge.yml` does that on merge. When invoked directly, run this skill **before**
