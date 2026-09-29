@@ -19,12 +19,12 @@ available, proceed regardless of which other methods (`mergeCommitAllowed`,
 ### 2. Run land-time versioning
 
 Run the `version-bump` skill before pushing. It owns all version, changelog, and
-title work and decides from project context whether the PR needs a bump.
+title work and follows the project's own versioning conventions.
 
 - If it commits a bump, continue.
 - If it reports no bump is required, continue with the plain PR title.
-- If it stops for a stale bump, invalid state, missing project contract, or
-  failed check, stop. Do not push, wait for CI, or merge.
+- If it stops for a stale bump, invalid state, conflicting versioning
+  evidence, or failed check, stop. Do not push, wait for CI, or merge.
 
 `shipit` does not inspect changed files or edit version files itself.
 

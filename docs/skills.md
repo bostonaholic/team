@@ -153,7 +153,7 @@ Lands a reviewed pull request.
 
 ### [version-bump](https://github.com/bostonaholic/team/blob/main/skills/version-bump/SKILL.md)
 
-Versions the current project at land time.
+Follows the current project's own versioning conventions at land time, or makes no bump when the project has none.
 
 **Used by:** `shipit`
 

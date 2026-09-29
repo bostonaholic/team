@@ -17,6 +17,7 @@ test("version-bump is packaged as a shared skill for every plugin host", () => {
   assert.match(versionBumpSkill, /ship it/);
   assert.doesNotMatch(versionBumpSkill, /\.claude\/skills\/version-bump/);
   assert.doesNotMatch(versionBumpSkill, new RegExp(`${productName} plugin|${productName} PR|${productName}-internal|${hardcodedOwnerRepo}`));
+  assert.doesNotMatch(versionBumpSkill, /\.claude\/|\.claude-plugin|version-bump-required|next-version|check-version-consistency/);
   assert.doesNotMatch(versionBumpOpenAi, new RegExp(`${productName} plugin|${productName} pull request`));
 });
 

@@ -1,4 +1,4 @@
-// Runs version-bump's step-0 gate block, as written in SKILL.md, against scratch repos.
+// Runs land-version's step-0 gate block, as written in its SKILL.md, against scratch repos.
 import assert from "node:assert/strict";
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -9,7 +9,7 @@ import test from "node:test";
 const INVARIANT_SCRIPT = ".claude/scripts/version-bump-required.sh";
 
 function stepZeroBlock() {
-  const skill = readFileSync("skills/version-bump/SKILL.md", "utf8");
+  const skill = readFileSync(".claude/skills/land-version/SKILL.md", "utf8");
   const stepZero = skill.slice(skill.indexOf("### 0."), skill.indexOf("### 1."));
   const block = stepZero.match(/```bash\n([\s\S]*?)```/);
   assert.ok(block, "step 0 carries a bash block");
@@ -33,7 +33,7 @@ function commitScript(cwd) {
 // A clone of a local origin on a feature branch. `gh` is stubbed to fail, so the
 // block falls back to origin/HEAD as it would outside GitHub.
 function scratchProject(t, { baseHasScript }) {
-  const root = mkdtempSync(join(tmpdir(), "version-bump-gate-"));
+  const root = mkdtempSync(join(tmpdir(), "land-version-gate-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const origin = join(root, "origin");
   mkdirSync(origin);
@@ -54,16 +54,6 @@ function runStepZero({ work, env }) {
   return spawnSync("bash", ["-c", stepZeroBlock()], { cwd: work, env, encoding: "utf8" });
 }
 
-test("a project whose base branch has no invariant script lands with no bump", (t) => {
-  const project = scratchProject(t, { baseHasScript: false });
-  git(project.work, "commit", "-q", "--allow-empty", "-m", "change");
-
-  const run = runStepZero(project);
-
-  assert.equal(run.status, 0, run.stderr);
-  assert.match(run.stdout, /^NO-CONTRACT: /m);
-});
-
 test("a head that deletes the base branch's invariant script gets no verdict", (t) => {
   const project = scratchProject(t, { baseHasScript: true });
   git(project.work, "rm", "-q", INVARIANT_SCRIPT);
@@ -72,22 +62,12 @@ test("a head that deletes the base branch's invariant script gets no verdict", (
   const run = runStepZero(project);
 
   assert.notEqual(run.status, 0);
-  assert.doesNotMatch(run.stdout, /^(OK|NO-CONTRACT): /m);
+  assert.doesNotMatch(run.stdout, /^OK: /m);
 });
 
 test("a project whose base branch has the invariant script runs it", (t) => {
   const project = scratchProject(t, { baseHasScript: true });
   git(project.work, "commit", "-q", "--allow-empty", "-m", "change");
-
-  const run = runStepZero(project);
-
-  assert.equal(run.status, 0, run.stderr);
-  assert.match(run.stdout, /^OK: runtime_changed=false bumped=false/m);
-});
-
-test("a head that adds the invariant script runs it", (t) => {
-  const project = scratchProject(t, { baseHasScript: false });
-  commitScript(project.work);
 
   const run = runStepZero(project);
 
