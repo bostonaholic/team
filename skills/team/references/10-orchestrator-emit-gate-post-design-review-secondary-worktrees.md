@@ -8,7 +8,7 @@ When the design review passes:
    [worktree playbook](../../team-worktree/playbooks/worktree.md) for the topology
    and call the Skill tool with `team-worktree` for the procedure.
    Create them **without a confirmation prompt**: the "Confirm with the user"
-   dialog in `skills/team-worktree/SKILL.md` applies only to standalone
+   dialog in `skills/team-worktree/references/04-execution.md` applies only to standalone
    `/team-worktree`. Before each `git worktree add`, re-check **containment**: the repo
    path's `realpath` must be a direct child of the home repo's parent
    directory. Refuse and report any repo that fails.

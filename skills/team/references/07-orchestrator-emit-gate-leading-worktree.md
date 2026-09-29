@@ -20,7 +20,8 @@ A `/team` run authors `docs/plans/<id>/` inside an isolated worktree on branch
    host's native worktree support when offered, otherwise `git worktree add`:
    call the Skill tool with `team-worktree` and follow the single-repo block
    under "Create the worktree(s)". Only the home repo gets a worktree here;
-   multi-repo secondaries wait for the post-design-review gate.
+   multi-repo secondaries wait for the post-design-review gate
+   (`10-orchestrator-emit-gate-post-design-review-secondary-worktrees.md`).
    **If the run started inside a linked worktree on a non-default branch, reuse it**
    ("Detect existing worktree" in `skills/team-worktree/SKILL.md`); on the
    default branch, stop rather than implement on it.
