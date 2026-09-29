@@ -5,7 +5,7 @@ Pass the applicable resource paths and require reads before work.
 If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
 
 Before this operation, read [artifact schema](references/artifacts.md).
-Resolve these links from the installed `SKILL.md` directory.
+Resolve these links from this file's directory, else from the installed `SKILL.md` directory.
 
 ### Design Review Gate (design)
 

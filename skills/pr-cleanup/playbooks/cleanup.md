@@ -1,7 +1,7 @@
 # Sweeping Local State
 
-Before each consuming step, read its linked shared rules from this installed playbook directory. If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
-Read [external-data rules](../team/references/external-data.md) from the installed playbook directory before teardown; stop with the resolved path on failure.
+Before each consuming step, read its linked shared rules from this file's directory, else from the installed `SKILL.md` directory. If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
+Read [external-data rules](../team/references/external-data.md) before teardown; stop with the resolved path on failure.
 
 A caller that has finished with a pull request — merged, closed, or
 reviewed — follows this file. `skills/pr-cleanup/SKILL.md` is the standing

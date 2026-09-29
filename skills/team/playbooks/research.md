@@ -1,7 +1,7 @@
 # Research playbook
 
 Before this operation, read [artifact schema](references/artifacts.md).
-Before each consuming step, read its linked shared rules. Resolve links from this installed playbook directory.
+Before each consuming step, read its linked shared rules. Resolve links from this file's directory, else from the installed `SKILL.md` directory.
 If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 Two read-only roles serve RESEARCH. The file-finder locates files; the researcher answers neutral questions with evidence. Both read only `2-questions.md` (and `4-repos.md` when present), never `1-task.md`. Neither writes files.
