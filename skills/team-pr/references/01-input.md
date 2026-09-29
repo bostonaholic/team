@@ -30,5 +30,5 @@ Resolve `<team-skill-dir>` to the absolute directory containing
   first, so an auto-picked topic is never silent.
 - **If the command printed nothing** (tier 3 — no matching directory), do not
   hard-error. Fall through to the **Standalone path** in `## Execution`. It
-  detects the base branch (archetype B) and stops with "Nothing to ship." only
+  detects the base branch and stops with "Nothing to ship." only
   when there is nothing ahead of the base.
