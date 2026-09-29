@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.136.0] - 2026-09-28
+
+### Fixed
+
+- The security reviewer now consistently treats HIGH findings as a hard gate, alongside CRITICAL. Its opening instruction said only CRITICAL findings block shipping, which contradicted its own verdict rule, so a HIGH finding could be under-weighted. **What this asks of you:** nothing.
+
 ## [0.135.0] - 2026-09-29
 
 ### Changed
@@ -1324,7 +1330,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.135.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.136.0...HEAD
+[0.136.0]: https://github.com/bostonaholic/team/compare/v0.135.0...v0.136.0
 [0.135.0]: https://github.com/bostonaholic/team/compare/v0.134.0...v0.135.0
 [0.134.0]: https://github.com/bostonaholic/team/compare/v0.133.0...v0.134.0
 [0.133.0]: https://github.com/bostonaholic/team/compare/v0.132.23...v0.133.0
