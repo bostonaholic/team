@@ -1,4 +1,0 @@
-interface:
-  display_name: "Version Bump"
-  short_description: "Follow the project's versioning at land time"
-  default_prompt: "Use $version-bump before $shipit when landing a pull request."

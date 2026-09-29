@@ -10,10 +10,10 @@ argument-hint: "[<pr-number>]"
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
-`shipit` lands a reviewed PR: land-time versioning, push, CI wait, squash-merge.
-The PR title, with any version `version-bump` puts in it, lands as the commit
-subject in `git log`. It is generic: it invokes `version-bump`, which decides
-from project context whether to commit a bump, land with no bump, or stop.
+`shipit` lands a reviewed PR: the project's pre-merge steps, push, CI wait,
+squash-merge. The PR title lands as the commit subject in `git log`. It is
+generic and does no versioning: a project that versions at land time declares
+that step itself.
 
 `gh pr merge` is irreversible. Two guards protect it, neither a frontmatter flag
 nor a question put to the user mid-run:

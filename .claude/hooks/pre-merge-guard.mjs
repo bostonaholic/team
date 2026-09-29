@@ -905,7 +905,7 @@ function withRecoveryRoute(verdict) {
       `${verdict}\n` +
       "At merge time this means the bump is missing or stale. Recovery: drop " +
       "any chore(version) commit, undo the changelog cut, re-run version-bump " +
-      "(land-version from step 0), re-title, then re-run /shipit."
+      "from step 0, re-title, then re-run /shipit."
     );
   }
   return verdict;

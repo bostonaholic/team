@@ -1,4 +1,4 @@
-// Runs land-version's step-0 gate block, as written in its SKILL.md, against scratch repos.
+// Runs this repo's version-bump step-0 gate block, as written in its SKILL.md, against scratch repos.
 import assert from "node:assert/strict";
 import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -9,7 +9,7 @@ import test from "node:test";
 const INVARIANT_SCRIPT = ".claude/scripts/version-bump-required.sh";
 
 function stepZeroBlock() {
-  const skill = readFileSync(".claude/skills/land-version/SKILL.md", "utf8");
+  const skill = readFileSync(".claude/skills/version-bump/SKILL.md", "utf8");
   const stepZero = skill.slice(skill.indexOf("### 0."), skill.indexOf("### 1."));
   const block = stepZero.match(/```bash\n([\s\S]*?)```/);
   assert.ok(block, "step 0 carries a bash block");
@@ -33,7 +33,7 @@ function commitScript(cwd) {
 // A clone of a local origin on a feature branch. `gh` is stubbed to fail, so the
 // block falls back to origin/HEAD as it would outside GitHub.
 function scratchProject(t, { baseHasScript }) {
-  const root = mkdtempSync(join(tmpdir(), "land-version-gate-"));
+  const root = mkdtempSync(join(tmpdir(), "version-bump-gate-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const origin = join(root, "origin");
   mkdirSync(origin);

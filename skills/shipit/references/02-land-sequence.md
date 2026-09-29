@@ -16,17 +16,13 @@ Stop and report **only** if `squashMergeAllowed` is `false`. If squash merging i
 available, proceed regardless of which other methods (`mergeCommitAllowed`,
 `rebaseMergeAllowed`) are enabled.
 
-### 2. Run land-time versioning
+### 2. Run the project's pre-merge steps
 
-Run the `version-bump` skill before pushing. It owns all version, changelog, and
-title work and follows the project's own versioning conventions.
+If the project's agent instructions declare a step to run before merging (for
+example, a version bump), run it now, before pushing. If that step stops, stop:
+do not push, wait for CI, or merge. With no declared step, continue.
 
-- If it commits a bump, continue.
-- If it reports no bump is required, continue with the plain PR title.
-- If it stops for a stale bump, invalid state, conflicting versioning
-  evidence, or failed check, stop. Do not push, wait for CI, or merge.
-
-`shipit` does not inspect changed files or edit version files itself.
+`shipit` does no versioning, changelog, or release work of its own.
 
 ### 3. Push any unpushed local commits
 
@@ -121,12 +117,12 @@ CI last ran. If the PR is **behind `<base>`**, bring it up to date:
 **Merge with `gh pr merge --squash`**, named explicitly: squash lands the PR
 title as the commit subject and keeps linear history, so it is the only
 acceptable merge strategy here. Build the subject explicitly from the PR title
-captured during discovery, so the repo's default squash commit message setting
+read now (a pre-merge step may have retitled the PR), so the repo's default squash commit message setting
 cannot replace it, and append `(#<number>)` yourself — an explicit `--subject`
 is **not** auto-suffixed with the PR number:
 
 ```bash
-TITLE=$(printf '%s' "$PR_JSON" | jq -r .title)
+TITLE=$(gh pr view <pr-number> --json title --jq .title)
 gh pr merge <pr-number> --squash --subject "$TITLE (#<pr-number>)"
 ```
 

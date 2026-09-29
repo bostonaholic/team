@@ -1,22 +1,40 @@
 ---
-name: land-version
-description: Use for this repository's land-time versioning, loaded by version-bump. Gates, bumps, cuts the changelog, and titles the PR.
-disable-model-invocation: true
+name: version-bump
+description: 'Use for version bumps on explicit request or during PR landing through shipit. Never infer from finished, reviewed, green, or draft-ready work. Assigns SemVer.'
 ---
 
-# Land version — this repository's versioning procedure
+# Version Bump — version a project at land time
 
-This is the project-owned procedure the generic `version-bump` skill follows in
-this repository. Follow [execution rules](../../../skills/team/references/execution.md).
-Policy and recovery: [docs/versioning.md](../../../docs/versioning.md).
+Follow [execution rules](../../../skills/team/references/execution.md).
 
-Tagging and the GitHub release are **not** part of this procedure;
-`release-on-merge.yml` does that on merge. Return to the caller after step 8.
+This repository's own versioning procedure. `AGENTS.md` declares it as a
+pre-merge step, so `/shipit` runs it before merging. Tagging and the GitHub
+release are **not** part of it; `release-on-merge.yml` does that on merge. When invoked directly, run this skill **before**
+`/shipit`, against the version of `main` you intend to land onto. When
+`/shipit` invokes this skill, return to `/shipit` after step 8.
 
-## Precondition
+## Precondition — explicit land intent
 
-Run only after `version-bump` established land intent. Its precondition owns
-that rule; an unbumped runtime branch is the expected state until then.
+**Why:** the bump is computed against the base branch's tip at this moment; a
+bump made before the land goes stale when another PR merges, and the pre-merge
+guard then denies the merge.
+
+**This skill fires only on explicit land intent**, meaning one of:
+
+- The user asked to land: "ship it", "land the PR", "land this", `/shipit`.
+- The user asked for the bump itself: "bump the version", "version this PR".
+- A `/shipit` run is already in flight and reached the project's pre-merge steps.
+
+**Never infer land intent.** None of the following is a cue to bump:
+
+- The work is finished, the review passed, or CI is green.
+- A draft PR is about to be opened, or was just opened. A drafted PR carries
+  **no** version: the bullet goes under `## [Unreleased]` and nothing else moves.
+- The invariant script exited 1. That exit states a precondition for *merging*,
+  expected for a runtime PR's whole review lifetime, never a request to bump now.
+
+With no land intent, **stop and say so.** Report that the branch will need a
+bump before it can merge, and wait for the user. Do not bump "to be helpful".
 
 ## Steps
 
@@ -59,11 +77,11 @@ HEAD_SHA=$(git rev-parse HEAD) BASE_SHA=$(git rev-parse "refs/remotes/origin/$DE
   conventional title (`<type>: <subject>`). On a re-entry whose PR title
   still carries a stale `vX.Y.Z` prefix from an earlier bump, strip it now
   (`gh pr edit --title`) — the title backstop never strips a stale prefix,
-  and this is the one step-8 action a no-bump exit still owes. Then return
-  to the caller. This exit **requires** that OK line — the quick look
+  and this is the one step-8 action a no-bump exit still owes. Then go
+  straight to `/shipit`. This exit **requires** that OK line — the quick look
   alone never authorizes it.
 - Exit 0, stdout starting `OK: runtime_changed=true bumped=true` → already
-  bumped (a recovery re-entry). Never re-bump — return to the caller.
+  bumped (a recovery re-entry). Never re-bump — proceed to `/shipit`.
 - Exit 1, verdict containing `cannot merge until version-bump runs at land time`
   → bump warranted. It is actionable here only because the land-intent
   precondition already passed; read outside a land it states a merge
@@ -251,4 +269,4 @@ stale-bump recovery re-titles with the recomputed version, and a re-entry that
 ends at "no bump" strips the `vX.Y.Z` prefix explicitly — the title backstop
 never strips a stale prefix.
 
-Return to `version-bump`, which reports the outcome to its caller.
+Return to `/shipit` to push, wait for CI, and squash-merge.

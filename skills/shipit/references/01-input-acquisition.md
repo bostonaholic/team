@@ -1,8 +1,7 @@
 ## Input acquisition
 
 `shipit` lands the open PR for the **current branch**. Never hardcode the base
-branch. The `title` is captured here for step 5's squash commit subject. Run this
-in one bash call:
+branch. Run this in one bash call:
 
 ```bash
 PR_JSON=$(gh pr view --json number,baseRefName,state,title 2>/dev/null)
