@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
-const INVARIANT_SCRIPT = ".github/scripts/version-bump-required.sh";
+const INVARIANT_SCRIPT = ".claude/scripts/version-bump-required.sh";
 
 function stepZeroBlock() {
   const skill = readFileSync("skills/version-bump/SKILL.md", "utf8");
@@ -23,7 +23,7 @@ function git(cwd, ...args) {
 }
 
 function commitScript(cwd) {
-  mkdirSync(join(cwd, ".github/scripts"), { recursive: true });
+  mkdirSync(join(cwd, ".claude/scripts"), { recursive: true });
   writeFileSync(join(cwd, INVARIANT_SCRIPT), "#!/bin/sh\necho 'OK: runtime_changed=false bumped=false'\n");
   chmodSync(join(cwd, INVARIANT_SCRIPT), 0o755);
   git(cwd, "add", ".");
@@ -78,6 +78,16 @@ test("a head that deletes the base branch's invariant script gets no verdict", (
 test("a project whose base branch has the invariant script runs it", (t) => {
   const project = scratchProject(t, { baseHasScript: true });
   git(project.work, "commit", "-q", "--allow-empty", "-m", "change");
+
+  const run = runStepZero(project);
+
+  assert.equal(run.status, 0, run.stderr);
+  assert.match(run.stdout, /^OK: runtime_changed=false bumped=false/m);
+});
+
+test("a head that adds the invariant script runs it", (t) => {
+  const project = scratchProject(t, { baseHasScript: false });
+  commitScript(project.work);
 
   const run = runStepZero(project);
 

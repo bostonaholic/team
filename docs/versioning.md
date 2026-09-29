@@ -45,7 +45,7 @@ number is thus always free. The serialization *is* the collision defense.
 **The step immediately before the merge command** — not "when the work is
 done". Opening the draft PR, passing review, and going green are all *before*
 land time. A runtime PR therefore sits unbumped for its entire review
-lifetime, on purpose, and `.github/scripts/version-bump-required.sh` exits 1
+lifetime, on purpose, and `.claude/scripts/version-bump-required.sh` exits 1
 for all of it. The script is a **merge-precondition probe**, so that
 exit 1 reports an unmet precondition rather than a failure: the
 precondition is for *merging*, which is why the only thing that enforces
@@ -75,7 +75,7 @@ with **no bump, no changelog cut, and a plain conventional title** (precedent:
 `710d44c` CI, `7d2e218` docs, `0821129` evals `feat:`).
 
 `version-bump` runs the check early, in its **step 0** and again right after
-the bump commit, through `.github/scripts/version-bump-required.sh`. CI does not enforce the
+the bump commit, through `.claude/scripts/version-bump-required.sh`. CI does not enforce the
 invariant.
 Enforcement is mechanical at the merge attempt: the pre-merge dev hook
 (`.claude/hooks/pre-merge-guard.mjs`) runs the script against the PR's
@@ -295,7 +295,7 @@ Every check lives at the cheapest layer that can catch it:
 
 | Check | Layer | Where |
 |-------|-------|-------|
-| Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | Pre-merge dev hook | `.github/scripts/version-bump-required.sh`, `.claude/hooks/pre-merge-guard.mjs` |
+| Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | Pre-merge dev hook | `.claude/scripts/version-bump-required.sh`, `.claude/hooks/pre-merge-guard.mjs` |
 | Six version strings agree, on strict semver, and the host manifests agree on the plugin and marketplace names. This holds on every commit, drafted or landed. | Land-time assertion (`version-bump`) | `.claude/scripts/check-version-consistency.sh` |
 | Released-section and footer-compare-link invariants hold for the assigned version. It runs after the changelog cut and before the commit. | Land-time assertion (`version-bump`) | `skills/version-bump/SKILL.md` |
 | Title prefix matches the version. It applies only when the branch bumped the version forward of its fork point, after `version-bump` bumps. It no-ops otherwise. | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
@@ -370,7 +370,7 @@ prefix (`version-bump`'s step 8 names this). Then re-run `/shipit`.
 Two denials say the guard could not render a verdict at all, so neither is about
 the bump:
 
-- **The head carries no `.github/scripts/version-bump-required.sh`.** Restore it
+- **The head carries no `.claude/scripts/version-bump-required.sh`.** Restore it
   on the branch (`git checkout origin/<default> -- <path>`), push, and re-run
   `/shipit`.
 - **A fork head's copy of that script differs from the local one.** The guard

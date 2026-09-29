@@ -64,18 +64,19 @@ DEFAULT=${DEFAULT:-$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed
 git fetch origin "$DEFAULT" || { echo "fetch failed — no verdict"; exit 1; }
 git merge-base --is-ancestor "refs/remotes/origin/$DEFAULT" HEAD \
   || { echo "behind base — rebase onto origin/$DEFAULT, re-enter step 0"; exit 1; }
-git cat-file -e "refs/remotes/origin/$DEFAULT:.github/scripts/version-bump-required.sh" 2>/dev/null \
-  || { echo "NO-CONTRACT: origin/$DEFAULT has no .github/scripts/version-bump-required.sh"; exit 0; }
+[ -f .claude/scripts/version-bump-required.sh ] \
+  || git cat-file -e "refs/remotes/origin/$DEFAULT:.claude/scripts/version-bump-required.sh" 2>/dev/null \
+  || { echo "NO-CONTRACT: neither HEAD nor origin/$DEFAULT has .claude/scripts/version-bump-required.sh"; exit 0; }
 HEAD_SHA=$(git rev-parse HEAD) BASE_SHA=$(git rev-parse "refs/remotes/origin/$DEFAULT") \
-  .github/scripts/version-bump-required.sh
+  .claude/scripts/version-bump-required.sh
 ```
 
 **Read the outcome by exact output match — the signal rule, default-deny:**
 
 - Exit 0, stdout starting `NO-CONTRACT:` → the project has no land-time
   versioning contract. **DO NOT BUMP.** Skip every step below and go straight
-  to `/shipit` with the PR title unchanged. The check reads the base branch,
-  so a head that deletes the script still reaches the script and stops.
+  to `/shipit` with the PR title unchanged. The script on either side counts,
+  so a head that deletes it or a head that adds it still runs the check.
 - Exit 0, stdout starting `OK: runtime_changed=false bumped=false` → dev-only
   and final. **DO NOT BUMP.** Skip every step below. Leave the version
   untouched, do **not** cut the changelog, and land with the plain

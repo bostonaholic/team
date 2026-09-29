@@ -5,7 +5,7 @@
  *
  * Replaces the always-red version-bump-check CI workflow (#120): when a Bash
  * command would merge this repo's PR into the default branch (`gh pr merge`),
- * the hook runs .github/scripts/version-bump-required.sh against what will
+ * the hook runs .claude/scripts/version-bump-required.sh against what will
  * actually merge (the PR's remote head vs the fetched base tip) and denies the
  * merge unless the script exits 0 printing an `OK:` line.
  *
@@ -51,7 +51,7 @@ import { fileURLToPath } from "node:url";
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 // Repo-relative, because the script is read out of a commit. The absolute path
 // below is used only to compare against a fork head's copy.
-const INVARIANT_SCRIPT_PATH = ".github/scripts/version-bump-required.sh";
+const INVARIANT_SCRIPT_PATH = ".claude/scripts/version-bump-required.sh";
 const INVARIANT_SCRIPT = join(REPO_ROOT, ...INVARIANT_SCRIPT_PATH.split("/"));
 
 // All external calls (gh, the fetches, the script run) share ONE overall
