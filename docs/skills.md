@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, pr-verify, pr-screenshots, paparazzi, pr-rebase, retro, why, how, no-comments, agent-prompt), each with the skills it loads."
+description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, prove, pr-screenshots, paparazzi, pr-rebase, retro, why, how, no-comments, agent-prompt), each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -199,13 +199,13 @@ Cleans PR state.
 
 **Uses:** None
 
-### [pr-verify](https://github.com/bostonaholic/team/blob/main/skills/pr-verify/SKILL.md)
+### [prove](https://github.com/bostonaholic/team/blob/main/skills/prove/SKILL.md)
 
-Verifies a PR test plan with evidence-rated verdicts.
+Proves any claim with evidence-rated verdicts.
 
 **Used by:** None
 
-**Uses:** None
+**Uses:** `how`, `paparazzi`, `why`
 
 ### [pr-screenshots](https://github.com/bostonaholic/team/blob/main/skills/pr-screenshots/SKILL.md)
 
@@ -219,7 +219,7 @@ Attaches local images to a PR body.
 
 Captures verified screenshots of an app.
 
-**Used by:** None
+**Used by:** `prove`
 
 **Uses:** None
 
@@ -243,7 +243,7 @@ Mines a session for durable learnings.
 
 Investigates design rationale behind code.
 
-**Used by:** `code-review`, `how`, `team`, `team-fix`
+**Used by:** `code-review`, `how`, `prove`, `team`, `team-fix`
 
 **Uses:** `how`
 
@@ -251,7 +251,7 @@ Investigates design rationale behind code.
 
 Explains subsystem architecture and runtime flow.
 
-**Used by:** `team`, `why`
+**Used by:** `prove`, `team`, `why`
 
 **Uses:** `why`
 
