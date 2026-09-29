@@ -34,14 +34,16 @@ Run the QUESTION phase only, then stop. The phase writes, in `docs/plans/<id>/`:
      intent. Never bare-stop with a plain "describe it" demand when context
      is already available.
    - Ticket-only: ask the user for context, or use any tracker integration
-     they have configured to fetch the issue body.
+     they have configured to read the issue body.
    - Issue URL: run `gh issue view <url> --json title,body` (or equivalent)
      and use the title plus body as the description.
    - Free text: use directly.
 
    A ticket identifier (e.g. `ENG-1234`) is recorded as `ticketId` on
-   `1-task.md`'s frontmatter. The orchestrator does not call any ticketing
-   system.
+   `1-task.md`'s frontmatter. Standalone QUESTION may read a ticket but
+   makes no tracker writes: it does not move, comment on, or edit the
+   ticket. In a full `/team` run, the orchestrator's setup owns the pickup
+   move.
 2. **Derive `<id>`**: `<TICKET>-<kebab-topic>` if a ticket identifier is
    present, otherwise `<YYYY-MM-DD>-<kebab-topic>`. The `<kebab-topic>` is a
    2–4 word kebab-case slug derived from the description.
@@ -51,8 +53,8 @@ Run the QUESTION phase only, then stop. The phase writes, in `docs/plans/<id>/`:
    questioner only writes `2-questions.md`.
 5. Dispatch the `questioner` agent with the full description and the
    target directory `docs/plans/<id>/`. It writes the artifacts above. It
-   writes `4-repos.md` when it makes sure with the user that the topic
-   spans multiple repos.
+   writes `4-repos.md` only when it resolves, autonomously, that the
+   topic spans multiple repos.
 6. **Stop once `1-task.md` and `2-questions.md` exist on disk** — do not
    continue to RESEARCH. (`3-prd.md` or `4-repos.md` can also exist, neither
    changes the stop condition.)
