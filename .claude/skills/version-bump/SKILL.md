@@ -5,10 +5,9 @@ description: 'Use for version bumps on explicit request or during PR landing thr
 
 # Version Bump — version a project at land time
 
-Follow [execution rules](../team/references/execution.md).
-
-Tagging and the GitHub release are **not** part of this procedure when project
-automation does that on merge. When invoked directly, run this skill **before**
+This repository's own versioning procedure. `AGENTS.md` declares it as a
+pre-merge step, so `/shipit` runs it before merging. Tagging and the GitHub
+release are **not** part of it; `release-on-merge.yml` does that on merge. When invoked directly, run this skill **before**
 `/shipit`, against the version of `main` you intend to land onto. When
 `/shipit` invokes this skill, return to `/shipit` after step 8.
 
@@ -22,7 +21,7 @@ guard then denies the merge.
 
 - The user asked to land: "ship it", "land the PR", "land this", `/shipit`.
 - The user asked for the bump itself: "bump the version", "version this PR".
-- A `/shipit` run is already in flight and reached its versioning step.
+- A `/shipit` run is already in flight and reached the project's pre-merge steps.
 
 **Never infer land intent.** None of the following is a cue to bump:
 
@@ -65,7 +64,7 @@ git fetch origin "$DEFAULT" || { echo "fetch failed — no verdict"; exit 1; }
 git merge-base --is-ancestor "refs/remotes/origin/$DEFAULT" HEAD \
   || { echo "behind base — rebase onto origin/$DEFAULT, re-enter step 0"; exit 1; }
 HEAD_SHA=$(git rev-parse HEAD) BASE_SHA=$(git rev-parse "refs/remotes/origin/$DEFAULT") \
-  .github/scripts/version-bump-required.sh
+  .claude/scripts/version-bump-required.sh
 ```
 
 **Read the outcome by exact output match — the signal rule, default-deny:**

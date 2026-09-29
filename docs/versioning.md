@@ -1,6 +1,6 @@
 ---
 title: Versioning
-description: "Land-time versioning. A drafted PR carries no version. It accumulates changelog bullets under [Unreleased]. At land time /shipit runs version-bump, which reads project context, assigns the version when required, cuts the changelog section, sets the title, and runs the consistency assertion. /shipit then pushes, waits for CI, and squash-merges. CI publishes the release on merge when configured."
+description: "Land-time versioning. A drafted PR carries no version. It accumulates changelog bullets under [Unreleased]. At land time /shipit runs this repo's declared pre-merge step, the project-local version-bump skill, which assigns the version when required, cuts the changelog section, sets the title, and runs the consistency assertion. /shipit then pushes, waits for CI, and squash-merges. CI publishes the release on merge when configured."
 audience: [developer]
 nav_order: 6
 nav_label: versioning
@@ -16,17 +16,18 @@ The project assigns the version at **land time**, not per PR. A drafted PR carri
 version, no `vX.Y.Z` title, and no released changelog section. It accumulates
 bullets under `[Unreleased]`. Landing a PR is **two steps inside `/shipit`**:
 
-1. **Bump.** The `version-bump` skill
-   (`skills/version-bump/SKILL.md`) reads project context. `/shipit` runs it
-   against current `main`. When a bump is required, it assigns the next version,
+1. **Bump.** This repo's project-local `version-bump` skill
+   (`.claude/skills/version-bump/SKILL.md`). `AGENTS.md` declares it as the
+   pre-merge step, so `/shipit` runs it against current `main`. When a bump is required, it assigns the next version,
    bumps the version strings, cuts the `[Unreleased]` body into a dated
    `## [X.Y.Z]` section, sets the PR title, runs the land-time consistency
    assertion, and commits `chore(version): X.Y.Z`. When no bump is required, it
    reports that and returns to `/shipit`.
 2. **Land.** The **generic, distributed** runtime `/shipit` skill
    (`skills/shipit/SKILL.md`) pushes the branch, waits for CI, and
-   squash-merges. `shipit` is project-agnostic: it delegates versioning and
-   changelog work to `version-bump`.
+   squash-merges. `shipit` is project-agnostic and does no versioning: it runs
+   the pre-merge step the project declares. Team ships no versioning skill;
+   each project owns its own strategy.
 
 There is no batch release step. The merge *is* the release. CI tags and
 publishes automatically.
@@ -45,7 +46,7 @@ number is thus always free. The serialization *is* the collision defense.
 **The step immediately before the merge command** — not "when the work is
 done". Opening the draft PR, passing review, and going green are all *before*
 land time. A runtime PR therefore sits unbumped for its entire review
-lifetime, on purpose, and `.github/scripts/version-bump-required.sh` exits 1
+lifetime, on purpose, and `.claude/scripts/version-bump-required.sh` exits 1
 for all of it. The script is a **merge-precondition probe**, so that
 exit 1 reports an unmet precondition rather than a failure: the
 precondition is for *merging*, which is why the only thing that enforces
@@ -58,7 +59,7 @@ land makes it stale, and the pre-merge guard then denies the merge until
 someone recomputes it. This is what happened on PR #208, which opened as
 `v0.36.0 …` with a cut changelog section and had to be reverted by hand.
 `version-bump` accordingly fires only on **explicit land intent** — see its
-[land-intent precondition](../skills/version-bump/SKILL.md) — and the
+[land-intent precondition](../.claude/skills/version-bump/SKILL.md) — and the
 `/team` pipeline's PR gate forbids versioning outright.
 
 ## Only runtime changes bump (the runtime-vs-dev gate)
@@ -75,7 +76,7 @@ with **no bump, no changelog cut, and a plain conventional title** (precedent:
 `710d44c` CI, `7d2e218` docs, `0821129` evals `feat:`).
 
 `version-bump` runs the check early, in its **step 0** and again right after
-the bump commit, through `.github/scripts/version-bump-required.sh`. CI does not enforce the
+the bump commit, through `.claude/scripts/version-bump-required.sh`. CI does not enforce the
 invariant.
 Enforcement is mechanical at the merge attempt: the pre-merge dev hook
 (`.claude/hooks/pre-merge-guard.mjs`) runs the script against the PR's
@@ -126,7 +127,7 @@ bump". [PR title sync](#pr-title) uses the same branch-relative measure.
 
 ## The bump sequence (`version-bump`)
 
-Run the dev `version-bump` skill against current `main`, on the branch you
+Run the project-local `version-bump` skill against current `main`, on the branch you
 intend to land:
 
 0. **Runtime-vs-dev gate.** If the PR changes no runtime files, stop here: no
@@ -172,7 +173,7 @@ Two consequences worth stating, because both were previously decided wrong:
   argument and its confirmation prompt landed as **0.44.0**.
 
 The full decision procedure, with the spec quoted verbatim, is step 1 of
-[`skills/version-bump/SKILL.md`](../skills/version-bump/SKILL.md).
+[`.claude/skills/version-bump/SKILL.md`](../.claude/skills/version-bump/SKILL.md).
 
 ## Land-time consistency assertion
 
@@ -190,7 +191,7 @@ fails fast and loud, and it never commits an invalid tree. It checks that:
   compares from `vX.Y.Z...HEAD`.
 
 If any check fails, `version-bump` stops before committing. Nothing is
-committed, pushed, or merged. See `skills/version-bump/SKILL.md` step 5.
+committed, pushed, or merged. See `.claude/skills/version-bump/SKILL.md` step 5.
 
 ## The six version strings
 
@@ -295,9 +296,9 @@ Every check lives at the cheapest layer that can catch it:
 
 | Check | Layer | Where |
 |-------|-------|-------|
-| Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | Pre-merge dev hook | `.github/scripts/version-bump-required.sh`, `.claude/hooks/pre-merge-guard.mjs` |
+| Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | Pre-merge dev hook | `.claude/scripts/version-bump-required.sh`, `.claude/hooks/pre-merge-guard.mjs` |
 | Six version strings agree, on strict semver, and the host manifests agree on the plugin and marketplace names. This holds on every commit, drafted or landed. | Land-time assertion (`version-bump`) | `.claude/scripts/check-version-consistency.sh` |
-| Released-section and footer-compare-link invariants hold for the assigned version. It runs after the changelog cut and before the commit. | Land-time assertion (`version-bump`) | `skills/version-bump/SKILL.md` |
+| Released-section and footer-compare-link invariants hold for the assigned version. It runs after the changelog cut and before the commit. | Land-time assertion (`version-bump`) | `.claude/skills/version-bump/SKILL.md` |
 | Title prefix matches the version. It applies only when the branch bumped the version forward of its fork point, after `version-bump` bumps. It no-ops otherwise. | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
 | Tag + GitHub release on merge | CI (needs write perms) | `.github/workflows/release-on-merge.yml` |
 
@@ -370,7 +371,7 @@ prefix (`version-bump`'s step 8 names this). Then re-run `/shipit`.
 Two denials say the guard could not render a verdict at all, so neither is about
 the bump:
 
-- **The head carries no `.github/scripts/version-bump-required.sh`.** Restore it
+- **The head carries no `.claude/scripts/version-bump-required.sh`.** Restore it
   on the branch (`git checkout origin/<default> -- <path>`), push, and re-run
   `/shipit`.
 - **A fork head's copy of that script differs from the local one.** The guard

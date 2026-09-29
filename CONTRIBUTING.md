@@ -71,7 +71,7 @@ label taxonomy.
   no `vX.Y.Z` title, no released changelog section. It accumulates
   `## [Unreleased]` bullets.
 - Landing is two steps (see [Versioning](docs/versioning.md)):
-  1. **`version-bump`** assigns the next version against current `main`, cuts the
+  1. **`version-bump`** (project-local, `.claude/skills/version-bump/`) assigns the next version against current `main`, cuts the
      `[Unreleased]` changelog into a dated section, and commits `chore(version)`.
   2. **`/shipit`** pushes, waits for CI, and squash-merges. `release-on-merge`
      then tags and publishes the release automatically.

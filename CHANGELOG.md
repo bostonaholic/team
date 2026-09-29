@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.138.0] - 2026-09-29
+
+### Changed
+
+- `/shipit` no longer versions your project. Team no longer ships a `version-bump` skill: versioning belongs to each project. Before merging, `/shipit` runs whatever step your project's agent instructions declare (for example, a version bump), and it reads the PR title at merge time, so a title that step sets lands as the commit subject. With no declared step, it just pushes, waits for CI, and merges. This also fixes `/shipit` stopping before merging in every project other than Team, because it ran a version check script that only exists in Team's own repository. **What this asks of you:** if you relied on `/shipit` to bump your version, add that step to your project's agent instructions (for example `AGENTS.md` or `CLAUDE.md`).
+
 ## [0.137.0] - 2026-09-28
 
 ### Fixed
@@ -1336,7 +1342,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.137.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.138.0...HEAD
+[0.138.0]: https://github.com/bostonaholic/team/compare/v0.137.0...v0.138.0
 [0.137.0]: https://github.com/bostonaholic/team/compare/v0.136.0...v0.137.0
 [0.136.0]: https://github.com/bostonaholic/team/compare/v0.135.0...v0.136.0
 [0.135.0]: https://github.com/bostonaholic/team/compare/v0.134.0...v0.135.0
