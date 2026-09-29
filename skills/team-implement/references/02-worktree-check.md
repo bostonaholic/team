@@ -1,16 +1,23 @@
-Before any dispatch, decide where to work:
+Before any dispatch, decide where to work. Implementation never runs on the
+default branch. Resolve it as
+`git symbolic-ref --short refs/remotes/origin/HEAD` without the `origin/`
+prefix, falling back to whichever of `main`/`master` exists locally, and
+compare it with `git rev-parse --abbrev-ref HEAD`.
 
 1. Multi-repo mode (`$ARGUMENTS/4-repos.md` present): a worktree must exist
    in **every** listed repo (per its `## Worktrees` section). If any is
    missing, tell the user to run `/team-worktree [docs/plans/<id>/]` and stop.
 2. If `git rev-parse --absolute-git-dir` contains `/worktrees/`, you are in a
-   linked worktree (in multi-repo mode, the home repo's): proceed in place.
+   linked worktree (in multi-repo mode, the home repo's). On a non-default
+   branch, proceed in place. On the default branch, stop and tell the user
+   to switch that worktree to a feature branch.
 3. In the main working tree, ask one `AskUserQuestion` question with a
    `Worktree` header and these options:
    - **Worktree (Recommended)** — isolate this implementation in a new
      git worktree.
    - **In-place** — implement on the current branch in the main working
-     tree.
+     tree. Offer this option only when the current branch is not the
+     default branch.
 
    On **Worktree**, derive `<id>` from the resolved directory, create the
    worktree(s) via `/team-worktree [docs/plans/<id>/]`, give the user the
