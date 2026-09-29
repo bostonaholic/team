@@ -2,9 +2,12 @@
 
 ## Finding Format
 
-Code, security, and docs reviewers use [Conventional
-Comments](https://conventionalcomments.org); `ux-reviewer` uses
-Working/Broken/Could Improve. Every comment includes a specific `file:line`.
+`code-reviewer` uses [Conventional
+Comments](https://conventionalcomments.org). `security-reviewer` uses the
+`#### [SEVERITY] Brief title` template in its agent file: CRITICAL and HIGH
+are Blocking, MEDIUM and LOW are Minor. `technical-writer` uses its
+`[REQUIRED|RECOMMENDED]` gap template; every gap is Minor. `ux-reviewer` uses
+Working/Broken/Could Improve. Every finding includes a specific `file:line`.
 
 ### Comment Style
 

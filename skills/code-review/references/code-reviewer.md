@@ -39,10 +39,12 @@ Block the line, change nothing
 
 ## Finding Format
 
-Format follows the artifact. A **finding** — from the code, security, or
-docs reviewer — uses the Conventional Comments format in
-[finding format](findings.md). A **live-verification report** (the
-ux-reviewer's) uses Working/Broken/Could Improve.
+Format follows the artifact. A code-reviewer **finding** uses the
+Conventional Comments format in [finding format](findings.md). The
+security-reviewer and technical-writer keep their agent-file templates, and
+[finding format](findings.md) maps their severities to tiers. A
+**live-verification report** (the ux-reviewer's) uses Working/Broken/Could
+Improve.
 
 ## Report Format
 
@@ -196,17 +198,17 @@ decoration — a blocking-regime hit reads
 
   A **missing-why** finding is separate and narrow. Raise it only when the
   diff introduces or rewrites code shaped by a constraint in the
-  "Document non-obvious constraints" list *and* you can name the exact
+  "Document deliberate constraints" rule *and* you can name the exact
   constraint and the consequence of removing the code. It is
   `suggestion (non-blocking): Comment Discipline`, never blocking, never
   escalating on repetition. Absence of comments is never by itself evidence.
 
 ### UX Reviewer
 
-- **APPROVE:** API/UX is intuitive, consistent with existing patterns.
-- **REQUEST CHANGES:** Usability issues found. Treated as a *major* —
+- **APPROVE:** Every exercised flow works.
+- **REQUEST CHANGES:** At least one Broken item. Treated as a *major* —
   auto-fixed in the loop, not surfaced to the user.
-- **COMMENT:** Minor ergonomic suggestions (minor-and-below — recorded in the
+- **COMMENT:** Could-Improve notes only (minor-and-below — recorded in the
   PR body's `## Review notes`, never presented mid-run).
 
 ### Technical Writer
@@ -256,7 +258,9 @@ no order implied:
   `System Fit` checklist item. When the diff removes or weakens
   long-standing behavior — a guard, a threshold, a workaround that looks
   deliberate — check its rationale before flagging or approving the
-  removal: call the Skill tool with `why`. A Chesterton's-fence deletion
+  removal. Find the introducing commit with `git log -S '<removed line>'`,
+  `git blame` on the parent revision, or `git log -- <path>`. Read that
+  commit's message and any doc or issue it links. A Chesterton's-fence deletion
   whose motivating constraint still holds is a finding; one whose
   constraint provably evaporated is not.
 - **SOLID violations** — per the [code standards](../team/references/code-standards.md).
