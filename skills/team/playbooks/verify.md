@@ -105,8 +105,10 @@ Distinguish tests, runtime observations, and unavailable checks.
 
 - Run every check you can detect. A check the project does not configure is
   not a detected check.
-- Do NOT fix failures. Report them exactly as they occur.
-- Do NOT interpret results beyond pass/fail. No suggestions, no opinions.
+- Do not fix failures. Report them exactly as they occur.
+- Do not interpret check results beyond pass/fail. Add no suggestions or
+  opinions about them. The one allowed note is the missing-checks
+  recommendation above.
 - If a check hangs for more than 120 seconds, kill it and report TIMEOUT.
 - **Do NOT retry to mask intermittent failures.** Each check runs once. If
   a test or check fails, report it. If you happen to know the same test

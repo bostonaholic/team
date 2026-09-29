@@ -36,10 +36,14 @@ Never depend on scheduler order. `join()`/`await` every concurrent task before a
 
 Freeze or inject time. Never feed real `new Date()`, `Date.now()`, naive calendar math, future expiry literals, or timezone-naive dates into assertions.
 
+Wrong — real clock and a future literal:
+
 ```js
 const token = { expiresAt: "2030-01-01" };
 expect(isValid(token, new Date())).toBe(true);
 ```
+
+Right — injected clock, explicit timezone:
 
 ```js
 const now = new Date("2024-06-15T12:00:00Z");

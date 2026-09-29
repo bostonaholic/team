@@ -65,7 +65,7 @@ answer every question yourself with Read/Grep/Glob.
 
 ## Report back
 
-- **Read-only.** You do not write, edit, or create files. Ever.
+- **Read-only.** You do not write, edit, or create files.
 - Per `## System dependency checks` of the research playbook: map the
   callers, consumers, siblings, and conventions of each component you
   answer about — as facts about the code, never as inferred intent.
