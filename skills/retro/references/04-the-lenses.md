@@ -85,12 +85,11 @@ is reported **unrun**, never counted as a zero.
 `team:researcher` runs on a stronger model and would need the same scope
 override, since it carries the same `2-questions.md` binding — so the
 differentiator is the toolset, not the fit. It holds `Agent` and `SendMessage`
-and `team:file-finder` holds neither, and its preloaded
-`skills/team/references/agent-dispatch.md` authorizes it to dispatch `Explore`, which holds
+and `team:file-finder` holds neither, and the
+`skills/team/references/agent-dispatch.md` its body reads authorizes it to dispatch `Explore`, which holds
 `Bash`, or `general-purpose`, which holds every tool. Aiming a lens at the
 researcher would restore by delegation the command sink the toolset guarantee
 above exists to starve.
 
-`agents/file-finder.md` grants no `Agent` tool and preloads only the prose
-skills, so it has no delegation path to restore it
+`agents/file-finder.md` grants no `Agent` tool, so it has no delegation path to restore it
 through. That, and not the quality of the fit, is what picks the target.
