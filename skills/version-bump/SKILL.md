@@ -104,8 +104,8 @@ Reached **only when step 0 said a bump is warranted**; the only question is how
 big the bump is.
 
 ```bash
-git log origin/main..HEAD --oneline
-git diff origin/main...HEAD --stat
+git log "origin/$DEFAULT..HEAD" --oneline   # $DEFAULT as resolved in step 0
+git diff "origin/$DEFAULT...HEAD" --stat
 ```
 
 [SemVer 2.0.0](https://semver.org/spec/v2.0.0.html), quoted verbatim. Items 6,

@@ -19,12 +19,15 @@ available, proceed regardless of which other methods (`mergeCommitAllowed`,
 ### 2. Run land-time versioning
 
 Run the `version-bump` skill before pushing. It owns all version, changelog, and
-title work and decides from project context whether the PR needs a bump.
+title work and decides from the `.github/scripts/version-bump-required.sh`
+gate whether the PR needs a bump.
 
-- If it commits a bump, continue.
+- If it commits a bump, or reports the branch already carries one, continue.
 - If it reports no bump is required, continue with the plain PR title.
-- If it stops for a stale bump, invalid state, missing project contract, or
-  failed check, stop. Do not push, wait for CI, or merge.
+- If it stops, stop. Do not push, wait for CI, or merge. It stops on an
+  unresolved default branch, a failed fetch, a branch behind its base, a stale
+  or wrongful bump, a failed consistency or invariant check, or any other gate
+  output, including a missing gate script.
 
 `shipit` does not inspect changed files or edit version files itself.
 
