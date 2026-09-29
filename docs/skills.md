@@ -201,7 +201,7 @@ Cleans PR state.
 
 ### [prove](https://github.com/bostonaholic/team/blob/main/skills/prove/SKILL.md)
 
-Proves claims a person or another skill passes in, such as a behavior, a fact about the code, or a PR's test plan, with evidence-rated verdicts. It tries to disprove each claim with the strongest evidence it can reach, and calls other skills when a claim needs screenshots, a walkthrough, or design history.
+Proves any claim with evidence-rated verdicts.
 
 **Used by:** None
 
