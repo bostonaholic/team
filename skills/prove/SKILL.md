@@ -1,11 +1,11 @@
 ---
-name: pr-verify
+name: prove
 description: 'Use for PR test-plan or readiness checks. Produces an evidence-rated verdict.'
 effort: high
 argument-hint: "[<pr-number-or-url>]"
 ---
 
-# pr-verify — evidence-rated test-plan verification
+# prove — evidence-rated test-plan verification
 
 Before each consuming step, read its linked shared rules from this installed skill directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.

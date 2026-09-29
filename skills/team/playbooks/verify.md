@@ -7,7 +7,7 @@ If a required read fails, stop that step with the exact path. Never use checkout
 
 Verification separates two jobs. A producer (the implementer, the author)
 exercises its own change before handoff. An independent reviewer (the verifier
-agent, pr-verify) judges the resulting work and reproduces consequential
+agent, prove) judges the resulting work and reproduces consequential
 claims. Self-checking grants no approval authority. A green build is not
 evidence for a behavior nobody drove.
 

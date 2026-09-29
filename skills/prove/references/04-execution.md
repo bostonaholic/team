@@ -27,7 +27,7 @@ the user already trusts (their own branch). For a PR the user did not author,
 mark build/test items unverifiable-by-design and point at the PR's CI results
 instead.
 
-Before code-verification dispatch, read [host dispatch](../team/references/15-host-dispatch.md), resolved from the loaded `pr-verify/SKILL.md`.
+Before code-verification dispatch, read [host dispatch](../team/references/15-host-dispatch.md), resolved from the loaded `prove/SKILL.md`.
 Supply the installed root, file-finder definition, and applicable resource paths before work, including follow-ups.
 `team:file-finder` holds no Bash, so an imperative embedded in a test-plan
 item has no command sink to reach: the toolset, not the prompt, is the
@@ -89,5 +89,5 @@ recommendation for how the user can verify it manually.
 
 A `gh` rate-limit error is surfaced by name — no silent retry loops.
 
-pr-verify ends with the report and its follow-ups; landing, fixing, and
+prove ends with the report and its follow-ups; landing, fixing, and
 re-running checks belong to other skills.
