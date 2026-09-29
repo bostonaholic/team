@@ -59,7 +59,7 @@ does not accidentally include it>
 - **Each slice has 1–3 acceptance tests.** A slice with 10 tests is too big.
   A slice with 0 tests is too horizontal.
 - **Acceptance tests cover edge cases, not just happy paths.** Pull the
-  relevant scenarios from `6-design.md`'s `## Edge cases` section into the
+  relevant scenarios `6-design.md` lists under `## Desired end state` and `## Interface` into the
   slice that ships that behavior — boundary values, invalid inputs, failure
   paths, concurrency, auth, and resource limits. A slice whose test list
   reads as happy-path only is incomplete. Either add the missing edge-case
