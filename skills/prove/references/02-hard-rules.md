@@ -12,7 +12,7 @@
    numbered list BEFORE any verification runs.
 4. **Nothing to verify → say so and stop.** When no items exist, report
    `nothing to verify` — never invent a verdict for an empty checklist.
-5. **Read-only.** prove performs no writes and no pushes; it never
+5. **Read-only.** `prove` performs no writes and no pushes; it never
    modifies the working tree, the branch, or the remote.
 6. **Bounded parallelism.** Dispatches run at most 4 in flight.
    Independent items batch; dependent items serialize.

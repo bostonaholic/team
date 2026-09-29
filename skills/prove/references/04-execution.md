@@ -89,5 +89,5 @@ recommendation for how the user can verify it manually.
 
 A `gh` rate-limit error is surfaced by name — no silent retry loops.
 
-prove ends with the report and its follow-ups; landing, fixing, and
+`prove` ends with the report and its follow-ups; landing, fixing, and
 re-running checks belong to other skills.

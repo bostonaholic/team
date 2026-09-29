@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/pr-verify` is renamed to `/prove`.** It keeps the same procedure, description, and invocation policy; only the name changes. **What this asks of you:** invoke `/prove` where you used to invoke `/pr-verify`. The old name is gone with no alias and no longer resolves.
+
 ## [0.134.0] - 2026-09-28
 
 ### Added
