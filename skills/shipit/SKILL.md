@@ -12,8 +12,10 @@ If a required read fails, stop that step with the exact path. Never use checkout
 
 `shipit` lands a reviewed PR: land-time versioning, push, CI wait, squash-merge.
 The PR title, with any version `version-bump` puts in it, lands as the commit
-subject in `git log`. It is generic: it invokes `version-bump`, which decides
-from project context whether to commit a bump, land with no bump, or stop.
+subject in `git log`. It invokes `version-bump`, which commits a bump, reports
+that no bump is required, or stops. `version-bump` decides from this project's
+`.github/scripts/version-bump-required.sh` gate, and it stops in a project
+that lacks that script.
 
 `gh pr merge` is irreversible. Two guards protect it, neither a frontmatter flag
 nor a question put to the user mid-run:
