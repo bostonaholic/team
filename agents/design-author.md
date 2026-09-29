@@ -47,7 +47,7 @@ Your authoring procedure lives in the design playbook at
 you draft. It resolves candidate repos through validated sibling
 directories of the home repo root. Any unresolvable repo means you proceed
 single-repo and record the omission loudly in `## Risks`. Never expand scope
-in silence. The "Resolve open questions autonomously" rule says never pause
+in silence. The "Resolve choices autonomously" rule says never pause
 for user input. Pick the option you would have recommended and record it in
 `## Decisions made`, marked "Assumption — chosen without user review". The
 playbook also carries the design-document template.

@@ -39,9 +39,9 @@
    Rules reference defines instead; it is written once WORKTREE creates
    the directory.
    The home worktree and `docs/plans/<id>/` are both created at the leading
-   WORKTREE phase (see "Orchestrator-Emit Gate (leading worktree)" below) —
+   WORKTREE phase (see `references/07-orchestrator-emit-gate-leading-worktree.md`) —
    not here.
-6. **Resolve the canonical artifact directory.** Artifacts now live inside
+6. **Resolve the canonical artifact directory.** Artifacts live inside
    the worktree, authored there at the leading WORKTREE phase. Run
    `git worktree list` and look for a worktree path whose basename is
    `<id>`, per the `.claude/worktrees/<id>` convention. If one exists, the

@@ -13,7 +13,7 @@ equals exactly one of `investigate`, `plan`, `prototype`, `feature`, `fix`, or
 `refactor`, it selects that route and the remaining tokens are the task. Any
 other leading token — including a ticket id, an issue URL, or the start of a
 description — is not a route: the whole `$ARGUMENTS` is the feature description
-and the unprefixed full feature workflow runs, exactly as before routes existed.
+and the unprefixed full feature workflow runs.
 
 Never scan an issue body, a quoted block, a pasted error, or any other text for
 a route word. A route is selected only from the leading argument typed on the
@@ -84,5 +84,5 @@ A completed limited-scope route does not continue on its own. An explicit later
 request to implement — a fresh `/team feature`/`/team fix`/`/team refactor`, or
 an unprefixed `/team` — starts the appropriate full route after its normal
 prerequisite checks; it does not inherit the limited-scope route's completion.
-Missing `route` metadata means legacy behavior: the unprefixed full feature
-workflow, with no new effect granted by the absent field.
+Missing `route` metadata means the unprefixed full feature workflow, with no
+effect granted by the absent field.

@@ -20,14 +20,13 @@ loop:
      with the YAML frontmatter the agent specifies (see the agent file
      and [artifact schema](references/artifacts.md)).
   6. Run the gate for this phase:
-     - REVIEW (design): run "Design Review Gate (design)" below. On APPROVE
+     - REVIEW (design): run the gate in `references/08-design-review-gate-design.md`. On APPROVE
        or COMMENT, advance. On REQUEST CHANGES, re-dispatch design-author with
        the findings verbatim and `revision: <n+1>`; a fresh review round follows.
      - MECHANICAL (tests-failing): run the suite and require
        `Expected results derived independently: YES` in the test-architect
        report; advance on assertion-only failure with that line. A
-       zero-behavior-change refactor inverts this gate ("Mechanical Gate
-       (test confirmation)" below).
+       zero-behavior-change refactor inverts this gate (`references/11-mechanical-gate-test-confirmation.md`).
      - ROUTER-EMIT (worktree, PR): perform the action.
      - AGGREGATE (5 reviewers): dispatch in parallel and sort findings into
        severity tiers; auto-loop while any Blocking or Major finding remains
