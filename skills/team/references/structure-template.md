@@ -5,10 +5,10 @@ slices, each end-to-end, independently testable, and atomically committable.
 
 ## Why vertical slices
 
-Models love to write horizontal plans: all the migrations, then all the APIs,
-then all the UI. By the time everything is wired together, 1200 lines of
-code exist with nothing testable between them. Structure forces the opposite:
-each slice exercises every layer it needs and ships behavior, not infrastructure.
+Each slice exercises every layer it needs and ships behavior, not
+infrastructure. Slicing by layer (all the migrations, then all the APIs, then
+all the UI) leaves hundreds of lines with nothing testable until the last layer
+lands. A vertical slice is testable the moment it is done.
 
 A slice is **vertical** if you can demo the change after that slice is done,
 even if the demo is narrow.
