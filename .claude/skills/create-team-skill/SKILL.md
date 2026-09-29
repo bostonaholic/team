@@ -41,7 +41,7 @@ Team cannot see the other tenants and so can never verify that it fits. Be a goo
 
 - Put shared invariants in the applicable ordinary document under `skills/team/principles/` or its scoped operational reference. Do not create principle registrations.
 - Methodology is reusable reference material. Set `user-invocable: false`; never expose it directly as a slash command.
-- An entry point is a user action. Leave `user-invocable` unset. If methodology also needs a command, add a separate front door such as `code-review` over `reviewing-code`.
+- An entry point is a user action. Leave `user-invocable` unset. If methodology also needs a command, add a separate entry-point skill as its front door.
 - Use `disable-model-invocation: true` only for an explicit-only entry point with a recorded reason.
 
 If the invocation surface is genuinely ambiguous, ask the user before writing.
