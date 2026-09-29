@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.135.0] - 2026-09-29
+
 ### Changed
 
 - **`/pr-verify` is now `/prove`, and it proves any claim, not just a PR's test plan.** Pass it claims in plain text, such as a behavior, a fact about the code, or the state of a file, or pass it a PR, and it proves each claim the same principled way. It restates the claim as something falsifiable and tries to disprove it with the strongest evidence it can reach: driving the change on its own surface first, then the project's checks, then a traced `file:line`, then file contents. It rates each claim PROVEN, PARTIAL, DISPROVEN, or UNPROVEN, with a confidence level. When a claim needs screenshots, a subsystem walkthrough, or design history, it calls `/paparazzi`, `/how`, or `/why` and judges what comes back. Other skills can call `/prove` too: the report's first line is always `Verdict: PROVEN`, `NEEDS ATTENTION`, or `DISPROVEN`. It still changes nothing, and it still runs code only on a tree you trust. With no argument it still proves the current branch's PR test plan, and the PR verdict still reads READY, NEEDS ATTENTION, or NOT READY. **What this asks of you:** invoke `/prove` where you used to invoke `/pr-verify`. The old name is gone with no alias and no longer resolves.
@@ -1322,7 +1324,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.134.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.135.0...HEAD
+[0.135.0]: https://github.com/bostonaholic/team/compare/v0.134.0...v0.135.0
 [0.134.0]: https://github.com/bostonaholic/team/compare/v0.133.0...v0.134.0
 [0.133.0]: https://github.com/bostonaholic/team/compare/v0.132.23...v0.133.0
 [0.132.23]: https://github.com/bostonaholic/team/compare/v0.132.22...v0.132.23
