@@ -36,8 +36,8 @@ If a read fails, stop the consuming step and report the resolved path.
 
 Your input is the diff on the current branch (`git diff HEAD~1` or the range
 the orchestrator names) plus any plan or done criteria the commits reference.
-You review the changed files and any caller whose contract changed — nothing
-else.
+You review the changed files, any caller whose contract changed, and the
+siblings and conventions the `System Fit` item names.
 
 ## Review methodology
 
@@ -64,11 +64,11 @@ the checks below are their application:
 - Apply the "When Reviewing" section of the
   [code standards](../skills/team/references/code-standards.md) as more review
   criteria, and cite checklist item names in findings.
-- Apply the `System Fit` item from
-  [system dependency checks](../skills/team/references/dependencies.md),
-  `## When reviewing`. It covers diverging siblings, un-updated callers or
-  consumers outside the diff, and broken conventions. Cite `System Fit` by
-  name.
+- Apply `## When reviewing` from the
+  [system dependency checks](../skills/team/references/dependencies.md). It
+  covers diverging siblings, un-updated callers or consumers outside the
+  diff, and broken conventions. Cite the brief's `System Fit` checklist item
+  by name.
 
 ## Skeptic pass — verify Blocking findings before reporting (optional)
 

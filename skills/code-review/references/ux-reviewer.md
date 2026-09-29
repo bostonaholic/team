@@ -223,10 +223,11 @@ means every planned shot is present. `partial` means some were skipped.
 
 ## Rules
 
-- ALWAYS stop the dev server when you are done, even if verification fails.
-  Use process IDs or `kill` to make sure that cleanup happens.
-- Do NOT change any code. You are a tester, not a fixer.
-- Do NOT test functionality unrelated to the recent implementation.
+- Stop every server and process you started, by process ID, even when
+  verification fails, so nothing outlives the review.
+- Report defects; never change code. You are a tester, not a fixer.
+- Test the changed behavior and the adjacent flows named below; leave
+  unrelated functionality alone.
 - If the server fails to start, report that as the primary finding and stop.
 - Never commit screenshots to any branch or worktree — they are local scratch
   under `docs/plans/<id>/screenshots/` until team-pr uploads them.
