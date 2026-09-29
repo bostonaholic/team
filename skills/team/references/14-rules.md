@@ -36,7 +36,7 @@ Resolve these links from this file's directory. If a read fails, stop and report
   named tests never passed the gate. A test that the halt says passed the
   gate stays. When the halt says that the gate status is unknown, the
   operator decides.
-- To add a pipeline agent, add it to the phase table and to the inventory in
+- To add a pipeline agent, add it to the phase table in `03-the-phase-loop.md` and to the inventory in
   `skills/team/registry.json`.
 
 ### Multi-repo topics
