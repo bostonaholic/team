@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `/test-audit` audits a whole test suite, or a part you name, against Team's test value bar. It sorts the tests by the production code they exercise, runs the suite once to find tests that already fail, and marks every test: retain, fix the assertion, consolidate into a stronger test, or delete. A delete or consolidate mark needs full evidence and an independent check that another test still catches the same bug; anything in doubt stays. It also names redundant test layers and production code that only tests use. The result is one report, `report.json` for agents plus a rendered `report.md` for people, in `docs/plans/<date>-test-audit/`. It edits no code or test. **What this asks of you:** nothing. Run `/test-audit` when you want to prune a suite, then act on the report one batch at a time.
+- `/audit-tests` audits a whole test suite, or a part you name, against Team's test value bar. It sorts the tests by the production code they exercise, runs the suite once to find tests that already fail, and marks every test: retain, fix the assertion, consolidate into a stronger test, or delete. A delete or consolidate mark needs full evidence and an independent check that another test still catches the same bug; anything in doubt stays. It also names redundant test layers and production code that only tests use. The result is one report, `report.json` for agents plus a rendered `report.md` for people, in `docs/plans/<date>-audit-tests/`. It edits no code or test. **What this asks of you:** nothing. Run `/audit-tests` when you want to prune a suite, then act on the report one batch at a time.
 
 ## [0.140.0] - 2026-09-30
 

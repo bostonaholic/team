@@ -4,9 +4,9 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
-import { renderReport, validateReport } from "../skills/test-audit/scripts/render-report.mjs";
+import { renderReport, validateReport } from "../skills/audit-tests/scripts/render-report.mjs";
 
-const RENDER = resolve("skills/test-audit/scripts/render-report.mjs");
+const RENDER = resolve("skills/audit-tests/scripts/render-report.mjs");
 
 const EVIDENCE = {
   location: "tests/cache.test.js:40 clears on write",
@@ -87,7 +87,7 @@ test("the rendered delete table carries the remaining proof", () => {
 });
 
 test("the CLI rejects an invalid report and writes no markdown", (t) => {
-  const dir = mkdtempSync(join(tmpdir(), "test-audit-"));
+  const dir = mkdtempSync(join(tmpdir(), "audit-tests-"));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const broken = report({ version: 2 });
   writeFileSync(join(dir, "report.json"), JSON.stringify(broken));

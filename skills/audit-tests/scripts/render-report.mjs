@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Validates a test-audit report.json and renders report.md beside it.
+// Validates an audit-tests report.json and renders report.md beside it.
 // Usage: render-report.mjs <report.json> [<report.md>]
 import { readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";

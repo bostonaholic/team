@@ -1,5 +1,5 @@
 ---
-name: test-audit
+name: audit-tests
 description: 'Use for auditing a whole test suite for low-value tests.'
 effort: high
 argument-hint: "[<path or subsystem> ...] [--out <dir>]"

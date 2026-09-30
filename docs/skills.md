@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, prove, pr-screenshots, paparazzi, pr-rebase, retro, why, how, no-comments, agent-prompt, test-audit), each with the skills it loads."
+description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, prove, pr-screenshots, paparazzi, pr-rebase, retro, why, how, no-comments, agent-prompt, audit-tests), each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -271,7 +271,7 @@ Composes an agent-optimized prompt for a task.
 
 **Uses:** None
 
-### [test-audit](https://github.com/bostonaholic/team/blob/main/skills/test-audit/SKILL.md)
+### [audit-tests](https://github.com/bostonaholic/team/blob/main/skills/audit-tests/SKILL.md)
 
 Audits a whole test suite against the test value bar and reports which tests to keep, fix, consolidate, or delete, with the evidence for each. Changes no code.
 

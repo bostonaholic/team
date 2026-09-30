@@ -6,7 +6,7 @@
   audit. With no path, the scope is the whole repository. A subsystem name
   that is not a path resolves to the directories that own it; state the
   resolution in one line before you start.
-- **Output directory.** Default: `docs/plans/<YYYY-MM-DD>-test-audit/`
+- **Output directory.** Default: `docs/plans/<YYYY-MM-DD>-audit-tests/`
   under the repository root, with today's date. An existing directory is
   reused: `report.json` and `report.md` in it are overwritten, and nothing
   else there is touched. Never stage or commit the output.
