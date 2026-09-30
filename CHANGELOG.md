@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `/agent-prompt` now prints its prompt inside a fenced `markdown` code block, so you see and copy the raw markdown instead of a rendered page. A file written with `--out` still holds the plain prompt, with no fence.
+
 ## [0.139.0] - 2026-09-29
 
 ### Changed

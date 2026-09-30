@@ -51,8 +51,11 @@ Seed one TodoWrite item per numbered step below before starting
 
 ## Output
 
-Print the prompt to stdout. When the invocation gives an output path, write the
-same text there too; that is the only write this skill performs.
+Print the prompt as raw markdown: wrap it in one fenced code block tagged
+`markdown`, with a fence longer than any backtick run inside the prompt, so the
+host shows the source instead of rendering it. When the invocation gives an
+output path, write the prompt there too, without the fence; that is the only
+write this skill performs.
 
 ## Hard rules
 
