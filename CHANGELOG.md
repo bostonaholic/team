@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.141.0] - 2026-09-30
+
 ### Added
 
 - `/audit-tests` audits a whole test suite, or a part you name, against Team's test value bar. It sorts the tests by the production code they exercise, runs the suite once to find tests that already fail, and marks every test: retain, fix the assertion, consolidate into a stronger test, or delete. A delete or consolidate mark needs full evidence and an independent check that another test still catches the same bug; anything in doubt stays. It also names redundant test layers and production code that only tests use. The result is one report, `report.json` for agents plus a rendered `report.md` for people, in `docs/plans/<date>-audit-tests/`. It edits no code or test. **What this asks of you:** nothing. Run `/audit-tests` when you want to prune a suite, then act on the report one batch at a time.
@@ -1358,7 +1360,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.140.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.141.0...HEAD
+[0.141.0]: https://github.com/bostonaholic/team/compare/v0.140.0...v0.141.0
 [0.140.0]: https://github.com/bostonaholic/team/compare/v0.139.0...v0.140.0
 [0.139.0]: https://github.com/bostonaholic/team/compare/v0.138.0...v0.139.0
 [0.138.0]: https://github.com/bostonaholic/team/compare/v0.137.0...v0.138.0
