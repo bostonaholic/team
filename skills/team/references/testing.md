@@ -191,9 +191,3 @@ A flag on an editable test is blocking on first occurrence. A flag on a locked a
 ## Flaky-test red flags (reviewer checklist)
 
 Any outcome-dependent flag is blocking on first occurrence per the [code reviewer brief](../code-review/references/code-reviewer.md): real time or future dates; `sleep()` or timed waits; race order or missing awaits; shared state or missing teardown; unseeded randomness; real networks; leaked resources or fixed ports; unordered positions; exact floats; platform, locale, TZ, CPU, or CI parallelism. Fixed explicit-TZ dates and deterministic controls do not flag.
-
-The value bar, authoring gate, junk patterns, retention bar, removal
-evidence, and regression-test rule above come from OpenClaw's `test-audit` skill at
-<https://github.com/openclaw/openclaw/blob/main/.agents/skills/test-audit/SKILL.md>.
-The skill carries the MIT License, © 2026 OpenClaw Foundation. This file
-restates the ideas in its own words.
