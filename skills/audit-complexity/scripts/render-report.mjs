@@ -187,6 +187,14 @@ function hotspotRows(report, files) {
     .sort((a, b) => b.score - a.score || byPath(a.file, b.file));
 }
 
+function partialChurnWarning(history) {
+  const causes = [
+    history.shallow && "the clone is shallow, so older commits are missing",
+    history.renameDetectionSkipped && "git skipped rename detection on a large commit, so some renames were not followed",
+  ].filter(Boolean);
+  return causes.length === 0 ? "" : `**Churn is partial:** ${causes.join(", and ")}. Commit counts can be low.\n`;
+}
+
 function renderSummary(report, history) {
   const scope = report.scope;
   const files = Object.values(history.files);
@@ -197,6 +205,7 @@ function renderSummary(report, history) {
     `Commit \`${scope.commit}\` on ${scope.date}. Scope: ${list(scope.pathspecs).map((path) => `\`${path}\``).join(", ")}. ` +
       `Excluded: ${exclusions.join(", ") || "none"}.\n`,
     `History window: ${scope.since === null ? "all history" : `since ${scope.since}`}. Commits scanned: ${history.commitsScanned}.\n`,
+    partialChurnWarning(history),
     table(
       ["Measure", "Count"],
       [

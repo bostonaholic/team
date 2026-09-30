@@ -10,7 +10,9 @@ an optional `--out <dir>`.
 - **Scope.** Each named path is a top-level-relative directory or file. With
   no named path, the pathspec is `.`, the whole repository. A subsystem
   name that is not a path resolves to the top-level-relative directories
-  that own it. State the resolution in one line before you start.
+  that own it. State the resolution in one line before you start. Paths
+  match literally, never as globs: `app/[id]` matches only the path
+  `app/[id]` and what sits under it.
 - **Window.** `--since <date>` limits history to commits after the date, in
   any form `git log --since` accepts, such as `2025-01-01` or
   `12 months ago`. Without it, the window is all history and `scope.since`
@@ -45,5 +47,5 @@ level, add it too, with reason `audit output`. A directory name alone, such
 as `vendor` or `dist`, is not evidence. Never exclude a path that equals or
 contains a named path.
 
-`git-history.mjs` applies every exclusion to every `git ls-files` call, so
-an excluded path never enters the inventory.
+`git-history.mjs` applies every exclusion to every `git ls-files` call, as a
+literal path, so an excluded path never enters the inventory.

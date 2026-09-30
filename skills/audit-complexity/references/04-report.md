@@ -43,7 +43,10 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
   "pathspecs": ["<scope.pathspecs, copied>"],
   "exclude": ["<scope.exclude path, copied>"],
   "since": null,
+  "shallow": false,
+  "renameDetectionSkipped": false,
   "commitsScanned": 0,
+  "dirty": ["<inventory path that differs from HEAD>"],
   "files": {
     "<top-level-relative path>": { "status": "text", "lines": 0, "commits": 0 }
   }
@@ -57,10 +60,20 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
 - `lines` counts line feeds, plus 1 for an unterminated last line, and is 0
   unless `status` is `text`.
 - `commits` counts the commits in the window, reachable from HEAD, that
-  touch the file. A rename counts for its new path. A merge commit counts
-  zero.
+  touch the file. Reading history newest first, the count follows each
+  rename back to the file's older names, including a rename from outside
+  the scope and a rename that is staged but not committed. A copy starts
+  fresh. A path that git records as added again keeps counting by path. A
+  merge commit counts zero.
 - `commitsScanned` counts every commit in the window, across the whole
   repository.
+- `shallow` is true in a shallow clone, where older commits are missing.
+- `renameDetectionSkipped` is true when git printed its rename-limit
+  warning, so some renames were not followed.
+- `dirty` lists the inventory paths whose work-tree or index content
+  differs from HEAD when the script ran.
+- Every git call pins the output the script parses, so user, repository,
+  and system git config change no number.
 
 ### Rules the renderer enforces
 
@@ -89,7 +102,9 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
 The renderer lays out these sections, in order:
 
 1. **Summary.** The root, commit, date, scope, and exclusions, the literal
-   `since` window, `commitsScanned`, and the file counts.
+   `since` window, `commitsScanned`, and the file counts. When `shallow` or
+   `renameDetectionSkipped` is true, a warning states that churn is
+   partial.
 2. **Hotspots.** Measured lane files ranked by score, commits × lines. A
    file with score 0 drops out, and equal scores rank by path. Each row
    also shows the file's highest cyclomatic complexity. The table shows at

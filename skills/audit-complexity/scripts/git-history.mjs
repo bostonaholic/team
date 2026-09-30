@@ -12,24 +12,40 @@ const HASH_END = "\x1f";
 // git's own binary test: a NUL byte in the first 8,000 bytes.
 const BINARY_PROBE_BYTES = 8000;
 const LINE_FEED = 0x0a;
+const HEX_HASH = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/;
+// git prints this under LC_ALL=C when a commit has more rename candidates than -l allows.
+const RENAME_LIMIT_WARNING = /rename detection was skipped due to too many files/;
+// The C locale keeps git's warnings in the English text RENAME_LIMIT_WARNING matches.
+const GIT_ENV = { ...process.env, LC_ALL: "C" };
+// Each flag pins an output that user, repo, or system config could otherwise change.
+const LOG_PINS = ["-M", "-l1000", "--no-show-signature", "--no-color", "--ignore-submodules=untracked", "--encoding=UTF-8"];
+const DIFF_PINS = ["-M", "-l1000", "--no-color", "--ignore-submodules=untracked"];
 
 class AuditError extends Error {}
 
+// --no-optional-locks keeps every call off index.lock, so the audit never blocks a concurrent git command.
+const gitArgv = (...args) => ["--no-optional-locks", ...args];
+
 export function buildGitArgs({ pathspecs, exclude, since }) {
-  const exclusions = exclude.map((path) => `:(exclude)${path}`);
+  const exclusions = exclude.map((path) => `:(exclude,literal)${path}`);
   return {
-    topLevel: ["rev-parse", "--show-toplevel"],
-    head: ["rev-parse", "--verify", "HEAD"],
-    lsFiles: pathspecs.map((pathspec) => ["ls-files", "-z", "--stage", "--", pathspec, ...exclusions]),
-    log: [
+    topLevel: gitArgv("rev-parse", "--show-toplevel"),
+    head: gitArgv("rev-parse", "--verify", "HEAD"),
+    shallow: gitArgv("rev-parse", "--is-shallow-repository"),
+    lsFiles: pathspecs.map((pathspec) => gitArgv("ls-files", "-z", "--stage", "--", `:(literal)${pathspec}`, ...exclusions)),
+    diff: gitArgv("-c", "diff.autoRefreshIndex=true", "diff", "-z", "--name-status", ...DIFF_PINS, "HEAD", "--"),
+    log: gitArgv(
+      "-c",
+      "log.showRoot=true",
       "log",
       "-z",
       "--format=%x1e%H%x1f%aN",
       "--name-status",
+      ...LOG_PINS,
       ...(since === null ? [] : [`--since=${since}`]),
       "HEAD",
       "--",
-    ],
+    ),
   };
 }
 
@@ -52,6 +68,9 @@ function parseRecord(record) {
   const hashEnd = record.indexOf(HASH_END);
   const authorEnd = record.indexOf("\0", hashEnd);
   const hash = record.slice(0, hashEnd);
+  if (hashEnd === -1 || !HEX_HASH.test(hash)) {
+    throw new AuditError(`git log record does not start with a hex hash: ${JSON.stringify(record.slice(0, 80))}`);
+  }
   const author = record.slice(hashEnd + 1, authorEnd === -1 ? undefined : authorEnd);
   const tokens = authorEnd === -1 ? [] : record.slice(authorEnd + 1).split("\0");
   return { hash, author, changes: parseChanges(tokens) };
@@ -61,28 +80,48 @@ export function parseLog(text) {
   return text.split(RECORD_START).slice(1).map(parseRecord);
 }
 
-function createFold(inventory) {
-  const commits = new Map(inventory.map((path) => [path, 0]));
-  let scanned = 0;
+const parseNameStatus = (text) => parseChanges(text.split("\0"));
+
+// Maps each name a file had at the current point in history to the current paths it became.
+function createNames(paths) {
+  const names = new Map(paths.map((path) => [path, new Set([path])]));
   return {
-    add(commit) {
-      scanned += 1;
-      const touched = new Set(commit.changes.map((change) => change.paths.at(-1)));
-      for (const path of touched) {
-        if (commits.has(path)) commits.set(path, commits.get(path) + 1);
-      }
-    },
-    finish() {
-      const files = Object.fromEntries([...commits].map(([path, count]) => [path, { commits: count }]));
-      return { commitsScanned: scanned, files };
+    currentPathsOf: (name) => names.get(name) ?? [],
+    // Reading newest first, a rename's old name carries the new name's current paths into older commits.
+    rename([from, to]) {
+      const current = names.get(to);
+      if (current) names.set(from, new Set([...(names.get(from) ?? []), ...current]));
     },
   };
 }
 
-export function buildHistory({ log, inventory }) {
-  const fold = createFold(inventory);
+function createFold({ inventory, diff }) {
+  const commits = new Map(inventory.map((path) => [path, 0]));
+  const names = createNames(inventory);
+  const uncommitted = parseNameStatus(diff);
+  for (const change of uncommitted) if (change.status === "R") names.rename(change.paths);
+  const inInventory = (path) => commits.has(path);
+  const dirty = [...new Set(uncommitted.flatMap((change) => change.paths).filter(inInventory))].sort();
+  let scanned = 0;
+  return {
+    add(commit) {
+      scanned += 1;
+      // Count against the names as they stand after this commit, then apply its renames for older commits.
+      const touched = new Set(commit.changes.flatMap((change) => [...names.currentPathsOf(change.paths.at(-1))]));
+      for (const path of touched) commits.set(path, commits.get(path) + 1);
+      for (const change of commit.changes) if (change.status === "R") names.rename(change.paths);
+    },
+    finish(logStderr) {
+      const files = Object.fromEntries([...commits].map(([path, count]) => [path, { commits: count }]));
+      return { renameDetectionSkipped: RENAME_LIMIT_WARNING.test(logStderr), commitsScanned: scanned, dirty, files };
+    },
+  };
+}
+
+export function buildHistory({ log, logStderr = "", diff = "", inventory }) {
+  const fold = createFold({ inventory, diff });
   for (const commit of parseLog(log)) fold.add(commit);
-  return fold.finish();
+  return fold.finish(logStderr);
 }
 
 function countLines(bytes) {
@@ -99,7 +138,7 @@ export function classifyStatus(topLevel, key) {
 }
 
 async function git(args, cwd, onStdout = null) {
-  const child = spawn("git", args, { cwd, stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn("git", args, { cwd, env: GIT_ENV, stdio: ["ignore", "pipe", "pipe"] });
   const closed = new Promise((resolve) => {
     child.on("error", (error) => resolve({ error }));
     child.on("close", (code) => resolve({ code }));
@@ -179,6 +218,7 @@ async function collectHistory(scope) {
   const args = buildGitArgs(scope);
   const topLevel = (await git(args.topLevel, process.cwd())).stdout.replace(/\n$/, "");
   const commit = (await git(args.head, topLevel)).stdout.trim();
+  const shallow = (await git(args.shallow, topLevel)).stdout.trim() === "true";
 
   const modes = new Map();
   for (const lsFiles of args.lsFiles) {
@@ -186,11 +226,11 @@ async function collectHistory(scope) {
   }
   const inventory = [...modes.keys()].sort();
 
-  const fold = createFold(inventory);
+  const fold = createFold({ inventory, diff: (await git(args.diff, topLevel)).stdout });
   const log = streamingLog(fold);
-  await git(args.log, topLevel, (text) => log.push(text));
+  const { stderr: logStderr } = await git(args.log, topLevel, (text) => log.push(text));
   log.end();
-  const churn = fold.finish();
+  const churn = fold.finish(logStderr);
 
   const files = Object.fromEntries(
     inventory.map((path) => [path, { ...classifyStatus(topLevel, path), ...churn.files[path] }]),
@@ -201,7 +241,10 @@ async function collectHistory(scope) {
     pathspecs: scope.pathspecs,
     exclude: scope.exclude,
     since: scope.since,
+    shallow,
+    renameDetectionSkipped: churn.renameDetectionSkipped,
     commitsScanned: churn.commitsScanned,
+    dirty: churn.dirty,
     files,
   };
 }
