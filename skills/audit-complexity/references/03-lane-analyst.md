@@ -31,6 +31,35 @@ relative to the repository top level.
   - `locations` lists at most 20 of them, each with its `line`, `kind`, and
     the `name` written. `count` can exceed the number of listed locations.
 
+### Function signals
+
+Measure every function in the file. These counting and selection rules are
+fixed. Apply them exactly:
+
+- A decision point is each `if` or `else if`, loop, `case` label other than `default`, `catch`, ternary, and `&&`, `||`, or `??` operator, or the language's equivalent.
+  A constant label such as `case 3:` counts. `else` and `default` add none.
+- `decisions` holds one line number per decision point, so a line with two points appears twice. A nested function or lambda is its own function, and its points never count toward its parent.
+- Top-level code with at least one decision point forms one `<module>` pseudo-function, also in files that have functions. It spans line 1 to the last line and has `params: 0`.
+- The function body is nesting depth 0, and each control block inside it adds one level. At depth 0, `deepestLine` is the function's own `line`.
+- The hot functions are the top 3 by cyclomatic complexity, plus the deepest, longest, and most-parameter function when not already listed. `<module>` competes for the top 3 and the deepest only.
+
+Two more rules apply:
+
+- Parameters: each declared parameter counts once, including one rest or variadic parameter and one destructured parameter. A receiver such as `this`, `self`, or `cls` does not count.
+- A tie in any hot-function pick goes to the lowest `line`.
+
+For each hot function, give:
+
+- `name`, and `line` and `endLine`, the first and last lines of the function.
+- `cyclomatic`, which is 1 plus the number of decision points.
+- `decisions`, the line of each decision point.
+- `nesting`, the deepest control-block depth, and `deepestLine`, the line
+  where that depth starts.
+- `params`, the parameter count.
+
+`functions` is the count of every function in the file, plus 1 for
+`<module>` when it exists.
+
 ### When you cannot measure a file
 
 Return a `skipped` record with the reason, such as minified code, instead
@@ -48,11 +77,24 @@ Return only one fenced `json` block holding this object, and nothing else:
   "entries": [
     {
       "file": "<lane file>",
+      "functions": 1,
       "fanOut": 0,
       "mutableState": {
         "count": 1,
         "locations": [{ "line": 1, "kind": "global", "name": "<binding written>" }]
-      }
+      },
+      "hotFunctions": [
+        {
+          "name": "<function name>",
+          "line": 3,
+          "endLine": 12,
+          "cyclomatic": 3,
+          "decisions": [5, 9],
+          "nesting": 1,
+          "deepestLine": 5,
+          "params": 2
+        }
+      ]
     }
   ],
   "skipped": [{ "file": "<lane file>", "reason": "<why it cannot be measured>" }],
@@ -60,4 +102,8 @@ Return only one fenced `json` block holding this object, and nothing else:
 }
 ```
 
-Every count is an integer of 0 or more.
+Every count is an integer of 0 or more. Each hot function satisfies
+`1 <= line <= endLine <=` the file's line count, `cyclomatic` equals the
+length of `decisions` plus 1, and every decision line and `deepestLine`
+falls inside `line..endLine`. A file with no function and no top-level
+decision point has `functions: 0` and no hot functions.

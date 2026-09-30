@@ -79,7 +79,7 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
 
 7. **Reply.** Print these items:
    - The rendered summary.
-   - The top 5 hotspots.
+   - The top 5 hotspots and the top 5 functions.
    - The paths of `report.json`, `history.json`, and `report.md`.
    - Each exclusion with its reason.
    - One count per gap reason, and one count per `Not measured` status.

@@ -29,6 +29,10 @@ Step 2 writes `version`, `skill`, and `scope` without `commit`. Step 5 adds
 ```
 
 `since` is the literal `--since` value, or `null` when the flag is absent.
+Each lane entry carries `functions`, `fanOut`, `mutableState`, and
+`hotFunctions`, as the lane analyst brief defines them. A hot function holds
+`name`, `line`, `endLine`, `cyclomatic`, `decisions`, `nesting`,
+`deepestLine`, and `params`.
 
 ### `history.json`
 
@@ -69,9 +73,16 @@ Step 2 writes `version`, `skill`, and `scope` without `commit`. Step 5 adds
   in `gaps`. Every lane or gap file is a `text` file in `history.json`.
 - Each lane file has exactly one entry or one `skipped` record, never both.
   Each entry and `skipped` record names a file of its lane.
-- `fanOut` and `mutableState.count` are integers of 0 or more.
+- `functions`, `fanOut`, `mutableState.count`, and every hot-function
+  number are integers of 0 or more.
 - Each location `kind` is `global`, `field`, or `param`, and `count` is at
   least the number of listed locations.
+- Each hot function has `1 <= line <= endLine <= lines`, where `lines` comes
+  from `history.json`. `cyclomatic` equals the length of `decisions` plus 1,
+  and every decision line and `deepestLine` falls inside `line..endLine`.
+- An entry has at most 6 hot functions, and never more than `functions`.
+- A `<module>` hot function has `line` 1, `endLine` equal to the file's
+  `lines`, and `params` 0.
 
 ### `report.md`
 
@@ -80,11 +91,23 @@ The renderer lays out these sections, in order:
 1. **Summary.** The root, commit, date, scope, and exclusions, the literal
    `since` window, `commitsScanned`, and the file counts.
 2. **Hotspots.** Measured lane files ranked by score, commits × lines. A
-   file with score 0 drops out, and equal scores rank by path. The table
-   shows at most 25 rows, then the omitted count.
-3. **Lanes.** One table per lane, with one row per measured file, its
-   fan-out, and its mutable-state count.
-4. **Gaps.** Every `gaps` record and every `skipped` record, with its
+   file with score 0 drops out, and equal scores rank by path. Each row
+   also shows the file's highest cyclomatic complexity. The table shows at
+   most 25 rows, then the omitted count.
+3. **Functions.** Every hot function ranked by `cyclomatic`, with ties by
+   file, then line, and its nesting, length (`endLine - line + 1`), and
+   parameters. The table shows at most 25 rows, then the omitted count. Its
+   heading states that a function ranked fourth or lower in its own file
+   can be missing.
+4. **Lanes.** One table per lane, with one row per measured file: its
+   fan-out, its mutable-state count, its function count, and its highest
+   cyclomatic complexity, nesting, length, and parameters among its hot
+   functions. Length and parameters skip `<module>`, because it spans the
+   whole file.
+5. **Gaps.** Every `gaps` record and every `skipped` record, with its
    reason.
-5. **Not measured.** Every `history.json` file whose `status` is not
+6. **Not measured.** Every `history.json` file whose `status` is not
    `text`, with its status.
+
+The report labels every analyst value as "estimated by reading". The script
+values, commits and lines, are exact counts.

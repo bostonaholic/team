@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `/audit-complexity` ranks where complexity concentrates in a git codebase, or in a part you name. A script reads git history and the work tree to count each file's commits and lines, and ranks files by commits × lines, the hotspot score. Read-only analysts read each source file and count its imported modules and its writes to shared mutable state, and list up to 20 of those writes by line. Every file in scope shows up in the report: measured, set aside with a reason, or listed as not measured, such as a binary file. The result is `report.json` and `history.json` for agents plus a rendered `report.md` for people, in `docs/plans/<date>-audit-complexity/`. It edits no code. **What this asks of you:** nothing.
+- `/audit-complexity` ranks where complexity concentrates in a git codebase, or in a part you name. A script reads git history and the work tree to count each file's commits and lines, and ranks files by commits × lines, the hotspot score. Read-only analysts read each source file and count its imported modules and its writes to shared mutable state, and list up to 20 of those writes by line. They also measure each function's cyclomatic complexity, nesting depth, length, and parameters, with the line of every decision point, so you can recount any number. Every file in scope shows up in the report: measured, set aside with a reason, or listed as not measured, such as a binary file. The result is `report.json` and `history.json` for agents plus a rendered `report.md` for people, in `docs/plans/<date>-audit-complexity/`. It edits no code. **What this asks of you:** nothing.
 
 ## [0.141.0] - 2026-09-30
 

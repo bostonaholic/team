@@ -15,7 +15,10 @@ it. A script measures each file's **churn** (the commits that touch it) and
 its **size** (lines) from git history and the work tree. The **hotspot
 score** is commits × lines. Read-only analysts read each source file and
 measure its **fan-out** (distinct imported modules) and its **shared mutable
-state** (writes that outlive one call), with line evidence.
+state** (writes that outlive one call). For each function they measure
+**cyclomatic complexity** (1 plus its decision points), **nesting depth**,
+**length**, and **parameters**. Each function number comes with the line
+numbers a reader needs to recount it.
 
 The audit is **read-only toward the code**. It edits, deletes, stages, and
 commits nothing, and every git command it runs only reads. It writes three
