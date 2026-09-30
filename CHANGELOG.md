@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.140.0] - 2026-09-30
+
+### Fixed
+
+- `/agent-prompt` now prints its prompt inside a fenced `markdown` code block, so you see and copy the raw markdown instead of a rendered page. A file written with `--out` still holds the plain prompt, with no fence.
+
 ## [0.139.0] - 2026-09-29
 
 ### Changed
@@ -1348,7 +1354,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.139.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.140.0...HEAD
+[0.140.0]: https://github.com/bostonaholic/team/compare/v0.139.0...v0.140.0
 [0.139.0]: https://github.com/bostonaholic/team/compare/v0.138.0...v0.139.0
 [0.138.0]: https://github.com/bostonaholic/team/compare/v0.137.0...v0.138.0
 [0.137.0]: https://github.com/bostonaholic/team/compare/v0.136.0...v0.137.0
