@@ -126,7 +126,9 @@ Distinguish tests, runtime observations, and unavailable checks.
   absolute coverage threshold. Coverage tells you what is NOT tested. It
   does not tell you what IS tested is good. Pair with mutation testing
   when available. Require coverage to trend upward rather than mandating a
-  fixed threshold.
+  fixed threshold. Test count and coverage are not value, per the
+  [value bar](references/testing.md#value-bar). Report them as data, and
+  never as proof that the tests are good.
 
 ## Separate three failures
 

@@ -49,6 +49,7 @@ Do not add raw HTML, diagram uploads, or representations inside the uploader-own
 ### Evidence and recovery
 
 Under How to Verify, use plain bullets for each command or manual action, observed result, scope, and limitations.
+A bullet that cites a test names the behavior the test protects, never a test count, per the [value bar](../team/references/testing.md#value-bar).
 Include short decisive output, result counts, or reliable evidence links when available.
 Distinguish completed, failed, skipped, timed-out, unavailable, and unrun checks.
 Never infer success from planned commands. State unrecoverable evidence gaps.
