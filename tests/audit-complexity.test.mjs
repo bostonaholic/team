@@ -1,4 +1,4 @@
-// Acceptance tests for skills/audit-complexity, grouped by slice. No test creates a commit:
+// Acceptance tests for skills/audit-complexity. No test creates a commit:
 // the real-git cases only read this checkout, and the one new repository is a `git init` with no commit.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -204,7 +204,7 @@ function runRender(reportPath) {
   return spawnSync(process.execPath, [RENDER, reportPath], { encoding: "utf8" });
 }
 
-// A value for every Decision 18 key that, unpinned, would change what git-history.mjs parses.
+// A value for every git config key that, unpinned, would change what git-history.mjs parses.
 const HOSTILE_GIT_CONFIG = `[diff]
 \trenames = false
 \trenameLimit = 1
@@ -260,7 +260,7 @@ const BIG_COMMIT = record("5555555555555555555555555555555555555555", "Author On
 ]);
 
 // ---------------------------------------------------------------------------------------------
-// Slice 1: /audit-complexity ranks change hotspots
+// /audit-complexity ranks change hotspots
 
 test("history.json is identical from the top level and from docs/", (t) => {
   const dir = tempDir(t);
@@ -507,7 +507,7 @@ test("renderReport ranks hotspots by commits × lines", async (t) => {
 });
 
 // ---------------------------------------------------------------------------------------------
-// Slice 2: Function complexity with line evidence
+// Function complexity with line evidence
 
 test("validateReport rejects function evidence that does not add up", async (t) => {
   await t.test("cyclomatic that is not decisions.length + 1", () => {
@@ -662,7 +662,7 @@ test("renderReport ranks hot functions", async (t) => {
 });
 
 // ---------------------------------------------------------------------------------------------
-// Slice 3: Churn follows renames under any git config
+// Churn follows renames under any git config
 
 test("parseLog and buildHistory fold renames into the current path", async (t) => {
   await t.test("a committed rename from outside the scope folds into the current path", () => {
@@ -843,7 +843,7 @@ test("history.json is identical under hostile git config", (t) => {
 });
 
 // ---------------------------------------------------------------------------------------------
-// Slice 4: Every tracked path is accounted for, and unsafe targets are refused
+// Every tracked path is accounted for, and unsafe targets are refused
 
 test("classifyStatus returns each status", async (t) => {
   await t.test("text, with lines counting an unterminated last line", async (st) => {
@@ -996,7 +996,7 @@ test("both CLIs exit 1 and write nothing", async (t) => {
 });
 
 // ---------------------------------------------------------------------------------------------
-// Slice 5: Authors and change coupling
+// Authors and change coupling
 
 test("buildHistory pairs files that change together", async (t) => {
   await t.test("a 31-file commit counts for churn but adds no pair", () => {
