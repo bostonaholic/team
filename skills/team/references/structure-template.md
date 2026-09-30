@@ -28,7 +28,10 @@ The body of `7-structure.md`:
 **Repos:** <multi-repo only — comma-separated repo slugs from 4-repos.md
 that this slice touches; e.g. `frontend, api`>
 **Layers touched:** <e.g., migration, repository, service, API handler, client>
-**Tests:** <list of acceptance test names that prove this slice is done.
+**Tests:** <list of acceptance tests that prove this slice is done, chosen
+through the authoring gate. Each entry reads `name` — <behavior it protects>.
+A task-required test that fails the bar keeps its entry and adds
+"task-required, fails <class>".
 In multi-repo mode prefix each with `<repo>:` to say where it lives.>
 **Verification checkpoint:** <how the human or CI makes sure this slice works in
 isolation, even if later slices are not yet written>
@@ -56,15 +59,21 @@ does not accidentally include it>
 - **Every slice ends in a passing test.** If a slice cannot be demonstrated
   with a test (or a manually-runnable check), it is infrastructure scaffolding
   — fold it into the next slice.
-- **Each slice has 1–3 acceptance tests.** A slice with 10 tests is too big.
-  A slice with 0 tests is too horizontal.
+- **Each slice has 1–3 acceptance tests.** One is the floor, and three is a
+  ceiling, not a target. A slice with 10 tests is too big. A slice with 0
+  tests is too horizontal. A parameterized test counts as one listed test.
+- **Every listed test earns its cost.** Choose each test through the
+  [authoring gate](testing.md#authoring-gate), and name the behavior it
+  protects. A task-required test that fails the bar keeps its entry and
+  adds "task-required, fails <class>".
 - **Acceptance tests cover edge cases, not just happy paths.** Pull the
   relevant scenarios from `6-design.md`'s `## Edge cases` section into the
   slice that ships that behavior — boundary values, invalid inputs, failure
   paths, concurrency, auth, and resource limits. A slice whose test list
-  reads as happy-path only is incomplete. Either add the missing edge-case
-  tests or, if the design declared them out of scope, cite that decision in
-  the slice notes.
+  reads as happy-path only is incomplete. Cover each edge case with a new
+  test, a new case in a listed parameterized test, or a cited existing test
+  that already fails on that regression. If the design declared a case out
+  of scope, cite that decision in the slice notes.
 - **Order by user value.** First slice should ship the smallest piece of
   user-visible behavior. Pure-infrastructure slices push integration risk to
   the end — that is the failure mode QRSPI exists to prevent.

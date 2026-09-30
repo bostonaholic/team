@@ -58,8 +58,9 @@ the structure specifies — the structure's test list is the scope fence.
 
 **Edge-case gaps are structure defects, not test-architect inventions.** If
 the structure's test list for a slice reads as happy-path only, compare it
-against the design's `## Edge cases` section. If that section names uncovered
-scenarios, stop and report this to the orchestrator. Fix the gap upstream
+against the design's `## Edge cases` section. A cited existing test that
+already fails on an edge-case regression covers that scenario. If that
+section names uncovered scenarios, stop and report this to the orchestrator. Fix the gap upstream
 (structure phase) rather than silently inventing tests here.
 
 ## Output

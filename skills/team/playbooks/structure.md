@@ -15,7 +15,9 @@ For each numbered slice record:
 
 - user-visible Goal;
 - Repos and Layers touched;
-- 1–3 named acceptance Tests, with repo prefixes in multi-repo work;
+- 1–3 named acceptance Tests, each with the behavior it protects and chosen
+  through the [authoring gate](references/testing.md#authoring-gate), with
+  repo prefixes in multi-repo work;
 - an isolated Verification checkpoint;
 - one Atomic commit message per affected repo.
 
@@ -30,7 +32,9 @@ Then include:
 - Every slice ends in a passing test or runnable check. Fold scaffolding into
   its first consumer.
 - Include designed boundary, invalid-input, failure, concurrency, auth, and
-  resource-limit cases. Cite an out-of-scope decision for omissions.
+  resource-limit cases. Cover each with a new test, a new case in a listed
+  parameterized test, or a cited existing test that already fails on that
+  regression. Cite an out-of-scope decision for omissions.
 - Order by user value. Slice 1 is the smallest usable behavior or walking
   skeleton, not infrastructure.
 - Cite non-obvious design decisions. Name files and behavior, never bodies.
