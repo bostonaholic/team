@@ -7,7 +7,7 @@ The IMPLEMENT phase has two owners. The test-architect writes the immutable acce
 
 ## Test-author contract
 
-Acceptance tests are the immutable scope fence ([human control rules](principles/human-control.md)). Read the [testing rules](references/testing.md) for style, deterministic-input requirements, the audit checklist, and the flaky-test red flags.
+Acceptance tests are the immutable scope fence ([human control rules](principles/human-control.md)). Read the [testing rules](references/testing.md) for the [authoring gate](references/testing.md#authoring-gate), the [junk patterns](references/testing.md#junk-patterns), style, deterministic-input requirements, the audit checklist, and the flaky-test red flags.
 
 ### Core rule
 
@@ -17,7 +17,7 @@ Write ALL acceptance tests from the plan BEFORE any implementation code. Use the
 
 ### 1. Write every planned test
 
-Tests assert observable outcomes and follow the [testing rules](references/testing.md). Audit each against that reference's checklist before reporting results.
+Tests assert observable outcomes and follow the [testing rules](references/testing.md). Before writing each test, answer the authoring gate. If a test fails the gate and its planned behavior stays the same, rewrite it at the owner boundary under the same name. Otherwise, return it to PLAN. For a plan line with no regression clause, answer the gate yourself, and return to PLAN only when you cannot. Keep a task-required test that fails the bar, and record "task-required, fails <class>" in the report. Audit each test against that reference's checklist before reporting results.
 
 ### 2. Make sure that tests fail correctly
 
@@ -41,7 +41,7 @@ A needed change returns to PLAN; the structure regenerates the plan. There is no
 ### Two test levels
 
 - **Feature acceptance:** immutable, coarse observable behavior; defines what.
-- **Step-level TDD:** Red, Green, Refactor unit tests; freely changed during implementation; helps build how.
+- **Step-level TDD:** Red, Green, Refactor unit tests; freely changed during implementation; helps build how. Each passes the authoring gate before the slice commit. Delete a step-level test that an acceptance test proves at a stronger boundary.
 
 ### Completion contract
 
@@ -77,7 +77,7 @@ Then run the full suite, resolve every failure type from the round, and report e
 ### TDD and scope invariants
 
 - Write only minimal code exercised by the current slice's tests. Do not preempt later slices; do not optimize/refactor before green. Stop if code has no test.
-- Every step-level test follows the [testing rules](references/testing.md). Observe it fail before changing production code. If it covers existing behavior, mutation-check the relevant production behavior instead. A test that stays green is invalid.
+- Every step-level test follows the [testing rules](references/testing.md). Observe it fail before changing production code. If it covers existing behavior, mutation-check the relevant production behavior instead. A test that stays green is invalid. Removing a base-branch test whose covered behavior remains needs the [removal evidence](references/testing.md#removal-evidence) fields in the commit body.
 - Apply [boil the ocean rules](principles/boil-the-ocean.md): finish the authorized slice completely, with the cause fixed, tests passing, and behavior documented, and no dangling thread left behind.
 - Apply [focused work rules](principles/focused-work.md): remove what the slice replaces before adding its replacement, and add no guard its tests do not exercise.
 - Apply [human control rules](principles/human-control.md): the plan authorizes exactly its named changes. Do NOT change acceptance tests or invent files/directories absent from the plan. Record concerns but satisfy tests as written.
