@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audit Complexity"
+  short_description: "Audit a codebase for code complexity hotspots"
+  default_prompt: "Use $audit-complexity to audit a codebase for code complexity hotspots."
