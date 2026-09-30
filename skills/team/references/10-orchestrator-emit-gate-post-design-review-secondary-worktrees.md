@@ -18,7 +18,7 @@ When the design review passes:
    the procedure.
    Create the worktrees **without a confirmation prompt** — the phase loop
    never pauses mid-run. The "Confirm with the user" dialog in
-   `skills/team-worktree/SKILL.md` applies only to standalone human
+   `skills/team-worktree/references/04-execution.md` applies only to standalone human
    invocation of `/team-worktree`. The resolved repo set is already
    recorded loudly in `6-design.md` (`## Decisions made`/`## Risks`) and
    echoed in the PR body's `## Review notes`. Before each

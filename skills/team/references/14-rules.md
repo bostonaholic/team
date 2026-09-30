@@ -37,7 +37,7 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
 - On any unexpected failure: report to the user and suggest re-invoking
   the same /team-* command with `docs/plans/<id>/`.
 - To add a new agent to the pipeline, add an entry to the phase table
-  above and to the inventory in `skills/team/registry.json`.
+  in `references/03-the-phase-loop.md` and to the inventory in `skills/team/registry.json`.
 
 ### Multi-repo topics
 
@@ -52,7 +52,7 @@ slices and plan steps carry `[repo: <name>]` annotations, secondary
 worktrees are created after the design review (the home worktree already
 exists from the leading WORKTREE phase), the implementer changes directory
 between them per step, and PR opens one PR per repo. When `4-repos.md` is
-absent, the pipeline runs in single-repo mode (today's default).
+absent, the pipeline runs in single-repo mode.
 
 ### Design-review record convention
 
