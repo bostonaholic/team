@@ -39,6 +39,17 @@ the orchestrator names) plus any plan or done criteria the commits reference.
 You review the changed files, any caller whose contract changed, and the
 siblings and conventions the `System Fit` item names.
 
+The entry mode sets which tests are locked. A value flag on a locked test is
+a non-blocking note:
+
+- `/team`, and `/team-implement` with `8-plan.md`: the acceptance list in the
+  `8-plan.md` beside the design and structure paths the slice commits cite,
+  or at the predecessor artifact path in your dispatch.
+- Standalone `/team-implement`: the `Locked acceptance tests:` line in your
+  dispatch. A line that reads `unknown` locks every test the branch adds.
+- `/code-review`: no line. A test is locked only when the commits cite a
+  plan.
+
 ## Review methodology
 
 Read the [code reviewer brief](../skills/code-review/references/code-reviewer.md)
@@ -58,9 +69,10 @@ the checks below are their application:
   `Comment Discipline` checklist item.
 - Check design-principle violations with the SOLID rules in the
   [code standards](../skills/team/references/code-standards.md).
-- Walk changed test files against the testing rules' tautological-test,
-  style, and flaky-test rules. Tautological and flaky tests are blocking on
-  **first** occurrence.
+- Walk changed test files against the testing rules'
+  [value red flags](../skills/team/references/testing.md#value-red-flags-reviewer-checklist),
+  style, and flaky-test rules. A value flag blocks on an editable test and is
+  a note on a locked test. Flaky tests are blocking on **first** occurrence.
 - Apply the "When Reviewing" section of the
   [code standards](../skills/team/references/code-standards.md) as more review
   criteria, and cite checklist item names in findings.

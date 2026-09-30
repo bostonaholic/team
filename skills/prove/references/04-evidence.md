@@ -10,7 +10,11 @@ rung available inside the trust boundary:
    [verify playbook](../team/playbooks/verify.md) to pick the surface and
    reuse the project's own run and test tools.
 2. **Executed checks.** Run the project's detected checks and targeted
-   tests, and read their results.
+   tests, and read their results. A test counts here only when it
+   exercises the claim and is outside the "cannot fail" and "promises more
+   than it checks" classes of the
+   [junk patterns](../team/references/testing.md#junk-patterns). A test
+   that duplicates stronger proof still counts.
 3. **Traced source.** Follow the code to the `file:line` that decides the
    behavior. That means the actual implementation, not just the file the
    claim names.

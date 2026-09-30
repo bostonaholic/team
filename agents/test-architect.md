@@ -50,6 +50,18 @@ implementation code. Then lock the list. Read the
 [testing rules](../skills/team/references/testing.md) and audit every test against
 its "Audit checklist", citing the failing check by name when reporting issues.
 
+Before you write each planned test, answer the
+[authoring gate](../skills/team/references/testing.md#authoring-gate):
+
+- If the test fails the gate and its planned behavior stays the same,
+  rewrite it at the owner boundary under the same name. Otherwise, stop and
+  return it to PLAN, as for a test without task support.
+- If a plan line has no regression clause, answer the gate yourself. Return
+  the test to PLAN only when you cannot answer.
+- If a task-required test fails the bar, keep it. Record
+  "task-required, fails <class>" as a note line under that slice's table in
+  your report.
+
 Before writing any tests, read existing test files and match the project's
 test framework, file naming, directory structure, assertion style, and
 setup/teardown conventions exactly. Group tests by slice so the implementer
@@ -58,8 +70,9 @@ the structure specifies — the structure's test list is the scope fence.
 
 **Edge-case gaps are structure defects, not test-architect inventions.** If
 the structure's test list for a slice reads as happy-path only, compare it
-against the design's `## Edge cases` section. If that section names uncovered
-scenarios, stop and report this to the orchestrator. Fix the gap upstream
+against the design's `## Edge cases` section. A cited existing test that
+already fails on an edge-case regression covers that scenario. If that
+section names uncovered scenarios, stop and report this to the orchestrator. Fix the gap upstream
 (structure phase) rather than silently inventing tests here.
 
 ## Output

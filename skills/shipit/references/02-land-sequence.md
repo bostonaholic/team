@@ -84,6 +84,10 @@ Map `WATCH_STATUS` first:
   "CI wait timed out". Do not merge.
 - **0** → necessary, not sufficient. Continue to 4c.
 
+When you report the watch, do not present a green check count as
+confidence in the tests behind it, per the
+[value bar](../team/references/testing.md#value-bar).
+
 **4c — Verify. This is the gate.** Read GitHub's aggregate for the head commit:
 
 ```bash

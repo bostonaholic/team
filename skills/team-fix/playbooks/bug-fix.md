@@ -21,9 +21,9 @@ Before any code change, reliably reproduce the failure. Record exact inputs, act
 
 ## Step 2: Write a failing test
 
-Read the [testing rules](../../team/references/testing.md), including `No tautological tests`, then write a test that reproduces the bug with the exact scenario, asserts correct behavior (not current behavior), fails through the intended assertion (not infrastructure), and names the behavior (not a bug number or method).
+Read the [testing rules](../../team/references/testing.md), including `No tautological tests` and the [regression tests](../../team/references/testing.md#regression-tests) rule, then write one test at the owner boundary that reproduces the bug with the exact scenario, asserts correct behavior (not current behavior), fails through the intended assertion (not infrastructure), and names the behavior (not a bug number or method).
 
-Audit it against the testing checklist. Run it and the existing suite. The new test must fail for the right reason and all prior tests must pass. Do not continue without this Red state.
+Audit it against the testing checklist. Run it and the existing suite. The new test must fail for the right reason and all prior tests must pass. Do not continue without this Red state. Keep the command and the failing assertion line from this run for the `test:` commit body.
 
 ## Step 3: Fix minimally
 
@@ -44,3 +44,5 @@ Keep two atomic commits:
 test: reproduce <bug description> with failing test
 fix: <minimal description of the fix>
 ```
+
+The `test:` commit body records the Red run: the command and the failing assertion line from the pre-fix run.

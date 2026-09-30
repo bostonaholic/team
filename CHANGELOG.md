@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.139.0] - 2026-09-29
+
+### Changed
+
+- Team now asks every test to earn its keep. Before, the test workflows rewarded more tests. Now structure, plan, the test-architect, the implementer, and the bug-fix pipeline check each new test against one shared value bar before writing it. The code-reviewer blocks an editable test that re-asserts source, duplicates stronger proof, cannot fail, or needs a test-only production hook, and it records the same flag on a locked acceptance test as a review note. Removing an existing test now needs a short evidence record in the commit body. A bug-fix `test:` commit records the command and the failing assertion from its Red run. `/prove`, `/pr-open-comments`, `/team-pr`, and `/shipit` stop treating a test count as proof. **What this asks of you:** expect fewer, stronger tests in Team runs, and expect review to flag low-value tests you add by hand.
+
 ## [0.138.0] - 2026-09-29
 
 ### Changed
@@ -1342,7 +1348,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.138.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.139.0...HEAD
+[0.139.0]: https://github.com/bostonaholic/team/compare/v0.138.0...v0.139.0
 [0.138.0]: https://github.com/bostonaholic/team/compare/v0.137.0...v0.138.0
 [0.137.0]: https://github.com/bostonaholic/team/compare/v0.136.0...v0.137.0
 [0.136.0]: https://github.com/bostonaholic/team/compare/v0.135.0...v0.136.0
