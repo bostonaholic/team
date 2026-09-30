@@ -86,6 +86,10 @@ This record applies to a test on the base branch whose covered behavior remains 
 
 If a field is missing, keep the test. The record goes in the body of the commit that removes the test. When a plan step orders the removal, the step supplies the fields and the commit body carries them. A deleted test is exempt only when the same change deletes the behavior that it covers.
 
+## Regression tests
+
+A bug-fix regression test fails on the pre-fix code through its intended assertion, and it passes after the fix. If you never see it fail, it gives no evidence about the fix. Write one test at the owner boundary, the layer that owns the broken behavior. One test is enough, even when the bug crosses several layers. Record the Red run: the command you ran and the failing assertion it printed.
+
 ## Test behavior, not implementation
 
 Tests assert externally observable outcomes — return values, persisted state, effects visible to other components. A refactor that preserves behavior must leave every acceptance test green. Interaction tests verify state-changing calls only; never assert on query-only calls.
@@ -186,8 +190,8 @@ A flag on an editable test is blocking on first occurrence. A flag on a locked a
 
 Any outcome-dependent flag is blocking on first occurrence per the [code reviewer brief](../code-review/references/code-reviewer.md): real time or future dates; `sleep()` or timed waits; race order or missing awaits; shared state or missing teardown; unseeded randomness; real networks; leaked resources or fixed ports; unordered positions; exact floats; platform, locale, TZ, CPU, or CI parallelism. Fixed explicit-TZ dates and deterministic controls do not flag.
 
-The value bar, authoring gate, junk patterns, retention bar, and removal
-evidence above come from OpenClaw's `test-audit` skill at
+The value bar, authoring gate, junk patterns, retention bar, removal
+evidence, and regression-test rule above come from OpenClaw's `test-audit` skill at
 <https://github.com/openclaw/openclaw/blob/main/.agents/skills/test-audit/SKILL.md>.
 The skill carries the MIT License, © 2026 OpenClaw Foundation. This file
 restates the ideas in its own words.
