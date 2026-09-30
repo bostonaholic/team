@@ -55,8 +55,17 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
 
 - `files` holds every tracked file that matches a pathspec and no
   exclusion. That set is the inventory.
-- `status` is `text` or `binary`. `binary` means a NUL byte in the first
-  8,000 bytes, which is git's own test.
+- `status` gives each path exactly one of these values. The script opens
+  only a regular file whose real path stays inside the top level.
+  - `text`: a readable file that the analysts can measure.
+  - `binary`: a NUL byte in the first 8,000 bytes, which is git's own test.
+  - `missing`: a tracked file deleted from the work tree.
+  - `submodule`: index mode 160000. The audit never reads submodule
+    contents.
+  - `symlink`: index mode 120000, a symlink in the work tree, or a path
+    whose real path leaves the top level through a symlinked directory.
+  - `unreadable`: a directory, FIFO, or other file that is not regular, or
+    any other read error.
 - `lines` counts line feeds, plus 1 for an unterminated last line, and is 0
   unless `status` is `text`.
 - `commits` counts the commits in the window, reachable from HEAD, that

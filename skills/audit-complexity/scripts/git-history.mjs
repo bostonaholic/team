@@ -2,8 +2,8 @@
 // Collects git churn and file sizes for an audit-complexity scope and writes history.json beside it.
 // Usage: git-history.mjs <report.json>
 import { spawn } from "node:child_process";
-import { readFileSync, realpathSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { lstatSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { dirname, join, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const SCRIPT = "git-history.mjs";
@@ -12,6 +12,8 @@ const HASH_END = "\x1f";
 // git's own binary test: a NUL byte in the first 8,000 bytes.
 const BINARY_PROBE_BYTES = 8000;
 const LINE_FEED = 0x0a;
+const SUBMODULE_MODE = "160000";
+const SYMLINK_MODE = "120000";
 const HEX_HASH = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/;
 // git prints this under LC_ALL=C when a commit has more rename candidates than -l allows.
 const RENAME_LIMIT_WARNING = /rename detection was skipped due to too many files/;
@@ -131,9 +133,24 @@ function countLines(bytes) {
   return unterminated ? lines + 1 : lines;
 }
 
-export function classifyStatus(topLevel, key) {
-  const bytes = readFileSync(join(topLevel, key));
-  if (bytes.subarray(0, BINARY_PROBE_BYTES).includes(0)) return { status: "binary", lines: 0 };
+const notMeasured = (status) => ({ status, lines: 0 });
+
+// Opens only a regular file whose real path stays inside the top level, so no read leaves the repository.
+export function classifyStatus(topLevel, key, mode) {
+  if (mode === SUBMODULE_MODE) return notMeasured("submodule");
+  if (mode === SYMLINK_MODE) return notMeasured("symlink");
+  const path = join(topLevel, key);
+  let bytes;
+  try {
+    const stats = lstatSync(path);
+    if (stats.isSymbolicLink()) return notMeasured("symlink");
+    if (!stats.isFile()) return notMeasured("unreadable");
+    if (!realpathSync(path).startsWith(realpathSync(topLevel) + sep)) return notMeasured("symlink");
+    bytes = readFileSync(path);
+  } catch (error) {
+    return notMeasured(error.code === "ENOENT" || error.code === "ENOTDIR" ? "missing" : "unreadable");
+  }
+  if (bytes.subarray(0, BINARY_PROBE_BYTES).includes(0)) return notMeasured("binary");
   return { status: "text", lines: countLines(bytes) };
 }
 
@@ -221,8 +238,10 @@ async function collectHistory(scope) {
   const shallow = (await git(args.shallow, topLevel)).stdout.trim() === "true";
 
   const modes = new Map();
-  for (const lsFiles of args.lsFiles) {
-    for (const [path, mode] of parseLsFiles((await git(lsFiles, topLevel)).stdout)) modes.set(path, mode);
+  for (const [i, lsFiles] of args.lsFiles.entries()) {
+    const matched = parseLsFiles((await git(lsFiles, topLevel)).stdout);
+    if (matched.size === 0) throw new AuditError(`no tracked file under ${topLevel} matches ${scope.pathspecs[i]}`);
+    for (const [path, mode] of matched) modes.set(path, mode);
   }
   const inventory = [...modes.keys()].sort();
 
@@ -233,7 +252,7 @@ async function collectHistory(scope) {
   const churn = fold.finish(logStderr);
 
   const files = Object.fromEntries(
-    inventory.map((path) => [path, { ...classifyStatus(topLevel, path), ...churn.files[path] }]),
+    inventory.map((path) => [path, { ...classifyStatus(topLevel, path, modes.get(path)), ...churn.files[path] }]),
   );
   return {
     version: 1,
@@ -249,21 +268,33 @@ async function collectHistory(scope) {
   };
 }
 
+function refuseSymlink(target) {
+  let stats;
+  try {
+    stats = lstatSync(target);
+  } catch (error) {
+    if (error.code === "ENOENT") return;
+    throw new AuditError(`cannot check ${target}: ${error.message}`);
+  }
+  if (stats.isSymbolicLink()) throw new AuditError(`${target} is a symlink, and the script never writes through one`);
+}
+
 async function main(args) {
   const [input] = args;
   if (!input) {
     process.stderr.write(`${SCRIPT}: usage: ${SCRIPT} <report.json>\n`);
     return 2;
   }
+  const target = join(dirname(input), "history.json");
   let history;
   try {
     history = await collectHistory(readScope(input));
+    refuseSymlink(target);
   } catch (error) {
     if (!(error instanceof AuditError)) throw error;
     process.stderr.write(`${SCRIPT}: ${error.message}\n`);
     return 1;
   }
-  const target = join(dirname(input), "history.json");
   writeFileSync(target, `${JSON.stringify(history, null, 2)}\n`);
   process.stdout.write(`${target}\n`);
   return 0;

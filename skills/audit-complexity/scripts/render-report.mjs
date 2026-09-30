@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Joins an audit-complexity report.json with the history.json beside it, validates both, and renders report.md.
 // Usage: render-report.mjs <report.json> [<report.md>]
-import { readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { lstatSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -322,6 +322,15 @@ export function renderReport(report, history) {
     .join("\n");
 }
 
+function isSymlink(path) {
+  try {
+    return lstatSync(path).isSymbolicLink();
+  } catch (error) {
+    if (error.code === "ENOENT") return false;
+    throw error;
+  }
+}
+
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
 }
@@ -349,6 +358,10 @@ function main(args) {
     return 1;
   }
   const target = output ?? join(dirname(input), "report.md");
+  if (isSymlink(target)) {
+    process.stderr.write(`render-report.mjs: ${target} is a symlink, and the renderer never writes through one\n`);
+    return 1;
+  }
   writeFileSync(target, renderReport(report, history));
   process.stdout.write(`${target}\n`);
   return 0;

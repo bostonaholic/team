@@ -12,6 +12,11 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
    - Run `git rev-parse --show-toplevel`, then `git rev-parse --verify HEAD`.
      When either fails, stop and state that the audit needs a git work tree
      with at least one commit.
+   - When `<out>/report.json`, `<out>/history.json`, or `<out>/report.md` is
+     a symlink, stop and name it.
+   - When any of those three files exists and `<out>/report.json` does not
+     hold `skill: "audit-complexity"`, stop. The directory holds another
+     tool's files, so choose another `--out`.
 
 2. **Collect the history.** Build `scope.exclude` per the
    [input](01-input.md) rules. Write `<out>/report.json` with the Write
@@ -28,10 +33,11 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
    and writes `<out>/history.json`. User paths reach it only through
    `report.json`, never through the command text. On a long history, run it
    in the background per the execution rules. On exit 1, relay its stderr
-   line and stop.
+   line and stop. Exit 1 covers a git failure, a bad `report.json`, a
+   symlinked `history.json`, and a pathspec that matches no tracked file.
 
-   When `history.json` lists no file, or no file with `status: "text"`,
-   stop, name the pathspecs, and dispatch nothing.
+   When `history.json` lists no file with `status: "text"`, stop, name the
+   pathspecs, and dispatch nothing.
 
 3. **Split the text files into lanes.** Take every `history.json` file with
    `status: "text"`, and place each one in exactly one lane or gap:
