@@ -31,6 +31,14 @@
    mode it works from that task artifact and the failing tests.
 5. Dispatch 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
+   In standalone mode (no `8-plan.md`), the `code-reviewer` dispatch
+   carries a named line,
+   `Locked acceptance tests: <comma-separated names | unknown>`:
+   - Take the names from the Test Name column of this session's step-2
+     `test-architect` report.
+   - Write `unknown` when step 2 was skipped because the tests exist.
+   - Send no line when step 2 was skipped for a zero-behavior-change
+     contract.
 6. **Aggregate gate** — sort every finding into **Blocking**, **Major**, or
    **Minor and below** per the table under "Severity Tiers and the Auto-Fix
    Boundary" in the [finding format](../code-review/references/findings.md).
@@ -56,7 +64,8 @@
      is written before any aggregate has sorted anything.
    - Re-dispatch implementer with the typed class(es), then re-dispatch
      ALL 5 reviewers for a fresh review; reviewers carry no memory of
-     earlier rounds.
+     earlier rounds. The `code-reviewer` dispatch carries the same
+     `Locked acceptance tests:` line as step 5.
    - **Never** stop to ask the user which Blocking or Major items to address
      (the no-consult rule). A prompt that lists a blocking or major finding
      is a defect.

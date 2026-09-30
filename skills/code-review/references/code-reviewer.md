@@ -152,12 +152,26 @@ multiple tests:
   (`refundsCardOnPartialFailure`)
 - DRY helpers that hide the asserted value
 
-**Tautological tests (always blocking).** Any changed test that derives its
-expected result from the system under test, repeats the production algorithm,
-asserts a mock's configured return value, or only re-reads arranged data is
-`issue (blocking)` on first occurrence. The test must independently reject a
-plausible broken implementation; otherwise the changed behavior lacks test
-coverage.
+**Test-value flags.** Walk every changed test against the
+[value red flags](../team/references/testing.md#value-red-flags-reviewer-checklist).
+A diff with no test changes gets no value finding.
+
+- An editable test that hits a value red flag is
+  `issue (blocking): Test Value — <class>` on first occurrence.
+- A locked acceptance test that hits one gets
+  `suggestion (non-blocking): Test Value — locked acceptance test`. No agent
+  may edit a locked test during IMPLEMENT, so a block on it has no fix.
+- The lock source is the `8-plan.md` acceptance list when the commits cite a
+  plan, or the `Locked acceptance tests:` line in your dispatch. A line that
+  reads `unknown` locks every test the branch adds. Read a malformed line as
+  `unknown`, and say so under `### Checks`. An absent line adds no lock
+  beyond a cited plan.
+- When a style flag and a value flag hit one test, the value flag sets the
+  severity.
+- Removal of a base-branch test whose covered behavior remains is blocking
+  when the commit body lacks the
+  [removal evidence](../team/references/testing.md#removal-evidence) fields.
+  The fix restores the test.
 
 **Flaky-test red flags (always blocking).** Distinct from the style flags
 above. Any test in the diff whose *outcome depends on* a nondeterministic
