@@ -54,4 +54,4 @@ Write `8-plan.md` as:
 4. Include no implementation code; state what and where, leaving actual code to the implementer.
 5. Every slice leaves the codebase working with its acceptance tests passing.
 6. Add no tests beyond the structure; `7-structure.md` is the scope fence.
-7. Answer the [authoring gate](references/testing.md#authoring-gate) for each structure test. Report a test that fails the gate as a structure defect, which returns to STRUCTURE.
+7. Answer the [authoring gate](references/testing.md#authoring-gate) for each structure test. Carry an entry marked "task-required, fails <class>" through unchanged. Report any other test that fails the gate as a structure defect, which returns to STRUCTURE.

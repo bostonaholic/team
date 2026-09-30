@@ -43,7 +43,8 @@ The entry mode sets which tests are locked. A value flag on a locked test is
 a non-blocking note:
 
 - `/team`, and `/team-implement` with `8-plan.md`: the acceptance list in the
-  `8-plan.md` that the slice commits cite.
+  `8-plan.md` beside the design and structure paths the slice commits cite,
+  or at the predecessor artifact path in your dispatch.
 - Standalone `/team-implement`: the `Locked acceptance tests:` line in your
   dispatch. A line that reads `unknown` locks every test the branch adds.
 - `/code-review`: no line. A test is locked only when the commits cite a

@@ -161,11 +161,14 @@ A diff with no test changes gets no value finding.
 - A locked acceptance test that hits one gets
   `suggestion (non-blocking): Test Value — locked acceptance test`. No agent
   may edit a locked test during IMPLEMENT, so a block on it has no fix.
-- The lock source is the `8-plan.md` acceptance list when the commits cite a
-  plan, or the `Locked acceptance tests:` line in your dispatch. A line that
-  reads `unknown` locks every test the branch adds. Read a malformed line as
+- The lock source is the acceptance list in the `8-plan.md` beside the
+  design and structure paths the slice commits cite, or at the predecessor
+  artifact path in your dispatch. Under `/code-review`, a plan locks tests
+  only when the commits cite one. Standalone `/team-implement` uses the
+  `Locked acceptance tests:` line in your dispatch. A line that reads
+  `unknown` locks every test the branch adds. Read a malformed line as
   `unknown`, and say so under `### Checks`. An absent line adds no lock
-  beyond a cited plan.
+  beyond a found plan.
 - When a style flag and a value flag hit one test, the value flag sets the
   severity.
 - Removal of a base-branch test whose covered behavior remains is blocking
