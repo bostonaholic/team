@@ -14,6 +14,10 @@ const BINARY_PROBE_BYTES = 8000;
 const LINE_FEED = 0x0a;
 const SUBMODULE_MODE = "160000";
 const SYMLINK_MODE = "120000";
+// A commit that touches more files than this is a sweep, such as a rename or a format run, not a coupling signal.
+const MAX_COUPLING_COMMIT_FILES = 30;
+const MIN_SHARED_COMMITS = 3;
+const MAX_PARTNERS = 3;
 const HEX_HASH = /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/;
 // git prints this under LC_ALL=C when a commit has more rename candidates than -l allows.
 const RENAME_LIMIT_WARNING = /rename detection was skipped due to too many files/;
@@ -35,6 +39,7 @@ export function buildGitArgs({ pathspecs, exclude, since }) {
     head: gitArgv("rev-parse", "--verify", "HEAD"),
     shallow: gitArgv("rev-parse", "--is-shallow-repository"),
     lsFiles: pathspecs.map((pathspec) => gitArgv("ls-files", "-z", "--stage", "--", `:(literal)${pathspec}`, ...exclusions)),
+    partners: gitArgv("ls-files", "-z", "--stage", "--", ".", ...exclusions),
     diff: gitArgv("-c", "diff.autoRefreshIndex=true", "diff", "-z", "--name-status", ...DIFF_PINS, "HEAD", "--"),
     log: gitArgv(
       "-c",
@@ -97,9 +102,20 @@ function createNames(paths) {
   };
 }
 
-function createFold({ inventory, diff }) {
+function topPartners(shared) {
+  return [...shared]
+    .filter(([, count]) => count >= MIN_SHARED_COMMITS)
+    .sort(([pathA, a], [pathB, b]) => b - a || (pathA < pathB ? -1 : pathA > pathB ? 1 : 0))
+    .slice(0, MAX_PARTNERS)
+    .map(([path, count]) => ({ path, shared: count }));
+}
+
+function createFold({ inventory, partners, diff }) {
   const commits = new Map(inventory.map((path) => [path, 0]));
-  const names = createNames(inventory);
+  const authors = new Map(inventory.map((path) => [path, new Set()]));
+  const shared = new Map(inventory.map((path) => [path, new Map()]));
+  const partnerSet = new Set(partners);
+  const names = createNames([...new Set([...inventory, ...partners])]);
   const uncommitted = parseNameStatus(diff);
   for (const change of uncommitted) if (change.status === "R") names.rename(change.paths);
   const inInventory = (path) => commits.has(path);
@@ -110,18 +126,36 @@ function createFold({ inventory, diff }) {
       scanned += 1;
       // Count against the names as they stand after this commit, then apply its renames for older commits.
       const touched = new Set(commit.changes.flatMap((change) => [...names.currentPathsOf(change.paths.at(-1))]));
-      for (const path of touched) commits.set(path, commits.get(path) + 1);
+      const audited = [...touched].filter(inInventory);
+      for (const path of audited) {
+        commits.set(path, commits.get(path) + 1);
+        authors.get(path).add(commit.author);
+      }
+      if (commit.changes.length <= MAX_COUPLING_COMMIT_FILES) {
+        const touchedPartners = [...touched].filter((path) => partnerSet.has(path));
+        for (const path of audited) {
+          const counts = shared.get(path);
+          for (const partner of touchedPartners.filter((other) => other !== path)) {
+            counts.set(partner, (counts.get(partner) ?? 0) + 1);
+          }
+        }
+      }
       for (const change of commit.changes) if (change.status === "R") names.rename(change.paths);
     },
     finish(logStderr) {
-      const files = Object.fromEntries([...commits].map(([path, count]) => [path, { commits: count }]));
+      const files = Object.fromEntries(
+        [...commits].map(([path, count]) => [
+          path,
+          { commits: count, authors: authors.get(path).size, coupling: topPartners(shared.get(path)) },
+        ]),
+      );
       return { renameDetectionSkipped: RENAME_LIMIT_WARNING.test(logStderr), commitsScanned: scanned, dirty, files };
     },
   };
 }
 
-export function buildHistory({ log, logStderr = "", diff = "", inventory }) {
-  const fold = createFold({ inventory, diff });
+export function buildHistory({ log, logStderr = "", diff = "", inventory, partners = [] }) {
+  const fold = createFold({ inventory, partners, diff });
   for (const commit of parseLog(log)) fold.add(commit);
   return fold.finish(logStderr);
 }
@@ -245,7 +279,8 @@ async function collectHistory(scope) {
   }
   const inventory = [...modes.keys()].sort();
 
-  const fold = createFold({ inventory, diff: (await git(args.diff, topLevel)).stdout });
+  const partners = [...parseLsFiles((await git(args.partners, topLevel)).stdout).keys()];
+  const fold = createFold({ inventory, partners, diff: (await git(args.diff, topLevel)).stdout });
   const log = streamingLog(fold);
   const { stderr: logStderr } = await git(args.log, topLevel, (text) => log.push(text));
   log.end();

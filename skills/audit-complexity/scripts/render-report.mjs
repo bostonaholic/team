@@ -260,17 +260,32 @@ function renderFunctions(report) {
   ];
 }
 
-function renderLanes(report) {
+const partnersCell = (coupling) => list(coupling).map((partner) => `${partner.path} (${partner.shared})`).join(", ") || "-";
+
+function renderLanes(report, files) {
   const out = [
     "## Lanes\n",
-    "Every value is estimated by reading. Maxima come from the hot functions, and length and params skip `<module>`.\n",
+    "Authors and partners come from git history. Partners are the files that most often change in the same commit, " +
+      "with the shared commit count. Every other value is estimated by reading. " +
+      "Maxima come from the hot functions, and length and params skip `<module>`.\n",
   ];
   for (const lane of list(report.lanes)) {
     out.push(`### ${lane.name}\n`);
     out.push(`Owner: ${list(lane.owner).join(", ") || "unstated"}.\n`);
     out.push(
       table(
-        ["File", "Fan-out", "Mutable state", "Functions", "Max cyclomatic", "Max nesting", "Max length", "Max params"],
+        [
+          "File",
+          "Fan-out",
+          "Mutable state",
+          "Functions",
+          "Max cyclomatic",
+          "Max nesting",
+          "Max length",
+          "Max params",
+          "Authors",
+          "Partners",
+        ],
         list(lane.entries).map((entry) => {
           const max = fileMaxima(entry);
           return [
@@ -282,6 +297,8 @@ function renderLanes(report) {
             max.nesting,
             max.length,
             max.params,
+            files[entry.file].authors,
+            partnersCell(files[entry.file].coupling),
           ];
         }),
       ),
@@ -314,7 +331,7 @@ export function renderReport(report, history) {
     ...renderSummary(report, history),
     ...renderHotspots(report, files),
     ...renderFunctions(report),
-    ...renderLanes(report),
+    ...renderLanes(report, files),
     ...renderGaps(report),
     ...renderNotMeasured(files),
   ]

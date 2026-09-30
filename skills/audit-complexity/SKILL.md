@@ -11,9 +11,10 @@ Before each consuming step, read its linked shared rules from this installed ski
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 Rank where complexity concentrates in a git codebase, or in a named part of
-it. A script measures each file's **churn** (the commits that touch it) and
-its **size** (lines) from git history and the work tree. The **hotspot
-score** is commits × lines. Read-only analysts read each source file and
+it. A script measures each file's **churn** (the commits that touch it),
+its **size** (lines), its **authors** (a count of distinct names), and its
+**change coupling** (the files that most often change with it) from git
+history and the work tree. The **hotspot score** is commits × lines. Read-only analysts read each source file and
 measure its **fan-out** (distinct imported modules) and its **shared mutable
 state** (writes that outlive one call). For each function they measure
 **cyclomatic complexity** (1 plus its decision points), **nesting depth**,

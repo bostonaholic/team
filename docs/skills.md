@@ -281,7 +281,7 @@ Audits a whole test suite against the test value bar and reports which tests to 
 
 ### [audit-complexity](https://github.com/bostonaholic/team/blob/main/skills/audit-complexity/SKILL.md)
 
-Ranks where complexity concentrates in a git codebase by change churn and file size, and shows each file's fan-out, its writes to shared mutable state, and its functions' cyclomatic complexity, nesting depth, length, and parameters, with line evidence. Changes no code.
+Ranks where complexity concentrates in a git codebase by change churn and file size, and shows each file's author count, change coupling, fan-out, its writes to shared mutable state, and its functions' cyclomatic complexity, nesting depth, length, and parameters, with line evidence. Changes no code.
 
 **Used by:** None
 

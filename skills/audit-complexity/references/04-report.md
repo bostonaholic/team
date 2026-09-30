@@ -48,7 +48,13 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
   "commitsScanned": 0,
   "dirty": ["<inventory path that differs from HEAD>"],
   "files": {
-    "<top-level-relative path>": { "status": "text", "lines": 0, "commits": 0 }
+    "<top-level-relative path>": {
+      "status": "text",
+      "lines": 0,
+      "commits": 0,
+      "authors": 0,
+      "coupling": [{ "path": "<top-level-relative path>", "shared": 3 }]
+    }
   }
 }
 ```
@@ -74,6 +80,13 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
   the scope and a rename that is staged but not committed. A copy starts
   fresh. A path that git records as added again keeps counting by path. A
   merge commit counts zero.
+- `authors` counts the distinct author names, after `.mailmap`, on those
+  commits. No name reaches any output.
+- `coupling` lists up to 3 partners: the files anywhere in the repository,
+  outside the exclusions, that changed in the same commit as this file at
+  least 3 times. `shared` is that commit count. Partners sort by `shared`,
+  highest first, then by path. A commit that touches more than 30 files
+  counts for `commits` but adds no partner.
 - `commitsScanned` counts every commit in the window, across the whole
   repository.
 - `shallow` is true in a shallow clone, where older commits are missing.
@@ -124,14 +137,14 @@ The renderer lays out these sections, in order:
    heading states that a function ranked fourth or lower in its own file
    can be missing.
 4. **Lanes.** One table per lane, with one row per measured file: its
-   fan-out, its mutable-state count, its function count, and its highest
+   fan-out, its mutable-state count, its function count, its highest
    cyclomatic complexity, nesting, length, and parameters among its hot
-   functions. Length and parameters skip `<module>`, because it spans the
-   whole file.
+   functions, its author count, and its partners as `path (shared)`. Length
+   and parameters skip `<module>`, because it spans the whole file.
 5. **Gaps.** Every `gaps` record and every `skipped` record, with its
    reason.
 6. **Not measured.** Every `history.json` file whose `status` is not
    `text`, with its status.
 
 The report labels every analyst value as "estimated by reading". The script
-values, commits and lines, are exact counts.
+values, commits, lines, authors, and partners, are exact counts.
