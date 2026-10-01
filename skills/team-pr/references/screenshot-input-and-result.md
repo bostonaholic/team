@@ -16,7 +16,7 @@ into the run's own directory. Bind the values the inline `gh` commands below
 and in [screenshot verify](screenshot-verify.md) expand:
 
 ```bash
-UPLOAD_ARGS='<PR URL> --entries <entries-file path>'   # filled in literally, this call
+UPLOAD_ARGS='<PR URL> --entries <printed ENTRIES_FILE>'   # filled in literally, this call
 RUN_DIR="$(mktemp -d)"                     # every temporary this run writes
 "<team-pr-skill-dir>/scripts/resolve-pr.sh" "$UPLOAD_ARGS" "$RUN_DIR" || exit 1
 PR_URL="$(cat "$RUN_DIR/pr-url")"          # the canonical URL, on the base repo
@@ -25,15 +25,17 @@ OWNER="$(cat "$RUN_DIR/owner")"
 REPO="$(cat "$RUN_DIR/repo")"
 NUMBER="$(cat "$RUN_DIR/number")"
 REPO_SPEC="$(cat "$RUN_DIR/repo-spec")"    # gh's own [HOST/]OWNER/REPO form
+printf 'RUN_DIR=%s\n' "$RUN_DIR"
 ```
 
 Exit 1 is a refusal, and it names the argument on stderr.
 
 `$RUN_DIR` is this run's whole state: every script reads its inputs from it and
 writes its outputs back into it, so `$RUN_DIR` is the one value that has to
-survive from one command to the next. A fence that lost the others re-binds
-them by re-running the six `cat` lines above against the same `$RUN_DIR`.
-Never the `mktemp -d` and `resolve-pr.sh` lines beside them: those resolve the
+survive from one command to the next, and the fence above prints it. Every
+later fence re-binds it from that printed line, then re-runs whichever of the
+six `cat` lines above it needs against the same `$RUN_DIR`. Never the
+`UPLOAD_ARGS`, `mktemp -d`, and `resolve-pr.sh` lines beside them: those resolve the
 PR a second time into a fresh directory, and leave `pre-image.md`,
 `assets.tsv`, and everything else this run has produced behind in the old one.
 
@@ -85,9 +87,8 @@ step; each entry's caption is that entry's own path, basename-only and
 extension-stripped:
 
 ```bash
-ENTRIES_DIR="$(mktemp -d)"
-ENTRIES_FILE="$ENTRIES_DIR/entries.json"
-CAPTURE_ROOT=/Users/dev/Desktop/shots          # where the images ALREADY live
+ENTRIES_FILE='<printed ENTRIES_FILE>'          # from the build call
+CAPTURE_ROOT='<printed CAPTURE_ROOT>'          # where the images ALREADY live
 jq -n --arg root "$CAPTURE_ROOT" '{
   root: $root,
   entries: ($ARGS.positional | map({

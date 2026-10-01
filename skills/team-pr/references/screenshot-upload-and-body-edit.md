@@ -10,11 +10,13 @@ failure the host rewrites only the references that resolved, so every entry
 that failed keeps a local filesystem path in a body that may already be merged.
 
 Two committed scripts carry the steps that branch or loop. Each takes the
-`$RUN_DIR` bound in [screenshot input and result](screenshot-input-and-result.md).
+`$RUN_DIR` printed in [screenshot input and result](screenshot-input-and-result.md),
+which every fence below re-binds on its first line.
 
 **Step A — take the pre-image and run every check that can run against it.**
 
 ```bash
+RUN_DIR='<printed RUN_DIR>'               # from the resolve call
 "<team-pr-skill-dir>/scripts/pre-image.sh" "$RUN_DIR" || exit 2
 ```
 
@@ -32,6 +34,7 @@ Two checks run against `pre-image.md` here:
    check mode against it, here, before the first upload:
 
    ```bash
+   RUN_DIR='<printed RUN_DIR>'               # from the resolve call
    if node "<team-pr-skill-dir>/scripts/splice.mjs" --check --body-file "$RUN_DIR/pre-image.md"; then
      :                                   # the pre-image allows a write
    else
@@ -99,6 +102,7 @@ attached. Step A has already written `after.md`, `assets.tsv`, and
 Otherwise, one script attaches every entry:
 
 ```bash
+RUN_DIR='<printed RUN_DIR>'               # from the resolve call
 "<team-pr-skill-dir>/scripts/upload.sh" "$RUN_DIR"
 ```
 
@@ -173,6 +177,7 @@ reaches the file as the literal text that was rendered ([external-data rules](..
 token no rendered line can equal:
 
 ```bash
+RUN_DIR='<printed RUN_DIR>'               # from the resolve call
 SECTION_FILE="$RUN_DIR/section.md"       # step D's rendered section
 NEW_BODY_FILE="$RUN_DIR/new-body.md"     # step D's spliced body
 cat >"$SECTION_FILE" <<'PR_SCREENSHOTS_SECTION'
@@ -187,6 +192,9 @@ Then bind the landed count from step C's own record and splice into the
 **pre-image** with resolved URLs only:
 
 ```bash
+RUN_DIR='<printed RUN_DIR>'               # from the resolve call
+SECTION_FILE="$RUN_DIR/section.md"
+NEW_BODY_FILE="$RUN_DIR/new-body.md"
 LANDED_COUNT="$(wc -l <"$RUN_DIR/assets.tsv" | tr -d '[:space:]')"   # one line per landed entry
 if node "<team-pr-skill-dir>/scripts/splice.mjs" --body-file "$RUN_DIR/pre-image.md" \
      --section-file "$SECTION_FILE" --landed "$LANDED_COUNT" > "$NEW_BODY_FILE.tmp"; then
@@ -228,6 +236,10 @@ On exit 0, one write lands it, and that same write also clears the tails the
 attach step appended:
 
 ```bash
+RUN_DIR='<printed RUN_DIR>'               # from the resolve call
+NUMBER="$(cat "$RUN_DIR/number")"
+REPO_SPEC="$(cat "$RUN_DIR/repo-spec")"
+NEW_BODY_FILE="$RUN_DIR/new-body.md"
 gh pr edit "$NUMBER" --repo "$REPO_SPEC" --body-file "$NEW_BODY_FILE"
 ```
 

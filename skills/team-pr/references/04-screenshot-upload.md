@@ -19,13 +19,17 @@ and rewrite.
 ### Build the entries file
 
 Write a JSON entries file under `$(mktemp -d)`, bound once as below because
-`result.json` comes back beside the entries file:
+`result.json` comes back beside the entries file. The fence prints each value
+a later call needs, per the carrying rule in [screenshot rules](screenshot-rules.md):
 
 ```bash
 ENTRIES_DIR="$(mktemp -d)"
 ENTRIES_FILE="$ENTRIES_DIR/entries.json"
 # `$ARGUMENTS` is relative and the callee refuses a relative `root`: write the resolved value.
 CAPTURE_ROOT="$(cd -- "$ARGUMENTS/screenshots" && pwd -P)" || exit 2
+printf 'ENTRIES_DIR=%s\n' "$ENTRIES_DIR"
+printf 'ENTRIES_FILE=%s\n' "$ENTRIES_FILE"
+printf 'CAPTURE_ROOT=%s\n' "$CAPTURE_ROOT"
 ```
 
 The file itself carries:
@@ -50,13 +54,14 @@ argument and never pasted into a JSON string
 
 ### Run the upload
 
-Bind `UPLOAD_ARGS` to the PR's URL followed by `--entries` and the entries file path, both written out as literal text. Assign it in the same shell call that runs `resolve-pr.sh` ([screenshot input and result](screenshot-input-and-result.md)): shell variables do not persist between calls, so a value bound in an earlier call reaches the script empty and the script refuses. Then follow [screenshot rules](screenshot-rules.md) and its procedure references in order. One run per PR phase, on the home repository's PR.
+Bind `UPLOAD_ARGS` to the PR's URL followed by `--entries` and the printed `ENTRIES_FILE`, both written out as literal text. Assign it in the same shell call that runs `resolve-pr.sh` ([screenshot input and result](screenshot-input-and-result.md)): shell variables do not persist between calls, so a value bound in an earlier call reaches the script empty and the script refuses. Then follow [screenshot rules](screenshot-rules.md) and its procedure references in order. One run per PR phase, on the home repository's PR.
 
 ### Read the result
 
 `result.json` is the contract:
 
 ```bash
+ENTRIES_DIR='<printed ENTRIES_DIR>'      # from the build call
 RESULT_FILE="$ENTRIES_DIR/result.json"   # the upload writes it beside the entries file
 [ -r "$RESULT_FILE" ] || exit 2
 ```
@@ -86,30 +91,38 @@ companion PR's body, one companion at a time.
 This loop is the home write run once per companion, so it runs the same
 committed scripts the home write runs rather than restating them.
 
+Run steps 1 to 3 for one companion as **one shell call**, the fence below, so
+every value the write and the read-back expand is bound in that same call:
+
+```bash
+ENTRIES_DIR='<printed ENTRIES_DIR>'                # from the build call
+RESULT_FILE="$ENTRIES_DIR/result.json"
+COMPANION_URL="https://github.com/owner/other-repo/pull/17"   # this companion's PR
+# Step 1: bind this companion's own values.
+COMPANION_DIR="$(mktemp -d)"                       # bound per companion, never reused
+"<team-pr-skill-dir>/scripts/resolve-pr.sh" "$COMPANION_URL" "$COMPANION_DIR" || exit 2
+COMPANION_HOST="$(cat "$COMPANION_DIR/pr-host")"
+OWNER="$(cat "$COMPANION_DIR/owner")"
+REPO="$(cat "$COMPANION_DIR/repo")"
+NUMBER="$(cat "$COMPANION_DIR/number")"
+# Step 2: splice the section in and write it, once.
+"<team-pr-skill-dir>/scripts/write-companion.sh" "$COMPANION_DIR" "$RESULT_FILE" || exit $?
+# Step 3: read this companion's own rendered body back.
+gh api --hostname "$COMPANION_HOST" repos/"$OWNER"/"$REPO"/pulls/"$NUMBER" \
+  -H "Accept: application/vnd.github.full+json" --jq .body_html
+```
+
 1. Bind that companion's own values with `resolve-pr.sh` over the companion's
    URL. The host is not optional: `--repo "$OWNER/$REPO"` resolves against
    whichever host `gh` considers default, so on an Enterprise PR every call
-   below would name a repository on github.com.
-
-   ```bash
-   COMPANION_URL="https://github.com/owner/other-repo/pull/17"   # this companion's PR
-   COMPANION_DIR="$(mktemp -d)"                       # bound per companion, never reused
-   "<team-pr-skill-dir>/scripts/resolve-pr.sh" "$COMPANION_URL" "$COMPANION_DIR" || exit 2
-   COMPANION_HOST="$(cat "$COMPANION_DIR/pr-host")"
-   OWNER="$(cat "$COMPANION_DIR/owner")"
-   REPO="$(cat "$COMPANION_DIR/repo")"
-   NUMBER="$(cat "$COMPANION_DIR/number")"
-   ```
+   in the fence would name a repository on github.com.
 
    `$COMPANION_DIR` is bound *inside* this loop and nowhere above it. Bound
    once outside, a refusal here would leave the write putting the previous
    companion's body over this companion's description.
 
-2. Splice the section in and write it, once:
-
-   ```bash
-   "<team-pr-skill-dir>/scripts/write-companion.sh" "$COMPANION_DIR" "$RESULT_FILE"
-   ```
+2. Splice the section in and write it, once. The fence stops on a non-zero
+   exit and passes that exit through:
 
    | Exit | Means | Do |
    | --- | --- | --- |
@@ -118,12 +131,7 @@ committed scripts the home write runs rather than restating them.
    | 2 | Fault — an unreadable or malformed input, a failed `gh` call, or `splice.mjs: <message>` | Report it as a fault, not as a refusal |
 
 3. Read that companion's own rendered body back, against its own host, owner,
-   repository, and number:
-
-   ```bash
-   gh api --hostname "$COMPANION_HOST" repos/"$OWNER"/"$REPO"/pulls/"$NUMBER" \
-     -H "Accept: application/vnd.github.full+json" --jq .body_html
-   ```
+   repository, and number. The fence runs this only after exit 0.
 
    `--hostname` is mandatory: without it the read-back checks whatever PR of
    that number exists on the default host.
