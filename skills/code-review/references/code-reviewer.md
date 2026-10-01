@@ -1,6 +1,6 @@
 # Code Reviewer Brief
 
-Resolve links from the installed skill directory. If a required read fails,
+Resolve links from this file's directory, else from the installed `SKILL.md` directory. If a required read fails,
 stop that step with the exact path. Never use checkout fallback or recursive
 loading.
 

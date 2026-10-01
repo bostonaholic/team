@@ -1,6 +1,6 @@
 # Nested Sub-Agents — Guardrails
 
-Before each consuming step, read its linked shared rules from this installed references directory.
+Before each consuming step, read its linked shared rules from this file's directory, else from the installed `SKILL.md` directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 Pipeline agents with `Agent` may dispatch helpers one level further down. These rules are non-negotiable.

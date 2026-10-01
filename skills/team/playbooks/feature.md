@@ -1,7 +1,7 @@
 # Feature playbook
 
 Before this operation, read [artifact schema](references/artifacts.md).
-Before each consuming step, read its linked shared rules. Resolve links from this installed playbook directory.
+Before each consuming step, read its linked shared rules. Resolve links from this file's directory, else from the installed `SKILL.md` directory.
 If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 Eight sequential phases; none are skippable.

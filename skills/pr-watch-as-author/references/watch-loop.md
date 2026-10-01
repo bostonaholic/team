@@ -1,6 +1,6 @@
 # PR watch mechanics
 
-Before each consuming step, read its linked shared rules from this installed reference directory.
+Before each consuming step, read its linked shared rules from this file's directory, else from the installed `SKILL.md` directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 A consuming skill owns what each cycle *does*; this reference owns how the
