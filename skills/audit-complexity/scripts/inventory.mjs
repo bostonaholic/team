@@ -123,12 +123,36 @@ function readScope(input) {
   if (!Array.isArray(exclude) || !exclude.every((e) => typeof e?.path === "string" && e.path !== "")) {
     throw new AuditError(`${input}: scope.exclude must be a list of { path, reason } records`);
   }
-  return { pathspecs, exclude: exclude.map((e) => e.path) };
+  const { coverage } = report.scope;
+  if (coverage !== undefined) {
+    if (typeof coverage !== "string" || coverage === "") {
+      throw new AuditError(`${input}: scope.coverage must be a non-empty path, not ${JSON.stringify(coverage)}`);
+    }
+    if (coverage.startsWith("/") || coverage.split("/").includes("..")) {
+      throw new AuditError(`${input}: scope.coverage ${coverage} must be top-level-relative, with no leading / and no .. segment`);
+    }
+  }
+  return { pathspecs, exclude: exclude.map((e) => e.path), coverage };
+}
+
+const COVERAGE_REFUSALS = {
+  missing: (path) => `coverage file ${path} does not exist`,
+  symlink: (path) => `coverage file ${path} is a symlink or leaves the top level`,
+  binary: (path) => `coverage file ${path} is binary, not text`,
+  unreadable: (path) => `coverage file ${path} is not a readable regular file`,
+  text: (path) => `coverage file ${path} is empty`,
+};
+
+// No mode argument: an untracked coverage file is allowed.
+function checkCoverage(topLevel, coverage) {
+  const { status, lines } = classifyStatus(topLevel, coverage);
+  if (status !== "text" || lines === 0) throw new AuditError(COVERAGE_REFUSALS[status](coverage));
 }
 
 async function collectInventory(scope) {
   const args = buildGitArgs(scope);
   const topLevel = (await git(args.topLevel, process.cwd())).replace(/\n$/, "");
+  if (scope.coverage !== undefined) checkCoverage(topLevel, scope.coverage);
   const commit = (await git(args.head, topLevel)).trim();
 
   const modes = new Map();
@@ -144,6 +168,7 @@ async function collectInventory(scope) {
     commit,
     pathspecs: scope.pathspecs,
     exclude: scope.exclude,
+    ...(scope.coverage === undefined ? {} : { coverage: scope.coverage }),
     dirty: listDirty(await git(args.diff, topLevel), inventory),
     files: Object.fromEntries(inventory.map((path) => [path, classifyStatus(topLevel, path, modes.get(path))])),
   };

@@ -10,6 +10,10 @@ const TABLE_ROWS = 25;
 const MAX_HOT_FUNCTIONS = 6;
 const MODULE = "<module>";
 const HOT_FUNCTION_COUNTS = ["line", "endLine", "cyclomatic", "nesting", "deepestLine", "params"];
+const CRAP_TOLERANCE = 0.01;
+// Float slack, so a 2-decimal crap exactly 0.01 from the recount still passes.
+const FLOAT_SLACK = 1e-9;
+const NOT_RUN = "Not run: no coverage file was given.\n";
 
 const list = (value) => (Array.isArray(value) ? value : []);
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -29,6 +33,9 @@ function joinErrors(scope, inventory) {
   const excluded = list(scope.exclude).map((record) => record?.path);
   if (!sameList(excluded, list(inventory.exclude))) {
     errors.push(`scope.exclude paths ${show(excluded)} do not match inventory.json exclude ${show(inventory.exclude)}`);
+  }
+  if (scope.coverage !== inventory.coverage) {
+    errors.push(`scope.coverage ${show(scope.coverage)} does not match inventory.json coverage ${show(inventory.coverage)}`);
   }
   for (const exclusion of excluded) {
     for (const named of pathspecs.filter((path) => path === exclusion || path.startsWith(`${exclusion}/`))) {
@@ -69,7 +76,41 @@ function laneRecordErrors(lane) {
   return errors;
 }
 
-function hotFunctionErrors(file, hot, lines) {
+const crapOf = (cyclomatic, hit, missed) => cyclomatic ** 2 * (missed / (hit + missed)) ** 3 + cyclomatic;
+
+// Each defect yields one error, so the checks stop at the first form error.
+function coverageErrors(where, hot, hasCoverage) {
+  const { coverage, crap } = hot;
+  const carriesNeither = coverage === undefined && crap === undefined;
+  if (!hasCoverage) return carriesNeither ? [] : [`${where}: coverage and crap need scope.coverage, and no coverage file was given`];
+  if (hot.name === MODULE) {
+    return carriesNeither ? [] : [`${where}: ${MODULE} carries no coverage or crap, because its range holds every function in the file`];
+  }
+  if (!isObject(coverage)) return [`${where}: coverage must be { hit, missed } or { reason }, because a coverage file was given`];
+  if ("reason" in coverage) {
+    if ("hit" in coverage || "missed" in coverage) return [`${where}: coverage holds a reason and line lists. Give one form`];
+    if (typeof coverage.reason !== "string" || coverage.reason.trim() === "") return [`${where}: coverage reason must be non-empty text`];
+    return crap === undefined ? [] : [`${where}: crap needs hit and missed line lists, not a reason`];
+  }
+  const { hit, missed } = coverage;
+  if (!Array.isArray(hit) || !Array.isArray(missed) || ![...hit, ...missed].every(Number.isInteger)) {
+    return [`${where}: coverage hit and missed must be lists of line numbers`];
+  }
+  const lines = [...hit, ...missed];
+  if (lines.length === 0) return [`${where}: coverage lists no line in hit or missed. Give a reason instead`];
+  const outside = lines.find((line) => line < hot.line || line > hot.endLine);
+  if (outside !== undefined) return [`${where}: coverage line ${outside} falls outside lines ${hot.line}-${hot.endLine}`];
+  const repeated = lines.find((line, i) => lines.indexOf(line) !== i);
+  if (repeated !== undefined) return [`${where}: coverage line ${repeated} appears more than once across hit and missed`];
+  if (typeof crap !== "number" || !Number.isFinite(crap)) return [`${where}: crap must be a finite number, not ${show(crap)}`];
+  const expected = crapOf(hot.cyclomatic, hit.length, missed.length);
+  if (Math.abs(crap - expected) > CRAP_TOLERANCE + FLOAT_SLACK) {
+    return [`${where}: crap ${crap} must be within ${CRAP_TOLERANCE} of the recount from cyclomatic, hit, and missed, which is ${expected.toFixed(2)}`];
+  }
+  return [];
+}
+
+function hotFunctionErrors(file, hot, lines, hasCoverage) {
   const where = `${file}: ${hot.name} at line ${hot.line}`;
   const notCounts = HOT_FUNCTION_COUNTS.filter((field) => !isCount(hot[field]));
   if (notCounts.length > 0) return [`${where}: ${notCounts.join(", ")} must be integers of 0 or more`];
@@ -90,10 +131,11 @@ function hotFunctionErrors(file, hot, lines) {
     if (lines !== undefined && hot.endLine !== lines) errors.push(`${file}: ${MODULE} must end at the file's last line ${lines}, not ${hot.endLine}`);
     if (hot.params !== 0) errors.push(`${file}: ${MODULE} must have params 0, not ${hot.params}`);
   }
+  errors.push(...coverageErrors(where, hot, hasCoverage));
   return errors;
 }
 
-function entryErrors(entry, files) {
+function entryErrors(entry, files, hasCoverage) {
   const errors = [];
   const file = entry.file;
   const state = isObject(entry.mutableState) ? entry.mutableState : {};
@@ -108,7 +150,7 @@ function entryErrors(entry, files) {
   if (hotFunctions.length > MAX_HOT_FUNCTIONS) {
     errors.push(`${file}: ${hotFunctions.length} hot functions exceed the limit of ${MAX_HOT_FUNCTIONS}`);
   }
-  for (const hot of hotFunctions) errors.push(...hotFunctionErrors(file, hot, files[file]?.lines));
+  for (const hot of hotFunctions) errors.push(...hotFunctionErrors(file, hot, files[file]?.lines, hasCoverage));
   if (!isCount(state.count)) {
     errors.push(`${file}: mutableState.count must be an integer of 0 or more, not ${show(state.count)}`);
   } else if (state.count < locations.length) {
@@ -130,11 +172,13 @@ export function validateReport(report, inventory) {
   if (report.skill !== "audit-complexity") errors.push(`report.json skill must be audit-complexity, not ${show(report.skill)}`);
   if (inventory.version !== 1) errors.push(`inventory.json version must be 1, not ${show(inventory.version)}`);
   const files = isObject(inventory.files) ? inventory.files : {};
-  errors.push(...joinErrors(isObject(report.scope) ? report.scope : {}, inventory));
+  const scope = isObject(report.scope) ? report.scope : {};
+  const hasCoverage = typeof scope.coverage === "string";
+  errors.push(...joinErrors(scope, inventory));
   errors.push(...placementErrors(report, files));
   for (const lane of list(report.lanes)) {
     errors.push(...laneRecordErrors(lane));
-    for (const entry of list(lane.entries)) errors.push(...entryErrors(entry, files));
+    for (const entry of list(lane.entries)) errors.push(...entryErrors(entry, files, hasCoverage));
   }
   return errors;
 }
@@ -173,6 +217,23 @@ function fileMaxima(entry) {
     params: max(functions.map((fn) => fn.params)),
   };
 }
+
+// Every hot function with line lists, with the renderer's own CRAP recount.
+function scoredFunctions(report) {
+  return entriesOf(report).flatMap((entry) =>
+    list(entry.hotFunctions)
+      .filter((hot) => Array.isArray(hot.coverage?.hit))
+      .map((hot) => {
+        const hit = hot.coverage.hit.length;
+        const missed = hot.coverage.missed.length;
+        return { file: entry.file, name: hot.name, line: hot.line, cyclomatic: hot.cyclomatic, hit, missed, crap: crapOf(hot.cyclomatic, hit, missed) };
+      }),
+  );
+}
+
+const oneDecimal = (value) => value.toFixed(1);
+// Floored, so 100% appears only when no line was missed.
+const coveragePercent = ({ hit, missed }) => `${Math.floor((hit * 100) / (hit + missed))}%`;
 
 // A file with no hot function ranks below every file that has one.
 const rankable = (cyclomatic) => (typeof cyclomatic === "number" ? cyclomatic : 0);
@@ -246,6 +307,53 @@ function renderFunctions(report) {
   ];
 }
 
+function renderNotScored(report) {
+  const rows = entriesOf(report)
+    .map((entry) => {
+      const reasons = list(entry.hotFunctions)
+        .map((hot) => hot.coverage?.reason)
+        .filter((reason) => typeof reason === "string");
+      return { file: entry.file, count: reasons.length, reasons: [...new Set(reasons)] };
+    })
+    .filter((row) => row.count > 0)
+    .sort((a, b) => byPath(a.file, b.file))
+    .map((row) => [`\`${row.file}\``, row.count, row.reasons.join("; ")]);
+  return [
+    "### Not scored\n",
+    "Hot functions other than `<module>` that have no CRAP, by file, with each distinct reason.\n",
+    table(["File", "Count", "Reasons"], rows),
+  ];
+}
+
+function renderChangeRisk(report) {
+  const scope = report.scope;
+  if (typeof scope.coverage !== "string") return ["## Change risk\n", NOT_RUN];
+  const ranked = scoredFunctions(report).sort(
+    (a, b) => b.crap - a.crap || b.cyclomatic - a.cyclomatic || byPath(a.file, b.file) || a.line - b.line,
+  );
+  const { shown, note } = capped(ranked);
+  return [
+    "## Change risk\n",
+    "Scored hot functions rank by CRAP (Change Risk Anti-Patterns), then by cyclomatic complexity, file, and line. " +
+      "CRAP = cyclomatic² × (missed / (hit + missed))³ + cyclomatic. Full coverage gives the cyclomatic value, and no coverage gives cyclomatic² + cyclomatic.\n",
+    `Cyclomatic is estimated by reading. Analysts copied each function's hit and missed lines from \`${scope.coverage}\`, and no script parsed that file. ` +
+      "The renderer recounts each CRAP from those lines. Coverage is the floored percent of listed lines that ran.\n",
+    "Only per-line records count. A line with a count above 0 is hit, and a line with a count of 0 is missed. " +
+      "A record matches a file only when its path, after removing a leading `./` or a leading repository top-level path, equals the file's path byte for byte.\n",
+    "The lines of a nested function count toward the function that holds it. " +
+      "An untested nested function raises its parent's CRAP, and a tested one lowers it.\n",
+    `Each file lists at most ${MAX_HOT_FUNCTIONS} hot functions, so other functions have no CRAP. ` +
+      "`<module>` has no CRAP, because its range holds every function in the file. " +
+      `The audit cannot tell if the coverage file came from commit \`${scope.commit}\`.\n`,
+    table(
+      ["Rank", "Function", "File", "Line", "Cyclomatic", "Coverage", "CRAP"],
+      shown.map((fn, i) => [i + 1, `\`${fn.name}\``, `\`${fn.file}\``, fn.line, fn.cyclomatic, coveragePercent(fn), oneDecimal(fn.crap)]),
+    ),
+    note,
+    ...renderNotScored(report),
+  ];
+}
+
 function renderLanes(report) {
   const out = [
     "## Lanes\n",
@@ -309,6 +417,7 @@ export function renderReport(report, inventory) {
     ...renderSummary(report, inventory),
     ...renderFiles(report, files),
     ...renderFunctions(report),
+    ...renderChangeRisk(report),
     ...renderLanes(report),
     ...renderGaps(report),
     ...renderNotMeasured(files),

@@ -1,11 +1,12 @@
 ## Input
 
-`$ARGUMENTS` holds optional scope paths and an optional `--out <dir>`.
+`$ARGUMENTS` holds optional scope paths, an optional `--out <dir>`, and an
+optional `--coverage <file>`.
 
-- **Path base.** Every relative path, named or `--out`, resolves against the
-  repository top level that `git rev-parse --show-toplevel` prints. It never
-  resolves against the session's directory. From `packages/api/`, `src`
-  means `<top>/src`.
+- **Path base.** Every relative path, named, `--out`, or `--coverage`,
+  resolves against the repository top level that `git rev-parse
+  --show-toplevel` prints. It never resolves against the session's
+  directory. From `packages/api/`, `src` means `<top>/src`.
 - **Scope.** Each named path is a top-level-relative directory or file. With
   no named path, the pathspec is `.`, the whole repository. A subsystem
   name that is not a path resolves to the top-level-relative directories
@@ -22,6 +23,23 @@
   Stop on any other value before you write anything. A run writes only
   `report.json`, `inventory.json`, and `report.md` there, and touches nothing
   else. Never stage or commit the output.
+- **Coverage file.** Optional. Without it, the report states that CRAP did
+  not run. A `--coverage` value must obey these rules:
+  - It appears at most once, and it has a value.
+  - It holds only the characters `A-Z`, `a-z`, `0-9`, `.`, `_`, `/`, and `-`.
+  - It holds no `..` segment.
+  - It does not start with `-` or `/`.
+  - It does not lie inside the output directory.
+
+  Stop on any other value before you write anything. The audit only reads
+  the file. It never runs tests, and never writes, moves, or regenerates
+  the file. The file must hold these records, in any format:
+  - Records keyed by source path. Each source path is top-level-relative,
+    starts with `./`, or is absolute under the top level.
+  - Per-line records under each source path, each a line number with a hit
+    count.
+  - Each coverable line that did not run, listed with a count of 0.
+  - The records of different source files on different text lines.
 
 ## Keep vendored and generated code out
 
