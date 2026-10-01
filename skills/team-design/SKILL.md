@@ -11,7 +11,7 @@ If a required read fails, stop that step and report its resolved path. Never use
 
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 
-Before review dispatch, supply the installed plugin root and resolved `skills/eng-design-doc-review/references/design-reviewer.md` path.
+Before review dispatch, supply the installed plugin root, the resolved `skills/team/references/design-reviewer.md` path, the absolute installed `skills/team/` directory as the base of that brief's links, and the resolved paths of the manuals its `## Review brief` links, all in `skills/team/references/`: `code-reviewer.md`, `code-standards.md`, `design-template.md`, `decisions.md`, `findings.md`, `writing.md`, and `cross-model-review.md` when the prompt carries `## External review input`.
 Pass the applicable resource paths and require reads before work.
 
 # Team Design
@@ -76,8 +76,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    nothing). Any skip continues with the reviewer alone — the pass never
    blocks the gate. Then dispatch the adversarial design review: read the
    `## Review brief` from the
-   [design reviewer brief](../eng-design-doc-review/references/design-reviewer.md),
-   substitute the artifact directory, and give it to a fresh-context
+   [design reviewer brief](../team/references/design-reviewer.md),
+   substitute the artifact directory, attach the paths named at the top of this file, and give it to a fresh-context
    read-only `Explore` subagent each round. Write the findings + verdict
    to `$ARGUMENTS/design-review-<n>.md`, where `<n>` is the highest
    existing `<n>` + 1 (1 when none exists) — never overwrite an earlier

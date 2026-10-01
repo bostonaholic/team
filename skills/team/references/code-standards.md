@@ -34,7 +34,7 @@ Apply when writing new code and reviewing diffs.
 ## Code Comments
 
 These rules govern source comments; review findings use the [finding
-format](../code-review/references/findings.md). Comments never explain WHAT
+format](references/findings.md). Comments never explain WHAT
 code does. Permit only non-obvious WHY—constraints, workarounds, surprising
 requirements—when names, structure, and tests cannot carry it.
 

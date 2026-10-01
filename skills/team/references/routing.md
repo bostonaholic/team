@@ -35,7 +35,7 @@ carries ([external data rules](references/external-data.md)).
 
 `feature`, `fix`, and `refactor` run a full pipeline that ends in independent
 review and a draft PR, using the existing contracts: the [feature playbook](playbooks/feature.md),
-the [bug-fix playbook](../team-fix/playbooks/bug-fix.md), the [finding format](../code-review/references/findings.md),
+the [bug-fix playbook](../team-fix/playbooks/bug-fix.md), the [finding format](references/findings.md),
 and the [PR gate](references/13-orchestrator-emit-gate-pr-ship.md). A `refactor`
 route captures observable behavior first, changes structure within scope, and
 demonstrates equivalence through the inverted mechanical gate the feature

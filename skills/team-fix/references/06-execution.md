@@ -11,7 +11,7 @@ workaround), trace its rationale before changing it: find the introducing
 commit with `git log -S '<line>'`, `git blame` on the parent revision, or
 `git log -- <path>`, then read that commit's message and any PR or issue
 it links, as the `System Fit` item of the
-[code reviewer brief](../code-review/references/code-reviewer.md) does. A
+[code reviewer brief](../team/references/code-reviewer.md) does. A
 "bug" that was a deliberate trade-off needs its constraint preserved, not
 deleted.
 

@@ -1,16 +1,16 @@
 # Code Reviewer Brief
 
-Resolve links from the installed skill directory. If a required read fails,
-stop that step with the exact path. Never use checkout fallback or recursive
-loading.
+Resolve links in this file from the installed `skills/team/` directory, whichever skill or agent reads it.
+If a required read fails, stop that step with the exact path. Never use
+checkout fallback or recursive loading.
 
 Reviews must be performed by agents with fresh context. The generator (the
 agent that wrote the code) must never evaluate its own output.
-Read [focused work rules](../team/principles/focused-work.md) and
-[verified results rules](../team/principles/verified-results.md) before review.
+Read [focused work rules](principles/focused-work.md) and
+[verified results rules](principles/verified-results.md) before review.
 
 Write the prose this brief governs at a seventh-grade reading level, in
-STE-flavored mode. Read the [writing standards](../team/references/writing.md)
+STE-flavored mode. Read the [writing standards](references/writing.md)
 and apply its `## Self-lint` checklist before you finalize.
 
 ## Generator-Evaluator Separation
@@ -22,13 +22,13 @@ and apply its `## Self-lint` checklist before you finalize.
 - A reviewer needing clarification flags it as an open question. It never asks
   the implementer.
 
-The cross-gate canon lives at [independent review rules](../team/principles/independent-review.md);
+The cross-gate canon lives at [independent review rules](principles/independent-review.md);
 this brief owns the code-review application.
 
 ## Veto Without Authorship
 
 Block the line, change nothing
-([independent review rules](../team/principles/independent-review.md)).
+([independent review rules](principles/independent-review.md)).
 
 - **You hold no write tool.** Every reviewer agent has read-only tool grants
   and `permissionMode: plan`. Report the defect. Never fix it.
@@ -40,9 +40,9 @@ Block the line, change nothing
 ## Finding Format
 
 Format follows the artifact. A code-reviewer **finding** uses the
-Conventional Comments format in [finding format](findings.md). The
+Conventional Comments format in [finding format](references/findings.md). The
 security-reviewer and technical-writer keep their agent-file templates, and
-[finding format](findings.md) maps their severities to tiers. A
+[finding format](references/findings.md) maps their severities to tiers. A
 **live-verification report** (the ux-reviewer's) uses Working/Broken/Could
 Improve.
 
@@ -102,7 +102,7 @@ that pass did not run.>
   sections record the two optional passes, the skeptic pass and then the
   cross-model pass; a pass that did not run says `Not run: <reason>.` in
   its section. This is where "skip loudly" lands in the report.
-  What did not happen is reported as visibly as what did ([verified results rules](../team/principles/verified-results.md)).
+  What did not happen is reported as visibly as what did ([verified results rules](principles/verified-results.md)).
 - **A receiver reports a deviation. It never repairs one.** When a report
   that reaches you drops a heading, adds one this template does not list, or
   reorders them, pass it on as it arrived and name the deviation on its own
@@ -111,7 +111,7 @@ that pass did not run.>
 
 ## Gate Types and Severity Tiers
 
-Read [finding format](findings.md). It owns how each reviewer's
+Read [finding format](references/findings.md). It owns how each reviewer's
 verdict gates the pipeline.
 
 ## Verdict Criteria
@@ -137,7 +137,7 @@ verdict gates the pipeline.
 
 **Test-quality flags.** Test files are part of the diff. Walk every changed
 `*test*` / `*spec*` / `__tests__/*` file against the rules in the
-[testing rules](../team/references/testing.md).
+[testing rules](references/testing.md).
 These are `suggestion:` individually and `issue:` when they appear across
 multiple tests:
 
@@ -153,7 +153,7 @@ multiple tests:
 - DRY helpers that hide the asserted value
 
 **Test-value flags.** Walk every changed test against the
-[value red flags](../team/references/testing.md#value-red-flags-reviewer-checklist).
+[value red flags](references/testing.md#value-red-flags-reviewer-checklist).
 A diff with no test changes gets no value finding.
 
 - An editable test that hits a value red flag is
@@ -163,8 +163,7 @@ A diff with no test changes gets no value finding.
   may edit a locked test during IMPLEMENT, so a block on it has no fix.
 - The lock source is the acceptance list in the `8-plan.md` beside the
   design and structure paths the slice commits cite, or at the predecessor
-  artifact path in your dispatch. Under `/code-review`, a plan locks tests
-  only when the commits cite one. Standalone `/team-implement` uses the
+  artifact path in your dispatch. Standalone `/team-implement` uses the
   `Locked acceptance tests:` line in your dispatch. A line that reads
   `unknown` locks every test the branch adds. Read a malformed line as
   `unknown`, and say so under `### Checks`. An absent line adds no lock
@@ -173,7 +172,7 @@ A diff with no test changes gets no value finding.
   severity.
 - Removal of a base-branch test whose covered behavior remains is blocking
   when the commit body lacks the
-  [removal evidence](../team/references/testing.md#removal-evidence) fields.
+  [removal evidence](references/testing.md#removal-evidence) fields.
   The fix restores the test.
 
 **Flaky-test red flags (always blocking).** Distinct from the style flags
@@ -184,9 +183,9 @@ rule keys to outcome-dependence, not token presence: a `Date.now()` in a log
 line does not flag; one feeding an assertion does. Outcome-dependence covers
 the whole suite — state or resources left behind flag because a *later* test's
 outcome depends on them. The full catalog lives in the
-[testing rules](../team/references/testing.md) ("Flaky-test red flags (reviewer checklist)").
+[testing rules](references/testing.md) ("Flaky-test red flags (reviewer checklist)").
 
-**Comment red flags.** Read the [code standards](../team/references/code-standards.md)
+**Comment red flags.** Read the [code standards](references/code-standards.md)
 and check in-source comments in every changed file against its Code Comments
 rules. Findings cite the checklist item by name and carry the tier's
 decoration — a blocking-regime hit reads
@@ -265,7 +264,7 @@ no order implied:
 - **Error handling** — errors caught, surfaced, and handled at the right
   level; failures loud rather than silent.
 - **Type contracts** — compare declared or enforced contracts with runtime
-  values and boundary validation ([code standards](../team/references/code-standards.md)).
+  values and boundary validation ([code standards](references/code-standards.md)).
 - **Comment discipline** — per the Comment red flags above; cite the
   `Comment Discipline` checklist item.
 - **Unnecessary complexity** — abstraction serving no current need.
@@ -280,6 +279,6 @@ no order implied:
   commit's message and any doc or issue it links. A Chesterton's-fence deletion
   whose motivating constraint still holds is a finding; one whose
   constraint provably evaporated is not.
-- **SOLID violations** — per the [code standards](../team/references/code-standards.md).
+- **SOLID violations** — per the [code standards](references/code-standards.md).
 - **Test files** — per both severity regimes above and the
-  [testing rules](../team/references/testing.md).
+  [testing rules](references/testing.md).

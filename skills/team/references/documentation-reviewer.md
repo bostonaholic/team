@@ -1,13 +1,15 @@
 # Documentation Reviewer Brief
 
+Resolve links in this file from the installed `skills/team/` directory, whichever skill or agent reads it.
+
 The gate is ADVISORY: findings are recorded, never block. Format findings per
-[finding format](findings.md). Compare the diff with existing docs and
+[finding format](references/findings.md). Compare the diff with existing docs and
 classify each gap.
 
 ## Applying Prose Principles to Reviews
 
 When the technical-writer agent identifies documentation gaps or assesses
-documentation quality, apply the [writing standards](../team/references/writing.md):
+documentation quality, apply the [writing standards](references/writing.md):
 
 1. **Classify by impact.** Weight readability and accuracy by affected readers.
 

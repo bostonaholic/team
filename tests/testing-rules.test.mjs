@@ -13,7 +13,7 @@ const TESTING_RULES = join("skills", "team", "references", "testing.md");
 const LOCK_KEY = "Locked acceptance tests:";
 
 const WORKFLOWS = [
-  "skills/code-review/references/code-reviewer.md",
+  "skills/team/references/code-reviewer.md",
   "agents/code-reviewer.md",
   "skills/team/references/structure-template.md",
   "skills/team/playbooks/structure.md",

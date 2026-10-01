@@ -1,5 +1,7 @@
 # Review Findings
 
+Resolve links in this file from the installed `skills/team/` directory, whichever skill or agent reads it.
+
 ## Finding Format
 
 `code-reviewer` uses [Conventional
@@ -56,7 +58,7 @@ Every finding has one tier.
 implementer and all five reviewers. Minor reaches the human in PR review,
 regardless of importance. The human decides what to build and what to ship;
 the middle runs autonomously
-([human control rules](../team/principles/human-control.md)).
+([human control rules](principles/human-control.md)).
 
 **No consult:** never present findings mid-run. Loop Blocking/Major until zero;
 write Minor-and-below to the PR's `review-notes` comment, tagged by reviewer.

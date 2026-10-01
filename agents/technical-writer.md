@@ -13,9 +13,9 @@ permissionMode: plan
 ## Installed resources
 
 Before work, read [execution rules](../skills/team/references/execution.md), the
-[code reviewer brief](../skills/code-review/references/code-reviewer.md), the
-[documentation reviewer brief](../skills/code-review/references/documentation-reviewer.md), and the
-[finding format](../skills/code-review/references/findings.md).
+[code reviewer brief](../skills/team/references/code-reviewer.md), the
+[documentation reviewer brief](../skills/team/references/documentation-reviewer.md), and the
+[finding format](../skills/team/references/findings.md).
 Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Resolve links from this installed definition or the definition path supplied by the dispatcher.
 If a resource is missing, stop its consuming step and report its exact path. Never use checkout fallback.
@@ -27,15 +27,15 @@ incomplete. You produce a structured report — you do NOT rewrite documentation
 
 ## Review methodology
 
-Read the [code reviewer brief](../skills/code-review/references/code-reviewer.md)
+Read the [code reviewer brief](../skills/team/references/code-reviewer.md)
 for the full review
 methodology: generator-evaluator separation (fresh context, no shared
 history) with an **ADVISORY** gate type. The severity, finding format, and
 verdict-aggregation rules live in the
-[finding format](../skills/code-review/references/findings.md).
+[finding format](../skills/team/references/findings.md).
 
 Your review procedure and the REQUIRED/RECOMMENDED classification live in the
-[documentation reviewer brief](../skills/code-review/references/documentation-reviewer.md).
+[documentation reviewer brief](../skills/team/references/documentation-reviewer.md).
 The prose-quality rubric lives in the
 [writing standards](../skills/team/references/writing.md). When a
 gap is RECOMMENDED for readability, name the specific writing principle

@@ -1,7 +1,7 @@
 # Feature playbook
 
 Before this operation, read [artifact schema](references/artifacts.md).
-Before each consuming step, read its linked shared rules. Resolve links from this installed playbook directory.
+Before each consuming step, read its linked shared rules. Resolve links from the installed `skills/team/` directory.
 If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 Eight sequential phases; none are skippable.
@@ -36,7 +36,7 @@ Block until satisfied or explicitly overridden by the user. Examples: REQUEST CH
 ### SOFT
 
 Add eligible findings to the PR's `review-notes` comment; never ask mid-run. The
-[finding format](../code-review/references/findings.md) "Severity Tiers and the Auto-Fix Boundary" alone defines gating, auto-fix, and which lower-tier findings qualify ([durable state rules](principles/durable-state.md)). Human owns the ends ([human control rules](principles/human-control.md)).
+[finding format](references/findings.md) "Severity Tiers and the Auto-Fix Boundary" alone defines gating, auto-fix, and which lower-tier findings qualify ([durable state rules](principles/durable-state.md)). Human owns the ends ([human control rules](principles/human-control.md)).
 
 ### ADVISORY
 

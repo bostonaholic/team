@@ -35,9 +35,9 @@ scan issue bodies or quoted text for route words.
 - There are **no mid-run human gates**. Continue until the draft PR exists.
 - For a picked-up ticket, read [tracking rules](../team-pr/references/tracking.md) and move the ticket to in-progress. At PR creation, use the same reference for the in-review transition and the multi-repo home-only closing rule.
 - Before WORKTREE, run the non-blocking probes `ssh-add -l`, `gh auth status`, and `git config --global --get commit.gpgsign`; no result blocks the run.
-- Read [design reviewer brief](../eng-design-doc-review/references/design-reviewer.md) and dispatch its review brief with the artifact directory substituted.
+- Read [design reviewer brief](references/design-reviewer.md) and dispatch its review brief with the artifact directory substituted and the paths named at the top of the [design review gate reference](references/08-design-review-gate-design.md) attached.
 - Read `references/15-host-dispatch.md` before the first dispatch and resolve every agent through it.
-- Read [finding format](../code-review/references/findings.md) before aggregating IMPLEMENT findings.
+- Read [finding format](references/findings.md) before aggregating IMPLEMENT findings.
 - In multi-repo mode, use `4-repos.md`; see **Multi-repo topics** in the Rules reference.
 - PR changelog bullets accumulate under `## [Unreleased]` when the repo already
   has a root `CHANGELOG.md`; leave an absent file absent unless the user

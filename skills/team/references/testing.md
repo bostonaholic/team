@@ -186,8 +186,8 @@ Flag a changed test that matches a [junk class](#junk-patterns) when the [retent
 - promises more than it checks
 - removal without evidence
 
-A flag on an editable test is blocking on first occurrence. A flag on a locked acceptance test is a non-blocking note, because no agent may edit that test during IMPLEMENT. The [code reviewer brief](../code-review/references/code-reviewer.md) sets the finding labels.
+A flag on an editable test is blocking on first occurrence. A flag on a locked acceptance test is a non-blocking note, because no agent may edit that test during IMPLEMENT. The [code reviewer brief](references/code-reviewer.md) sets the finding labels.
 
 ## Flaky-test red flags (reviewer checklist)
 
-Any outcome-dependent flag is blocking on first occurrence per the [code reviewer brief](../code-review/references/code-reviewer.md): real time or future dates; `sleep()` or timed waits; race order or missing awaits; shared state or missing teardown; unseeded randomness; real networks; leaked resources or fixed ports; unordered positions; exact floats; platform, locale, TZ, CPU, or CI parallelism. Fixed explicit-TZ dates and deterministic controls do not flag.
+Any outcome-dependent flag is blocking on first occurrence per the [code reviewer brief](references/code-reviewer.md): real time or future dates; `sleep()` or timed waits; race order or missing awaits; shared state or missing teardown; unseeded randomness; real networks; leaked resources or fixed ports; unordered positions; exact floats; platform, locale, TZ, CPU, or CI parallelism. Fixed explicit-TZ dates and deterministic controls do not flag.

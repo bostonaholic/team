@@ -1,6 +1,6 @@
 # Implement playbook
 
-Before each consuming step, read its linked shared rules. Resolve links from this installed playbook directory.
+Before each consuming step, read its linked shared rules. Resolve links from the installed `skills/team/` directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 The IMPLEMENT phase has two owners. The test-architect writes the immutable acceptance suite; the implementer executes slices against it.
