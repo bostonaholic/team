@@ -1,6 +1,6 @@
 ---
 title: Versioning
-description: "Land-time versioning. A drafted PR carries no version. It accumulates changelog bullets under [Unreleased]. At land time /shipit runs this repo's declared pre-merge step, the project-local version-bump skill, which assigns the version when required, cuts the changelog section, sets the title, and runs the consistency assertion. /shipit then pushes, waits for CI, and squash-merges. CI publishes the release on merge when configured."
+description: "Land-time versioning. A drafted PR carries no version. It accumulates changelog bullets under [Unreleased]. At land time the land command runs this repo's declared pre-merge step, the project-local version-bump skill, which assigns the version when required, cuts the changelog section, sets the title, and runs the consistency assertion. The land command then pushes, waits for CI, and squash-merges. CI publishes the release on merge when configured."
 audience: [developer]
 nav_order: 6
 nav_label: versioning
@@ -14,20 +14,19 @@ nav_label: versioning
 
 The project assigns the version at **land time**, not per PR. A drafted PR carries no
 version, no `vX.Y.Z` title, and no released changelog section. It accumulates
-bullets under `[Unreleased]`. Landing a PR is **two steps inside `/shipit`**:
+bullets under `[Unreleased]`. Landing a PR is **two steps**:
 
 1. **Bump.** This repo's project-local `version-bump` skill
    (`.claude/skills/version-bump/SKILL.md`). `AGENTS.md` declares it as the
-   pre-merge step, so `/shipit` runs it against current `main`. When a bump is required, it assigns the next version,
+   pre-merge step, so the land command runs it against current `main`. When a bump is required, it assigns the next version,
    bumps the version strings, cuts the `[Unreleased]` body into a dated
    `## [X.Y.Z]` section, sets the PR title, runs the land-time consistency
    assertion, and commits `chore(version): X.Y.Z`. When no bump is required, it
-   reports that and returns to `/shipit`.
-2. **Land.** The **generic, distributed** runtime `/shipit` skill
-   (`skills/shipit/SKILL.md`) pushes the branch, waits for CI, and
-   squash-merges. `shipit` is project-agnostic and does no versioning: it runs
-   the pre-merge step the project declares. Team ships no versioning skill;
-   each project owns its own strategy.
+   reports that and returns to the land command.
+2. **Land.** The land command pushes the branch, waits for CI, and
+   squash-merges. It runs the pre-merge step the project declares and does no
+   versioning itself. Team ships no versioning skill; each project owns its
+   own strategy.
 
 There is no batch release step. The merge *is* the release. CI tags and
 publishes automatically.
@@ -131,7 +130,7 @@ Run the project-local `version-bump` skill against current `main`, on the branch
 intend to land:
 
 0. **Runtime-vs-dev gate.** If the PR changes no runtime files, stop here: no
-   bump, no changelog cut, plain title. Go straight to `/shipit`. Only a
+   bump, no changelog cut, plain title. Go straight to the land command. Only a
    runtime change continues to the steps below.
 1. Decides the bump level from what the PR's **runtime** change does, not from
    its commit type (see [Choosing the level](#choosing-the-level)): observable
@@ -144,7 +143,7 @@ intend to land:
    commit (see [Land-time consistency assertion](#land-time-consistency-assertion)).
 6. Commits the bump (`chore(version): X.Y.Z`) and sets the PR title.
 
-Then run `/shipit` to push, wait for CI, and squash-merge.
+Then run the land command to push, wait for CI, and squash-merge.
 
 ## Choosing the level
 
@@ -169,8 +168,8 @@ Two consequences worth stating, because both were previously decided wrong:
   Declaring 1.0.0 is a deliberate decision, never a side effect of a bump.
 - **The commit type is not the input.** It describes intent, not blast radius. A
   `fix:` that changes observable behavior is a minor; a `feat:` confined to
-  internals is a patch. Example: a `fix:` that removed the `/shipit` `--yes`
-  argument and its confirmation prompt landed as **0.44.0**.
+  internals is a patch. Example: a `fix:` that removes a command's argument
+  and its confirmation prompt is a minor.
 
 The full decision procedure, with the spec quoted verbatim, is step 1 of
 [`.claude/skills/version-bump/SKILL.md`](../.claude/skills/version-bump/SKILL.md).
@@ -239,7 +238,7 @@ name is not hardcoded.
 
 Under the land-time model the version is assigned against current `main`, and
 landing is serialized to one PR at a time. `bump(main, level)` is thus always
-free. Three defenses cover a collision: serialization, `shipit`'s
+free. Three defenses cover a collision: serialization, the land command's
 rebase-and-recompute on a concurrent race, and `release-on-merge.yml`'s
 duplicate-tag rejection. Set `BASE_VERSION=x.y.z` to override the base the
 script reads. Its tests use this override.
@@ -283,7 +282,7 @@ bumps at land time:
 vX.Y.Z <type>: <subject>
 ```
 
-An example is `v0.6.0 feat: add the shipit land skill`. The `PR title sync`
+An example is `v1.4.0 feat: add a design review gate`. The `PR title sync`
 workflow rewrites a drifted title only when the branch bumped the version
 forward of its fork point. It reads the version at the PR head and compares it
 against the merge-base, not the live base tip. A bump-less PR thus no-ops, no
@@ -331,27 +330,27 @@ workflow reads is exactly what `version-bump` wrote.
 
 ## Recovery
 
-### `/shipit` stopped before merge (CI failed or timed out)
+### The land stopped before merge (CI failed or timed out)
 
 The `chore(version)` bump commit is **already on the branch** (committed by
-`version-bump`, pushed by `/shipit`). Only the merge did not happen. Fix CI
-(push the fix to the same branch), then re-run `/shipit`: it pushes any
+`version-bump`, pushed by the land command). Only the merge did not happen. Fix CI
+(push the fix to the same branch), then re-run the land command: it pushes any
 new commits, waits again, and merges. Do **not** re-run `version-bump`. The
 version was already assigned, and a second bump would create a redundant commit.
 
 ### The pre-merge guard denied the merge (stale bump after a rebase)
 
-`/shipit`'s step 5 rebases a behind-base branch, and the rebase moves the fork
+The land command may rebase a behind-base branch, and the rebase moves the fork
 point — a valid bump can go stale (the branch bumped `0.13.1 → 0.13.2` while
 `main` advanced to `0.14.0`). At the merge attempt the guard re-runs the
 invariant against the rebased head and denies. Re-run `version-bump` when,
 and only when, the guard denies a bump that a rebase left stale — that
 condition is what "Do not re-run `version-bump`" above leaves open: drop the
 `chore(version)` commit, undo the changelog cut, re-run `version-bump` from
-step 0 (it recomputes against the new base), re-title, and re-run `/shipit`.
+step 0 (it recomputes against the new base), re-title, and re-run the land command.
 
-A denial loop is reachable here, and it is expected, not a bug: `/shipit`
-step 5 rebases and re-runs the 30-minute CI wait, and if `main` advances
+A denial loop is reachable here, and it is expected, not a bug: the land command
+rebases and re-runs the 30-minute CI wait, and if `main` advances
 during that wait, the guard's up-to-date precondition denies again. Landing is
 serialized to one PR at a time, so the loop is rare in practice.
 
@@ -364,7 +363,7 @@ missing bump, or drop the `chore(version)` commit and undo the changelog cut
 for a wrongful one — and in the wrongful case also re-title: a re-entry that
 ends at "no bump" must strip the stale `vX.Y.Z` prefix back to the plain
 conventional title itself, because the title backstop never strips a stale
-prefix (`version-bump`'s step 8 names this). Then re-run `/shipit`.
+prefix (`version-bump`'s step 8 names this). Then re-run the land command.
 
 ### The pre-merge guard denied the merge (no verdict available)
 
@@ -373,7 +372,7 @@ the bump:
 
 - **The head carries no `.claude/scripts/version-bump-required.sh`.** Restore it
   on the branch (`git checkout origin/<default> -- <path>`), push, and re-run
-  `/shipit`.
+  the land command.
 - **A fork head's copy of that script differs from the local one.** The guard
   will not execute a gate script it has not reviewed. Read the head's copy
   (`git show <head>:<path>`), and once you trust it, land the PR deliberately

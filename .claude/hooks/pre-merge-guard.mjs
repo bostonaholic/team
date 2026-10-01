@@ -77,7 +77,7 @@ function run(executable, args, extraEnv = {}) {
   if (remainingMs <= 0) {
     deny(
       "pre-merge guard: the external-call budget expired before the verdict. " +
-        "Recovery: check network and gh auth, then re-run /shipit.",
+        "Recovery: check network and gh auth, then retry the merge.",
     );
   }
   return spawnSync(executable, args, {
@@ -883,21 +883,21 @@ function resolveDefaultBranch() {
   deny(
     "pre-merge guard: could not resolve the default branch (gh repo view " +
       "failed and origin/HEAD is unset). Recovery: run " +
-      "`git remote set-head origin --auto`, then re-run /shipit.",
+      "`git remote set-head origin --auto`, then retry the merge.",
   );
 }
 
 // Recovery routes keyed on the script verdict. At merge time there is no
 // "continue" arm: the "cannot merge until version-bump runs at land time"
-// verdict means the bump is missing or went stale (e.g. a /shipit step-5
-// rebase moved the fork point). That verdict is only actionable HERE, at the
+// verdict means the bump is missing or went stale (e.g. a rebase onto a moved
+// base moved the fork point). That verdict is only actionable HERE, at the
 // merge attempt — earlier in the PR's life it is the expected state.
 function withRecoveryRoute(verdict) {
   if (verdict.includes("must land with no bump")) {
     return (
       `${verdict}\n` +
       "Recovery: drop the chore(version) commit, undo the changelog cut, " +
-      "land plain, then re-run /shipit."
+      "land plain, then retry the merge."
     );
   }
   if (verdict.includes("cannot merge until version-bump runs at land time")) {
@@ -905,7 +905,7 @@ function withRecoveryRoute(verdict) {
       `${verdict}\n` +
       "At merge time this means the bump is missing or stale. Recovery: drop " +
       "any chore(version) commit, undo the changelog cut, re-run version-bump " +
-      "from step 0, re-title, then re-run /shipit."
+      "from step 0, re-title, then retry the merge."
     );
   }
   return verdict;
@@ -949,7 +949,7 @@ function gate(mergeWords) {
     deny(
       `${describeFailure("gh pr view", view)}\n` +
         "If this merge targets another repo's PR, pass --repo explicitly. " +
-        "Recovery: check network and gh auth (gh auth status), then re-run /shipit.",
+        "Recovery: check network and gh auth (gh auth status), then retry the merge.",
     );
   }
 
@@ -977,7 +977,7 @@ function gate(mergeWords) {
         "number, a 40-hex-char headRefOid, a string baseRefName, and a " +
         "boolean isCrossRepository): " +
         `${view.stdout.trim()}\n` +
-        "Recovery: check gh (gh --version, gh auth status), then re-run /shipit.",
+        "Recovery: check gh (gh --version, gh auth status), then retry the merge.",
     );
   }
 
@@ -990,7 +990,7 @@ function gate(mergeWords) {
   if (!succeeded(fetchBase)) {
     deny(
       `${describeFailure(`git fetch origin ${defaultBranch}`, fetchBase)}\n` +
-        "Recovery: check network and git credentials, then re-run /shipit.",
+        "Recovery: check network and git credentials, then retry the merge.",
     );
   }
 
@@ -1000,7 +1000,7 @@ function gate(mergeWords) {
   if (!succeeded(fetchHead)) {
     deny(
       `${describeFailure(`git fetch origin refs/pull/${number}/head`, fetchHead)}\n` +
-        "Recovery: check network and git credentials, then re-run /shipit.",
+        "Recovery: check network and git credentials, then retry the merge.",
     );
   }
 
@@ -1041,7 +1041,7 @@ function gate(mergeWords) {
   if (ancestor.status !== 0) {
     deny(
       `pre-merge guard: the PR head is behind origin/${defaultBranch}. ` +
-        `Recovery: rebase onto origin/${defaultBranch}, push, then re-run /shipit.`,
+        `Recovery: rebase onto origin/${defaultBranch}, push, then retry the merge.`,
     );
   }
 
@@ -1057,7 +1057,7 @@ function gate(mergeWords) {
       `pre-merge guard: the PR head carries no ${INVARIANT_SCRIPT_PATH}. ` +
         "Recovery: restore it on the branch " +
         `(git checkout origin/${defaultBranch} -- ${INVARIANT_SCRIPT_PATH}), ` +
-        "push, then re-run /shipit.",
+        "push, then retry the merge.",
     );
   }
 

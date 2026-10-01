@@ -73,8 +73,9 @@ label taxonomy.
 - Landing is two steps (see [Versioning](docs/versioning.md)):
   1. **`version-bump`** (project-local, `.claude/skills/version-bump/`) assigns the next version against current `main`, cuts the
      `[Unreleased]` changelog into a dated section, and commits `chore(version)`.
-  2. **`/shipit`** pushes, waits for CI, and squash-merges. `release-on-merge`
-     then tags and publishes the release automatically.
+  2. **Land**: push, wait for CI, and squash-merge with a land command that runs
+     the pre-merge step `AGENTS.md` declares. `release-on-merge` then tags and
+     publishes the release automatically.
 - A pre-merge dev hook re-runs the bump check at the merge attempt and denies
   `gh pr merge` itself — even run by hand — when the bump is missing,
   wrongful, or stale. See [Recovery](docs/versioning.md#recovery).
