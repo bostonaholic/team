@@ -17,7 +17,7 @@ which every fence below re-binds on its first line.
 
 ```bash
 RUN_DIR='<printed RUN_DIR>'               # from the resolve call
-"<team-pr-skill-dir>/scripts/pre-image.sh" "$RUN_DIR" || exit 2
+'<team-pr-skill-dir>/scripts/pre-image.sh' "$RUN_DIR" || exit 2
 ```
 
 Exit 2 is a fault, not a refusal — nothing has been read, so nothing has been
@@ -35,7 +35,7 @@ Two checks run against `pre-image.md` here:
 
    ```bash
    RUN_DIR='<printed RUN_DIR>'               # from the resolve call
-   if node "<team-pr-skill-dir>/scripts/splice.mjs" --check --body-file "$RUN_DIR/pre-image.md"; then
+   if node '<team-pr-skill-dir>/scripts/splice.mjs' --check --body-file "$RUN_DIR/pre-image.md"; then
      :                                   # the pre-image allows a write
    else
      case $? in
@@ -103,7 +103,7 @@ Otherwise, one script attaches every entry:
 
 ```bash
 RUN_DIR='<printed RUN_DIR>'               # from the resolve call
-"<team-pr-skill-dir>/scripts/upload.sh" "$RUN_DIR"
+'<team-pr-skill-dir>/scripts/upload.sh' "$RUN_DIR"
 ```
 
 | Exit | Means | Do |
@@ -196,7 +196,7 @@ RUN_DIR='<printed RUN_DIR>'               # from the resolve call
 SECTION_FILE="$RUN_DIR/section.md"
 NEW_BODY_FILE="$RUN_DIR/new-body.md"
 LANDED_COUNT="$(wc -l <"$RUN_DIR/assets.tsv" | tr -d '[:space:]')"   # one line per landed entry
-if node "<team-pr-skill-dir>/scripts/splice.mjs" --body-file "$RUN_DIR/pre-image.md" \
+if node '<team-pr-skill-dir>/scripts/splice.mjs' --body-file "$RUN_DIR/pre-image.md" \
      --section-file "$SECTION_FILE" --landed "$LANDED_COUNT" > "$NEW_BODY_FILE.tmp"; then
   mv "$NEW_BODY_FILE.tmp" "$NEW_BODY_FILE"
 else

@@ -18,7 +18,7 @@ and in [screenshot verify](screenshot-verify.md) expand:
 ```bash
 UPLOAD_ARGS='<PR URL> --entries <printed ENTRIES_FILE>'   # filled in literally, this call
 RUN_DIR="$(mktemp -d)"                     # every temporary this run writes
-"<team-pr-skill-dir>/scripts/resolve-pr.sh" "$UPLOAD_ARGS" "$RUN_DIR" || exit 1
+'<team-pr-skill-dir>/scripts/resolve-pr.sh' "$UPLOAD_ARGS" "$RUN_DIR" || exit 1
 PR_URL="$(cat "$RUN_DIR/pr-url")"          # the canonical URL, on the base repo
 PR_HOST="$(cat "$RUN_DIR/pr-host")"
 OWNER="$(cat "$RUN_DIR/owner")"
@@ -96,7 +96,7 @@ jq -n --arg root "$CAPTURE_ROOT" '{
     caption: (split("/") | last | sub("\\.[^.]+$"; ""))
   })),
   notes: []
-}' --args "$CAPTURE_ROOT/login.png" "$CAPTURE_ROOT/login-error.png" >"$ENTRIES_FILE"
+}' --args "$CAPTURE_ROOT"/'login.png' "$CAPTURE_ROOT"/'login-error.png' >"$ENTRIES_FILE"
 ```
 
 `--args` binds each path as a positional value, so `jq` never parses one. Add a
