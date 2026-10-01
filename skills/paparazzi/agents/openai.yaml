@@ -1,4 +1,0 @@
-interface:
-  display_name: "Paparazzi"
-  short_description: "Capture verified screenshots of an app"
-  default_prompt: "Use $paparazzi to capture verified screenshots of an app."

@@ -21,12 +21,8 @@ const WORKFLOWS = [
   "agents/test-architect.md",
   "skills/team/playbooks/implement.md",
   "skills/team-fix/playbooks/bug-fix.md",
-  "skills/prove/references/04-evidence.md",
-  "skills/pr-open-comments/references/02-hard-rules.md",
   "skills/team-pr/references/03-pr-body-template.md",
   "skills/team/playbooks/verify.md",
-  "skills/shipit/references/02-land-sequence.md",
-  "skills/pr-watch-as-author/references/08-ci-checks.md",
 ];
 
 function slug(heading) {
