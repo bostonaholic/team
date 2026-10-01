@@ -210,8 +210,7 @@ reporting, mismatch handling, and unsupported-host limits.
 - **Runtime vs. development split** (`CLAUDE.md`, `docs/architecture.md`). Only
   the distributed set ports: `agents/`, `skills/*/SKILL.md` + `registry.json` +
   the bundled skill scripts (`supports-nesting.mjs`, `ste-lint.mjs`,
-  `external-review.mjs`, `resolve-transcript.mjs`, `write-target.mjs`,
-  `discover-topic.sh`, and `pr-screenshots`' `scripts/splice.mjs` plus its
+  `external-review.mjs`, `discover-topic.sh`, and `team-pr`'s `scripts/splice.mjs` plus its
   `scripts/*.sh`),
   `.claude-plugin/`. The entire `.claude/`
   tree, `docs/`, `.github/` never ship and are out of every
@@ -224,9 +223,7 @@ reporting, mismatch handling, and unsupported-host limits.
   bundled skills use, and keep the script free of relative imports and of
   environment reads that resolve its own location, so it runs from any install
   path (`ste-lint.mjs` does both). Reading the environment for something other
-  than the script's own path is fine and sometimes required — the host a session
-  is running on is knowable no other way, which is how
-  `resolve-transcript.mjs` tells a Claude Code session from a Codex one.
+  than the script's own path is fine and sometimes required.
   `skills/team/references/agent-dispatch.md` still interpolates the variable directly.
   That command is Claude-Code-specific, but the pipeline it serves is not:
   nested dispatch degrades to its documented inline fallback on every other
@@ -324,7 +321,7 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
    path, so no methodology registration remains for Codex to list. The principle
    tier is returning as guarded `disable-model-invocation` skills, kept out of
    Codex's implicit catalog by `allow_implicit_invocation: false`; the `$`
-   picker shows the 30 commands. See
+   picker shows the 11 commands. See
    [the divergence note](#57-codex-port) for the historical evidence.
 
 3. **Recency risk.** This is cross-cutting rather than a primitive gap. Codex's
@@ -436,12 +433,12 @@ full parity. It starts from the matrix and works around the named gaps.
   runs the new code under the old number (#355).
 - **Codex's plugin validator rejects `disable-model-invocation`.**
   `plugin-creator`'s `validate_plugin.py` requires the key to be absent or
-  `false`, and Team's five guarded skills set it `true` because Claude Code
+  `false`, and Team's guarded skill, `principle-fix-root-causes`, sets it `true` because Claude Code
   needs it. The runtime does not enforce the rule, and this host's own
   equivalent — `policy.allow_implicit_invocation: false` in each skill's
-  `agents/openai.yaml` — keeps all five out of the implicit catalog. The
+  `agents/openai.yaml` — keeps it out of the implicit catalog. The
   divergence is deliberate and the validator finding is expected.
-- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 27 entry commands remain in the picker. Principles are guarded `disable-model-invocation` skills read by installed path, so they add no implicit-invocation entries.
+- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 11 commands remain in the picker. Principles are guarded `disable-model-invocation` skills read by installed path, so they add no implicit-invocation entries.
   Historical probe evidence: the `$` picker was fed by the `skills/list` app-server method, which returned all
   100 Team skills with `enabled: true`, `team:principle-fix-root-causes` among
   them. Its `SkillMetadata` payload carries nine fields — `dependencies`,
@@ -530,7 +527,7 @@ a file, and installing from a URL clones fresh so the socket never exists.
 - **A symlinked plugin root is discovered with no registration step.** A single
   link at `~/.gemini/config/plugins/team` pointing at a checkout put 52 Team
   skills in the agent's own skill list, with no entry in `import_manifest.json`
-  (a probe from the 54-skill era; the tree has grown since).
+  (a probe from the 54-skill era; the tree has changed since).
   Team's dev install is that one link. A directory holding a hand-written
   `plugin.json` beside symlinked `skills/` and `agents/` works too; linking the
   root is preferred because the checkout already carries the manifest, so nothing
@@ -543,18 +540,9 @@ a file, and installing from a URL clones fresh so the socket never exists.
   `PreInvocation` had a binding; that event cannot block, so the
   `.team/config.json` guard was inject-only.
 
-**`disable-model-invocation` is honored.** With the plugin installed, the
-probe (taken when the plugin shipped 54 skills, two of which set the key) had
-the agent list 52 of them. The two missing ones were exactly `pr-rebase` and
-`pr-watch-as-reviewer` — the skills that set the key **as of that probe**. The
-guarded set has since grown to four: `retro` and `no-comments` set it too, so
-this host withholds both as well. This host therefore keeps every guarded skill
-out of the model's reach on its own, and it is why Team's install for this host
-withholds nothing.
+**`disable-model-invocation` is honored.** With the plugin installed, the probe (taken when the plugin shipped 54 skills, two of which set the key) had the agent list 52 of them. The two missing ones were exactly the two that set the key. This host therefore keeps every guarded skill out of the model's reach on its own, and it is why Team's install for this host withholds nothing.
 
-Codex reaches the same end through its own key rather than this one:
-`no-comments`, `pr-rebase`, `pr-watch-as-reviewer`, and `retro` each declare
-`policy.allow_implicit_invocation: false` in their `agents/openai.yaml`.
+Codex reaches the same end through its own key: `principle-fix-root-causes` declares `policy.allow_implicit_invocation: false` in its `agents/openai.yaml`.
 OpenAI [documents](https://learn.chatgpt.com/docs/build-skills) that key as
 blocking implicit invocation while leaving explicit `$skill` invocation
 working, which is what `disable-model-invocation` buys on the other two hosts.
@@ -627,8 +615,7 @@ a filesystem read, resolves relative references against the canonical base, and
 supplies `$ARGUMENTS`. It embeds no skill body and sets no model or agent override.
 This preserves literal shell examples and argument references inside canonical
 skill content. Even the guarded `disable-model-invocation: true` skills appear
-in the command menu. Commands include `/retro`, whose transcript resolver supports
-Claude Code, Codex, and OpenCode.
+in the command menu.
 
 `disable-model-invocation: true` excludes a directory from **Team's added
 `skills.paths` only**. Other paths retain their order and exact duplicates are
@@ -681,8 +668,7 @@ skill/command discovery, and the developer lifecycle. The adapter registers
 skills and commands only; it ships no runtime hooks. Full QRSPI execution,
 specialist/nested-agent dispatch, and translated reviewer permissions remain
 unverified. No provider, credentials, model-tier translation, or model-quality
-guarantee is installed. `/retro` resolves OpenCode sessions from the host's
-SQLite store.
+guarantee is installed.
 
 ## Out of scope
 

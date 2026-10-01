@@ -10,6 +10,27 @@ Team installs on Claude Code, Codex CLI, Antigravity CLI, and OpenCode. The full
 
 The [shared principle resources](docs/skills.md#shared-principle-resources) define the installed rules for scope, state, evidence, review, and focused work.
 
+## Skills that moved
+
+Team now ships only its pipeline. These 19 skills moved to the `bostonaholic/skills` collection, which installs without Team: `agent-prompt`, `audit-complexity`, `audit-tests`, `code-review`, `eng-design-doc-review`, `groom-backlog`, `how`, `no-comments`, `paparazzi`, `pr-cleanup`, `pr-open-comments`, `pr-rebase`, `pr-screenshots`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `prove`, `retro`, `shipit`, and `why`.
+
+Install all of them as a Claude Code plugin:
+
+```bash
+claude plugin marketplace add bostonaholic/skills
+claude plugin install bostonaholic-skills@bostonaholic
+```
+
+Or pick skills for any agent:
+
+```bash
+npx skills@latest add bostonaholic/skills
+```
+
+The command names do not change, and the `team:` prefix no longer applies. Update Team first, then install the skills, so you do not get two copies of a command. Docs: https://skills.bostonaholic.dev
+
+The pipeline does not need these skills. It keeps its own copies of the reviewer briefs, the screenshot upload, and the worktree teardown.
+
 ## Install
 
 Each host installs Team through its own plugin mechanism. Every section below
@@ -27,7 +48,7 @@ claude plugin install team@team-dev
 ```
 
 The first command clones this repo as a marketplace; the second installs from
-it. Skills register as slash commands (`/team`, `/shipit`), and agents load
+it. Skills register as slash commands (`/team`, `/team-fix`), and agents load
 with them.
 
 #### Local git checkout installation
@@ -136,7 +157,7 @@ picks up new skills with no extra links and no sync step. Remove it with:
 codex plugin remove team@team-dev
 ```
 
-Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex
+Skills arrive **namespaced** — ask for `team:team-fix`, not `team-fix`. Codex
 budgets its skill catalog, so it shortens the longest descriptions; the skills
 still work.
 
@@ -186,7 +207,7 @@ Team ships `plugin.json` at the repo root, which is this host's plugin marker,
 so it installs as a native Antigravity plugin — all skills and all 13 agents.
 `agy plugin uninstall team` removes it.
 
-Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
+Skills arrive under **bare names** — ask for `team-fix`, not `team:team-fix`. The
 install copies the checkout, so upgrading means installing again.
 
 #### Live development installation
@@ -256,9 +277,7 @@ separate command and nothing to reinstall.
 
 **Supported:** native registration, skill discovery, canonical file-reading
 commands, and this lifecycle. Full QRSPI execution, specialist/nested dispatch,
-and reviewer isolation on OpenCode remain unverified. `/retro`
-appears in the command menu and resolves OpenCode sessions from the host's
-SQLite store.
+and reviewer isolation on OpenCode remain unverified.
 Methodology skills marked `user-invocable: false` also appear as commands.
 See [OpenCode support](docs/cross-host-portability.md#opencode) for command permissions, native argument preprocessing,
 external skill sources, and discovery diagnostics.
@@ -364,7 +383,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **Entry-point + methodology skills** in `skills/`: slash commands, the standalone `/shipit`, `/pr-open-comments`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/groom-backlog`, `/pr-cleanup`, `/prove`, `/pr-screenshots`, `/paparazzi`, `/pr-rebase`, `/retro`, `/why`, and `/how` utilities, and shared methodologies
+- **11 skills** in `skills/`: the `/team` orchestrator, the eight phase commands, `/team-fix`, and the guarded `principle-fix-root-causes`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
 
