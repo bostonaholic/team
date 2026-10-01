@@ -37,7 +37,7 @@ returned:
    Blocking or Major finding is open — loop automatically (the no-consult
    rule).
 5. Once Blocking and Major are clean → record any **Minor-and-below**
-   findings for the PR body's `## Review notes` section, tagged by source
+   findings for the PR's `review-notes` comment, tagged by source
    reviewer. Never present them mid-run, and advance to PR
    **in the same turn**. Do not summarize and end the turn. The run is
    complete only when the draft PR URL is reported.

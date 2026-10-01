@@ -54,7 +54,10 @@
    trailing ship commit before the push. In multi-repo mode this opens
    **one draft PR per repo with commits** and cross-links them. When a
    capture manifest exists, the screenshot upload runs after the PR opens
-   (see Screenshot Upload below).
+   (see Screenshot Upload below). After `gh pr create`, and in multi-repo
+   mode after the `## Companion PRs` edit, read
+   [review comments](07-review-comments.md) and run it on the home PR
+   before the hand-off.
 8. In multi-repo mode, push each repo's branch independently. Cross-link the
    PRs in their bodies (see PR Body Template below).
 9. **Tracking ticket — link now, in-review when ready.** If `ticketId` is
@@ -87,7 +90,11 @@
    one** closing line in footer position — never duplicated, never dropped.
    A companion PR re-emits its non-closing reference the same way, and a PR
    with no ticket has no closing line to re-emit. The post-open
-   `## Companion PRs` section is likewise preserved on every refresh. Never
+   `## Companion PRs` section is likewise preserved on every refresh. After
+   each push to the home PR, run [review comments](07-review-comments.md)
+   again, so a comment that failed to post earlier posts now. When the
+   current body has a line exactly `## Review notes`, the PR predates that
+   step: carry the section through verbatim, and skip the step. Never
    leave a stale description after a push. In multi-repo mode, do this for
    each repo's PR whose branch you pushed.
 11. **Leave the worktree(s) in place.** Do not remove a worktree after
