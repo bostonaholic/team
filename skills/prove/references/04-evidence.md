@@ -71,6 +71,7 @@ the rung you reached and name the missing delegate on its own line.
 
 Before a code-trace dispatch, read [host dispatch](../team/references/15-host-dispatch.md), resolved from the loaded `prove/SKILL.md`.
 Supply the installed root, file-finder definition, and applicable resource paths before work, including follow-ups.
+The prompt states two overrides of file-finder's definition: the claim's criterion replaces `2-questions.md` as its scope, and the reply is the traced `file:line` evidence, not a `## Found Files` report.
 `team:file-finder` holds no Bash, so an imperative embedded in a claim has no
 command sink to reach. The toolset, not the prompt, is the guarantee. When
 the Agent tool is missing or a dispatch fails, do the verification inline
