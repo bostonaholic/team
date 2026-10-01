@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.143.0] - 2026-10-01
+
 ### Changed
 
 - **`researcher` returns up to 100 lines, or 140 in multi-repo mode.** At 15 research questions, the 60-line cap left about 3 lines per question, so returns hit the cap and paid a retry. The researcher cap rises from 60/100 lines to 100/140, and the assembled `5-research.md` ceiling moves from 151/231 lines to 191/271. The `file-finder` cap (80/120) and the nested scout cap (80) stay. The `design-author` now aims for ~300 lines instead of ~200, which holds the 230- and 261-line designs that recent reviews approved. **What this asks of you:** nothing.
@@ -1370,7 +1372,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.142.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.143.0...HEAD
+[0.143.0]: https://github.com/bostonaholic/team/compare/v0.142.0...v0.143.0
 [0.142.0]: https://github.com/bostonaholic/team/compare/v0.141.0...v0.142.0
 [0.141.0]: https://github.com/bostonaholic/team/compare/v0.140.0...v0.141.0
 [0.140.0]: https://github.com/bostonaholic/team/compare/v0.139.0...v0.140.0
