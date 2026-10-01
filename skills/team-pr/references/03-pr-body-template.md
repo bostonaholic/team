@@ -78,9 +78,8 @@ environment and will fail a CI verify check until someone regenerates them;
 merely informs the reviewer. Post-merge follow-ups do not belong here.
 **Omit the section entirely when empty — never emit a bare heading.**
 
-**Checkbox discipline.** A `- [ ]` item hard-gates the merge through the
-`square-task-list-completed` bot: an unchecked box blocks merging until a human
-ticks it. So use `- [ ]` only for pre-merge actions, and plain `- ` bullets for
+**Checkbox discipline.** Treat a `- [ ]` item as a merge gate: an unchecked box
+says the merge waits until a human ticks it. So use `- [ ]` only for pre-merge actions, and plain `- ` bullets for
 anything informational or post-merge. Verification that truly must be re-run by
 a human before the merge belongs in `## Pre-merge` instead of
 `## How to Verify`. A checked box

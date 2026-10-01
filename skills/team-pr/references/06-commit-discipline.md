@@ -3,7 +3,7 @@
 When creating the commit, read [commit discipline](commit.md) and apply it:
 
 - Subject ≤ 50 chars, imperative, no trailing period
-- Reference the issue or design path in the footer if present
+- Reference the issue in the footer if present
 
 The PR may contain multiple commits (one per slice). The ship commit is
 only used if there are uncommitted final changes (e.g., changelog).
