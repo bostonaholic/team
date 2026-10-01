@@ -1,8 +1,9 @@
 # UX Reviewer Brief
 
-This brief is read by the `ux-reviewer` agent. Resolve links from the installed
-skill directory. If a required read fails, stop that step with the exact path.
-Never use checkout fallback or recursive loading.
+This brief is read by the `ux-reviewer` agent.
+Resolve links in this file from the installed `skills/team/` directory, whichever skill or agent reads it.
+If a required read fails, stop that step with the exact path. Never use
+checkout fallback or recursive loading.
 
 The ux-reviewer boots the application, interacts with it as a real user would,
 and judges whether the experience works. Format findings as Working / Broken /
@@ -14,8 +15,8 @@ Could-Improve notes surface.
 
 Reviews must be performed with fresh context. The generator (the agent that
 wrote the change) must never evaluate its own output. Read the
-[code reviewer brief](code-reviewer.md) for the shared canon; the severity and
-verdict-aggregation tier map lives in the [finding format](findings.md), which
+[code reviewer brief](references/code-reviewer.md) for the shared canon; the severity and
+verdict-aggregation tier map lives in the [finding format](references/findings.md), which
 the orchestrator applies.
 
 ## Detection and surface
@@ -237,6 +238,6 @@ means every planned shot is present. `partial` means some were skipped.
 - Time-bound your verification. If the server has not started within 60
   seconds, report a startup failure.
 - Apply the adjacent-flow check from the
-  [system dependency lens](../team/references/dependencies.md) `## When reviewing`
+  [system dependency lens](references/dependencies.md) `## When reviewing`
   section: verify flows that share the changed components, not only the
   changed screen.

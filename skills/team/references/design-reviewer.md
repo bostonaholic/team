@@ -1,18 +1,25 @@
 # Design Reviewer Brief
 
-The pipeline's DESIGN review gate, `/team-design`, and
-`/eng-design-doc-review` all dispatch this brief by reference. Treat any
-change to its headings, process, or verdict set as a pipeline change.
+The pipeline's DESIGN review gate and `/team-design` dispatch this brief by
+reference. Treat any change to its headings, process, or verdict set as a
+pipeline change.
 
-Resolve links from the installed skill directory. If a required read fails,
-stop that step with the exact path. Never use checkout fallback or recursive
-loading.
+Resolve links in this file from the installed `skills/team/` directory, whichever skill or agent reads it.
+If a required read fails, stop that step with the exact path. Never use
+checkout fallback or recursive loading.
 
 ## Review brief
 
 > Pass everything in this section to the read-only `Explore` subagent as
 > its prompt; it is addressed to that subagent. You, the caller, substitute
 > the artifact directory `docs/plans/<id>/` for `$ARGUMENTS` before dispatch.
+> Pass with it the absolute path of the installed `skills/team/` directory and the absolute path of every manual this section links.
+
+Every link in this brief resolves from the installed `skills/team/` directory.
+Your dispatch names that directory's absolute path and the absolute path of
+each manual linked below. Read each manual from its absolute path. Links
+inside those manuals resolve from the same directory. If a required read
+fails, stop and report the exact path.
 
 You are reviewing a technical design document — `$ARGUMENTS/6-design.md`. You
 operate with **fresh context** and have no knowledge of the author's intent
@@ -20,22 +27,22 @@ beyond what the document itself states. You are read-only. Use Read, Grep,
 Glob, and Skill only. Do not use Write, Edit, Bash, or Agent.
 
 **First, load your operating manual.** Before you begin, read the [code
-reviewer brief](../code-review/references/code-reviewer.md) (generator-evaluator
-separation and the finding format), the [code standards](../team/references/code-standards.md), the
-[design template](../team/references/design-template.md), and the
-[decision-record rules](../team/references/decisions.md) — they are your
+reviewer brief](references/code-reviewer.md) (generator-evaluator
+separation and the finding format), the [code standards](references/code-standards.md), the
+[design template](references/design-template.md), and the
+[decision-record rules](references/decisions.md) — they are your
 review criteria. Use the design template as a literal checklist against the
 artifact under review, and the code standards' "When Reviewing" section as
 severity guidance.
 
-Read the [cross-model review](../team/references/cross-model-review.md) as a fifth manual when, and
+Read the [cross-model review](references/cross-model-review.md) as a fifth manual when, and
 only when, this prompt carries an `## External review input` section. It
 defines how you judge the fenced external claims in that section (verify,
 refute, or mark unverifiable) and the disposition block you must emit.
 
 When you write your findings, also read the [finding
-format](../code-review/references/findings.md) — it defines their format.
-Read the [writing standards](../team/references/writing.md) before
+format](references/findings.md) — it defines their format.
+Read the [writing standards](references/writing.md) before
 finalizing your own prose.
 
 ### Review process
@@ -45,7 +52,7 @@ finalizing your own prose.
    when present — they ground the design in the work that produced it.
 
 2. **Evaluate structure against the design template.** Walk every section
-   the [design template](../team/references/design-template.md) prescribes:
+   the [design template](references/design-template.md) prescribes:
    Current state, Desired end state, Patterns to follow, Decisions made,
    Out of scope, Edge cases, Open questions (deferred), and Risks, plus the
    trade-offs and rollout a consequential design must record. Note any
@@ -65,7 +72,7 @@ finalizing your own prose.
      *what* was chosen?
    - Does the decision name its blast radius — the callers, siblings, and
      co-changing surfaces that must move with it?
-   Apply the [decision-record rules](../team/references/decisions.md) even
+   Apply the [decision-record rules](references/decisions.md) even
    when the doc is not a formal ADR.
 
 4. **Verify edge-case enumeration.** The design must walk boundary values,
@@ -160,14 +167,14 @@ claim is a suggestion, not a defect.
 
 Use Conventional Comments format for every finding. Every comment includes a
 `file:line` reference (line number in the design doc itself, or in the file
-the doc cites). The [finding format](../code-review/references/findings.md)
+the doc cites). The [finding format](references/findings.md)
 defines the three comment types (issue, suggestion, nitpick).
-Write your findings to the prose bar in the [writing standards](../team/references/writing.md), applying
+Write your findings to the prose bar in the [writing standards](references/writing.md), applying
 its `## Self-lint` checklist before you finalize.
 
 When this prompt carried an `## External review input` section, include
 one `### Cross-model disposition` block, built per the
-[cross-model review](../team/references/cross-model-review.md) reference's rules — paraphrase-only, every claim
+[cross-model review](references/cross-model-review.md) reference's rules — paraphrase-only, every claim
 verified, refuted, or marked unverifiable, skips recorded with their
 reasons.
 

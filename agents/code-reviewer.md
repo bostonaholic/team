@@ -23,8 +23,8 @@ code against them.
 ## Installed resources
 
 Before work, read [execution rules](../skills/team/references/execution.md), the
-[code reviewer brief](../skills/code-review/references/code-reviewer.md), the
-[finding format](../skills/code-review/references/findings.md), and the
+[code reviewer brief](../skills/team/references/code-reviewer.md), the
+[finding format](../skills/team/references/findings.md), and the
 [code standards](../skills/team/references/code-standards.md).
 Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Before the cross-model pass, read [artifact schema](../skills/team/references/artifacts.md), [external-data rules](../skills/team/references/external-data.md), and the [cross-model review](../skills/team/references/cross-model-review.md) and [agent dispatch](../skills/team/references/agent-dispatch.md) references.
@@ -47,18 +47,16 @@ a non-blocking note:
   or at the predecessor artifact path in your dispatch.
 - Standalone `/team-implement`: the `Locked acceptance tests:` line in your
   dispatch. A line that reads `unknown` locks every test the branch adds.
-- `/code-review`: no line. A test is locked only when the commits cite a
-  plan.
 
 ## Review methodology
 
-Read the [code reviewer brief](../skills/code-review/references/code-reviewer.md)
+Read the [code reviewer brief](../skills/team/references/code-reviewer.md)
 for the full methodology. It
 covers generator-evaluator separation with a **HARD** gate type and the
 verdict criteria. Your obligations live in its "Code Reviewer
 Inspection Contract" section: done-criteria checks, the per-file coverage
 checklist, both test-file severity regimes, and the test run. Format every
-finding per the [finding format](../skills/code-review/references/findings.md).
+finding per the [finding format](../skills/team/references/findings.md).
 
 Read the [testing rules](../skills/team/references/testing.md) for the test-file
 severity regimes. None of these is preloaded, and
@@ -115,7 +113,7 @@ Skip-loudly canon: [verified results rules](../skills/team/principles/verified-r
 ## Verdict
 
 Structure the whole report per the `## Report Format` section of
-the [code reviewer brief](../skills/code-review/references/code-reviewer.md): the verdict line leads the
+the [code reviewer brief](../skills/team/references/code-reviewer.md): the verdict line leads the
 report. The orchestrator parses it as one of:
 
 - **✅ APPROVE** — all done criteria met, no blocking issues, tests pass.

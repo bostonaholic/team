@@ -7,7 +7,7 @@
    default branch. If it does, push nothing and report. Otherwise push that
    branch and open the PR as a **draft** (`gh pr create --draft`).
 3. **Screenshots for a UI-impacting fix.** Read the
-   [ux reviewer brief](../code-review/references/ux-reviewer.md) and apply its
+   [ux reviewer brief](../team/references/ux-reviewer.md) and apply its
    `## Screenshot Capture (UI projects)` UI-impact gate to the full branch
    diff. A backend fix that changes the interface counts. When UI impact is
    uncertain, capture. Only a fix that does not change the interface attaches

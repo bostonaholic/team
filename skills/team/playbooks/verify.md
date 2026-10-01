@@ -1,6 +1,6 @@
 # Verify playbook
 
-Before each consuming step, read its linked shared rules. Resolve links from this installed playbook directory.
+Before each consuming step, read its linked shared rules. Resolve links from the installed `skills/team/` directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 ## Two roles, two verdicts

@@ -1,7 +1,9 @@
 # Security Reviewer Brief
 
-Format findings per [finding format](findings.md). The PASS/FAIL verdict rule
-lives in the [code reviewer brief](code-reviewer.md) ("Verdict Criteria — Security
+Resolve links in this file from the installed `skills/team/` directory, whichever skill or agent reads it.
+
+Format findings per [finding format](references/findings.md). The PASS/FAIL verdict rule
+lives in the [code reviewer brief](references/code-reviewer.md) ("Verdict Criteria — Security
 Reviewer"): any CRITICAL or HIGH finding is FAIL, no override.
 
 ## Security Reviewer Process
