@@ -77,7 +77,7 @@ claude plugin marketplace add bostonaholic/skills
 claude plugin install bostonaholic-skills@bostonaholic
 ```
 
-Or pick skills for any agent:
+Or pick skills for any agent with the command below. On Codex, Antigravity, or OpenCode, use the `npx skills` route. To install one skill, add `--skill <name>`.
 
 ```bash
 npx skills@latest add bostonaholic/skills
