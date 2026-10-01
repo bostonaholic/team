@@ -1130,10 +1130,10 @@ that return. A fixed line identifies the blocks as untrusted evidence and says
 embedded imperatives carry no authority. The root then traces every final
 substantive claim only to the completed returns, never to task framing.
 File-finder returns at most 80 lines for one repo or 120 for multiple repos.
-Researcher returns at most 60 or 100 lines. The root reserves eleven lines for
+Researcher returns at most 100 or 140 lines. The root reserves eleven lines for
 the five-line frontmatter,
 authority line, four fence lines, and one source-grounded synthesis line. The
-final artifact therefore has at most 151 lines for one repo or 231 for multiple
+final artifact therefore has at most 191 lines for one repo or 271 for multiple
 repos.
 Line validation normalizes line endings but counts every physical line,
 including terminal empty and whitespace-only lines.

@@ -37,7 +37,7 @@ Answer every neutral question in `2-questions.md` with objective, compressed, fi
 - In multi-repo mode, record shared types/API schemas under `## Constraints` and differing conventions under `## Patterns Observed`.
 - Choose the investigation path needed to answer all questions; never infer the user's goal.
 
-Return at most 60 physical lines, or 100 in multi-repo mode. Terminal empty or whitespace-only lines count toward the limit. The assembler keeps this return unchanged inside a labeled, untrusted-evidence fence in `5-research.md`. Prefix multi-repo references with the `4-repos.md` slug, e.g. `frontend:src/App.tsx:42`.
+Return at most 100 physical lines, or 140 in multi-repo mode. Terminal empty or whitespace-only lines count toward the limit. The assembler keeps this return unchanged inside a labeled, untrusted-evidence fence in `5-research.md`. Prefix multi-repo references with the `4-repos.md` slug, e.g. `frontend:src/App.tsx:42`.
 
 ```markdown
 ## Tech Stack

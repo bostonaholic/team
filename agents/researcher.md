@@ -47,7 +47,7 @@ and answer the literal question.
 The constraints on your findings and the research-report output format
 live in the research playbook at `skills/team/playbooks/research.md`. Answer
 every question with evidence from code you read in this run. Return
-compressed findings in at most 60 physical lines, or 100 in multi-repo
+compressed findings in at most 100 physical lines, or 140 in multi-repo
 mode. Terminal empty or whitespace-only lines count toward the limit.
 Prefix every multi-repo file reference with its repo slug.
 

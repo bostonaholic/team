@@ -81,7 +81,7 @@ Fan out read-only exploration when questions cluster into independent areas or `
 - Spawn only when a cluster requires more reading than the report will quote. Handle one or two pointed questions directly.
 - At most 4 scouts, preferably parallel. Each returns <= 80 lines of
   `file:line` findings and spawns nothing. The researcher compresses their
-  evidence within its 60-line single-repo or 100-line multi-repo producer
+  evidence within its 100-line single-repo or 140-line multi-repo producer
   budget.
 
 ### `code-reviewer` and `security-reviewer` — skeptic passes
