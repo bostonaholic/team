@@ -13,12 +13,12 @@ If a required read fails, stop that step with the exact path. Never use checkout
 Rank where complexity concentrates in a codebase, or in a named part of
 it. The codebase must be a git repository. A script lists the tracked files
 in scope and measures each file's **size** (lines) from the work tree.
-Read-only analysts read each source file and measure its **fan-out** (distinct imported modules) and its
-**shared mutable state** (writes that outlive one call). For each function
-they measure **cyclomatic complexity** (1 plus its decision points),
-**nesting depth**, **length**, and **parameters**. Each function number
-comes with the line numbers a reader needs to recount it. Files rank by
-their most complex function.
+Read-only analysts read each source file and measure its **fan-out**
+(distinct imported modules) and its **shared mutable state** (writes that
+outlive one call). For each function they measure **cyclomatic complexity**
+(1 plus its decision points), **nesting depth**, **length**, and
+**parameters**. Each function number comes with the line numbers a reader
+needs to recount it. Files rank by their most complex function.
 
 The audit is **read-only toward the code**. It edits, deletes, stages, and
 commits nothing, and every git command it runs only reads. It writes three
