@@ -62,12 +62,14 @@ Opening a PR does **not** tear down the worktree. Keep it until the PR is
 merged or the user explicitly asks to remove it. The same holds when commits
 are kept locally without a PR.
 
-The user-invoked, PR-aware teardown — with a merged-PR gate,
-protected-branch refusals, and remote-branch deletion — is `/pr-cleanup`
-(`skills/pr-cleanup/SKILL.md`); the numbered steps below remain the
-orchestrator's in-pipeline teardown.
+The numbered steps below are the orchestrator's in-pipeline teardown.
 
 When teardown is warranted (post-merge or on explicit request):
+
+Before step 1, record for each repo `BRANCH`, the branch its worktree used
+(`<id>`, or the existing branch when WORKTREE reused a linked worktree), and
+`WORKTREE`, that worktree's absolute path (empty when the run fell back to
+in-place work). Step 8 passes both.
 
 1. For each worktree with commits ahead of its base branch, cherry-pick
    or rebase those commits onto the target branch in that repo. Then let
@@ -87,8 +89,7 @@ When teardown is warranted (post-merge or on explicit request):
    branch on origin, follow with `git -C <repo-path> remote prune origin`:
    the surviving local `refs/remotes/origin/<id>` keeps every commit on the
    branch reachable, so `git branch -D` in step 3 frees nothing while it
-   stands. `skills/pr-cleanup/SKILL.md` Mode A step 6 covers this and the
-   space-reclaim sequence that follows it.
+   stands.
 6. Remove the feature's local planning docs. Verify the directory is
    untracked first (`git ls-files docs/plans/<id>` returns nothing), then
    `rm -rf docs/plans/<id>` — only that feature's `<id>` directory, never
@@ -124,10 +125,14 @@ When teardown is warranted (post-merge or on explicit request):
    deleted silently, never left unreported.
 
 8. **Tear down what the worktree provisioned**, not only the worktree.
-   Follow `skills/pr-cleanup/playbooks/cleanup.md` — all sections, full
-   depth. Skip "Finishing a review rather than a merge". It runs the
-   teardown commands the repo declares in `.teamteardown`, and runs nothing
-   when the repo declares none.
+   For each repo, follow
+   `<team-worktree-skill-dir>/playbooks/provisioned-teardown.md`, all
+   sections, with that repo's `<repo-path>` and the `BRANCH` and
+   `WORKTREE` recorded before step 1. `<team-worktree-skill-dir>` is the
+   absolute directory that holds the installed
+   `skills/team-worktree/SKILL.md`. The file runs the teardown commands
+   the repo declares in `.teamteardown`, and runs nothing when the repo
+   declares none.
 
 ## Gitignored Files
 
@@ -143,8 +148,8 @@ The teardown half of `.worktreeinclude` is `.teamteardown`, also at the
 project root: one command per line, run when the worktree's work is
 finished, so a database or container created for the branch does not
 outlive it. Only the copy committed to the default branch ever runs.
-`skills/pr-cleanup/playbooks/cleanup.md` carries the format and the rules;
-teardown step 8 runs it.
+`<team-worktree-skill-dir>/playbooks/provisioned-teardown.md` carries the
+format and the rules; teardown step 8 runs it.
 
 ## Fallback
 
