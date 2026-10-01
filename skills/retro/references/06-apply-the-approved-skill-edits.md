@@ -104,5 +104,5 @@ every tier is not an error — the fallback is fixed here:
 
 Run the repo's own check — read the [verify playbook](../team/playbooks/verify.md)
 to detect it, never invent one — and report the verdict. A failure names the
-failing test and the file written. Reflect neither fixes the failure nor
+failing test and the file written. Retro neither fixes the failure nor
 reverts the write. Where the repo configures no check, say that none ran.

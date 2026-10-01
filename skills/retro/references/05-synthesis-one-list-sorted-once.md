@@ -18,7 +18,7 @@ writing it:
   shape, a file-location rule: anything restatable as a deterministic predicate
   over files at rest or over a command's exit status, with no judgment about
   intent. It is demoted to Backlog, and the item names the layer that would
-  carry the check (`docs/testing.md`).
+  carry the check (a lint rule, a test, or a CI job).
 - **Judgement call** — cross-file consistency, "matches the surrounding
   style," anything that needs intent to decide. It stays Accepted as a skill
   edit.
