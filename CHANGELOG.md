@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.142.0] - 2026-09-30
+
 ### Added
 
 - `/audit-complexity` ranks where complexity concentrates in a codebase, or in a part you name. It requires a git repository. A script lists every tracked file in scope and counts its lines. Read-only analysts read each source file and count its imported modules and its writes to shared mutable state, and list up to 20 of those writes by line. They also measure each function's cyclomatic complexity, nesting depth, length, and parameters, with the line of every decision point, so you can recount any number. Files rank by their most complex function, then by size. Every file in scope shows up in the report: measured, set aside with a reason, or listed as not measured, such as a binary file. The result is `report.json` and `inventory.json` for agents plus a rendered `report.md` for people, in `docs/plans/<date>-audit-complexity/`. It edits no code. **What this asks of you:** nothing.
@@ -1364,7 +1366,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.141.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.142.0...HEAD
+[0.142.0]: https://github.com/bostonaholic/team/compare/v0.141.0...v0.142.0
 [0.141.0]: https://github.com/bostonaholic/team/compare/v0.140.0...v0.141.0
 [0.140.0]: https://github.com/bostonaholic/team/compare/v0.139.0...v0.140.0
 [0.139.0]: https://github.com/bostonaholic/team/compare/v0.138.0...v0.139.0
