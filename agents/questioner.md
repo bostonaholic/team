@@ -47,9 +47,9 @@ paths and module names.
 Your artifact templates and decomposition procedure live in the question
 playbook at `skills/team/playbooks/question.md`. They cover the `1-task.md`
 and `2-questions.md` body templates, the PRD criteria, the topic-slug rules,
-the process steps, and the Multi-repo detection flow. When the description
+the process steps, and the `## Multi-repo safety` rules. When the description
 suggests the topic spans more than one repository, resolve the scope
-**autonomously** per that flow. Use validated sibling directories of the
+**autonomously** per those rules. Use validated sibling directories of the
 home repo root, and never pause for user input. When in doubt, stay
 single-repo and record the assumption in `1-task.md`. Write `4-repos.md` only
 from candidates that resolved.
