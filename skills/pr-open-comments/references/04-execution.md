@@ -87,7 +87,7 @@ The verdict feeds steps 5–7. `ALREADY ADDRESSED` maps to option **F**.
 (**C**), or to a decline (**D**) where the claim does not hold, rather than
 to a code change. An unclear ask never applies to either — both are
 verdicts you reached with evidence — but a one-way-door choice
-`decision-making` returns to the user still lands on **G** as usual. Never
+the decision method returns to the user still lands on **G** as usual. Never
 mark a thread stale or inaccurate on a hunch — cite the file, line, or
 commit that proves it.
 
@@ -138,9 +138,9 @@ Standard option menu (pick the options that apply):
 **C answers, G asks.** C replies to a reviewer's question you understood.
 G covers two blockers: an ask you did not understand, which posts a reply
 asking the reviewer, or a one-way-door choice the user owns, which presents
-the choice to the user instead; G touches no code either way. Only G is a
-Hard Rule 3 exclusion, so only a G item can never auto-apply at any
-confidence.
+the choice to the user instead; G touches no code either way. Of C and G, only G
+is a Hard Rule 3 exclusion (needs-clarification), so a G item never
+auto-applies at any confidence.
 
 Each option places the reaction below on the thread's opening comment, and
 the menu states it. Nothing is posted until the user picks.
@@ -184,5 +184,5 @@ blocks globally so the user can pick by number.
 
 After the report is rendered, stop. Do not begin editing, posting, or
 resolving for `Needs your decision` items in the same turn. Wait for the
-user's per-item decisions. The hand-off prompt is in `## Completion`
-below.
+user's per-item decisions. The hand-off prompt is in
+[open questions to flag](07-open-questions-to-flag.md).
