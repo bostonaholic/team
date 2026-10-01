@@ -68,12 +68,16 @@ stated by the user, never inferred from a PR being stale, red, or unreviewed.
    explains why that matters and what the full space-reclaim sequence
    costs.
 
-5. **Sweep the machine-local state.** Follow
-   `skills/pr-cleanup/playbooks/cleanup.md` — all sections, full depth. Skip
-   "Finishing a review rather than a merge". Supply it `$PRIMARY_ROOT`,
-   `$DEFAULT`, `$BRANCH`, and `$WORKTREE_PATH` as its `WORKTREE` (empty
-   when no worktree existed). A failure there is reported and does not
-   stop the git teardown.
+5. **Sweep the machine-local state.** First run the
+   [sweep](11-sweep-merged-worktrees.md) from the session's working
+   directory. It removes every other merged worktree and branch in the
+   repository. Then follow `skills/pr-cleanup/playbooks/cleanup.md` — all
+   sections, full depth. Skip "Finishing a review rather than a merge".
+   Supply it `$PRIMARY_ROOT`, `$DEFAULT`, `$BRANCH`, and `$WORKTREE_PATH`
+   as its `WORKTREE` (empty when no worktree existed). The sweep runs
+   first so that a declared teardown command keyed on worktree paths, such
+   as a Docker garbage collector, finds each removed path gone. A failure
+   in either is reported and does not stop the git teardown.
 
 6. **Remove planning scratch that lives outside the worktree.** First
    derive `$ID` explicitly — it is this feature's `docs/plans/` directory
@@ -114,8 +118,8 @@ stated by the user, never inferred from a PR being stale, red, or unreviewed.
 Report, for both modes: the primary clone's state via
 `git -C "$PRIMARY_ROOT" branch --show-current` and
 `git -C "$PRIMARY_ROOT" status --short`, plus what was closed and deleted
-(PRs, worktrees, local and remote branches, scratch dirs) and the
-local-state sweep's own report from step 5. Mode A ends with
+(PRs, worktrees, local and remote branches, scratch dirs), the sweep's
+lines, and the local-state sweep's own report from step 5. Mode A ends with
 `git -C "$PRIMARY_ROOT" log --oneline -1` and reports
 `On <default> at <sha> — <subject>. Deleted branch <branch>.` A few lines,
 no more.

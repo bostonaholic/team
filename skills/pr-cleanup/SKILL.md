@@ -2,7 +2,7 @@
 name: pr-cleanup
 description: 'Use for PR cleanup after the user reports a merge or asks to abandon it. Never infer abandonment from staleness. Cleans PR state.'
 effort: medium
-argument-hint: "[<pr-number-or-url-or-branch>]"
+argument-hint: "[<pr-number-or-url-or-branch> | sweep]"
 ---
 
 Before this operation, read [external-data rules](../team/references/external-data.md).
@@ -23,6 +23,10 @@ modes:
   the PR(s), then delete every trace — worktree, local and remote branches,
   planning scratch.
 
+Both modes end with the sweep: it removes every worktree and local branch in
+the repository whose PR merged, so each teardown removes what an earlier
+session had to keep. `sweep` as the whole argument runs the sweep alone.
+
 ## Procedure references
 
 Read each reference completely when reaching that stage. Follow them in order; later stages depend on state and gates established earlier.
@@ -36,6 +40,7 @@ Read each reference completely when reaching that stage. Follow them in order; l
 7. [Step 3 — refuse a dirty tree](references/08-step-3-refuse-a-dirty-tree.md)
 8. [Mode A — merged](references/09-mode-a-merged.md)
 9. [Mode B — closed / abandoned](references/10-mode-b-closed-abandoned.md)
+10. [Sweep — remove every merged worktree in the repository](references/11-sweep-merged-worktrees.md)
 
 ## Applied principles
 

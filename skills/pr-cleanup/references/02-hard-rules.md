@@ -3,8 +3,9 @@
 1. **Never `git branch -D` without a gate.** Mode A requires the merged-PR
    verification (identity plus containment, Mode A step 1) — or, when
    that gate finds no merged PR, the user's explicit delete-anyway
-   confirmation. Mode B requires the user's explicit abandon request. No
-   ungated path exists.
+   confirmation. Mode B requires the user's explicit abandon request. The
+   sweep applies the same identity-plus-containment gate to each branch tip
+   and takes no delete-anyway override. No ungated path exists.
 2. **Never touch uncommitted tracked work.** A dirty tree stops the run
    (see step 3).
 3. **Never skip `git fetch`** — a just-merged PR is only visible after a

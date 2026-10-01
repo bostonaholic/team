@@ -55,7 +55,25 @@
    ```
 
    Empty `$WORKTREE_PATH` → the branch lives in no worktree; skip this
-   step. A `$WORKTREE_PATH` outside the repository's `.claude/worktrees/`
+   step.
+
+   When `$WORKTREE_PATH` contains `$INVOKE_DIR`, it is the current
+   session's own worktree. Do not remove it, and do not `cd` out of it to
+   remove it. Skip this step and step 4, and say so in the report: the
+   branch stays checked out there. The sweep in the next teardown in this
+   repository removes both once its own merged gate passes for them. Run this
+   check in the same invocation as the capture above, before any `cd`:
+
+   ```sh
+   : "${WORKTREE_PATH:?}" "${INVOKE_DIR:?}"
+   WORKTREE_REAL="$(cd "$WORKTREE_PATH" && pwd -P)"
+   case "$INVOKE_DIR" in
+     "$WORKTREE_REAL" | "$WORKTREE_REAL"/*)
+       echo "kept: $WORKTREE_PATH is this session's own worktree — the next teardown's sweep removes it"; exit 0 ;;
+   esac
+   ```
+
+   A `$WORKTREE_PATH` outside the repository's `.claude/worktrees/`
    (a workspace manager's, or made by hand) is not this skill's to remove:
    skip this step, say so, and name the path; that tool's own teardown
    removes it. The remaining steps (resync, branch delete, prune) still
@@ -97,8 +115,9 @@
 5. **Shared tail.** Remote deletion is usually automatic on merge; check
    whether origin still has the branch with
    `git -C "$PRIMARY_ROOT" ls-remote --heads origin -- "$BRANCH"` and OFFER
-   deletion if it does. Then run the local-state sweep and the scratch
-   removal exactly as Mode B steps 5 and 6 describe them.
+   deletion if it does. Then run Mode B steps 5 and 6 exactly as written:
+   the [sweep](11-sweep-merged-worktrees.md) from the session's working
+   directory, the local-state sweep, and the scratch removal.
 
 6. **Sever the stale tracking ref, and offer to reclaim the space.** When
    the head branch is deleted server-side — GitHub on merge, or

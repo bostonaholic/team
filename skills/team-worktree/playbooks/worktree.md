@@ -93,7 +93,20 @@ When teardown is warranted (post-merge or on explicit request):
    untracked first (`git ls-files docs/plans/<id>` returns nothing), then
    `rm -rf docs/plans/<id>` — only that feature's `<id>` directory, never
    sibling dirs for other in-flight work.
-7. **Sweep residue as the final action.** Recreation can land seconds to
+7. **Sweep residue as the final action.** First run the pr-cleanup
+   worktree sweep. Run it from the session's working directory for the
+   home repo, and from `<repo-path>` for each other repo:
+
+   ```sh
+   "<pr-cleanup-skill-dir>/scripts/sweep-worktrees.sh"
+   ```
+
+   It removes every merged worktree and branch in the repository,
+   including ones an earlier session had to keep, and reports each item it
+   kept. `skills/pr-cleanup/references/11-sweep-merged-worktrees.md` has
+   its rules and output.
+
+   Then sweep residue. Recreation can land seconds to
    hours after the removal command returns, so this sweep is not redundant
    with step 4. Re-check the removed path plus every sibling under
    `.claude/worktrees/` that `git worktree list` no longer knows about.
@@ -119,7 +132,8 @@ When teardown is warranted (post-merge or on explicit request):
    done
    ```
 
-   Report each swept directory, or that no residue was found. A kept
+   Report the worktree sweep's lines. Report each swept directory, or that
+   no residue was found. A kept
    directory is surfaced to the user with the files it holds — never
    deleted silently, never left unreported.
 

@@ -5,7 +5,8 @@ Read [external-data rules](../team/references/external-data.md) from the install
 
 A caller that has finished with a pull request — merged, closed, or
 reviewed — follows this file. `skills/pr-cleanup/SKILL.md` is the standing
-caller: it loads this after the worktree is removed and before it reports.
+caller: it loads this after the worktree is removed and the worktree sweep
+has run, and before it reports.
 
 ## Ownership boundary
 
@@ -15,6 +16,7 @@ in the caller.
 | State | Owner |
 |---|---|
 | Worktrees, local and remote branches, stale tracking refs | the caller (`pr-cleanup` Modes A/B) |
+| Every other merged worktree and branch in the repository | the caller (`pr-cleanup` sweep, before this file) |
 | `docs/plans/<id>/` planning scratch | the caller (`pr-cleanup` Mode B step 6) |
 | Leftover directories under `.claude/worktrees/` | the worktree playbook teardown step 7 |
 | Databases, containers, queues, buckets, caches | **this skill** |
@@ -50,6 +52,10 @@ declaration is a file named `.teamteardown` at the repository root:
 dropdb --if-exists "app_test_$TEAM_BRANCH"
 docker compose --project-name "$TEAM_BRANCH" down --volumes
 ```
+
+The caller runs the declaration after its worktree sweep. A command that
+reads `git worktree list` or the directories under `.claude/worktrees/`
+therefore finds every removed worktree gone.
 
 Each command runs with three environment variables set, and reads its values
 from them rather than from any substitution this skill performs:
