@@ -12,11 +12,10 @@
    diff. A backend fix that changes the interface counts. When UI impact is
    uncertain, capture. Only a fix that does not change the interface attaches
    nothing. When it does, run the brief's capture procedure into
-   `docs/plans/<id>/screenshots/`, then call
-   the Skill tool with `pr-screenshots` and attach the PNGs. Build the entries
-   file and read `result.json` per
-   [Screenshot Upload](../team-pr/references/04-screenshot-upload.md), with the
-   run's `docs/plans/<id>/` directory as the `$ARGUMENTS` that reference names.
+   `docs/plans/<id>/screenshots/`, then run the
+   [Screenshot Upload](../team-pr/references/04-screenshot-upload.md)
+   procedure, with the run's `docs/plans/<id>/` directory as the
+   `$ARGUMENTS` that reference names.
    A capture that cannot run degrades to the note; it never blocks the PR.
 4. **Ticket — link now, in-review when ready.** If `ticketId` is non-null in
    `1-task.md`'s frontmatter, read [tracking rules](../team-pr/references/tracking.md) and

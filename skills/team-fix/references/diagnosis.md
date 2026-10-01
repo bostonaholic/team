@@ -13,7 +13,7 @@ Gather evidence before forming any theory.
 - Collect multiple data points: logs, stack traces, test output, runtime state.
 - Note what still works — the boundary between working and broken narrows the search.
 - Trace a bad value from the visible failure through its callers to where it was produced. Compare the working path when one exists.
-- Record timestamps and sequence: what changed just before, in git, deploys, or dependencies. When the trail leads to code that looks deliberate and the question becomes "why was it written this way" rather than "what broke", that is design-rationale archaeology — `skills/why/SKILL.md` owns it.
+- Record timestamps and sequence: what changed just before, in git, deploys, or dependencies. When the trail leads to code that looks deliberate and the question becomes "why was it written this way" rather than "what broke", that is design-rationale archaeology: trace the introducing commit (`git log -S`, `git blame` on the parent revision) and its PR or issue before changing the code.
 - Treat intermittency as evidence, not noise. Record the failure rate, environment variance, and the timing, concurrency, resources, and shared state in the path.
 
 Do not hypothesize during OBSERVE.
