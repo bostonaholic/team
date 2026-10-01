@@ -117,5 +117,5 @@ Report, for both modes: the primary clone's state via
 (PRs, worktrees, local and remote branches, scratch dirs) and the
 local-state sweep's own report from step 5. Mode A ends with
 `git -C "$PRIMARY_ROOT" log --oneline -1` and reports
-`On <default> at <sha> — <subject>. Deleted branch <branch>.` A few lines,
-no more.
+`On <default> at <sha> — <subject>. Deleted branch <branch>.` One line per
+item, nothing else.
