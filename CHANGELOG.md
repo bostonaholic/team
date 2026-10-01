@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.145.0] - 2026-10-01
+
 ### Changed
 
 - **`/team-pr` posts review notes as a PR comment, not in the PR description.** A PR body with deferred findings and cross-model notes ran to about 14,500 characters, which buried the Summary and Merge risk. The body no longer has a `## Review notes` section. `/team-pr` posts one `review-notes` comment on the home PR with the Minor-and-below findings and the IMPLEMENT-round cross-model notes, and one `design-round-<n>` comment for each design round. Each body refresh posts only the comments that are missing, so a follow-up push adds no duplicates. `/pr-open-comments` leaves those comments out of its triage. A PR opened before this change keeps its `## Review notes` section on each body refresh.
@@ -1382,7 +1384,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.144.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.145.0...HEAD
+[0.145.0]: https://github.com/bostonaholic/team/compare/v0.144.0...v0.145.0
 [0.144.0]: https://github.com/bostonaholic/team/compare/v0.143.0...v0.144.0
 [0.143.0]: https://github.com/bostonaholic/team/compare/v0.142.0...v0.143.0
 [0.142.0]: https://github.com/bostonaholic/team/compare/v0.141.0...v0.142.0
