@@ -63,7 +63,9 @@ Nothing written means no read-back. Report what was left alone.
 ### The empty-`body_html` fallback
 
 If the field ever comes back empty, render the stored body through the same
-renderer and assert against that instead:
+renderer and assert against that instead. For a companion PR, re-bind `RUN_DIR`
+to that companion's printed `COMPANION_DIR`, where `resolve-pr.sh` wrote the
+same files:
 
 ```bash
 RUN_DIR='<printed RUN_DIR>'               # from the resolve call
