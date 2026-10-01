@@ -2,7 +2,7 @@
 // Builds the PR comment bodies that /team-pr posts for deferred findings and
 // cross-model-notes.md, and prints which bodies to post. No network, no `gh`.
 // Usage: review-comments.mjs --out <dir> --existing <file> [--findings <file>] [--notes <file>]
-import { readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -32,7 +32,8 @@ function trimBlankLines(lines) {
 function notesBodyLines(notesText) {
   const lines = notesText.split("\n");
   const closing = lines.indexOf("---", 1);
-  return lines.slice(closing + 1);
+  if (lines[0] !== "---" || closing < 0) return { error: "the notes file has no frontmatter" };
+  return { lines: lines.slice(closing + 1) };
 }
 
 function reviewNotesBody(findingsLines, unlabeledParts) {
@@ -74,9 +75,9 @@ function designRoundComments(blocks) {
     });
 }
 
-function buildComments(findingsText, notesText) {
+function buildComments(findingsText, notesLines) {
   const findingsLines = trimBlankLines(findingsText.split("\n"));
-  const { preamble, blocks } = splitNotes(notesText === undefined ? [] : notesBodyLines(notesText));
+  const { preamble, blocks } = splitNotes(notesLines);
   const unlabeledParts = [preamble, ...blocks.filter((block) => block.round === null).map((block) => block.text)].filter(
     (part) => part !== "",
   );
@@ -119,16 +120,6 @@ function partitionByPosted(comments, postedMarkerLines) {
   };
 }
 
-function readOptional(path) {
-  if (path === undefined) return undefined;
-  try {
-    return readFileSync(path, "utf8");
-  } catch (error) {
-    if (error.code === "ENOENT") return undefined;
-    throw error;
-  }
-}
-
 function main(argv) {
   const flag = (name) => {
     const at = argv.indexOf(name);
@@ -147,6 +138,26 @@ function main(argv) {
   const notesPath = flag("--notes");
   if (!out || !existingPath || findingsPath === null || notesPath === null) fail(USAGE);
 
+  // Every check runs before the first write, so an exit 2 leaves --out empty
+  // and a stale body from an earlier run can never be posted.
+  let outEntries;
+  try {
+    outEntries = readdirSync(out);
+  } catch (error) {
+    fail(`cannot use --out "${out}": ${error.message}`);
+  }
+  if (outEntries.length > 0) fail(`--out "${out}" is not empty`);
+
+  const readOptional = (path, label) => {
+    if (path === undefined) return undefined;
+    try {
+      return readFileSync(path, "utf8");
+    } catch (error) {
+      if (error.code === "ENOENT") return undefined;
+      return fail(`cannot read the ${label} at "${path}": ${error.message}`);
+    }
+  };
+
   let existing;
   try {
     existing = JSON.parse(readFileSync(existingPath, "utf8"));
@@ -156,7 +167,12 @@ function main(argv) {
   const posted = viewerMarkerLines(existing);
   if (posted.error) fail(posted.error);
 
-  const comments = buildComments(readOptional(findingsPath) ?? "", readOptional(notesPath));
+  const findingsText = readOptional(findingsPath, "findings file") ?? "";
+  const notesText = readOptional(notesPath, "notes file");
+  const notes = notesText === undefined ? { lines: [] } : notesBodyLines(notesText);
+  if (notes.error) fail(notes.error);
+
+  const comments = buildComments(findingsText, notes.lines);
   const { pending, skip } = partitionByPosted(comments, posted.lines);
   const { post, refused } = partitionBySize(pending);
 

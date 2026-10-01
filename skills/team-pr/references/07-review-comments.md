@@ -36,6 +36,8 @@ it a second time.
   call.
 - In standalone mode, skip the step. No artifact directory and no aggregate
   gate exist.
+- When the PR body has a line exactly `## Review notes`, skip the step. That
+  PR predates these comments and keeps its body section.
 - In multi-repo mode, post on the home PR only. Never post on a companion PR.
   Findings and notes blocks carry no repo tag, and each companion's
   `## Companion PRs` section links the home PR.
@@ -139,6 +141,10 @@ The comment step never blocks the PR. Every branch ends with an open draft PR
 and a report, per [focused work rules](../../team/principles/focused-work.md).
 
 - When `gh pr view` fails, post nothing. Report the `gh` error.
+- When the script exits 2, post nothing. Report its stderr line, then
+  continue the PR flow. Exit 2 means an invalid input: a missing flag, an
+  `--out` that is missing or not empty, a notes file with no frontmatter, an
+  unreadable file, or a malformed existing-comments file.
 - When a `gh pr comment` fails, stop posting. Report the key, the `gh` error,
   and each key not attempted.
 - In a new session that does not hold the aggregate result, (a) is not
