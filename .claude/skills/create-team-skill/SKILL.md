@@ -41,7 +41,7 @@ Team cannot see the other tenants and so can never verify that it fits. Be a goo
 
 - Put shared invariants in the applicable ordinary document under `skills/team/principles/` or its scoped operational reference. Do not create principle registrations.
 - Methodology is reusable reference material. Set `user-invocable: false`; never expose it directly as a slash command.
-- An entry point is a user action. Leave `user-invocable` unset. If methodology also needs a command, add a separate front door such as `code-review` over `reviewing-code`.
+- An entry point is a user action. Leave `user-invocable` unset. If methodology also needs a command, add a separate front-door entry point beside it.
 - Use `disable-model-invocation: true` only for an explicit-only entry point with a recorded reason.
 
 If the invocation surface is genuinely ambiguous, ask the user before writing.
@@ -92,7 +92,7 @@ Never put `$` followed by a digit in `SKILL.md`; hosts may substitute it as an a
 - Add entry points to the `AGENTS.md` routing table and `docs/skills.md`.
 - Add methodology registrations to `docs/skills.md`. Document ordinary resources separately.
 - Write every `docs/skills.md` entry as its heading, a short user-facing description of what the skill does, one `**Used by:**` line, then one `**Uses:**` line. Use comma-separated backticked names, or `None`. Update the summary when the skill’s purpose changes; do not copy invocation or host-routing instructions from the frontmatter `description`.
-- `Uses` lists, in codepoint order, the skills the files consume in any `.md` under `skills/<name>/`, references and prompt templates included: the ones they load through ``Call the Skill tool with `<name>` ``, and the ones whose `SKILL.md` they reference by path (relative or root-relative). A reference to any other file in a skill's directory, such as a `references/*.md` brief, is not a use, and neither is a bare name in prose nor a reference that only locates a skill's install directory to run a script beside it. Sort in codepoint order (plain `sort`, so `prove` precedes `reviewing-code`).
+- `Uses` lists, in codepoint order, the skills the files consume in any `.md` under `skills/<name>/`, references and prompt templates included: the ones they load through ``Call the Skill tool with `<name>` ``, and the ones whose `SKILL.md` they reference by path (relative or root-relative). A reference to any other file in a skill's directory, such as a `references/*.md` brief, is not a use, and neither is a bare name in prose nor a reference that only locates a skill's install directory to run a script beside it. Sort in codepoint order (plain `sort`, so `team-plan` precedes `team-pr`).
 - `Used by` lists, in codepoint order, every skill whose `Uses` list names this skill.
 - Add one TodoWrite item per ordered step by applying [execution rules](../../../skills/team/references/execution.md); do not copy its banner into the skill.
 - Review `agents/openai.yaml` whenever the description changes; update it when the displayed capability or invocation policy changes.
