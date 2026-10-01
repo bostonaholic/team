@@ -119,11 +119,11 @@ The renderer lays out these sections, in order:
    files, and average CRAP divides it by the number of files with a score.
    Both show 1 decimal, and both show `-` when no function has a score.
 2. **Files.** Measured lane files ranked by the highest `cyclomatic` among
-   their hot functions, with ties by `lines`, most first, then by path. A
-   file with no hot function shows `-` and ranks below every file that has
-   one. The table shows at most 25 rows, then the omitted count.
+   their hot functions, with ties by `lines`, most first, then by path, and
+   its CC band. A file with no hot function shows `-` for both and ranks
+   below every file that has one. The table shows at most 25 rows, then the omitted count.
 3. **Functions.** Every hot function ranked by `cyclomatic`, with ties by
-   file, then line, and its nesting, length (`endLine - line + 1`), and
+   file, then line, and its CC band, nesting, length (`endLine - line + 1`), and
    parameters. The table shows at most 25 rows, then the omitted count. Its
    heading states that a function ranked fourth or lower in its own file
    can be missing.
@@ -131,7 +131,7 @@ The renderer lays out these sections, in order:
    `Not run: no coverage file was given.` With one, scored hot functions
    ranked by the renderer's own CRAP recount, then `cyclomatic`, file, and
    line, with each function's coverage as a floored whole percent and its
-   CRAP to 1 decimal. The table shows at most 25 rows, then the omitted
+   CRAP to 1 decimal, and its CRAP band. The table shows at most 25 rows, then the omitted
    count. Its text states the formula, the source of each value, the
    6-function cap, the `<module>` exemption, the commit limit, the record
    match rule, and the nested-line rule. A `Not scored` table follows, one
@@ -139,13 +139,27 @@ The renderer lays out these sections, in order:
    sorted by path and not capped.
 5. **Lanes.** One table per lane, with one row per measured file: its
    fan-out, its mutable-state count, its function count, its highest
-   cyclomatic complexity, nesting, length, and parameters among its hot
-   functions. Length and parameters skip `<module>`, because it spans the
+   cyclomatic complexity and its CC band, and its highest nesting, length,
+   and parameters among its hot functions. Length and parameters skip `<module>`, because it spans the
    whole file.
 6. **Gaps.** Every `gaps` record and every `skipped` record, with its
    reason.
 7. **Not measured.** Every `inventory.json` file whose `status` is not
    `text`, with its status.
+8. **Reading the numbers.** Always last, once. Both band tables, the four
+   general reduction strategies, and the trend tip, attributed to
+   <https://getotterwise.com/blog/understanding-crap-and-cyclomatic-complexity-metrics>.
+   The strategies name no function.
+
+The bands come from that post. A value equal to a band's upper end takes
+the lower band:
+
+- CC band: 1-6 low, 7-9 moderate, 10-20 high, above 20 very complex.
+- CRAP band: up to 30 acceptable, above 30 to 60 needs attention, above 60
+  high risk. The CRAP band uses the shown 1-decimal value, so a cell never
+  reads 30.0 beside "needs attention".
+
+No band and no score changes the exit status of either script.
 
 The report labels every analyst value as "estimated by reading". `lines`
 comes from the script and is an exact count. Hit and missed lines come

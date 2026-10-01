@@ -1000,6 +1000,176 @@ test("renderReport sums file CRAP into combined and average CRAP", async (t) => 
   });
 });
 
+// Six files whose only hot function sits on each side of a cyclomatic band boundary, and one with none.
+const bandReport = () =>
+  report({
+    lanes: [
+      lane("bands", [
+        entry("src/cc06.js", { functions: 1, hotFunctions: [hot("f06", 1, 6)] }),
+        entry("src/cc07.js", { functions: 1, hotFunctions: [hot("f07", 1, 7)] }),
+        entry("src/cc09.js", { functions: 1, hotFunctions: [hot("f09", 1, 9)] }),
+        entry("src/cc10.js", { functions: 1, hotFunctions: [hot("f10", 1, 10)] }),
+        entry("src/cc20.js", { functions: 1, hotFunctions: [hot("f20", 1, 20)] }),
+        entry("src/cc21.js", { functions: 1, hotFunctions: [hot("f21", 1, 21)] }),
+        entry("src/none.js"),
+      ]),
+    ],
+    gaps: [],
+  });
+const bandInventory = () =>
+  inventory({
+    files: {
+      "src/cc06.js": textFile(10),
+      "src/cc07.js": textFile(10),
+      "src/cc09.js": textFile(10),
+      "src/cc10.js": textFile(10),
+      "src/cc20.js": textFile(10),
+      "src/cc21.js": textFile(10),
+      "src/none.js": textFile(10),
+    },
+  });
+
+// Five scored functions near the CRAP band boundaries. Each recount is worked out by hand.
+const crapBandReport = () =>
+  withCoverage(
+    report({
+      lanes: [
+        lane("risk", [
+          entry("src/risk.js", {
+            functions: 5,
+            hotFunctions: [
+              // 5^2 x 1^3 + 5 = 30 exactly.
+              covered("exact30", 1, 5, { hit: 0, missed: 1, crap: 30 }),
+              // 6^2 x (7/8)^3 + 6 = 12348/512 + 6 = 30.117, shown 30.1.
+              covered("above30", 1, 6, { hit: 1, missed: 7, crap: 30.12 }),
+              // 6^2 x (90/103)^3 + 6 = 26244000/1092727 + 6 = 30.017, shown 30.0.
+              covered("rounds30", 1, 6, { hit: 13, missed: 90, crap: 30.02 }),
+              // 8^2 x (14/15)^3 + 8 = 175616/3375 + 8 = 60.034, shown 60.0.
+              covered("rounds60", 1, 8, { hit: 1, missed: 14, crap: 60.03 }),
+              // 8^2 x (113/121)^3 + 8 = 92345408/1771561 + 8 = 60.127, shown 60.1.
+              covered("above60", 1, 8, { hit: 8, missed: 113, crap: 60.13 }),
+            ],
+          }),
+        ]),
+      ],
+      gaps: [],
+    }),
+  );
+const crapBandInventory = () => inventory({ coverage: COVERAGE, files: { "src/risk.js": textFile(200) } });
+
+test("renderReport labels each cyclomatic and CRAP value with its band", async (t) => {
+  await t.test("Files labels cyclomatic 6/7, 9/10, and 20/21 with the band each side of the boundary", () => {
+    const files = section(renderReport(bandReport(), bandInventory()), "Files");
+    assert.equal(rowWith(files, "src/cc06.js")["CC band"], "low");
+    assert.equal(rowWith(files, "src/cc07.js")["CC band"], "moderate");
+    assert.equal(rowWith(files, "src/cc09.js")["CC band"], "moderate");
+    assert.equal(rowWith(files, "src/cc10.js")["CC band"], "high");
+    assert.equal(rowWith(files, "src/cc20.js")["CC band"], "high");
+    assert.equal(rowWith(files, "src/cc21.js")["CC band"], "very complex");
+  });
+
+  await t.test("Functions labels cyclomatic 6/7, 9/10, and 20/21 with the band each side of the boundary", () => {
+    const functions = section(renderReport(bandReport(), bandInventory()), "Functions");
+    assert.equal(rowWith(functions, "f06")["CC band"], "low");
+    assert.equal(rowWith(functions, "f07")["CC band"], "moderate");
+    assert.equal(rowWith(functions, "f09")["CC band"], "moderate");
+    assert.equal(rowWith(functions, "f10")["CC band"], "high");
+    assert.equal(rowWith(functions, "f20")["CC band"], "high");
+    assert.equal(rowWith(functions, "f21")["CC band"], "very complex");
+  });
+
+  await t.test("Lanes labels cyclomatic 6/7, 9/10, and 20/21 with the band each side of the boundary", () => {
+    const lanes = section(renderReport(bandReport(), bandInventory()), "Lanes");
+    assert.equal(rowWith(lanes, "src/cc06.js")["CC band"], "low");
+    assert.equal(rowWith(lanes, "src/cc07.js")["CC band"], "moderate");
+    assert.equal(rowWith(lanes, "src/cc09.js")["CC band"], "moderate");
+    assert.equal(rowWith(lanes, "src/cc10.js")["CC band"], "high");
+    assert.equal(rowWith(lanes, "src/cc20.js")["CC band"], "high");
+    assert.equal(rowWith(lanes, "src/cc21.js")["CC band"], "very complex");
+  });
+
+  await t.test("a file with no hot function shows - as its CC band in Files and Lanes", () => {
+    const markdown = renderReport(bandReport(), bandInventory());
+    assert.equal(rowWith(section(markdown, "Files"), "src/none.js")["CC band"], "-");
+    assert.equal(rowWith(section(markdown, "Lanes"), "src/none.js")["CC band"], "-");
+  });
+
+  await t.test("a CRAP of exactly 30 reads acceptable", () => {
+    const row = rowWith(section(renderReport(crapBandReport(), crapBandInventory()), "Change risk"), "exact30");
+    assert.equal(row.CRAP, "30.0");
+    assert.equal(row["CRAP band"], "acceptable");
+  });
+
+  await t.test("a shown CRAP of 30.1 reads needs attention", () => {
+    const row = rowWith(section(renderReport(crapBandReport(), crapBandInventory()), "Change risk"), "above30");
+    assert.equal(row.CRAP, "30.1");
+    assert.equal(row["CRAP band"], "needs attention");
+  });
+
+  await t.test("a recount just above 30 that shows 30.0 reads acceptable", () => {
+    const row = rowWith(section(renderReport(crapBandReport(), crapBandInventory()), "Change risk"), "rounds30");
+    assert.equal(row.CRAP, "30.0");
+    assert.equal(row["CRAP band"], "acceptable");
+  });
+
+  await t.test("a recount just above 60 that shows 60.0 reads needs attention", () => {
+    const row = rowWith(section(renderReport(crapBandReport(), crapBandInventory()), "Change risk"), "rounds60");
+    assert.equal(row.CRAP, "60.0");
+    assert.equal(row["CRAP band"], "needs attention");
+  });
+
+  await t.test("a shown CRAP of 60.1 reads high risk", () => {
+    const row = rowWith(section(renderReport(crapBandReport(), crapBandInventory()), "Change risk"), "above60");
+    assert.equal(row.CRAP, "60.1");
+    assert.equal(row["CRAP band"], "high risk");
+  });
+});
+
+test("render-report.mjs exits 0 when a CRAP is above 60", (t) => {
+  // 8^2 x 1^3 + 8 = 72: high risk, and still no gate.
+  const dir = tempDir(t);
+  const risky = withCoverage(
+    report({
+      lanes: [lane("core", [entry("src/app.js", { functions: 1, hotFunctions: [covered("risky", 1, 8, { hit: 0, missed: 2, crap: 72 })] })])],
+      gaps: [],
+    }),
+  );
+  writeFileSync(join(dir, "report.json"), JSON.stringify(risky));
+  writeFileSync(join(dir, "inventory.json"), JSON.stringify(inventory({ coverage: COVERAGE, files: { "src/app.js": textFile(120) } })));
+  const run = runRender(join(dir, "report.json"));
+  assert.equal(run.status, 0, run.stderr);
+  assert.match(readFileSync(join(dir, "report.md"), "utf8"), /high risk/);
+});
+
+test("renderReport ends every report with Reading the numbers", async (t) => {
+  await t.test("with coverage the reading aid is the last section, once", () => {
+    const headings = level2Headings(renderReport(coveredReport(), coveredInventory()));
+    assert.equal(headings.at(-1), "Reading the numbers");
+    assert.equal(headings.indexOf("Reading the numbers"), headings.length - 1);
+  });
+
+  await t.test("without coverage the reading aid is the last section, once", () => {
+    const headings = level2Headings(renderReport(report(), inventory()));
+    assert.equal(headings.at(-1), "Reading the numbers");
+    assert.equal(headings.indexOf("Reading the numbers"), headings.length - 1);
+  });
+
+  await t.test("it holds both band tables, the four reduction strategies, and the trend tip, with attribution", () => {
+    const aid = section(renderReport(report(), inventory()), "Reading the numbers");
+    assert.match(aid, /\bmoderate\b/);
+    assert.match(aid, /very complex/);
+    assert.match(aid, /\bacceptable\b/);
+    assert.match(aid, /needs attention/);
+    assert.match(aid, /high risk/);
+    assert.match(aid, /extract/i);
+    assert.match(aid, /guard clause/i);
+    assert.match(aid, /polymorphism/i);
+    assert.match(aid, /lookup table/i);
+    assert.match(aid, /trend/i);
+    assert.match(aid, /getotterwise\.com\/blog\/understanding-crap-and-cyclomatic-complexity-metrics/);
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // The inventory reads git under any config
 

@@ -14,6 +14,19 @@ const CRAP_TOLERANCE = 0.01;
 // Float slack, so a 2-decimal crap exactly 0.01 from the recount still passes.
 const FLOAT_SLACK = 1e-9;
 const NOT_RUN = "Not run: no coverage file was given.\n";
+const SOURCE_POST = "https://getotterwise.com/blog/understanding-crap-and-cyclomatic-complexity-metrics";
+// A value equal to a band's max goes to that band, so a shared endpoint reads as the lower band.
+const CC_BANDS = [
+  { max: 6, label: "low" },
+  { max: 9, label: "moderate" },
+  { max: 20, label: "high" },
+  { max: Infinity, label: "very complex" },
+];
+const CRAP_BANDS = [
+  { max: 30, label: "acceptable" },
+  { max: 60, label: "needs attention" },
+  { max: Infinity, label: "high risk" },
+];
 
 const list = (value) => (Array.isArray(value) ? value : []);
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -232,6 +245,10 @@ function scoredFunctions(report) {
 }
 
 const oneDecimal = (value) => value.toFixed(1);
+const bandOf = (bands, value) => bands.find((band) => value <= band.max).label;
+const ccBand = (cyclomatic) => (typeof cyclomatic === "number" ? bandOf(CC_BANDS, cyclomatic) : "-");
+// Bands the shown value, so a cell never reads 30.0 beside "needs attention".
+const crapBand = (shown) => bandOf(CRAP_BANDS, Number(shown));
 // Floored, so 100% appears only when no line was missed.
 const coveragePercent = ({ hit, missed }) => `${Math.floor((hit * 100) / (hit + missed))}%`;
 
@@ -298,8 +315,8 @@ function renderFiles(report, files) {
     "Measured lane files rank by their highest hot-function cyclomatic complexity, then by lines, then by path. " +
       "Max cyclomatic is estimated by reading, and a file with no hot function shows `-`.\n",
     table(
-      ["Rank", "File", "Max cyclomatic", "Lines"],
-      shown.map((row, i) => [i + 1, `\`${row.file}\``, row.cyclomatic, row.lines]),
+      ["Rank", "File", "Max cyclomatic", "CC band", "Lines"],
+      shown.map((row, i) => [i + 1, `\`${row.file}\``, row.cyclomatic, ccBand(row.cyclomatic), row.lines]),
     ),
     note,
   ];
@@ -316,13 +333,14 @@ function renderFunctions(report) {
       "Values are estimated by reading. Each file lists at most 6 hot functions, " +
       "so a function that ranks fourth or lower in its own file can be missing.\n",
     table(
-      ["Rank", "Function", "File", "Line", "Cyclomatic", "Nesting", "Length", "Params"],
+      ["Rank", "Function", "File", "Line", "Cyclomatic", "CC band", "Nesting", "Length", "Params"],
       shown.map((hot, i) => [
         i + 1,
         `\`${hot.name}\``,
         `\`${hot.file}\``,
         hot.line,
         hot.cyclomatic,
+        ccBand(hot.cyclomatic),
         hot.nesting,
         lengthOf(hot),
         hot.params,
@@ -371,8 +389,11 @@ function renderChangeRisk(report) {
       "`<module>` has no CRAP, because its range holds every function in the file. " +
       `The audit cannot tell if the coverage file came from commit \`${scope.commit}\`.\n`,
     table(
-      ["Rank", "Function", "File", "Line", "Cyclomatic", "Coverage", "CRAP"],
-      shown.map((fn, i) => [i + 1, `\`${fn.name}\``, `\`${fn.file}\``, fn.line, fn.cyclomatic, coveragePercent(fn), oneDecimal(fn.crap)]),
+      ["Rank", "Function", "File", "Line", "Cyclomatic", "Coverage", "CRAP", "CRAP band"],
+      shown.map((fn, i) => {
+        const shownCrap = oneDecimal(fn.crap);
+        return [i + 1, `\`${fn.name}\``, `\`${fn.file}\``, fn.line, fn.cyclomatic, coveragePercent(fn), shownCrap, crapBand(shownCrap)];
+      }),
     ),
     note,
     ...renderNotScored(report),
@@ -395,6 +416,7 @@ function renderLanes(report) {
           "Mutable state",
           "Functions",
           "Max cyclomatic",
+          "CC band",
           "Max nesting",
           "Max length",
           "Max params",
@@ -407,6 +429,7 @@ function renderLanes(report) {
             entry.mutableState.count,
             entry.functions,
             max.cyclomatic,
+            ccBand(max.cyclomatic),
             max.nesting,
             max.length,
             max.params,
@@ -435,6 +458,30 @@ function renderNotMeasured(files) {
   return ["## Not measured\n", table(["Path", "Status"], rows)];
 }
 
+function bandRows(bands, range) {
+  return bands.map((band, i) => [range(bands[i - 1]?.max, band.max), band.label]);
+}
+
+function renderReadingAid() {
+  const ccRange = (below, max) => (max === Infinity ? `above ${below}` : `${(below ?? 0) + 1}-${max}`);
+  const crapRange = (below, max) => (below === undefined ? `up to ${max}` : max === Infinity ? `above ${below}` : `above ${below} to ${max}`);
+  return [
+    "## Reading the numbers\n",
+    `The bands, the reduction strategies, and the trend tip come from <${SOURCE_POST}>. ` +
+      "They are reading aids, not a pass or fail result. " +
+      "A value on a shared endpoint, such as a CRAP of 30, takes the lower band. The CRAP band uses the shown 1-decimal value.\n",
+    table(["Cyclomatic", "CC band"], bandRows(CC_BANDS, ccRange)),
+    table(["CRAP", "CRAP band"], bandRows(CRAP_BANDS, crapRange)),
+    "General ways to lower cyclomatic complexity. They name no function in this report:\n",
+    "- Extract methods: move a block into its own named function.\n" +
+      "- Use early returns or guard clauses in place of nested conditions.\n" +
+      "- Use polymorphism in place of conditionals.\n" +
+      "- Use lookup tables or configuration in place of `switch`/`case`.\n",
+    "Track the trend across runs, not only the absolute values. " +
+      "A change that raises combined CRAP but lowers average CRAP can still improve quality per file.\n",
+  ];
+}
+
 export function renderReport(report, inventory) {
   const files = inventory.files;
   return [
@@ -446,6 +493,7 @@ export function renderReport(report, inventory) {
     ...renderLanes(report),
     ...renderGaps(report),
     ...renderNotMeasured(files),
+    ...renderReadingAid(),
   ]
     .filter((part) => part !== "")
     .join("\n");
