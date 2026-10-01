@@ -5,7 +5,7 @@ Read [external-data rules](../../team/references/external-data.md) before teardo
 
 The worktree playbook's teardown step 8 follows this file after the worktree is removed.
 
-Shell variables do not persist between calls, so each fence below binds and derives everything it expands, and runs as one call. A value is pasted only inside single quotes, or into Step 2's quoted here-doc, and a supplied value that contains a single quote, a newline, `$`, or a backtick is refused, not pasted.
+Shell variables do not persist between calls, so each fence below binds and derives everything it expands, and runs as one call. A value is pasted only inside single quotes, or into Step 2's quoted here-doc. A supplied value is refused, not pasted, when it contains a single quote, a newline, `$`, or a backtick; when it equals the here-doc's end line `RECORDED_TEMP_PATHS`, which would end the here-doc early and run the lines after it as commands; or, for a temp path, when it is not absolute.
 
 ## Ownership boundary
 
@@ -172,6 +172,11 @@ that fails a check is skipped, and only a path that passes all three reaches
 ```sh
 TMPROOT="${TMPDIR:-/tmp}"
 while [ "${TMPROOT%/}" != "$TMPROOT" ]; do TMPROOT="${TMPROOT%/}"; done
+# `TMPDIR=/` strips to empty, and an empty root matches every absolute path.
+case "$TMPROOT" in
+  /?*) ;;
+  *) echo "refusing: temp root '$TMPROOT' is empty or not absolute" >&2; exit 1 ;;
+esac
 while IFS= read -r P; do
   [ -n "$P" ] || continue
   case "$P" in

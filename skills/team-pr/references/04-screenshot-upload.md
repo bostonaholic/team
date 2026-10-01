@@ -100,17 +100,17 @@ every value the write and the read-back expand is bound in that same call:
 ```bash
 ENTRIES_DIR='<printed ENTRIES_DIR>'                # from the build call
 RESULT_FILE="$ENTRIES_DIR/result.json"
-COMPANION_URL="https://github.com/owner/other-repo/pull/17"   # this companion's PR
+COMPANION_URL='https://github.com/owner/other-repo/pull/17'   # this companion's PR, filled in literally
 # Step 1: bind this companion's own values.
 COMPANION_DIR="$(mktemp -d)"                       # bound per companion, never reused
-"<team-pr-skill-dir>/scripts/resolve-pr.sh" "$COMPANION_URL" "$COMPANION_DIR" || exit 2
+'<team-pr-skill-dir>/scripts/resolve-pr.sh' "$COMPANION_URL" "$COMPANION_DIR" || exit 2
 printf 'COMPANION_DIR=%s\n' "$COMPANION_DIR"
 COMPANION_HOST="$(cat "$COMPANION_DIR/pr-host")"
 OWNER="$(cat "$COMPANION_DIR/owner")"
 REPO="$(cat "$COMPANION_DIR/repo")"
 NUMBER="$(cat "$COMPANION_DIR/number")"
 # Step 2: splice the section in and write it, once.
-"<team-pr-skill-dir>/scripts/write-companion.sh" "$COMPANION_DIR" "$RESULT_FILE" || exit $?
+'<team-pr-skill-dir>/scripts/write-companion.sh' "$COMPANION_DIR" "$RESULT_FILE" || exit $?
 # Step 3: read this companion's own rendered body back.
 gh api --hostname "$COMPANION_HOST" repos/"$OWNER"/"$REPO"/pulls/"$NUMBER" \
   -H "Accept: application/vnd.github.full+json" --jq .body_html

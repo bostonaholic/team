@@ -57,7 +57,9 @@ is a single command.
   inside a re-bound directory, and re-reads what a script wrote there with its
   `cat` line. A value is pasted only inside single quotes, and a printed or
   supplied value that contains a single quote, a newline, `$`, or a backtick is
-  refused, not pasted.
+  refused, not pasted. A line pasted into a quoted here-doc must not equal that
+  here-doc's end line, which would end it early and run the lines after it as
+  commands.
 - **Nothing leaves the declared root, and nothing that is not an image is
   uploaded.** Every entry's path must resolve inside the entries file's one
   **absolute** top-level `root`, and acceptance is decided by **content type**,
