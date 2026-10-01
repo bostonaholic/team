@@ -58,7 +58,7 @@ seeds and updates a TodoWrite ledger, and runs the gates.
   *Structural*: the orchestrator only passes the `2-questions.md` path to
   the research agents. *Procedural*: the research agents' system prompts
   forbid reading `1-task.md`.
-- **No mid-run human gates.** The design (~200-line alignment doc) is
+- **No mid-run human gates.** The design (~300-line alignment doc) is
   gated by an adversarial design review. A fresh-context subagent audits
   it, and the orchestrator records its verdict to `design-review-<n>.md`.
   The artifacts are thus self-describing. The Structure (~2-page

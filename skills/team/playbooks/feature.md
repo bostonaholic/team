@@ -13,7 +13,7 @@ Eight sequential phases; none are skippable.
 | **WORKTREE** | branch `<id>` worktree from `origin/HEAD`; author `docs/plans/<id>/` inside it | HARD: exists before QUESTION |
 | **QUESTION** | `1-task.md` (full, human-only) and `2-questions.md` (neutral codebase context; no goal) | HARD: both on disk |
 | **RESEARCH** | `5-research.md` | HARD: on disk |
-| **DESIGN** | `6-design.md` (~200 lines) and `design-review-<n>.md` each round | REVIEW: APPROVE/COMMENT advance; REQUEST CHANGES redrafts and reviews again |
+| **DESIGN** | `6-design.md` (~300 lines) and `design-review-<n>.md` each round | REVIEW: APPROVE/COMMENT advance; REQUEST CHANGES redrafts and reviews again |
 | **STRUCTURE** | `7-structure.md` (~2 pages, vertical slices) | NONE: autonomous |
 | **PLAN** | `8-plan.md` | SOFT: no approval; reviewed design is contract |
 | **IMPLEMENT** | code, passing tests, per-slice commits | AGGREGATE: security, verifier, code-review hard gates |

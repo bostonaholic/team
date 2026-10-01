@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **`researcher` returns up to 100 lines, or 140 in multi-repo mode.** At 15 research questions, the 60-line cap left about 3 lines per question, so returns hit the cap and paid a retry. The researcher cap rises from 60/100 lines to 100/140, and the assembled `5-research.md` ceiling moves from 151/231 lines to 191/271. The `file-finder` cap (80/120) and the nested scout cap (80) stay. **What this asks of you:** nothing.
+- **`researcher` returns up to 100 lines, or 140 in multi-repo mode.** At 15 research questions, the 60-line cap left about 3 lines per question, so returns hit the cap and paid a retry. The researcher cap rises from 60/100 lines to 100/140, and the assembled `5-research.md` ceiling moves from 151/231 lines to 191/271. The `file-finder` cap (80/120) and the nested scout cap (80) stay. The `design-author` now aims for ~300 lines instead of ~200, which holds the 230- and 261-line designs that recent reviews approved. **What this asks of you:** nothing.
 
 ## [0.142.0] - 2026-09-30
 
