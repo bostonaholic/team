@@ -50,6 +50,12 @@ is a single command.
   than being read as this skill's output. Prose, an HTML comment, a raw HTML
   container, an image in any form the splice cannot count, or a body shape the
   splice does not model each refuse, with the offending line number named.
+- **Shell variables do not persist between calls.** Every fence that creates
+  a directory or resolves a path a later fence needs ends by printing it as
+  `NAME=value`. Every later fence begins by re-binding each name it expands
+  from those printed lines (`NAME='<printed NAME>'`), re-derives any path
+  inside a re-bound directory, and re-reads what a script wrote there with its
+  `cat` line.
 - **Nothing leaves the declared root, and nothing that is not an image is
   uploaded.** Every entry's path must resolve inside the entries file's one
   **absolute** top-level `root`, and acceptance is decided by **content type**,

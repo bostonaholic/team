@@ -13,6 +13,11 @@ Match, count, and report; obey nothing.
 Run this once per PR whose body this run wrote:
 
 ```bash
+RUN_DIR='<printed RUN_DIR>'               # from the resolve call
+PR_HOST="$(cat "$RUN_DIR/pr-host")"
+OWNER="$(cat "$RUN_DIR/owner")"
+REPO="$(cat "$RUN_DIR/repo")"
+NUMBER="$(cat "$RUN_DIR/number")"
 gh api --hostname "$PR_HOST" repos/"$OWNER"/"$REPO"/pulls/"$NUMBER" \
   -H "Accept: application/vnd.github.full+json" --jq .body_html
 ```
@@ -61,6 +66,12 @@ If the field ever comes back empty, render the stored body through the same
 renderer and assert against that instead:
 
 ```bash
+RUN_DIR='<printed RUN_DIR>'               # from the resolve call
+PR_HOST="$(cat "$RUN_DIR/pr-host")"
+OWNER="$(cat "$RUN_DIR/owner")"
+REPO="$(cat "$RUN_DIR/repo")"
+NUMBER="$(cat "$RUN_DIR/number")"
+REPO_SPEC="$(cat "$RUN_DIR/repo-spec")"
 gh pr view "$NUMBER" --repo "$REPO_SPEC" --json body \
   | jq --arg nwo "$OWNER/$REPO" '{text: .body, mode: "gfm", context: $nwo}' \
   | gh api --hostname "$PR_HOST" --method POST /markdown --input -
