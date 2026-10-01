@@ -69,7 +69,8 @@ When teardown is warranted (post-merge or on explicit request):
 Before step 1, record for each repo `BRANCH`, the branch its worktree used
 (`<id>`, or the existing branch when WORKTREE reused a linked worktree), and
 `WORKTREE`, that worktree's absolute path (empty when the run fell back to
-in-place work). Step 8 passes both.
+in-place work). Step 8 pastes both, as single-quoted literals, into the
+teardown fence's `BRANCH` and `WORKTREE` lines.
 
 1. For each worktree with commits ahead of its base branch, cherry-pick
    or rebase those commits onto the target branch in that repo. Then let
@@ -127,7 +128,8 @@ in-place work). Step 8 passes both.
 8. **Tear down what the worktree provisioned**, not only the worktree.
    For each repo, follow
    `<team-worktree-skill-dir>/playbooks/provisioned-teardown.md`, all
-   sections, with that repo's `<repo-path>` and the `BRANCH` and
+   sections, filling its Step 1 fence's `REPO_PATH`, `BRANCH`, and
+   `WORKTREE` lines with that repo's `<repo-path>` and the `BRANCH` and
    `WORKTREE` recorded before step 1. `<team-worktree-skill-dir>` is the
    absolute directory that holds the installed
    `skills/team-worktree/SKILL.md`. The file runs the teardown commands

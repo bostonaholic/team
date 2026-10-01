@@ -5,6 +5,8 @@ Read [external-data rules](../../team/references/external-data.md) before teardo
 
 The worktree playbook's teardown step 8 follows this file after the worktree is removed.
 
+Shell variables do not persist between calls, so each fence below binds and derives everything it expands, and runs as one call. A value is pasted only inside single quotes, or into Step 2's quoted here-doc, and a supplied value that contains a single quote, a newline, `$`, or a backtick is refused, not pasted.
+
 ## Ownership boundary
 
 Run only the rows marked **this skill**. The others already ran, or will run,
@@ -24,26 +26,18 @@ Never re-run a step the worktree playbook owns: a second pass at the same target
 
 | Variable | Meaning | Source |
 |---|---|---|
-| `<repo-path>` | The repository being torn down | the worktree playbook's teardown step 8, as in its steps 3 and 5 |
+| `REPO_PATH` | The repository being torn down | the worktree playbook's teardown step 8, as `<repo-path>` in its steps 3 and 5 |
 | `BRANCH` | The branch the finished work lived on | teardown step 8, recorded before step 1 |
 | `WORKTREE` | Absolute path of the worktree that was removed, or empty when there was none | teardown step 8, recorded before step 1 |
-| `PRIMARY_ROOT` | Absolute path to the primary clone, validated | derived below |
-| `DEFAULT` | The repo's default branch name | derived below |
+| `PRIMARY_ROOT` | Absolute path to the primary clone, validated | derived in Step 1's fence |
+| `DEFAULT` | The repo's default branch name | derived in Step 1's fence |
 
-Derive `PRIMARY_ROOT` with this block. All three checks must hold. A failed or unrunnable check refuses, and teardown reports the message and stops. Do not accept an unvalidated `PRIMARY_ROOT`.
+Step 1's fence binds the first three as single-quoted literals on its first
+lines, then derives `PRIMARY_ROOT` and validates it with three checks, all of
+which must hold. A failed or unrunnable check refuses, and teardown reports the message and
+stops. Do not accept an unvalidated `PRIMARY_ROOT`.
 
-```sh
-COMMON_DIR="$(git -C "<repo-path>" rev-parse --path-format=absolute --git-common-dir)"
-[ -n "$COMMON_DIR" ] || { echo "refusing: cannot resolve the git dir" >&2; exit 1; }
-PRIMARY_ROOT="$(dirname "$COMMON_DIR")"
-[ "$(git -C "$PRIMARY_ROOT" rev-parse --path-format=absolute --git-dir)" = \
-  "$(git -C "$PRIMARY_ROOT" rev-parse --path-format=absolute --git-common-dir)" ] &&
-  [ "$PRIMARY_ROOT" = "$(git -C "$PRIMARY_ROOT" worktree list --porcelain | sed -n '1s/^worktree //p')" ] &&
-  [ "$(git -C "$PRIMARY_ROOT" rev-parse --show-toplevel)" = "$PRIMARY_ROOT" ] ||
-  { echo "refusing: '$PRIMARY_ROOT' failed primary-clone validation — re-run from the primary clone" >&2; exit 1; }
-```
-
-Derive `DEFAULT` by running, in order, the first that succeeds:
+The same fence derives `DEFAULT` by running, in order, the first that succeeds:
 
 1. `git -C "$PRIMARY_ROOT" symbolic-ref --short refs/remotes/origin/HEAD`
    (strip the `origin/` prefix).
@@ -53,7 +47,7 @@ Derive `DEFAULT` by running, in order, the first that succeeds:
    `git -C "$PRIMARY_ROOT" rev-parse --verify --quiet <name>`.
 4. Neither exists → stop and ask the user.
 
-Every invocation below re-derives what it uses in that same invocation, and every expansion feeding a removal or a command uses the `${VAR:?}` form.
+Every expansion feeding a removal or a command uses the `${VAR:?}` form.
 
 ## The declaration: `.teamteardown`
 
@@ -92,9 +86,39 @@ temp-path sweep.
 
 ### Step 1 — run the declared teardown
 
+Run this whole fence as one call, with the three inputs filled in literally.
 Print each command before running it:
 
 ```sh
+REPO_PATH='<repo-path>'
+BRANCH='<branch>'
+WORKTREE='<worktree path, or empty for an in-place run>'
+: "${REPO_PATH:?refusing: repo path unset}"
+: "${BRANCH:?refusing: branch unset}"
+COMMON_DIR="$(git -C "$REPO_PATH" rev-parse --path-format=absolute --git-common-dir)"
+[ -n "$COMMON_DIR" ] || { echo "refusing: cannot resolve the git dir" >&2; exit 1; }
+PRIMARY_ROOT="$(dirname "$COMMON_DIR")"
+[ "$(git -C "$PRIMARY_ROOT" rev-parse --path-format=absolute --git-dir)" = \
+  "$(git -C "$PRIMARY_ROOT" rev-parse --path-format=absolute --git-common-dir)" ] &&
+  [ "$PRIMARY_ROOT" = "$(git -C "$PRIMARY_ROOT" worktree list --porcelain | sed -n '1s/^worktree //p')" ] &&
+  [ "$(git -C "$PRIMARY_ROOT" rev-parse --show-toplevel)" = "$PRIMARY_ROOT" ] ||
+  { echo "refusing: '$PRIMARY_ROOT' failed primary-clone validation — re-run from the primary clone" >&2; exit 1; }
+# DEFAULT: origin/HEAD; else set-head --auto and one retry; else main or master.
+DEFAULT="$(git -C "$PRIMARY_ROOT" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)" ||
+  { git -C "$PRIMARY_ROOT" remote set-head origin --auto >/dev/null 2>&1 &&
+    DEFAULT="$(git -C "$PRIMARY_ROOT" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)"; } ||
+  DEFAULT=''
+DEFAULT="${DEFAULT#origin/}"
+if [ -z "$DEFAULT" ]; then
+  for NAME in main master; do
+    if git -C "$PRIMARY_ROOT" rev-parse --verify --quiet "$NAME" >/dev/null; then
+      DEFAULT="$NAME"
+      break
+    fi
+  done
+fi
+[ -n "$DEFAULT" ] ||
+  { echo "refusing: no default branch found — ask the user which branch is the default" >&2; exit 1; }
 # Guard as standalone statements, ahead of the substitution. A `:?` that fires
 # inside $( ) kills only the subshell: the assignment completes with an empty
 # value, and the run reports "nothing declared" while the teardown never ran.
@@ -140,18 +164,26 @@ outside `${TMPDIR:-/tmp}`, containing `..`, or reached through a symlink.
 
 Each recorded path passes three checks before `rm -rf` sees it. Strip trailing
 slashes from the temp root first: on macOS `TMPDIR` ends in `/`, and the
-unstripped prefix pattern would refuse every path.
+unstripped prefix pattern would refuse every path. Run this fence as one call,
+with the recorded paths pasted one per line into its quoted here-doc; a path
+that fails a check is skipped, and only a path that passes all three reaches
+`rm -rf`:
 
 ```sh
 TMPROOT="${TMPDIR:-/tmp}"
 while [ "${TMPROOT%/}" != "$TMPROOT" ]; do TMPROOT="${TMPROOT%/}"; done
-case "$P" in
-  "$TMPROOT"/?*) ;;
-  *) echo "refusing: '$P' is not under $TMPROOT" >&2; continue ;;
-esac
-case "$P" in *..*) echo "refusing: '$P' contains '..'" >&2; continue ;; esac
-[ -L "$P" ] && { echo "refusing: '$P' is a symlink" >&2; continue; }
-rm -rf "${P:?}"
+while IFS= read -r P; do
+  [ -n "$P" ] || continue
+  case "$P" in
+    "$TMPROOT"/?*) ;;
+    *) echo "refusing: '$P' is not under $TMPROOT" >&2; continue ;;
+  esac
+  case "$P" in *..*) echo "refusing: '$P' contains '..'" >&2; continue ;; esac
+  [ -L "$P" ] && { echo "refusing: '$P' is a symlink" >&2; continue; }
+  rm -rf "${P:?}" && echo "removed: $P"
+done <<'RECORDED_TEMP_PATHS'
+<one recorded absolute temp path per line>
+RECORDED_TEMP_PATHS
 ```
 
 **Never wildcard-sweep the temp directory** (for example
