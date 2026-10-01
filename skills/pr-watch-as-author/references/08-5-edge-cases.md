@@ -2,7 +2,8 @@
 
 - If a wake finds zero unresolved threads, no untriaged review summaries or
   conversation comments, and no other change (for example, a reviewer
-  resolved their own thread), re-arm silently and present nothing. Check
+  resolved their own thread), re-arm without presenting a punch list; the poll's one-line snapshot still
+  prints. Check
   the untriaged PR-level item set before taking this path.
 - If a CHANGES_REQUESTED review arrives with an empty body and no
   threads, emit a status line that names the reviewer and the

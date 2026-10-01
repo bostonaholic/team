@@ -31,8 +31,8 @@ else:
 - **Soft cap: 3 cycles** (~90 minutes). At cycle 3, if nothing has
   stopped the loop already, end the interactive session — do not sleep
   again. Print a handoff: the consumer's handoff state and the exact
-  command to resume the watch as a scheduled headless job — the scheduled
-  pr-watch job (`~/dotfiles/bin/pr-watch.sh`, run from launchd).
+  command to resume the watch as a headless job under an external
+  scheduler, if the user runs one.
   Re-arming the interactive loop happens only on explicit user request;
   the loop does not re-arm itself.
 - The bound is the invariant, not the interval: 3 cycles at ~31 minutes.

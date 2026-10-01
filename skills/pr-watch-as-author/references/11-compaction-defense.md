@@ -20,5 +20,5 @@ Report:
 - the number of cycles consumed
 - the handoff — on approval,
   `Next: run /shipit when you want to land it.`. On the soft cap, print
-  the baseline state and the resume command for the scheduled pr-watch
-  job. After the user's choices run, offer to re-arm the watch.
+  the baseline state and the command to resume the watch as a headless
+  job under an external scheduler, if the user runs one. After the user's choices run, offer to re-arm the watch.
