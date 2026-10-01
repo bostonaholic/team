@@ -2,9 +2,12 @@
 
 Each poll is one Bash call that combines:
 
-- `gh pr view <n> --repo <owner>/<repo> --json state,reviewDecision,isDraft,headRefOid,statusCheckRollup`,
+- `gh pr view <n> --repo <owner>/<repo> --json state,reviewDecision,isDraft,headRefOid,headRefName,headRepository,headRepositoryOwner,statusCheckRollup`,
   projected with `--jq` to `state`, `reviewDecision`, `isDraft`,
-  `headRefOid`, and the `statusCheckRollup` length
+  `headRefOid`, `headRefName`, `headRepository.name`,
+  `headRepositoryOwner.login`, and the `statusCheckRollup` length. The
+  three head-branch fields feed the branch binding in
+  [CI checks](08-ci-checks.md).
 - when that length is above 0,
   `gh pr checks <n> --repo <owner>/<repo> --json workflow,name,bucket,state,link`
 - a second `gh pr view <n> --repo <owner>/<repo> --json headRefOid`, read
