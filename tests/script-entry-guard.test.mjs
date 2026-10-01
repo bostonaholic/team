@@ -33,7 +33,7 @@ function importModule(t, path) {
 }
 
 test("splice.mjs run through a symlinked directory reaches its usage error", (t) => {
-  const run = runScript(join(symlinkedDir(t, "skills/pr-screenshots/scripts"), "splice.mjs"));
+  const run = runScript(join(symlinkedDir(t, "skills/team-pr/scripts"), "splice.mjs"));
   assert.equal(run.status, 2);
   assert.match(run.stderr, /^splice\.mjs: usage: splice\.mjs /);
 });
@@ -57,7 +57,7 @@ test("external-review.mjs run through a symlinked directory reaches its usage er
 });
 
 test("importing splice.mjs through a symlinked directory has no side effects", (t) => {
-  const run = importModule(t, join(symlinkedDir(t, "skills/pr-screenshots/scripts"), "splice.mjs"));
+  const run = importModule(t, join(symlinkedDir(t, "skills/team-pr/scripts"), "splice.mjs"));
   assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
 });
 

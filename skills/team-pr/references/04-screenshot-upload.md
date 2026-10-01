@@ -1,11 +1,9 @@
-Before this operation, read [external-data rules](../team/references/external-data.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before this operation, read [external-data rules](../../team/references/external-data.md).
+Resolve links in this file from this file's own directory. `<team-pr-skill-dir>` is the absolute directory that holds the installed `skills/team-pr/SKILL.md`. If a read fails, stop and report its resolved path.
 
 ## Screenshot Upload
 
-Caller policy only. The upload mechanics, the section's markdown shape, and the
-body write live in one place — `skills/pr-screenshots/` — and this file decides
-whether to run, when, and which manifest entries qualify.
+Caller policy only. The upload mechanics, the section's markdown shape, and the body write live in [screenshot rules](screenshot-rules.md), its procedure references, and `<team-pr-skill-dir>/scripts/`. This file decides whether to run, when, and which manifest entries qualify.
 
 ### When to call
 
@@ -45,23 +43,21 @@ The file itself carries:
   states were skipped and pointing at the manifest.
 
 The file's schema, and the worked `jq -n --args` construction that writes it,
-are in `skills/pr-screenshots/references/01-input-and-result.md`. Use that
+are in [screenshot input and result](screenshot-input-and-result.md). Use that
 construction: a path and a caption are caller text, so each is bound as a `jq`
 argument and never pasted into a JSON string
-([external-data rules](../team/references/external-data.md)).
+([external-data rules](../../team/references/external-data.md)).
 
-### Call the skill
+### Run the upload
 
-Call the Skill tool with `pr-screenshots`, passing the PR's URL and
-`--entries <path>` for the file just written. One call per run, on the home
-repository's PR.
+Bind `UPLOAD_ARGS` to the PR's URL followed by `--entries` and the entries file path. Then follow [screenshot rules](screenshot-rules.md) and its procedure references in order. One run per PR phase, on the home repository's PR.
 
 ### Read the result
 
 `result.json` is the contract:
 
 ```bash
-RESULT_FILE="$ENTRIES_DIR/result.json"   # the skill writes it beside the entries file
+RESULT_FILE="$ENTRIES_DIR/result.json"   # the upload writes it beside the entries file
 [ -r "$RESULT_FILE" ] || exit 2
 ```
 
@@ -74,14 +70,14 @@ Three fields decide what happens next:
 - `failures` — named in the report, one line per entry, so a missing image is
   visible rather than silently absent.
 
-The skill owns the section's wording, the failure list, and the degraded form.
+The upload procedure owns the section's wording, the failure list, and the degraded form.
 Never edit the `## Screenshots` section a second time from this skill:
 `team-pr` renders it once, at open time, in the pre-upload wording, and the
-skill's single write replaces it.
+upload's single write replaces it.
 
 ### Multi-repo
 
-One call, on the home repository's PR. Never one call per repository: that
+One run, on the home repository's PR. Never one run per repository: that
 re-uploads the same image once per repo and orphans the extra assets.
 
 When the returned `section` is non-null, copy that exact string into each
@@ -98,7 +94,7 @@ committed scripts the home write runs rather than restating them.
    ```bash
    COMPANION_URL="https://github.com/owner/other-repo/pull/17"   # this companion's PR
    COMPANION_DIR="$(mktemp -d)"                       # bound per companion, never reused
-   "<pr-screenshots-skill-dir>/scripts/resolve-pr.sh" "$COMPANION_URL" "$COMPANION_DIR" || exit 2
+   "<team-pr-skill-dir>/scripts/resolve-pr.sh" "$COMPANION_URL" "$COMPANION_DIR" || exit 2
    COMPANION_HOST="$(cat "$COMPANION_DIR/pr-host")"
    OWNER="$(cat "$COMPANION_DIR/owner")"
    REPO="$(cat "$COMPANION_DIR/repo")"
@@ -112,7 +108,7 @@ committed scripts the home write runs rather than restating them.
 2. Splice the section in and write it, once:
 
    ```bash
-   "<pr-screenshots-skill-dir>/scripts/write-companion.sh" "$COMPANION_DIR" "$RESULT_FILE"
+   "<team-pr-skill-dir>/scripts/write-companion.sh" "$COMPANION_DIR" "$RESULT_FILE"
    ```
 
    | Exit | Means | Do |
@@ -132,7 +128,7 @@ committed scripts the home write runs rather than restating them.
    `--hostname` is mandatory: without it the read-back checks whatever PR of
    that number exists on the default host.
 
-   Apply the assertions in `skills/pr-screenshots/references/03-verify.md`. A
+   Apply the assertions in [screenshot verify](screenshot-verify.md). A
    companion whose read-back does not pass is named in the report and left
    *as written* — never reverted, never retried.
 
@@ -143,4 +139,4 @@ thing for it to say.
 **Failure posture:** every branch ends with an open PR, a visible note, and
 local paths. Upload problems never block the PR, retry-loop, or prompt the
 user — the upload is an enhancement per
-[focused work rules](../team/principles/focused-work.md).
+[focused work rules](../../team/principles/focused-work.md).

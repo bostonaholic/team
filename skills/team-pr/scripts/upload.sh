@@ -50,7 +50,7 @@ done
 # Read, never re-derived from `pr-url`: `resolve-pr.sh` already split and
 # charset-tested the resolved URL, and `pr-host` is the value the attachment
 # allowlist below is documented to come from
-# (`references/01-input-and-result.md`).
+# (`references/screenshot-input-and-result.md`).
 PR_HOST="$(cat "$RUN_DIR/pr-host")"
 NUMBER="$(cat "$RUN_DIR/number")"
 REPO_SPEC="$(cat "$RUN_DIR/repo-spec")"

@@ -1,20 +1,20 @@
-Before this operation, read [external-data rules](../team/references/external-data.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before this operation, read [external-data rules](../../team/references/external-data.md).
+Resolve links in this file from this file's own directory. `<team-pr-skill-dir>` is the absolute directory that holds the installed `skills/team-pr/SKILL.md`. If a read fails, stop and report its resolved path.
 
 ## Input and result
 
 ### Resolve the PR once
 
-`$ARGUMENTS` carries the whole invocation — `<pr-number-or-url>` **and**
-`--entries <path>`, which is what `SKILL.md` advertises and what `team-pr`
-sends. Run `scripts/resolve-pr.sh` first: it splits the arguments, validates
+`$UPLOAD_ARGS` carries the whole invocation — `<pr-number-or-url>` **and**
+`--entries <path>`, which [Screenshot Upload](04-screenshot-upload.md) binds.
+Run `<team-pr-skill-dir>/scripts/resolve-pr.sh` first: it splits the arguments, validates
 the PR token alone, resolves the PR in one call, and writes each derived value
 into the run's own directory. Bind the values the inline `gh` commands below
-and in `references/03-verify.md` expand:
+and in [screenshot verify](screenshot-verify.md) expand:
 
 ```bash
 RUN_DIR="$(mktemp -d)"                     # every temporary this run writes
-"<skill-dir>/scripts/resolve-pr.sh" "$ARGUMENTS" "$RUN_DIR" || exit 1
+"<team-pr-skill-dir>/scripts/resolve-pr.sh" "$UPLOAD_ARGS" "$RUN_DIR" || exit 1
 PR_URL="$(cat "$RUN_DIR/pr-url")"          # the canonical URL, on the base repo
 PR_HOST="$(cat "$RUN_DIR/pr-host")"
 OWNER="$(cat "$RUN_DIR/owner")"
@@ -38,8 +38,8 @@ PR a second time into a fresh directory, and leave `pre-image.md`,
 `--repo "$OWNER/$REPO"`, which resolves against whichever host `gh` considers
 default and so names a github.com repository on an Enterprise PR. The
 read-back's `gh api` takes the host through `--hostname "$PR_HOST"`
-(`references/03-verify.md`). `pr-host` is the value step C's attachment
-allowlist is derived from (`references/02-upload-and-body-edit.md`).
+([screenshot verify](screenshot-verify.md)). `pr-host` is the value step C's attachment
+allowlist is derived from ([screenshot upload and body edit](screenshot-upload-and-body-edit.md)).
 
 `gh pr view` returns the URL on the **base** repository, which is the PR a fork
 contribution is edited on. Every later call carries `--repo "$REPO_SPEC"`, so
@@ -50,7 +50,7 @@ edited.
 
 ### The entries file
 
-One input, one file, JSON. `team-pr` writes it from the capture manifest. A
+One input, one file, JSON. Screenshot Upload writes it from the capture manifest. A
 session with no `--entries` flag writes the same JSON itself under
 `$(mktemp -d)` from the request — the paths exactly as the user gave them, and
 `root` set to the directory those images already live in, never to the
@@ -78,7 +78,7 @@ empty after normalization.
 
 Write the file with `jq`, never by pasting the paths into a JSON string: a path
 is caller text, and a quote or a backslash in one rewrites the document rather
-than filling a slot in it ([external-data rules](../team/references/external-data.md)). This is the whole
+than filling a slot in it ([external-data rules](../../team/references/external-data.md)). This is the whole
 step; each entry's caption is that entry's own path, basename-only and
 extension-stripped:
 
@@ -106,7 +106,7 @@ empty `entries-file` when the invocation carried no `--entries`, and
 own `--arg`; add each discrepancy line to `notes` the same way.
 
 What `root` bounds is scope, not trust — the check that survives a hostile
-entries file is in `references/02-upload-and-body-edit.md`, step B.
+entries file is in [screenshot upload and body edit](screenshot-upload-and-body-edit.md), step B.
 
 ### Normalizing caller strings
 
@@ -114,14 +114,14 @@ entries file is in `references/02-upload-and-body-edit.md`, step B.
 read, by the same function.** The rule is over the *class*, not over a field: a
 new field that renders is normalized because it is caller text, and the list
 below is the current membership rather than the reason. No backstop in
-`scripts/splice.mjs` replaces the normalization.
+`<team-pr-skill-dir>/scripts/splice.mjs` replaces the normalization.
 
 Normalize: strip newlines, trim, collapse whitespace runs, then
 backslash-escape `\`, `!`, `[`, `]`, `<`, and `>`. `\` is escaped first, so no
 escape can be undone by a caller-supplied backslash.
 
 **`state` also loses its parentheses.** It renders inside the `(<state>)`
-parenthetical, which `scripts/splice.mjs` recognizes by a grammar admitting one
+parenthetical, which `<team-pr-skill-dir>/scripts/splice.mjs` recognizes by a grammar admitting one
 level of nesting, so an unbalanced or deeper `state` makes the next run's
 `--check` refuse a section this skill itself wrote. Remove `(` and `)` from
 `state` after the whitespace collapse. Escaping would not do: a backslash
@@ -202,9 +202,9 @@ passed.** That is the field `team-pr` copies into companion bodies, so
 anything weaker must not travel.
 
 `uploaded-not-written` covers both post-attach halts — the lost-update guard,
-and a `scripts/splice.mjs` refusal or fault after the attach step, whose
+and a `<team-pr-skill-dir>/scripts/splice.mjs` refusal or fault after the attach step, whose
 `operator_note` carries the reason and the manual edit that clears it
-(`references/02-upload-and-body-edit.md`, step D). A splice refusal on a run
+([screenshot upload and body edit](screenshot-upload-and-body-edit.md), step D). A splice refusal on a run
 where **nothing** landed is `refused` instead — nothing changed anywhere.
 
 For `uploaded-not-written`, `body_written: false` and `section: null`. The
