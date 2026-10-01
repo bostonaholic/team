@@ -1,7 +1,8 @@
 ### 4. On new feedback — run the triage procedure
 
-When a poll detects a change, call the Skill tool with `pr-open-comments`
-and follow it.
+When a poll detects a feedback change, call the Skill tool with
+`pr-open-comments` and follow it. A CI change alone never calls
+`pr-open-comments`.
 
 **Review summaries and conversation comments are triaged alongside threads.**
 Each untriaged node becomes a punch-list item under the same

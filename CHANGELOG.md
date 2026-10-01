@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `pr-watch-as-author` now reads the CI checks for the PR head on every poll. Each snapshot shows the head SHA, the pending, passing, and failing counts, and the failing and pending check names. Each new failure is reported once for that head, with a short excerpt of its GitHub Actions log, and the watch changes no file for it. Green CI does not stop the watch, and approval still ends with `Next: run /shipit when you want to land it.`
+
 ## [0.145.0] - 2026-10-01
 
 ### Changed
