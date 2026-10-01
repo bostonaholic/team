@@ -1,7 +1,8 @@
 ### 4. On new feedback — run the triage procedure
 
-When a poll detects a change, call the Skill tool with `pr-open-comments`
-and follow it.
+When a poll detects a feedback change, call the Skill tool with
+`pr-open-comments` and follow it. A CI change alone never calls
+`pr-open-comments`.
 
 **Review summaries and conversation comments are triaged alongside threads.**
 Each untriaged node becomes a punch-list item under the same
@@ -54,12 +55,39 @@ arming cue in the same instruction — a bare "handle the comments" routes
 to a one-shot `/pr-open-comments` triage, not a watch. When the cue is
 ambiguous about authorization, run present-then-stop — never authorized
 mode. Every loop report — the poll snapshot and the batch report — names
-the active mode and lists any auto-applied items with their confidence
+both grants as `feedback <present-then-stop|authorized>, CI <report|fix>`
+and lists any auto-applied items with their confidence
 and landing commit SHA. The batch report names the reaction each item
 received and, for a presented item, the reaction each of its options
-would place. A soft-cap re-arm keeps the mode. A exclusion stop ends the
-authorization, so a re-arm after one starts in present-then-stop unless
-the user restates authorization.
+would place. A soft-cap re-arm keeps both grants. A exclusion stop, a
+`CI exclusion` stop, or a `CI fix bound` stop ends both grants, so a re-arm
+after one starts in present-then-stop and `CI report` unless the user
+restates them.
+
+The same instruction grants CI on its own: `CI report` by default, or
+`CI fix`, which lets [CI checks](08-ci-checks.md) push bounded fixes. The
+object of the fix verb decides which subject it grants. The opening words
+of the phrase do not.
+
+- CI objects: `CI`, `checks`, `failing checks`, `the build`. Feedback
+  objects: `comments`, `feedback`, `review feedback`.
+- A fix verb with no object keeps its meaning above: feedback only.
+- `handle the comments` and `address feedback as it comes in` grant
+  feedback only.
+- Any other object, or an unclear one, gives both subjects their defaults.
+  The arm report then prints `watch and fix comments and CI`, the phrase
+  that grants both.
+- Every grant needs an arming cue in the same instruction.
+
+| Arming instruction | Feedback | CI |
+|---|---|---|
+| `watch the PR` | present-then-stop | report |
+| `watch and fix`, `watch this PR and fix comments` | authorized | report |
+| `watch and fix CI`, `watch this PR and fix failing checks` | present-then-stop | fix |
+| `watch and fix comments and CI`, `watch this PR and fix feedback and checks` | authorized | fix |
+| `watch and fix everything` | present-then-stop | report |
+
+Under every row, present-then-stop keeps the 90% fast path below.
 
 The default mode is present-then-stop with a confidence-gated fast path:
 

@@ -8,4 +8,6 @@ the PR is approved:
    Include every unresolved thread and every review summary or conversation
    comment whose node id is absent from the triaged-id set. Do not fetch the
    result again.
-3. End with the handoff: `Next: run /shipit when you want to land it.`
+3. Print the CI state for the head: its SHA, the CI counts, and the
+   failing and pending names. No CI fix pushes after approval.
+4. End with the handoff: `Next: run /shipit when you want to land it.`

@@ -161,7 +161,7 @@ Triages unresolved PR review comments.
 
 ### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
 
-Watches an authored PR for feedback.
+Watches an authored PR for feedback and CI checks.
 
 **Used by:** None
 
