@@ -72,8 +72,9 @@ steps in order:
    ```
 
    The script prints one JSON object, `{post, skip, refused}`. A `post` entry
-   has `key`, `file`, and `characters`. The script writes one file for each
-   `post` entry and no other file.
+   has `key`, `file`, and `characters`. A `refused` entry has `key` and
+   `reason`. The script writes one file for each `post` entry and no other
+   file.
 5. Post each `post` entry in manifest order:
 
    ```sh
@@ -86,10 +87,28 @@ steps in order:
 ### Comment set
 
 Line 1 of each body is a hidden marker, `<!-- team:pr-comment <key> -->`.
-Published comments keep the marker, so never change its text.
+Published comments keep the marker, so never change its text. The script
+splits the notes body into blocks. A block starts at each
+`> ### Cross-model disposition` line. A `> **Design round <n>**` line labels
+that block when only blank `>` lines separate the two. The comments, in post
+order:
 
-- `review-notes`: the `## Review notes` heading, then the findings from
-  (a)-(c), then the notes body under a `cross-model-notes` tag line.
+1. `review-notes`: the `## Review notes` heading, then the findings from
+   (a)-(c). Then, under a `cross-model-notes` tag line, every unlabeled block
+   in file order. The IMPLEMENT blocks carry no label, so they go here. Text
+   above the first block goes here too.
+2. `design-round-<n>`, in ascending `<n>`: every block labeled
+   `Design round <n>`, in file order. The label is the first visible line.
+   A resumed round with two blocks gives one comment.
+
+Every notes body line lands in exactly one comment. The script posts no
+comment for a key with no content.
+
+A block from a writer layout the label rule does not match goes to
+`review-notes` as an unlabeled block. Its lines still appear once.
+
+A body over 65536 characters, the GitHub comment limit, goes to `refused`.
+The script never cuts a body. The other keys still post.
 
 ### Failure rules
 
@@ -104,4 +123,6 @@ and a report, per [focused work rules](../../team/principles/focused-work.md).
 
 ### Completion report
 
-List the URL of each posted comment. `gh pr comment` prints that URL.
+List the URL of each posted comment. `gh pr comment` prints that URL. For each
+`refused` entry, report that the comment for its key did not post, with the
+`reason`.
