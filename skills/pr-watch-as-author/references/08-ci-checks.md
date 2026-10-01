@@ -75,24 +75,37 @@ When a precondition fails, make no attempt, report which one failed, and
 keep watching. The bound below is the one exception.
 
 Branch binding: a matching `HEAD` alone does not tie the checkout to the
-PR, because a new branch stacked on the PR head has the same SHA. Read the
-local side in one Bash call whose command text holds only local values:
-`git symbolic-ref -q HEAD` for the branch ref,
-`git for-each-ref --format='%(refname:short) %(upstream:remotename) %(upstream:remoteref)'`
-on that ref, and `git remote get-url` on that upstream remote. The binding
-holds only when all of these hold:
+PR, because a new branch stacked on the PR head has the same SHA. A push
+also goes where the push settings point, and they can differ from the
+upstream. Read the local side in one Bash call whose command text holds
+only local values. An unset key prints nothing.
+
+- `git symbolic-ref -q HEAD` for the branch ref
+- `git for-each-ref --format='%(refname:short) %(upstream:remotename) %(upstream:remoteref) %(push:remotename)'`
+  on that ref
+- for the upstream remote `<r>`: `git remote get-url --push --all <r>`,
+  `git config --get-all remote.<r>.push`, and
+  `git config --type=bool remote.<r>.mirror`
+- `git config push.default`
+
+The binding holds only when all of these hold:
 
 - `HEAD` is on a branch, not detached
 - the branch name equals `headRefName`
 - the upstream remote ref equals `refs/heads/<headRefName>`
-- `headRepository` is not null, and the upstream remote URL names
+- the push remote, `%(push:remotename)`, equals the upstream remote
+- the upstream remote has no `push` refspec, and `mirror` is not `true`
+- `push.default` is unset, `simple`, `upstream`, or `current`
+- `headRepository` is not null, and `get-url --push --all` prints exactly
+  one URL. That URL names
   `<headRepositoryOwner.login>/<headRepository.name>` on `github.com`, in
-  HTTPS or SSH form, with or without `.git`, compared case-insensitively
+  HTTPS or SSH form, with or without `.git`, compared case-insensitively.
+- the publish command below targets that remote and that branch name
 
 Compare the values as strings outside the shell. `headRefName` and the
 head repository fields are PR data and never reach command text. On a
-mismatch, report the local branch and `headRefName` in code spans, change
-nothing, and push nothing.
+mismatch, report the failed condition, the local branch, and `headRefName`
+in code spans, change nothing, and push nothing.
 
 Read the PR file list in one Bash call: `headRefOid`, then
 `gh api --paginate "repos/<owner>/<repo>/pulls/<n>/files?per_page=100"`
@@ -131,8 +144,12 @@ Fence and commit:
 Publish from the bound branch with the push command that the governing
 instructions (the user, or the repo `AGENTS.md` or `CLAUDE.md`) name for
 PR branches, for example
-`gt submit` in a Graphite-tracked repo. With none named, use `git push`.
-Never add a force flag. On failure, take the push-failure stop of
+`gt submit` in a Graphite-tracked repo. With none named, use `git push`
+with no arguments. The binding checks cover that command. For any other
+command, its arguments, its local configuration, or the governing
+instructions must name the remote and the destination branch. When none
+of them does, the binding fails as `publish target unknown`. Never add a
+force flag. On failure, take the push-failure stop of
 [authorized mode](07-authorized-mode-apply-resolve-resume.md) with that
 command's actual error output.
 
