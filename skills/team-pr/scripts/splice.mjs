@@ -46,11 +46,10 @@
  * sentence somebody else typed under the heading is a refusal rather than a
  * silent deletion.
  *
- * The CLI guard at the bottom follows resolve-transcript.mjs and
- * write-target.mjs: it runs only on direct execution, so a test import has no
- * side effects. Exit 0 writes the body on stdout, exit 1 is a clean refusal,
- * and exit 2 is a usage or environment fault — an unreadable input never
- * reaches the caller as a stack trace on the refusal code.
+ * The CLI guard at the bottom runs only on direct execution, so a test import
+ * has no side effects. Exit 0 writes the body on stdout, exit 1 is a clean
+ * refusal, and exit 2 is a usage or environment fault — an unreadable input
+ * never reaches the caller as a stack trace on the refusal code.
  */
 
 import { readFileSync, realpathSync } from "node:fs";

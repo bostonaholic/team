@@ -55,7 +55,9 @@ is a single command.
   `NAME=value`. Every later fence begins by re-binding each name it expands
   from those printed lines (`NAME='<printed NAME>'`), re-derives any path
   inside a re-bound directory, and re-reads what a script wrote there with its
-  `cat` line.
+  `cat` line. A value is pasted only inside single quotes, and a printed or
+  supplied value that contains a single quote, a newline, `$`, or a backtick is
+  refused, not pasted.
 - **Nothing leaves the declared root, and nothing that is not an image is
   uploaded.** Every entry's path must resolve inside the entries file's one
   **absolute** top-level `root`, and acceptance is decided by **content type**,
