@@ -107,6 +107,7 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
 7. **Reply.** Print these items:
    - The rendered summary.
    - The top 5 files and the top 5 functions.
+   - With a coverage file, combined and average CRAP.
    - With a coverage file, the top 5 functions by CRAP, and one count per
      `Not scored` reason kind. All `no coverable line in <line>-<endLine>`
      reasons count as one kind.

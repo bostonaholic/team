@@ -944,6 +944,62 @@ test("renderReport ranks scored functions by CRAP under Change risk", async (t) 
   });
 });
 
+test("renderReport sums file CRAP into combined and average CRAP", async (t) => {
+  await t.test("combined CRAP sums every file, and average CRAP divides by files with a score", () => {
+    // src/a.js: 20.0 + 4.0 = 24.0; src/b.js: 6.0; src/c.js: no score.
+    // Combined 24.0 + 6.0 = 30.0 over 2 files and 3 functions; average 30.0 / 2 = 15.0.
+    const markdown = renderReport(
+      withCoverage(
+        report({
+          lanes: [
+            lane("core", [
+              entry("src/a.js", {
+                functions: 2,
+                hotFunctions: [covered("untested", 1, 4, { hit: 0, missed: 2, crap: 20 }), covered("tested", 10, 4, { hit: 2, missed: 0, crap: 4 })],
+              }),
+              entry("src/b.js", { functions: 1, hotFunctions: [covered("half", 1, 4, { hit: 1, missed: 1, crap: 6 })] }),
+              entry("src/c.js", { functions: 1, hotFunctions: [hot("unmatched", 1, 2, { coverage: { reason: "no coverage record for this file" } })] }),
+            ]),
+          ],
+          gaps: [],
+        }),
+      ),
+      inventory({ coverage: COVERAGE, files: { "src/a.js": textFile(50), "src/b.js": textFile(50), "src/c.js": textFile(50) } }),
+    );
+    const summary = section(markdown, "Summary");
+    assert.equal(rowWith(summary, "Combined CRAP").Value, "30.0");
+    assert.equal(rowWith(summary, "Average CRAP").Value, "15.0");
+    assert.equal(rowWith(summary, "Files with a CRAP score").Value, "2");
+    assert.equal(rowWith(summary, "Scored functions").Value, "3");
+  });
+
+  await t.test("with coverage and no scored function both values show -", () => {
+    const markdown = renderReport(
+      withCoverage(
+        report({
+          lanes: [
+            lane("core", [
+              entry("src/c.js", { functions: 1, hotFunctions: [hot("unmatched", 1, 2, { coverage: { reason: "no coverage record for this file" } })] }),
+            ]),
+          ],
+          gaps: [],
+        }),
+      ),
+      inventory({ coverage: COVERAGE, files: { "src/c.js": textFile(50) } }),
+    );
+    const summary = section(markdown, "Summary");
+    assert.equal(rowWith(summary, "Combined CRAP").Value, "-");
+    assert.equal(rowWith(summary, "Average CRAP").Value, "-");
+  });
+
+  await t.test("without coverage the Summary says Not run and shows no CRAP value", () => {
+    const summary = section(renderReport(report(), inventory()), "Summary");
+    assert.match(summary, /Not run: no coverage file was given\./);
+    assert.deepEqual(rowWith(summary, "Combined CRAP"), {});
+    assert.deepEqual(rowWith(summary, "Average CRAP"), {});
+  });
+});
+
 // ---------------------------------------------------------------------------------------------
 // The inventory reads git under any config
 

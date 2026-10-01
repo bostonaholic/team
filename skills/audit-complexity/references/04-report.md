@@ -112,7 +112,12 @@ decimals, or `{ "reason": "<why no score>" }` with no `crap`.
 The renderer lays out these sections, in order:
 
 1. **Summary.** The root, commit, date, scope, and exclusions, and the file
-   counts.
+   counts. Without a coverage file, `Not run: no coverage file was given.`
+   With one, a second table: combined CRAP, average CRAP, the files with a
+   CRAP score, and the scored functions. A file's CRAP is the sum over its
+   scored hot functions, at most 6 per file. Combined CRAP sums those
+   files, and average CRAP divides it by the number of files with a score.
+   Both show 1 decimal, and both show `-` when no function has a score.
 2. **Files.** Measured lane files ranked by the highest `cyclomatic` among
    their hot functions, with ties by `lines`, most first, then by path. A
    file with no hot function shows `-` and ranks below every file that has

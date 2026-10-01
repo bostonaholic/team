@@ -244,6 +244,30 @@ function fileRows(report, files) {
     .sort((a, b) => rankable(b.cyclomatic) - rankable(a.cyclomatic) || b.lines - a.lines || byPath(a.file, b.file));
 }
 
+// Sums unrounded recounts, so only the shown values round.
+function renderCrapTotals(report) {
+  if (typeof report.scope.coverage !== "string") {
+    return [`Combined and average CRAP (Change Risk Anti-Patterns) need a coverage file. ${NOT_RUN}`];
+  }
+  const scored = scoredFunctions(report);
+  const scoredFiles = new Set(scored.map((fn) => fn.file)).size;
+  const combined = scored.reduce((sum, fn) => sum + fn.crap, 0);
+  const crapValue = (value) => (scored.length === 0 ? "-" : oneDecimal(value));
+  return [
+    `A file's CRAP is the sum over its scored hot functions, and each file lists at most ${MAX_HOT_FUNCTIONS} hot functions. ` +
+      "Combined CRAP sums every file. Average CRAP divides combined CRAP by the number of files with a score.\n",
+    table(
+      ["Measure", "Value"],
+      [
+        ["Combined CRAP", crapValue(combined)],
+        ["Average CRAP", crapValue(combined / scoredFiles)],
+        ["Files with a CRAP score", scoredFiles],
+        ["Scored functions", scored.length],
+      ],
+    ),
+  ];
+}
+
 function renderSummary(report, inventory) {
   const scope = report.scope;
   const files = Object.values(inventory.files);
@@ -263,6 +287,7 @@ function renderSummary(report, inventory) {
         ["Not measured", files.filter((file) => file.status !== "text").length],
       ],
     ),
+    ...renderCrapTotals(report),
   ];
 }
 
