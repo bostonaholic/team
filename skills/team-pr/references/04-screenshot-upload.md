@@ -50,7 +50,7 @@ argument and never pasted into a JSON string
 
 ### Run the upload
 
-Bind `UPLOAD_ARGS` to the PR's URL followed by `--entries` and the entries file path. Then follow [screenshot rules](screenshot-rules.md) and its procedure references in order. One run per PR phase, on the home repository's PR.
+Bind `UPLOAD_ARGS` to the PR's URL followed by `--entries` and the entries file path, both written out as literal text. Assign it in the same shell call that runs `resolve-pr.sh` ([screenshot input and result](screenshot-input-and-result.md)): shell variables do not persist between calls, so a value bound in an earlier call reaches the script empty and the script refuses. Then follow [screenshot rules](screenshot-rules.md) and its procedure references in order. One run per PR phase, on the home repository's PR.
 
 ### Read the result
 

@@ -7,12 +7,16 @@ Resolve links in this file from this file's own directory. `<team-pr-skill-dir>`
 
 `$UPLOAD_ARGS` carries the whole invocation — `<pr-number-or-url>` **and**
 `--entries <path>`, which [Screenshot Upload](04-screenshot-upload.md) binds.
+Assign it on the first line of the fence below, in the same call that runs
+`resolve-pr.sh`: shell variables do not persist between calls, so a value bound in an
+earlier call reaches the script empty and the script refuses.
 Run `<team-pr-skill-dir>/scripts/resolve-pr.sh` first: it splits the arguments, validates
 the PR token alone, resolves the PR in one call, and writes each derived value
 into the run's own directory. Bind the values the inline `gh` commands below
 and in [screenshot verify](screenshot-verify.md) expand:
 
 ```bash
+UPLOAD_ARGS='<PR URL> --entries <entries-file path>'   # filled in literally, this call
 RUN_DIR="$(mktemp -d)"                     # every temporary this run writes
 "<team-pr-skill-dir>/scripts/resolve-pr.sh" "$UPLOAD_ARGS" "$RUN_DIR" || exit 1
 PR_URL="$(cat "$RUN_DIR/pr-url")"          # the canonical URL, on the base repo
@@ -50,11 +54,9 @@ edited.
 
 ### The entries file
 
-One input, one file, JSON. Screenshot Upload writes it from the capture manifest. A
-session with no `--entries` flag writes the same JSON itself under
-`$(mktemp -d)` from the request — the paths exactly as the user gave them, and
-`root` set to the directory those images already live in, never to the
-directory the JSON was just written to.
+One input, one file, JSON. Screenshot Upload writes it from the capture
+manifest under `$(mktemp -d)`, with `root` set to the directory those images
+already live in, never to the directory the JSON was just written to.
 
 ```json
 {
@@ -94,12 +96,7 @@ jq -n --arg root "$CAPTURE_ROOT" '{
   })),
   notes: []
 }' --args "$CAPTURE_ROOT/login.png" "$CAPTURE_ROOT/login-error.png" >"$ENTRIES_FILE"
-printf '%s\n' "$ENTRIES_FILE" >"$RUN_DIR/entries-file"   # what `upload.sh` reads
 ```
-
-The last line is what makes this path reachable: `resolve-pr.sh` writes an
-empty `entries-file` when the invocation carried no `--entries`, and
-`upload.sh` reads that file rather than a variable.
 
 `--args` binds each path as a positional value, so `jq` never parses one. Add a
 `caption`, a `state`, or a `note` the request supplied by binding each with its
