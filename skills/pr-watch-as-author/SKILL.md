@@ -30,7 +30,7 @@ Read each reference completely when reaching that stage. Follow them in order; l
 4. [3. Poll and change detection](references/05-3-poll-and-change-detection.md)
 5. [4. On new feedback — run the triage procedure](references/06-4-on-new-feedback-run-the-triage-procedure.md)
 6. [Authorized mode — apply, resolve, resume](references/07-authorized-mode-apply-resolve-resume.md)
-7. [CI checks — report](references/08-ci-checks.md)
+7. [CI checks — report, fix, bound](references/08-ci-checks.md)
 8. [5. Edge cases](references/09-5-edge-cases.md)
 9. [6. Stop conditions](references/10-6-stop-conditions.md)
 10. [7. On approval — hand off, never land](references/11-7-on-approval-hand-off-never-land.md)

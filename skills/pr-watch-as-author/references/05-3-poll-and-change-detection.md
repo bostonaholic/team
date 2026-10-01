@@ -57,7 +57,8 @@ names in code spans:
 feedback present-then-stop, CI report | head 3f9c2ab | threads 0, summaries 0, comments 0 | CI 1 pending, 4 passing, 1 failing | failing: `CI / lint` | pending: `CI / e2e`
 ```
 
-With a rollup length of 0, the CI part reads `CI 0 checks`. Classify each
+Under a CI fix grant, the grant token reads `CI fix`. With a rollup length
+of 0, the CI part reads `CI 0 checks`. Classify each
 check by the `bucket` table in [CI checks](08-ci-checks.md).
 
 A **feedback change** is any of:

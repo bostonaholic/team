@@ -5,7 +5,7 @@
 // Link paths resolve from the file's directory or, under skills/, its skill root, the same bases
 // as skill-path-references.test.mjs. Anchors use GitHub heading slugs.
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, normalize, sep } from "node:path";
 import test from "node:test";
 
@@ -26,6 +26,7 @@ const WORKFLOWS = [
   "skills/team-pr/references/03-pr-body-template.md",
   "skills/team/playbooks/verify.md",
   "skills/shipit/references/02-land-sequence.md",
+  "skills/pr-watch-as-author/references/08-ci-checks.md",
 ];
 
 function slug(heading) {
@@ -59,6 +60,7 @@ test("standalone dispatch and code-reviewer name the same locked-test line", () 
 
 for (const file of WORKFLOWS) {
   test(`each test-touching workflow cites testing-rule sections that exist: ${file}`, () => {
+    assert.ok(existsSync(file), `${file} does not exist`);
     const cited = anchorsCitedIn(file);
     const headings = testingRuleAnchors();
 
