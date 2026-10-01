@@ -154,8 +154,7 @@ still declares no phase artifact.
 
 `docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
 ux-reviewer during IMPLEMENT for UI-touching changes and consumed by team-pr.
-The upload itself, and every mechanic it needs, lives in
-`skills/pr-screenshots/`.
+The upload itself, and every mechanic it needs, lives in `skills/team-pr/` (its `screenshot-*.md` references and `scripts/`).
 
 `docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
 the DESIGN review gate and the IMPLEMENT aggregate gate — one
@@ -248,7 +247,7 @@ research artifact with the necessary frontmatter.
 each as an auditable assumption) **Predecessor:** `5-research.md`
 **Artifact:** `docs/plans/<id>/6-design.md` **Gate:** REVIEW. The
 orchestrator dispatches a fresh-context, read-only `Explore` subagent
-with the `## Review brief` from `skills/eng-design-doc-review/references/design-reviewer.md`.
+with the `## Review brief` from `skills/team/references/design-reviewer.md`.
 The subagent holds no Write or Edit tools, so the reviewer cannot touch
 the artifacts it judges. The orchestrator records the verdict to
 `design-review-<n>.md`. APPROVE and COMMENT advance. On REQUEST CHANGES
@@ -288,7 +287,7 @@ No gate. The plan is mechanically derived from the structure.
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`.
 5. **Aggregate gate.** The orchestrator sorts every finding into a
    severity tier: **Blocking, Major, or Minor-and-below**. See
-   `skills/code-review/references/findings.md`. Each round in which the
+   `skills/team/references/findings.md`. Each round in which the
    code-reviewer's report carries a `### Cross-model disposition` block,
    the orchestrator appends that block — altered only by the blockquote
    wrap (every line prefixed with `>`) — to
@@ -331,7 +330,7 @@ requested one. Push the branch and open a draft PR automatically with
 `gh pr create --draft`. The PR phase never waits for approval. Then
 surface the tracking ticket, if `1-task.md` carries `ticketId`. When the
 branch impacts a UI, the PR body also gets a `## Screenshots` section,
-populated by one delegated call to the `pr-screenshots` skill, which attaches
+populated by team-pr's own screenshot upload, which attaches
 the PNGs and rewrites the body. UI impact is decided from the full branch diff;
 when ux-reviewer produced no capture manifest (`docs/plans/<id>/screenshots/`,
 see the artifact-layout note in section 2), the PR phase captures per the
@@ -341,9 +340,7 @@ blocks as PR review comments
 (`skills/team-pr/references/07-review-comments.md`), replacing the final
 round's inline disposition block so every round appears exactly once. The worktree stays in place
 after the PR opens. Teardown is deferred until the PR merges or the user
-asks, so the branch remains available for iteration. The final report points at the
-standalone `/pr-watch-as-author` utility for watching the PR once it is
-ready for review.
+asks, so the branch remains available for iteration. The final report tells the user how to mark the PR ready for review and move its ticket.
 
 ## 4. Agent roster
 
@@ -406,7 +403,7 @@ Three more balances bound the checks themselves:
 - **The veto ends on agreement, not on a count.** The review loop runs until no
   Blocking or Major finding is left. A check that can never be satisfied grinds
   until a person stops the run. See
-  `skills/code-review/references/findings.md`.
+  `skills/team/references/findings.md`.
 - **The check has a check.** The optional skeptic pass is default-keep. An
   inconclusive refutation leaves the finding standing, so the pass removes false
   positives only.
@@ -648,9 +645,9 @@ that documents the expected `$ARGUMENTS` shape.
 
 Each downstream skill (`team-research` and beyond) treats `$ARGUMENTS` as
 an artifact directory, typically the path printed by the previous phase's
-completion message. For the 8 directory-consuming skills
+completion message. For the 7 directory-consuming skills
 (`team-research`, `team-design`, `team-structure`, `team-plan`,
-`team-worktree`, `team-implement`, `team-pr`, `eng-design-doc-review`)
+`team-worktree`, `team-implement`, `team-pr`)
 the `docs/plans/<id>/` argument is **optional**. Each skill resolves the
 directory through a three-tier chain: explicit `$ARGUMENTS` →
 newest-mtime convention discovery → `AskUserQuestion`. The middle tier
@@ -662,7 +659,7 @@ pause for user input. Standalone modes still exist. A partial skill
 invoked with no resolvable directory, or with a free-form description,
 bootstraps the missing upstream artifacts inline rather than hard-error.
 
-**Shared discovery helper.** The 8 directory-consuming skills invoke the
+**Shared discovery helper.** The 7 directory-consuming skills invoke the
 bundled `skills/team/discover-topic.sh` helper with their predecessor
 filename. `team-structure` also passes `--require-passing-review`. Each
 skill resolves `<team-skill-dir>` to the absolute directory containing
@@ -683,7 +680,7 @@ agent's frontmatter, one indented `- <name>` per line.
 After the playbook-and-verification consolidation, no methodology skill
 remains registered: the last two (`running-quality-checks` and
 `verifying-ux`) moved into the [verify playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/verify.md)
-and the [ux reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/ux-reviewer.md).
+and the [ux reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/team/references/ux-reviewer.md).
 The block form is the contract: three
 test parsers read it, and the one-line inline flow form parses to zero
 names, so it is an offender rather than a second shape.
@@ -823,8 +820,7 @@ rather than authoring it.
 
 **Second tier: a skill that gates every mutation on its own in-run
 approval** carries the guard there instead, which is where
-[human-control rules](https://github.com/bostonaholic/team/blob/main/skills/team/principles/human-control.md) puts it. `groom-backlog` is
-the worked example — it presents each irreversible close and waits.
+[human-control rules](https://github.com/bostonaholic/team/blob/main/skills/team/principles/human-control.md) puts it.
 Setting `disable-model-invocation` is a further per-skill call with its
 own recorded reason, never a property of this class. An in-class skill
 stays listed as a command, and its routing-map line in `AGENTS.md` states
@@ -835,45 +831,13 @@ on a side-effecting skill is a review-blocking defect.
 No methodology skill is user-invocable. When a methodology also wants a
 user-facing command, the answer is a **front door**, not an exception:
 the methodology keeps `user-invocable: false` and a separate entry-point
-skill carries the slash command. The review procedures moved off the
-methodology list entirely: each reviewer brief is now an ordinary
-reference file owned by its entry point, so the front-door pair collapsed
-to one skill carrying a `references/` file beside it.
-
-`code-review` owns the code reviewer brief
-(`skills/code-review/references/code-reviewer.md`), the separate security
-and documentation briefs (`security-reviewer.md`,
-`documentation-reviewer.md`), and the shared finding format
-(`findings.md`). The `code-reviewer`, `security-reviewer`, `ux-reviewer`,
-and `technical-writer` agents read those briefs from the installed
-plugin; `code-review` carries `argument-hint` and `effort` like any other
-entry point and is catalogued under Standalone utilities. What stays on
-the front door is the one thing a user runs: "review this diff".
-`eng-design-doc-review` owns the design reviewer brief
-(`skills/eng-design-doc-review/references/design-reviewer.md`), and
-`team`, `team-design`, and the front door all read it by path.
-`no-comments` owns the comment reviewer brief
-(`skills/no-comments/references/reviewer.md`): a read-only `Explore`
-reviewer classifies comments, then the invoking producer applies accepted
-findings and gates constraint encodings on approval.
-
-A front door is a second kind of entry point, and both kinds are
-ordinary. One runs its own procedure; a front door owes the reviewer's
-own rules and routes the work to whoever may do it. The main session
-shares conversation history with whatever wrote the code, so it is not a
-valid reviewer. `code-review` therefore dispatches the `code-reviewer`
-agent and relays the verdict rather than reviewing inline, then reads
-`code-reviewer.md` for the methodology that reviewer applies.
-`eng-design-doc-review` does the same with a read-only `Explore`
-subagent and the `design-reviewer.md` brief. `no-comments` uses that dispatch
-pattern but returns accepted findings to the invoking producer for edits.
+skill carries the slash command. The review procedures moved off the methodology list entirely. Each reviewer brief is an ordinary reference under `skills/team/references/`: the code reviewer brief (`code-reviewer.md`), the security and documentation briefs (`security-reviewer.md`, `documentation-reviewer.md`), the UX reviewer brief (`ux-reviewer.md`), the shared finding format (`findings.md`), and the design reviewer brief (`design-reviewer.md`). The `code-reviewer`, `security-reviewer`, `ux-reviewer`, and `technical-writer` agents read them from the installed plugin, and `team` and `team-design` read the design reviewer brief by path.
 
 (This is separate from the entry-point skills, which are user-invocable by
 definition. Some of those, e.g. `team-worktree` and `team-pr`, are also
 *referenced by path* from `team/SKILL.md`, but those are procedural
 cross-links in the orchestrator's prose, not a parent loading the skill as
-a building block. The reviewer briefs are how a composed review keeps a
-user-facing entry point without becoming a methodology skill of its own.)
+a building block.)
 
 For the full per-skill reference (all skills, each with the skills it
 loads, which is the skill-to-skill dependency graph), see
@@ -914,7 +878,7 @@ An overage requires a reviewed reason stating its exact line count.
    Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
    Twelve agent bodies read execution rules. File-finder retains its single-step contract.
-   Resources use no skill frontmatter or discovery metadata. Keep the 30 commands registered.
+   Resources use no skill frontmatter or discovery metadata. Keep the 11 commands registered.
    Guarded principles are their own tier: they carry skill frontmatter and
    `agents/openai.yaml`, register as commands, and set `disable-model-invocation:
    true` so the model never applies them on its own. Do not add unguarded
@@ -984,8 +948,7 @@ the lifecycle lock are unsupported.
 
 This adapter establishes discovery and lifecycle support. Full QRSPI
 execution, specialist/nested dispatch, and reviewer isolation on OpenCode
-remain unverified. `/retro` stays guarded and discoverable and resolves OpenCode
-sessions from the host's SQLite store.
+remain unverified.
 
 ## 7. Hooks
 
