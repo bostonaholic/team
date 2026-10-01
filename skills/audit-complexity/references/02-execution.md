@@ -38,6 +38,23 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
    symlinked `inventory.json`, a pathspec that matches no tracked file, and
    a bad coverage path or file.
 
+   When `scope.coverage` is set, probe the coverage file before any
+   dispatch. A file that lists only executed lines gives untested code a
+   false-low CRAP. Each stop below dispatches nothing:
+   1. Read the first 200 lines of the coverage file. When they hold no
+      per-line record under a source path, stop. State that the 200-line
+      probe found no per-line record.
+   2. When one text line holds records for two or more source files, stop.
+      State that each source file's records must sit on their own lines.
+   3. Search the whole file for one per-line record with a count of 0.
+      Take at most one match.
+   4. When the search finds none, stop with this message, with `<file>`
+      replaced by the coverage path:
+      "`<file>` lists no line with a hit count of 0. CRAP needs each unexecuted line listed with a count of 0. If every line ran, each CRAP equals its cyclomatic value. Rerun without `--coverage`."
+
+   The probe proves that the file's format lists unexecuted lines. It does
+   not prove that every record lists all of them.
+
    When `inventory.json` lists no file with `status: "text"`, stop, name the
    pathspecs, and dispatch nothing.
 
