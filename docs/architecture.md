@@ -70,7 +70,8 @@ review, is a *code* checkpoint, and it happens **after** the run has
 already executed. Local Bash execution (implementer, verifier),
 branch creation, pushes to remotes, and any multi-repo worktree effects
 all occur before a human sees the PR. The PR review contains the diff,
-the design's recorded assumptions, and the deferred `## Review notes`. It
+the design's recorded assumptions, and the deferred findings in the
+`review-notes` comment. It
 does **not** contain the run's local side effects. The pipeline also
 assumes that repository content the researcher reads is trusted: a repo
 that accepts untrusted contributions feeds untrusted text into agent
@@ -160,7 +161,8 @@ The upload itself, and every mechanic it needs, lives in
 the DESIGN review gate and the IMPLEMENT aggregate gate — one
 `### Cross-model disposition` block appended per review round, at either
 gate, in which the cross-model pass ran — and consumed by team-pr
-for the PR's `## Review notes` section. It is created only on the first
+for the PR review comments
+(`skills/team-pr/references/07-review-comments.md`). It is created only on the first
 round that runs the pass, so a repo where the pass never runs gains no
 artifact. Beside it, `docs/plans/<id>/cross-model-raw.md` is the design
 path's raw transcript — the orchestrator appends each vendor call's
@@ -295,7 +297,7 @@ No gate. The plan is mechanically derived from the structure.
    fix the typed failure class. It then re-runs all 5 reviewers
    automatically. It never consults the user. This is the *no-consult
    rule*. Once Blocking and Major are clean, any remaining Minor-and-below
-   findings are recorded in the PR body's `## Review notes` for the
+   findings are recorded in the PR's `review-notes` comment for the
    human's PR review.
 
 The orchestrator tracks the round count by appending
@@ -334,9 +336,10 @@ the PNGs and rewrites the body. UI impact is decided from the full branch diff;
 when ux-reviewer produced no capture manifest (`docs/plans/<id>/screenshots/`,
 see the artifact-layout note in section 2), the PR phase captures per the
 ux-reviewer brief before rendering the section.
-When `docs/plans/<id>/cross-model-notes.md` exists, its body (frontmatter stripped) is copied into the PR's
-`## Review notes` section, replacing the final round's inline disposition
-block so every round appears exactly once. The worktree stays in place
+When `docs/plans/<id>/cross-model-notes.md` exists, team-pr posts its
+blocks as PR review comments
+(`skills/team-pr/references/07-review-comments.md`), replacing the final
+round's inline disposition block so every round appears exactly once. The worktree stays in place
 after the PR opens. Teardown is deferred until the PR merges or the user
 asks, so the branch remains available for iteration. The final report points at the
 standalone `/pr-watch-as-author` utility for watching the PR once it is

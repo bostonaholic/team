@@ -35,7 +35,7 @@ Block until satisfied or explicitly overridden by the user. Examples: REQUEST CH
 
 ### SOFT
 
-Add eligible findings to PR `## Review notes`; never ask mid-run. The
+Add eligible findings to the PR's `review-notes` comment; never ask mid-run. The
 [finding format](../code-review/references/findings.md) "Severity Tiers and the Auto-Fix Boundary" alone defines gating, auto-fix, and which lower-tier findings qualify ([durable state rules](principles/durable-state.md)). Human owns the ends ([human control rules](principles/human-control.md)).
 
 ### ADVISORY

@@ -281,7 +281,8 @@ unverifiable claims, and skips with their reasons. The block is
 **paraphrase-only**: it reproduces no vendor sentence and no vendor
 verdict token — state each claim in your own words. This binds every pass,
 the code-review path included, so a vendor line can never ride the
-disposition block into a report or a PR body verbatim. A clean pass —
+disposition block into a report or the PR review comments
+([review comments](../../team-pr/references/07-review-comments.md)) verbatim. A clean pass —
 output carrying no claims — is still a record: the block says
 "no findings from `<cli>`". Exit 0 with empty stdout is not a clean pass:
 the runner reports `skip: <cli> produced no output`, and the block

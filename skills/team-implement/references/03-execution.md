@@ -79,7 +79,7 @@
    re-invoked session's ledger carries no `PR` phase item, so step 9 takes
    the standalone branch and names `/team-pr`.
 9. **Once Blocking and Major are clean:** record any **Minor-and-below**
-   findings for the PR body's `## Review notes` section, tagged by source
+   findings for the PR's `review-notes` comment, tagged by source
    reviewer — never present them mid-run. Then present all review verdicts
    and:
    - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —

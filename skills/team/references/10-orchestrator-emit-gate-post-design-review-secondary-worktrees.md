@@ -21,7 +21,7 @@ When the design review passes:
    `skills/team-worktree/SKILL.md` applies only to standalone human
    invocation of `/team-worktree`. The resolved repo set is already
    recorded loudly in `6-design.md` (`## Decisions made`/`## Risks`) and
-   echoed in the PR body's `## Review notes`. Before each
+   echoed in the PR's `review-notes` comment. Before each
    `git worktree add`, re-check **containment**: the repo path's `realpath`
    must be a direct child of the home repo's parent directory. Refuse and
    report any repo that fails (`4-repos.md` may have been authored without a

@@ -31,8 +31,8 @@ loop:
      - ROUTER-EMIT (worktree, PR): perform the action.
      - AGGREGATE (5 reviewers): dispatch in parallel and sort findings into
        severity tiers; auto-loop while any Blocking or Major finding remains
-       (never consulting the user); record Minor-and-below for the PR body's
-       `## Review notes`.
+       (never consulting the user); record Minor-and-below for the PR's
+       `review-notes` comment.
   7. Update TodoWrite — mark current phase `completed` and the next one
      `in_progress`.
   8. Goto loop.

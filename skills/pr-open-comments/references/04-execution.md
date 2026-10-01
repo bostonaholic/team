@@ -26,10 +26,26 @@ before building the item list.
 
 ### Step 3 — Build the open-feedback set
 
+Before the build, fetch the invoking identity once and bind it to `$VIEWER`:
+
+```bash
+VIEWER="$(gh api graphql -f query='{ viewer { login } }' --jq '.data.viewer.login')"
+```
+
+A login matches GitHub's identifier charset, so it is safe inside a
+double-quoted `--jq` filter. Never interpolate it into a GraphQL query
+string; it only ever reaches `--jq`, which post-filters a response.
+
 Include every unresolved `reviewThreads` node, every non-empty
 `reviewSummaries` body, and every `conversationComments` node not already
 triaged by a caller. The three connections are disjoint; never obtain inline
 comments from both a review summary and its review thread.
+
+Drop a `conversationComments` node when its `author.login` equals `$VIEWER`
+and the first line of its `body` starts with `<!-- team:pr-comment `. These
+are the review-record comments that `/team-pr` posts: deferred findings and
+cross-model dispositions, not open feedback. A node with that first line from
+any other author stays in the set. Count the dropped nodes for step 7.
 
 Review summaries and conversation comments carry no resolved flag. Their
 items stay open until the author's code and follow-up clearly address them.
@@ -120,7 +136,9 @@ item with its confidence and landing commit SHA. Then
 **Needs your decision** — every remaining unresolved thread as a block
 with the comment, a menu of 2–4 tailored options, and exactly one
 recommendation. Base the recommendation on the step 4 verdict, the
-class, and the current diff — never pick it blindly.
+class, and the current diff — never pick it blindly. When step 3 dropped
+any Team comments, end the report with the line
+"Skipped <n> Team review-record comments." Omit the line when n is 0.
 
 Standard option menu (pick the options that apply):
 
