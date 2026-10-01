@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Joins an audit-complexity report.json with the history.json beside it, validates both, and renders report.md.
+// Joins an audit-complexity report.json with the inventory.json beside it, validates both, and renders report.md.
 // Usage: render-report.mjs <report.json> [<report.md>]
 import { lstatSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -17,21 +17,18 @@ const isCount = (value) => Number.isInteger(value) && value >= 0;
 const sameList = (a, b) => a.length === b.length && a.every((value, i) => value === b[i]);
 const show = (value) => JSON.stringify(value ?? null);
 
-function joinErrors(scope, history) {
+function joinErrors(scope, inventory) {
   const errors = [];
-  if (scope.commit !== history.commit) {
-    errors.push(`scope.commit ${show(scope.commit)} does not match history.json commit ${show(history.commit)}. HEAD moved, so rerun the audit`);
+  if (scope.commit !== inventory.commit) {
+    errors.push(`scope.commit ${show(scope.commit)} does not match inventory.json commit ${show(inventory.commit)}. HEAD moved, so rerun the audit`);
   }
   const pathspecs = list(scope.pathspecs);
-  if (!sameList(pathspecs, list(history.pathspecs))) {
-    errors.push(`scope.pathspecs ${show(pathspecs)} do not match history.json pathspecs ${show(history.pathspecs)}`);
+  if (!sameList(pathspecs, list(inventory.pathspecs))) {
+    errors.push(`scope.pathspecs ${show(pathspecs)} do not match inventory.json pathspecs ${show(inventory.pathspecs)}`);
   }
   const excluded = list(scope.exclude).map((record) => record?.path);
-  if (!sameList(excluded, list(history.exclude))) {
-    errors.push(`scope.exclude paths ${show(excluded)} do not match history.json exclude ${show(history.exclude)}`);
-  }
-  if ((scope.since ?? null) !== (history.since ?? null) || scope.since === undefined) {
-    errors.push(`scope.since ${show(scope.since)} does not match history.json since ${show(history.since)}`);
+  if (!sameList(excluded, list(inventory.exclude))) {
+    errors.push(`scope.exclude paths ${show(excluded)} do not match inventory.json exclude ${show(inventory.exclude)}`);
   }
   for (const exclusion of excluded) {
     for (const named of pathspecs.filter((path) => path === exclusion || path.startsWith(`${exclusion}/`))) {
@@ -46,7 +43,7 @@ function placementErrors(report, files) {
   const placements = new Map(Object.keys(files).filter((path) => files[path]?.status === "text").map((path) => [path, 0]));
   const place = (file, where) => {
     if (placements.has(file)) placements.set(file, placements.get(file) + 1);
-    else errors.push(`${where} lists ${file}, which is not a text file in history.json (status ${files[file]?.status ?? "absent"})`);
+    else errors.push(`${where} lists ${file}, which is not a text file in inventory.json (status ${files[file]?.status ?? "absent"})`);
   };
   for (const lane of list(report.lanes)) for (const file of list(lane.files)) place(file, `lane ${lane.name}`);
   for (const gap of list(report.gaps)) place(gap.file, "gaps");
@@ -125,15 +122,15 @@ function entryErrors(entry, files) {
   return errors;
 }
 
-export function validateReport(report, history) {
+export function validateReport(report, inventory) {
   if (!isObject(report)) return ["report.json is not a JSON object"];
-  if (!isObject(history)) return ["history.json is not a JSON object"];
+  if (!isObject(inventory)) return ["inventory.json is not a JSON object"];
   const errors = [];
   if (report.version !== 1) errors.push(`report.json version must be 1, not ${show(report.version)}`);
   if (report.skill !== "audit-complexity") errors.push(`report.json skill must be audit-complexity, not ${show(report.skill)}`);
-  if (history.version !== 1) errors.push(`history.json version must be 1, not ${show(history.version)}`);
-  const files = isObject(history.files) ? history.files : {};
-  errors.push(...joinErrors(isObject(report.scope) ? report.scope : {}, history));
+  if (inventory.version !== 1) errors.push(`inventory.json version must be 1, not ${show(inventory.version)}`);
+  const files = isObject(inventory.files) ? inventory.files : {};
+  errors.push(...joinErrors(isObject(report.scope) ? report.scope : {}, inventory));
   errors.push(...placementErrors(report, files));
   for (const lane of list(report.lanes)) {
     errors.push(...laneRecordErrors(lane));
@@ -177,35 +174,24 @@ function fileMaxima(entry) {
   };
 }
 
-function hotspotRows(report, files) {
+// A file with no hot function ranks below every file that has one.
+const rankable = (cyclomatic) => (typeof cyclomatic === "number" ? cyclomatic : 0);
+
+function fileRows(report, files) {
   return entriesOf(report)
-    .map((entry) => {
-      const { commits, lines } = files[entry.file];
-      return { file: entry.file, commits, lines, score: commits * lines, cyclomatic: fileMaxima(entry).cyclomatic };
-    })
-    .filter((row) => row.score > 0)
-    .sort((a, b) => b.score - a.score || byPath(a.file, b.file));
+    .map((entry) => ({ file: entry.file, lines: files[entry.file].lines, cyclomatic: fileMaxima(entry).cyclomatic }))
+    .sort((a, b) => rankable(b.cyclomatic) - rankable(a.cyclomatic) || b.lines - a.lines || byPath(a.file, b.file));
 }
 
-function partialChurnWarning(history) {
-  const causes = [
-    history.shallow && "the clone is shallow, so older commits are missing",
-    history.renameDetectionSkipped && "git skipped rename detection on a large commit, so some renames were not followed",
-  ].filter(Boolean);
-  return causes.length === 0 ? "" : `**Churn is partial:** ${causes.join(", and ")}. Commit counts can be low.\n`;
-}
-
-function renderSummary(report, history) {
+function renderSummary(report, inventory) {
   const scope = report.scope;
-  const files = Object.values(history.files);
+  const files = Object.values(inventory.files);
   const lanes = list(report.lanes);
   const exclusions = list(scope.exclude).map((record) => `\`${record.path}\` (${record.reason})`);
   return [
     "## Summary\n",
     `Commit \`${scope.commit}\` on ${scope.date}. Scope: ${list(scope.pathspecs).map((path) => `\`${path}\``).join(", ")}. ` +
       `Excluded: ${exclusions.join(", ") || "none"}.\n`,
-    `History window: ${scope.since === null ? "all history" : `since ${scope.since}`}. Commits scanned: ${history.commitsScanned}.\n`,
-    partialChurnWarning(history),
     table(
       ["Measure", "Count"],
       [
@@ -219,15 +205,15 @@ function renderSummary(report, history) {
   ];
 }
 
-function renderHotspots(report, files) {
-  const { shown, note } = capped(hotspotRows(report, files));
+function renderFiles(report, files) {
+  const { shown, note } = capped(fileRows(report, files));
   return [
-    "## Hotspots\n",
-    "Score is commits × lines. Only measured lane files rank, and equal scores rank by path. " +
-      "Max cyclomatic is estimated by reading.\n",
+    "## Files\n",
+    "Measured lane files rank by their highest hot-function cyclomatic complexity, then by lines, then by path. " +
+      "Max cyclomatic is estimated by reading, and a file with no hot function shows `-`.\n",
     table(
-      ["Rank", "File", "Commits", "Lines", "Score", "Max cyclomatic"],
-      shown.map((row, i) => [i + 1, `\`${row.file}\``, row.commits, row.lines, row.score, row.cyclomatic]),
+      ["Rank", "File", "Max cyclomatic", "Lines"],
+      shown.map((row, i) => [i + 1, `\`${row.file}\``, row.cyclomatic, row.lines]),
     ),
     note,
   ];
@@ -260,14 +246,10 @@ function renderFunctions(report) {
   ];
 }
 
-const partnersCell = (coupling) => list(coupling).map((partner) => `${partner.path} (${partner.shared})`).join(", ") || "-";
-
-function renderLanes(report, files) {
+function renderLanes(report) {
   const out = [
     "## Lanes\n",
-    "Authors and partners come from git history. Partners are the files that most often change in the same commit, " +
-      "with the shared commit count. Every other value is estimated by reading. " +
-      "Maxima come from the hot functions, and length and params skip `<module>`.\n",
+    "Every value is estimated by reading. Maxima come from the hot functions, and length and params skip `<module>`.\n",
   ];
   for (const lane of list(report.lanes)) {
     out.push(`### ${lane.name}\n`);
@@ -283,8 +265,6 @@ function renderLanes(report, files) {
           "Max nesting",
           "Max length",
           "Max params",
-          "Authors",
-          "Partners",
         ],
         list(lane.entries).map((entry) => {
           const max = fileMaxima(entry);
@@ -297,8 +277,6 @@ function renderLanes(report, files) {
             max.nesting,
             max.length,
             max.params,
-            files[entry.file].authors,
-            partnersCell(files[entry.file].coupling),
           ];
         }),
       ),
@@ -324,14 +302,14 @@ function renderNotMeasured(files) {
   return ["## Not measured\n", table(["Path", "Status"], rows)];
 }
 
-export function renderReport(report, history) {
-  const files = history.files;
+export function renderReport(report, inventory) {
+  const files = inventory.files;
   return [
     `# Complexity audit: ${report.scope.root}\n`,
-    ...renderSummary(report, history),
-    ...renderHotspots(report, files),
+    ...renderSummary(report, inventory),
+    ...renderFiles(report, files),
     ...renderFunctions(report),
-    ...renderLanes(report, files),
+    ...renderLanes(report),
     ...renderGaps(report),
     ...renderNotMeasured(files),
   ]
@@ -358,17 +336,17 @@ function main(args) {
     process.stderr.write("render-report.mjs: usage: render-report.mjs <report.json> [<report.md>]\n");
     return 2;
   }
-  const historyPath = join(dirname(input), "history.json");
+  const inventoryPath = join(dirname(input), "inventory.json");
   let report;
-  let history;
+  let inventory;
   try {
     report = readJson(input);
-    history = readJson(historyPath);
+    inventory = readJson(inventoryPath);
   } catch (error) {
-    process.stderr.write(`render-report.mjs: cannot read ${input} and ${historyPath}: ${error.message}\n`);
+    process.stderr.write(`render-report.mjs: cannot read ${input} and ${inventoryPath}: ${error.message}\n`);
     return 1;
   }
-  const errors = validateReport(report, history);
+  const errors = validateReport(report, inventory);
   if (errors.length > 0) {
     process.stderr.write(`render-report.mjs: ${errors.length} error(s). Nothing written\n`);
     for (const error of errors) process.stderr.write(`- ${error}\n`);
@@ -379,7 +357,7 @@ function main(args) {
     process.stderr.write(`render-report.mjs: ${target} is a symlink, and the renderer never writes through one\n`);
     return 1;
   }
-  writeFileSync(target, renderReport(report, history));
+  writeFileSync(target, renderReport(report, inventory));
   process.stdout.write(`${target}\n`);
   return 0;
 }

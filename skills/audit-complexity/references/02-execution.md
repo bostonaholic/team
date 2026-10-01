@@ -12,41 +12,39 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
    - Run `git rev-parse --show-toplevel`, then `git rev-parse --verify HEAD`.
      When either fails, stop and state that the audit needs a git work tree
      with at least one commit.
-   - When `<out>/report.json`, `<out>/history.json`, or `<out>/report.md` is
+   - When `<out>/report.json`, `<out>/inventory.json`, or `<out>/report.md` is
      a symlink, stop and name it.
    - When any of those three files exists and `<out>/report.json` does not
      hold `skill: "audit-complexity"`, stop. The directory holds another
      tool's files, so choose another `--out`.
 
-2. **Collect the history.** Build `scope.exclude` per the
+2. **Collect the inventory.** Build `scope.exclude` per the
    [input](01-input.md) rules. Write `<out>/report.json` with the Write
    tool. It holds only `version: 1`, `skill: "audit-complexity"`, and
-   `scope` with `root`, `pathspecs`, `exclude`, `since`, and `date`, per the
-   [report](04-report.md) schema. Put `since: null` when `--since` is
-   absent. Then run:
+   `scope` with `root`, `pathspecs`, `exclude`, and `date`, per the
+   [report](04-report.md) schema. Then run:
 
    ```bash
-   node <skill-dir>/scripts/git-history.mjs <out>/report.json
+   node <skill-dir>/scripts/inventory.mjs <out>/report.json
    ```
 
    The script reads `scope`, runs read-only git commands at the top level,
-   and writes `<out>/history.json`. User paths reach it only through
-   `report.json`, never through the command text. On a long history, run it
-   in the background per the execution rules. On exit 1, relay its stderr
-   line and stop. Exit 1 covers a git failure, a bad `report.json`, a
-   symlinked `history.json`, and a pathspec that matches no tracked file.
+   and writes `<out>/inventory.json`. User paths reach it only through
+   `report.json`, never through the command text. On exit 1, relay its
+   stderr line and stop. Exit 1 covers a git failure, a bad `report.json`, a
+   symlinked `inventory.json`, and a pathspec that matches no tracked file.
 
-   When `history.json` lists no file with `status: "text"`, stop, name the
+   When `inventory.json` lists no file with `status: "text"`, stop, name the
    pathspecs, and dispatch nothing.
 
-3. **Split the text files into lanes.** Take every `history.json` file with
+3. **Split the text files into lanes.** Take every `inventory.json` file with
    `status: "text"`, and place each one in exactly one lane or gap:
    - First, put documentation, data, configuration, and lock files into
      `gaps` with reason `not source code`, by extension and path.
    - Split the rest along owner boundaries: the module, package, or feature
      that owns the code, never a file-name prefix.
    - Keep each lane to at most 25 files and 4,000 lines, counted from
-     `history.json` `lines`. Split a larger owner by its sub-owners.
+     `inventory.json` `lines`. Split a larger owner by its sub-owners.
    - Give a file over 4,000 lines its own lane. A scope with one file is
      one lane.
 
@@ -66,7 +64,7 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
    a `skipped` record. Keep it as returned.
 
 5. **Assemble the report.** Run `git rev-parse HEAD` again and put its
-   output in `scope.commit`. Never copy `history.json` `commit`: the
+   output in `scope.commit`. Never copy `inventory.json` `commit`: the
    renderer compares the two to detect a HEAD that moved during the audit.
    Add `lanes`, one analyst return each, and `gaps`. Write `report.json` in
    one Write call.
@@ -85,8 +83,8 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
 
 7. **Reply.** Print these items:
    - The rendered summary.
-   - The top 5 hotspots and the top 5 functions.
-   - The paths of `report.json`, `history.json`, and `report.md`.
+   - The top 5 files and the top 5 functions.
+   - The paths of `report.json`, `inventory.json`, and `report.md`.
    - Each exclusion with its reason.
    - One count per gap reason, and one count per `Not measured` status.
    - One line for each `skipped` record and each check the run skipped.

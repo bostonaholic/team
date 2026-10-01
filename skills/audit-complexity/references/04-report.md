@@ -1,7 +1,7 @@
 ## Report
 
 Two JSON files hold the audit's data, and each has one owner. The skill
-writes `report.json`. `scripts/git-history.mjs` writes `history.json`, and
+writes `report.json`. `scripts/inventory.mjs` writes `inventory.json`, and
 no agent edits it. `scripts/render-report.mjs` joins the two and writes
 `report.md`, which nobody edits by hand. When any rule below breaks, the
 renderer names each broken rule and writes nothing.
@@ -19,7 +19,6 @@ Step 2 writes `version`, `skill`, and `scope` without `commit`. Step 5 adds
     "root": "<repository name>",
     "pathspecs": ["<top-level-relative path>"],
     "exclude": [{ "path": "<top-level-relative path>", "reason": "<evidence>" }],
-    "since": null,
     "date": "<YYYY-MM-DD>",
     "commit": "<git rev-parse HEAD at step 5>"
   },
@@ -28,13 +27,12 @@ Step 2 writes `version`, `skill`, and `scope` without `commit`. Step 5 adds
 }
 ```
 
-`since` is the literal `--since` value, or `null` when the flag is absent.
 Each lane entry carries `functions`, `fanOut`, `mutableState`, and
 `hotFunctions`, as the lane analyst brief defines them. A hot function holds
 `name`, `line`, `endLine`, `cyclomatic`, `decisions`, `nesting`,
 `deepestLine`, and `params`.
 
-### `history.json`
+### `inventory.json`
 
 ```json
 {
@@ -42,19 +40,9 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
   "commit": "<HEAD at step 2>",
   "pathspecs": ["<scope.pathspecs, copied>"],
   "exclude": ["<scope.exclude path, copied>"],
-  "since": null,
-  "shallow": false,
-  "renameDetectionSkipped": false,
-  "commitsScanned": 0,
   "dirty": ["<inventory path that differs from HEAD>"],
   "files": {
-    "<top-level-relative path>": {
-      "status": "text",
-      "lines": 0,
-      "commits": 0,
-      "authors": 0,
-      "coupling": [{ "path": "<top-level-relative path>", "shared": 3 }]
-    }
+    "<top-level-relative path>": { "status": "text", "lines": 0 }
   }
 }
 ```
@@ -74,24 +62,6 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
     any other read error.
 - `lines` counts line feeds, plus 1 for an unterminated last line, and is 0
   unless `status` is `text`.
-- `commits` counts the commits in the window, reachable from HEAD, that
-  touch the file. Reading history newest first, the count follows each
-  rename back to the file's older names, including a rename from outside
-  the scope and a rename that is staged but not committed. A copy starts
-  fresh. A path that git records as added again keeps counting by path. A
-  merge commit counts zero.
-- `authors` counts the distinct author names, after `.mailmap`, on those
-  commits. No name reaches any output.
-- `coupling` lists up to 3 partners: the files anywhere in the repository,
-  outside the exclusions, that changed in the same commit as this file at
-  least 3 times. `shared` is that commit count. Partners sort by `shared`,
-  highest first, then by path. A commit that touches more than 30 files
-  counts for `commits` but adds no partner.
-- `commitsScanned` counts every commit in the window, across the whole
-  repository.
-- `shallow` is true in a shallow clone, where older commits are missing.
-- `renameDetectionSkipped` is true when git printed its rename-limit
-  warning, so some renames were not followed.
 - `dirty` lists the inventory paths whose work-tree or index content
   differs from HEAD when the script ran.
 - Every git call pins the output the script parses, so user, repository,
@@ -100,12 +70,11 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
 ### Rules the renderer enforces
 
 - Both `version` values are 1, and `skill` is `audit-complexity`.
-- `scope.commit`, `scope.pathspecs`, the `scope.exclude` paths, and
-  `scope.since` match `history.json` `commit`, `pathspecs`, `exclude`, and
-  `since`. `null` never matches a string.
+- `scope.commit`, `scope.pathspecs`, and the `scope.exclude` paths match
+  `inventory.json` `commit`, `pathspecs`, and `exclude`.
 - No exclusion equals or contains a named path.
-- Every `text` file in `history.json` sits in exactly one lane's `files` or
-  in `gaps`. Every lane or gap file is a `text` file in `history.json`.
+- Every `text` file in `inventory.json` sits in exactly one lane's `files`
+  or in `gaps`. Every lane or gap file is a `text` file in `inventory.json`.
 - Each lane file has exactly one entry or one `skipped` record, never both.
   Each entry and `skipped` record names a file of its lane.
 - `functions`, `fanOut`, `mutableState.count`, and every hot-function
@@ -113,7 +82,7 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
 - Each location `kind` is `global`, `field`, or `param`, and `count` is at
   least the number of listed locations.
 - Each hot function has `1 <= line <= endLine <= lines`, where `lines` comes
-  from `history.json`. `cyclomatic` equals the length of `decisions` plus 1,
+  from `inventory.json`. `cyclomatic` equals the length of `decisions` plus 1,
   and every decision line and `deepestLine` falls inside `line..endLine`.
 - An entry has at most 6 hot functions, and never more than `functions`.
 - A `<module>` hot function has `line` 1, `endLine` equal to the file's
@@ -123,14 +92,12 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
 
 The renderer lays out these sections, in order:
 
-1. **Summary.** The root, commit, date, scope, and exclusions, the literal
-   `since` window, `commitsScanned`, and the file counts. When `shallow` or
-   `renameDetectionSkipped` is true, a warning states that churn is
-   partial.
-2. **Hotspots.** Measured lane files ranked by score, commits × lines. A
-   file with score 0 drops out, and equal scores rank by path. Each row
-   also shows the file's highest cyclomatic complexity. The table shows at
-   most 25 rows, then the omitted count.
+1. **Summary.** The root, commit, date, scope, and exclusions, and the file
+   counts.
+2. **Files.** Measured lane files ranked by the highest `cyclomatic` among
+   their hot functions, with ties by `lines`, most first, then by path. A
+   file with no hot function shows `-` and ranks below every file that has
+   one. The table shows at most 25 rows, then the omitted count.
 3. **Functions.** Every hot function ranked by `cyclomatic`, with ties by
    file, then line, and its nesting, length (`endLine - line + 1`), and
    parameters. The table shows at most 25 rows, then the omitted count. Its
@@ -139,12 +106,12 @@ The renderer lays out these sections, in order:
 4. **Lanes.** One table per lane, with one row per measured file: its
    fan-out, its mutable-state count, its function count, its highest
    cyclomatic complexity, nesting, length, and parameters among its hot
-   functions, its author count, and its partners as `path (shared)`. Length
-   and parameters skip `<module>`, because it spans the whole file.
+   functions. Length and parameters skip `<module>`, because it spans the
+   whole file.
 5. **Gaps.** Every `gaps` record and every `skipped` record, with its
    reason.
-6. **Not measured.** Every `history.json` file whose `status` is not
+6. **Not measured.** Every `inventory.json` file whose `status` is not
    `text`, with its status.
 
-The report labels every analyst value as "estimated by reading". The script
-values, commits, lines, authors, and partners, are exact counts.
+The report labels every analyst value as "estimated by reading". `lines`
+comes from the script and is an exact count.

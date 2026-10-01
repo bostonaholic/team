@@ -1,7 +1,6 @@
 ## Input
 
-`$ARGUMENTS` holds optional scope paths, an optional `--since <date>`, and
-an optional `--out <dir>`.
+`$ARGUMENTS` holds optional scope paths and an optional `--out <dir>`.
 
 - **Path base.** Every relative path, named or `--out`, resolves against the
   repository top level that `git rev-parse --show-toplevel` prints. It never
@@ -13,11 +12,6 @@ an optional `--out <dir>`.
   that own it. State the resolution in one line before you start. Paths
   match literally, never as globs: `app/[id]` matches only the path
   `app/[id]` and what sits under it.
-- **Window.** `--since <date>` limits history to commits after the date, in
-  any form `git log --since` accepts, such as `2025-01-01` or
-  `12 months ago`. Without it, the window is all history and `scope.since`
-  is `null`. git parses dates leniently, so a mistyped date can give zero
-  commits. The report prints the literal window beside the commit count.
 - **Output directory.** Default: `<top>/docs/plans/<YYYY-MM-DD>-audit-complexity/`,
   with today's date. An `--out` value must obey these rules:
   - It holds only the characters `A-Z`, `a-z`, `0-9`, `.`, `_`, `/`, and `-`.
@@ -26,7 +20,7 @@ an optional `--out <dir>`.
   - It names a directory, or a path that does not exist yet.
 
   Stop on any other value before you write anything. A run writes only
-  `report.json`, `history.json`, and `report.md` there, and touches nothing
+  `report.json`, `inventory.json`, and `report.md` there, and touches nothing
   else. Never stage or commit the output.
 
 ## Keep vendored and generated code out
@@ -47,5 +41,5 @@ level, add it too, with reason `audit output`. A directory name alone, such
 as `vendor` or `dist`, is not evidence. Never exclude a path that equals or
 contains a named path.
 
-`git-history.mjs` applies every exclusion to every `git ls-files` call, as a
+`inventory.mjs` applies every exclusion to every `git ls-files` call, as a
 literal path, so an excluded path never enters the inventory.
