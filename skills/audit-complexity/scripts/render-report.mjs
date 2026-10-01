@@ -10,6 +10,23 @@ const TABLE_ROWS = 25;
 const MAX_HOT_FUNCTIONS = 6;
 const MODULE = "<module>";
 const HOT_FUNCTION_COUNTS = ["line", "endLine", "cyclomatic", "nesting", "deepestLine", "params"];
+const CRAP_TOLERANCE = 0.01;
+// Float slack, so a 2-decimal crap exactly 0.01 from the recount still passes.
+const FLOAT_SLACK = 1e-9;
+const NOT_RUN = "Not run: no coverage file was given.\n";
+const SOURCE_POST = "https://getotterwise.com/blog/understanding-crap-and-cyclomatic-complexity-metrics";
+// A value equal to a band's max goes to that band, so a shared endpoint reads as the lower band.
+const CC_BANDS = [
+  { max: 6, label: "low" },
+  { max: 9, label: "moderate" },
+  { max: 20, label: "high" },
+  { max: Infinity, label: "very complex" },
+];
+const CRAP_BANDS = [
+  { max: 30, label: "acceptable" },
+  { max: 60, label: "needs attention" },
+  { max: Infinity, label: "high risk" },
+];
 
 const list = (value) => (Array.isArray(value) ? value : []);
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -29,6 +46,9 @@ function joinErrors(scope, inventory) {
   const excluded = list(scope.exclude).map((record) => record?.path);
   if (!sameList(excluded, list(inventory.exclude))) {
     errors.push(`scope.exclude paths ${show(excluded)} do not match inventory.json exclude ${show(inventory.exclude)}`);
+  }
+  if (scope.coverage !== inventory.coverage) {
+    errors.push(`scope.coverage ${show(scope.coverage)} does not match inventory.json coverage ${show(inventory.coverage)}`);
   }
   for (const exclusion of excluded) {
     for (const named of pathspecs.filter((path) => path === exclusion || path.startsWith(`${exclusion}/`))) {
@@ -69,7 +89,41 @@ function laneRecordErrors(lane) {
   return errors;
 }
 
-function hotFunctionErrors(file, hot, lines) {
+const crapOf = (cyclomatic, hit, missed) => cyclomatic ** 2 * (missed / (hit + missed)) ** 3 + cyclomatic;
+
+// Each defect yields one error, so the checks stop at the first form error.
+function coverageErrors(where, hot, hasCoverage) {
+  const { coverage, crap } = hot;
+  const carriesNeither = coverage === undefined && crap === undefined;
+  if (!hasCoverage) return carriesNeither ? [] : [`${where}: coverage and crap need scope.coverage, and no coverage file was given`];
+  if (hot.name === MODULE) {
+    return carriesNeither ? [] : [`${where}: ${MODULE} carries no coverage or crap, because its range holds every function in the file`];
+  }
+  if (!isObject(coverage)) return [`${where}: coverage must be { hit, missed } or { reason }, because a coverage file was given`];
+  if ("reason" in coverage) {
+    if ("hit" in coverage || "missed" in coverage) return [`${where}: coverage holds a reason and line lists. Give one form`];
+    if (typeof coverage.reason !== "string" || coverage.reason.trim() === "") return [`${where}: coverage reason must be non-empty text`];
+    return crap === undefined ? [] : [`${where}: crap needs hit and missed line lists, not a reason`];
+  }
+  const { hit, missed } = coverage;
+  if (!Array.isArray(hit) || !Array.isArray(missed) || ![...hit, ...missed].every(Number.isInteger)) {
+    return [`${where}: coverage hit and missed must be lists of line numbers`];
+  }
+  const lines = [...hit, ...missed];
+  if (lines.length === 0) return [`${where}: coverage lists no line in hit or missed. Give a reason instead`];
+  const outside = lines.find((line) => line < hot.line || line > hot.endLine);
+  if (outside !== undefined) return [`${where}: coverage line ${outside} falls outside lines ${hot.line}-${hot.endLine}`];
+  const repeated = lines.find((line, i) => lines.indexOf(line) !== i);
+  if (repeated !== undefined) return [`${where}: coverage line ${repeated} appears more than once across hit and missed`];
+  if (typeof crap !== "number" || !Number.isFinite(crap)) return [`${where}: crap must be a finite number, not ${show(crap)}`];
+  const expected = crapOf(hot.cyclomatic, hit.length, missed.length);
+  if (Math.abs(crap - expected) > CRAP_TOLERANCE + FLOAT_SLACK) {
+    return [`${where}: crap ${crap} must be within ${CRAP_TOLERANCE} of the recount from cyclomatic, hit, and missed, which is ${expected.toFixed(2)}`];
+  }
+  return [];
+}
+
+function hotFunctionErrors(file, hot, lines, hasCoverage) {
   const where = `${file}: ${hot.name} at line ${hot.line}`;
   const notCounts = HOT_FUNCTION_COUNTS.filter((field) => !isCount(hot[field]));
   if (notCounts.length > 0) return [`${where}: ${notCounts.join(", ")} must be integers of 0 or more`];
@@ -90,10 +144,11 @@ function hotFunctionErrors(file, hot, lines) {
     if (lines !== undefined && hot.endLine !== lines) errors.push(`${file}: ${MODULE} must end at the file's last line ${lines}, not ${hot.endLine}`);
     if (hot.params !== 0) errors.push(`${file}: ${MODULE} must have params 0, not ${hot.params}`);
   }
+  errors.push(...coverageErrors(where, hot, hasCoverage));
   return errors;
 }
 
-function entryErrors(entry, files) {
+function entryErrors(entry, files, hasCoverage) {
   const errors = [];
   const file = entry.file;
   const state = isObject(entry.mutableState) ? entry.mutableState : {};
@@ -108,7 +163,7 @@ function entryErrors(entry, files) {
   if (hotFunctions.length > MAX_HOT_FUNCTIONS) {
     errors.push(`${file}: ${hotFunctions.length} hot functions exceed the limit of ${MAX_HOT_FUNCTIONS}`);
   }
-  for (const hot of hotFunctions) errors.push(...hotFunctionErrors(file, hot, files[file]?.lines));
+  for (const hot of hotFunctions) errors.push(...hotFunctionErrors(file, hot, files[file]?.lines, hasCoverage));
   if (!isCount(state.count)) {
     errors.push(`${file}: mutableState.count must be an integer of 0 or more, not ${show(state.count)}`);
   } else if (state.count < locations.length) {
@@ -130,11 +185,13 @@ export function validateReport(report, inventory) {
   if (report.skill !== "audit-complexity") errors.push(`report.json skill must be audit-complexity, not ${show(report.skill)}`);
   if (inventory.version !== 1) errors.push(`inventory.json version must be 1, not ${show(inventory.version)}`);
   const files = isObject(inventory.files) ? inventory.files : {};
-  errors.push(...joinErrors(isObject(report.scope) ? report.scope : {}, inventory));
+  const scope = isObject(report.scope) ? report.scope : {};
+  const hasCoverage = typeof scope.coverage === "string";
+  errors.push(...joinErrors(scope, inventory));
   errors.push(...placementErrors(report, files));
   for (const lane of list(report.lanes)) {
     errors.push(...laneRecordErrors(lane));
-    for (const entry of list(lane.entries)) errors.push(...entryErrors(entry, files));
+    for (const entry of list(lane.entries)) errors.push(...entryErrors(entry, files, hasCoverage));
   }
   return errors;
 }
@@ -174,6 +231,27 @@ function fileMaxima(entry) {
   };
 }
 
+// Every hot function with line lists, with the renderer's own CRAP recount.
+function scoredFunctions(report) {
+  return entriesOf(report).flatMap((entry) =>
+    list(entry.hotFunctions)
+      .filter((hot) => Array.isArray(hot.coverage?.hit))
+      .map((hot) => {
+        const hit = hot.coverage.hit.length;
+        const missed = hot.coverage.missed.length;
+        return { file: entry.file, name: hot.name, line: hot.line, cyclomatic: hot.cyclomatic, hit, missed, crap: crapOf(hot.cyclomatic, hit, missed) };
+      }),
+  );
+}
+
+const oneDecimal = (value) => value.toFixed(1);
+const bandOf = (bands, value) => bands.find((band) => value <= band.max).label;
+const ccBand = (cyclomatic) => (typeof cyclomatic === "number" ? bandOf(CC_BANDS, cyclomatic) : "-");
+// Bands the shown value, so a cell never reads 30.0 beside "needs attention".
+const crapBand = (shown) => bandOf(CRAP_BANDS, Number(shown));
+// Floored, so 100% appears only when no line was missed.
+const coveragePercent = ({ hit, missed }) => `${Math.floor((hit * 100) / (hit + missed))}%`;
+
 // A file with no hot function ranks below every file that has one.
 const rankable = (cyclomatic) => (typeof cyclomatic === "number" ? cyclomatic : 0);
 
@@ -181,6 +259,30 @@ function fileRows(report, files) {
   return entriesOf(report)
     .map((entry) => ({ file: entry.file, lines: files[entry.file].lines, cyclomatic: fileMaxima(entry).cyclomatic }))
     .sort((a, b) => rankable(b.cyclomatic) - rankable(a.cyclomatic) || b.lines - a.lines || byPath(a.file, b.file));
+}
+
+// Sums unrounded recounts, so only the shown values round.
+function renderCrapTotals(report) {
+  if (typeof report.scope.coverage !== "string") {
+    return [`Combined and average CRAP (Change Risk Anti-Patterns) need a coverage file. ${NOT_RUN}`];
+  }
+  const scored = scoredFunctions(report);
+  const scoredFiles = new Set(scored.map((fn) => fn.file)).size;
+  const combined = scored.reduce((sum, fn) => sum + fn.crap, 0);
+  const crapValue = (value) => (scored.length === 0 ? "-" : oneDecimal(value));
+  return [
+    `A file's CRAP is the sum over its scored hot functions, and each file lists at most ${MAX_HOT_FUNCTIONS} hot functions. ` +
+      "Combined CRAP sums every file. Average CRAP divides combined CRAP by the number of files with a score.\n",
+    table(
+      ["Measure", "Value"],
+      [
+        ["Combined CRAP", crapValue(combined)],
+        ["Average CRAP", crapValue(combined / scoredFiles)],
+        ["Files with a CRAP score", scoredFiles],
+        ["Scored functions", scored.length],
+      ],
+    ),
+  ];
 }
 
 function renderSummary(report, inventory) {
@@ -202,6 +304,7 @@ function renderSummary(report, inventory) {
         ["Not measured", files.filter((file) => file.status !== "text").length],
       ],
     ),
+    ...renderCrapTotals(report),
   ];
 }
 
@@ -212,8 +315,8 @@ function renderFiles(report, files) {
     "Measured lane files rank by their highest hot-function cyclomatic complexity, then by lines, then by path. " +
       "Max cyclomatic is estimated by reading, and a file with no hot function shows `-`.\n",
     table(
-      ["Rank", "File", "Max cyclomatic", "Lines"],
-      shown.map((row, i) => [i + 1, `\`${row.file}\``, row.cyclomatic, row.lines]),
+      ["Rank", "File", "Max cyclomatic", "CC band", "Lines"],
+      shown.map((row, i) => [i + 1, `\`${row.file}\``, row.cyclomatic, ccBand(row.cyclomatic), row.lines]),
     ),
     note,
   ];
@@ -230,19 +333,70 @@ function renderFunctions(report) {
       "Values are estimated by reading. Each file lists at most 6 hot functions, " +
       "so a function that ranks fourth or lower in its own file can be missing.\n",
     table(
-      ["Rank", "Function", "File", "Line", "Cyclomatic", "Nesting", "Length", "Params"],
+      ["Rank", "Function", "File", "Line", "Cyclomatic", "CC band", "Nesting", "Length", "Params"],
       shown.map((hot, i) => [
         i + 1,
         `\`${hot.name}\``,
         `\`${hot.file}\``,
         hot.line,
         hot.cyclomatic,
+        ccBand(hot.cyclomatic),
         hot.nesting,
         lengthOf(hot),
         hot.params,
       ]),
     ),
     note,
+  ];
+}
+
+function renderNotScored(report) {
+  const rows = entriesOf(report)
+    .map((entry) => {
+      const reasons = list(entry.hotFunctions)
+        .map((hot) => hot.coverage?.reason)
+        .filter((reason) => typeof reason === "string");
+      return { file: entry.file, count: reasons.length, reasons: [...new Set(reasons)] };
+    })
+    .filter((row) => row.count > 0)
+    .sort((a, b) => byPath(a.file, b.file))
+    .map((row) => [`\`${row.file}\``, row.count, row.reasons.join("; ")]);
+  return [
+    "### Not scored\n",
+    "Hot functions other than `<module>` that have no CRAP, by file, with each distinct reason.\n",
+    table(["File", "Count", "Reasons"], rows),
+  ];
+}
+
+function renderChangeRisk(report) {
+  const scope = report.scope;
+  if (typeof scope.coverage !== "string") return ["## Change risk\n", NOT_RUN];
+  const ranked = scoredFunctions(report).sort(
+    (a, b) => b.crap - a.crap || b.cyclomatic - a.cyclomatic || byPath(a.file, b.file) || a.line - b.line,
+  );
+  const { shown, note } = capped(ranked);
+  return [
+    "## Change risk\n",
+    "Scored hot functions rank by CRAP (Change Risk Anti-Patterns), then by cyclomatic complexity, file, and line. " +
+      "CRAP = cyclomatic² × (missed / (hit + missed))³ + cyclomatic. Full coverage gives the cyclomatic value, and no coverage gives cyclomatic² + cyclomatic.\n",
+    `Cyclomatic is estimated by reading. Analysts copied each function's hit and missed lines from \`${scope.coverage}\`, and no script parsed that file. ` +
+      "The renderer recounts each CRAP from those lines. Coverage is the floored percent of listed lines that ran.\n",
+    "Only per-line records count. A line with a count above 0 is hit, and a line with a count of 0 is missed. " +
+      "A record matches a file only when its path, after removing a leading `./` or a leading repository top-level path, equals the file's path byte for byte.\n",
+    "The lines of a nested function count toward the function that holds it. " +
+      "An untested nested function raises its parent's CRAP, and a tested one lowers it.\n",
+    `Each file lists at most ${MAX_HOT_FUNCTIONS} hot functions, so other functions have no CRAP. ` +
+      "`<module>` has no CRAP, because its range holds every function in the file. " +
+      `The audit cannot tell if the coverage file came from commit \`${scope.commit}\`.\n`,
+    table(
+      ["Rank", "Function", "File", "Line", "Cyclomatic", "Coverage", "CRAP", "CRAP band"],
+      shown.map((fn, i) => {
+        const shownCrap = oneDecimal(fn.crap);
+        return [i + 1, `\`${fn.name}\``, `\`${fn.file}\``, fn.line, fn.cyclomatic, coveragePercent(fn), shownCrap, crapBand(shownCrap)];
+      }),
+    ),
+    note,
+    ...renderNotScored(report),
   ];
 }
 
@@ -262,6 +416,7 @@ function renderLanes(report) {
           "Mutable state",
           "Functions",
           "Max cyclomatic",
+          "CC band",
           "Max nesting",
           "Max length",
           "Max params",
@@ -274,6 +429,7 @@ function renderLanes(report) {
             entry.mutableState.count,
             entry.functions,
             max.cyclomatic,
+            ccBand(max.cyclomatic),
             max.nesting,
             max.length,
             max.params,
@@ -302,6 +458,32 @@ function renderNotMeasured(files) {
   return ["## Not measured\n", table(["Path", "Status"], rows)];
 }
 
+function bandRows(bands, range) {
+  return bands.map((band, i) => [range(bands[i - 1]?.max, band.max), band.label]);
+}
+
+function renderReadingAid() {
+  const ccRange = (below, max) => (max === Infinity ? `above ${below}` : `${(below ?? 0) + 1}-${max}`);
+  const crapRange = (below, max) => (below === undefined ? `up to ${max}` : max === Infinity ? `above ${below}` : `above ${below} to ${max}`);
+  return [
+    "## Reading the numbers\n",
+    `The bands, the reduction strategies, and the trend tip come from <${SOURCE_POST}>. ` +
+      "They are reading aids, not a pass or fail result. " +
+      "A value on a shared endpoint, such as a CRAP of 30, takes the lower band. The CRAP band uses the shown 1-decimal value.\n",
+    table(["Cyclomatic", "CC band"], bandRows(CC_BANDS, ccRange)),
+    table(["CRAP", "CRAP band"], bandRows(CRAP_BANDS, crapRange)),
+    "General ways to lower cyclomatic complexity. They name no function in this report:\n",
+    "- Extract methods: move a block into its own named function.\n" +
+      "- Use early returns or guard clauses in place of nested conditions.\n" +
+      "- Use polymorphism in place of conditionals.\n" +
+      "- Use lookup tables or configuration in place of `switch`/`case`.\n",
+    "The direction behind every strategy: find the 20 lines that replace the 200. " +
+      "It is a figure of speech, not a target line count.\n",
+    "Track the trend across runs, not only the absolute values. " +
+      "A change that raises combined CRAP but lowers average CRAP can still improve quality per file.\n",
+  ];
+}
+
 export function renderReport(report, inventory) {
   const files = inventory.files;
   return [
@@ -309,9 +491,11 @@ export function renderReport(report, inventory) {
     ...renderSummary(report, inventory),
     ...renderFiles(report, files),
     ...renderFunctions(report),
+    ...renderChangeRisk(report),
     ...renderLanes(report),
     ...renderGaps(report),
     ...renderNotMeasured(files),
+    ...renderReadingAid(),
   ]
     .filter((part) => part !== "")
     .join("\n");

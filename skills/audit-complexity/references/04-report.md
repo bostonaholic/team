@@ -20,6 +20,7 @@ Step 2 writes `version`, `skill`, and `scope` without `commit`. Step 5 adds
     "pathspecs": ["<top-level-relative path>"],
     "exclude": [{ "path": "<top-level-relative path>", "reason": "<evidence>" }],
     "date": "<YYYY-MM-DD>",
+    "coverage": "<top-level-relative coverage file, only when given>",
     "commit": "<git rev-parse HEAD at step 5>"
   },
   "lanes": ["<one lane object per the lane analyst brief>"],
@@ -30,7 +31,10 @@ Step 2 writes `version`, `skill`, and `scope` without `commit`. Step 5 adds
 Each lane entry carries `functions`, `fanOut`, `mutableState`, and
 `hotFunctions`, as the lane analyst brief defines them. A hot function holds
 `name`, `line`, `endLine`, `cyclomatic`, `decisions`, `nesting`,
-`deepestLine`, and `params`.
+`deepestLine`, and `params`. With `scope.coverage`, every hot function
+other than `<module>` also holds `coverage`: either
+`{ "hit": [<line>], "missed": [<line>] }` with `crap`, a number with 2
+decimals, or `{ "reason": "<why no score>" }` with no `crap`.
 
 ### `inventory.json`
 
@@ -40,6 +44,7 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
   "commit": "<HEAD at step 2>",
   "pathspecs": ["<scope.pathspecs, copied>"],
   "exclude": ["<scope.exclude path, copied>"],
+  "coverage": "<scope.coverage, copied, only when given>",
   "dirty": ["<inventory path that differs from HEAD>"],
   "files": {
     "<top-level-relative path>": { "status": "text", "lines": 0 }
@@ -62,6 +67,10 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
     any other read error.
 - `lines` counts line feeds, plus 1 for an unterminated last line, and is 0
   unless `status` is `text`.
+- `coverage` is present only when `scope.coverage` is. Before it copies
+  the path, the script exits 1 unless the path is a string with no leading
+  `/` and no `..` segment, and names a non-empty `text` file under the
+  statuses above.
 - `dirty` lists the inventory paths whose work-tree or index content
   differs from HEAD when the script ran.
 - Every git call pins the output the script parses, so user, repository,
@@ -87,31 +96,74 @@ Each lane entry carries `functions`, `fanOut`, `mutableState`, and
 - An entry has at most 6 hot functions, and never more than `functions`.
 - A `<module>` hot function has `line` 1, `endLine` equal to the file's
   `lines`, and `params` 0.
+- `scope.coverage` equals `inventory.json` `coverage`, or both are absent.
+- Without `scope.coverage`, no hot function carries `coverage` or `crap`.
+  With it, every hot function other than `<module>` carries `coverage`,
+  and `<module>` carries neither.
+- `coverage` holds a non-empty `reason` or both `hit` and `missed`, never
+  both forms. List lines are integers inside `line..endLine`, appear once
+  across both lists, and number at least 1 in total.
+- `crap` appears only with the lists. It is a finite number within 0.01 of
+  `cyclomatic² × (missed / (hit + missed))³ + cyclomatic`, where `hit` and
+  `missed` are the list lengths. The error names the expected value.
 
 ### `report.md`
 
 The renderer lays out these sections, in order:
 
 1. **Summary.** The root, commit, date, scope, and exclusions, and the file
-   counts.
+   counts. Without a coverage file, `Not run: no coverage file was given.`
+   With one, a second table: combined CRAP, average CRAP, the files with a
+   CRAP score, and the scored functions. A file's CRAP is the sum over its
+   scored hot functions, at most 6 per file. Combined CRAP sums those
+   files, and average CRAP divides it by the number of files with a score.
+   Both show 1 decimal, and both show `-` when no function has a score.
 2. **Files.** Measured lane files ranked by the highest `cyclomatic` among
-   their hot functions, with ties by `lines`, most first, then by path. A
-   file with no hot function shows `-` and ranks below every file that has
-   one. The table shows at most 25 rows, then the omitted count.
+   their hot functions, with ties by `lines`, most first, then by path, and
+   its CC band. A file with no hot function shows `-` for both and ranks
+   below every file that has one. The table shows at most 25 rows, then the omitted count.
 3. **Functions.** Every hot function ranked by `cyclomatic`, with ties by
-   file, then line, and its nesting, length (`endLine - line + 1`), and
+   file, then line, and its CC band, nesting, length (`endLine - line + 1`), and
    parameters. The table shows at most 25 rows, then the omitted count. Its
    heading states that a function ranked fourth or lower in its own file
    can be missing.
-4. **Lanes.** One table per lane, with one row per measured file: its
+4. **Change risk.** Without a coverage file, only
+   `Not run: no coverage file was given.` With one, scored hot functions
+   ranked by the renderer's own CRAP recount, then `cyclomatic`, file, and
+   line, with each function's coverage as a floored whole percent and its
+   CRAP to 1 decimal, and its CRAP band. The table shows at most 25 rows, then the omitted
+   count. Its text states the formula, the source of each value, the
+   6-function cap, the `<module>` exemption, the commit limit, the record
+   match rule, and the nested-line rule. A `Not scored` table follows, one
+   row per file with a `reason`, with its count and distinct reasons,
+   sorted by path and not capped.
+5. **Lanes.** One table per lane, with one row per measured file: its
    fan-out, its mutable-state count, its function count, its highest
-   cyclomatic complexity, nesting, length, and parameters among its hot
-   functions. Length and parameters skip `<module>`, because it spans the
+   cyclomatic complexity and its CC band, and its highest nesting, length,
+   and parameters among its hot functions. Length and parameters skip `<module>`, because it spans the
    whole file.
-5. **Gaps.** Every `gaps` record and every `skipped` record, with its
+6. **Gaps.** Every `gaps` record and every `skipped` record, with its
    reason.
-6. **Not measured.** Every `inventory.json` file whose `status` is not
+7. **Not measured.** Every `inventory.json` file whose `status` is not
    `text`, with its status.
+8. **Reading the numbers.** Always last, once. Both band tables, the four
+   general reduction strategies, and the trend tip, attributed to
+   <https://getotterwise.com/blog/understanding-crap-and-cyclomatic-complexity-metrics>.
+   The strategies name no function. After them, one unattributed line
+   gives their direction: find the 20 lines that replace the 200, a
+   figure of speech, not a target line count.
+
+The bands come from that post. A value equal to a band's upper end takes
+the lower band:
+
+- CC band: 1-6 low, 7-9 moderate, 10-20 high, above 20 very complex.
+- CRAP band: up to 30 acceptable, above 30 to 60 needs attention, above 60
+  high risk. The CRAP band uses the shown 1-decimal value, so a cell never
+  reads 30.0 beside "needs attention".
+
+No band and no score changes the exit status of either script.
 
 The report labels every analyst value as "estimated by reading". `lines`
-comes from the script and is an exact count.
+comes from the script and is an exact count. Hit and missed lines come
+from the coverage file through the analysts, and no script parses that
+file.

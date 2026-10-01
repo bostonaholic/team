@@ -281,7 +281,7 @@ Audits a whole test suite against the test value bar and reports which tests to 
 
 ### [audit-complexity](https://github.com/bostonaholic/team/blob/main/skills/audit-complexity/SKILL.md)
 
-Ranks where complexity concentrates in a codebase by each file's most complex function, then its size, and shows each file's fan-out, its writes to shared mutable state, and its functions' cyclomatic complexity, nesting depth, length, and parameters, with line evidence. Changes no code.
+Ranks where complexity concentrates in a codebase by each file's most complex function, then its size, and shows each file's fan-out, its writes to shared mutable state, and its functions' cyclomatic complexity, nesting depth, length, and parameters, with line evidence. Given a coverage file, it also ranks hot functions by CRAP (Change Risk Anti-Patterns) change risk. Labels each cyclomatic and CRAP value with a band and ends with a reading aid. Changes no code.
 
 **Used by:** None
 

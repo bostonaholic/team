@@ -1,5 +1,5 @@
 // Acceptance tests for skills/audit-complexity. No test creates a commit:
-// the real-git cases only read this checkout, and the one new repository is a `git init` with no commit.
+// the real-git cases only read this checkout, and each new repository is a `git init` with no commit.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -13,6 +13,7 @@ const TOP = resolve(".");
 const INVENTORY = resolve("skills/audit-complexity/scripts/inventory.mjs");
 const RENDER = resolve("skills/audit-complexity/scripts/render-report.mjs");
 const COMMIT = "0123456789abcdef0123456789abcdef01234567";
+const COVERAGE = "coverage/lines.txt";
 
 // ---------------------------------------------------------------------------------------------
 // Fixtures and helpers. Every expected number in a test is worked out by hand from these literals.
@@ -97,10 +98,41 @@ function textFile(lines) {
   return { status: "text", lines };
 }
 
-function hot(name, line, cyclomatic) {
+function hot(name, line, cyclomatic, extra = {}) {
   const decisions = Array.from({ length: cyclomatic - 1 }, () => line + 1);
-  return { name, line, endLine: line + 5, cyclomatic, decisions, nesting: 1, deepestLine: line + 1, params: 1 };
+  return { name, line, endLine: line + 5, cyclomatic, decisions, nesting: 1, deepestLine: line + 1, params: 1, ...extra };
 }
+
+// Sets scope.coverage on a report() result, as the skill does when --coverage names a file.
+function withCoverage(audit) {
+  audit.scope.coverage = COVERAGE;
+  return audit;
+}
+
+// A hot function whose coverage lists `hit` executed lines, then `missed` unexecuted lines, right after `line`.
+function covered(name, line, cyclomatic, { hit, missed, crap }) {
+  const run = (from, count) => Array.from({ length: count }, (_, i) => from + i);
+  return hot(name, line, cyclomatic, {
+    endLine: line + hit + missed,
+    coverage: { hit: run(line + 1, hit), missed: run(line + 1 + hit, missed) },
+    crap,
+  });
+}
+
+// report() with a coverage file. route (cyclomatic 4) misses 1 of its 4 coverable lines:
+// CRAP = 4^2 x (1/4)^3 + 4 = 16/64 + 4 = 4.25. No record matches src/db.js.
+function coveredReport() {
+  const audit = withCoverage(report());
+  audit.lanes[0].entries[0].hotFunctions = [
+    {
+      name: "route", line: 10, endLine: 40, cyclomatic: 4, decisions: [12, 20, 30], nesting: 1, deepestLine: 20, params: 2,
+      coverage: { hit: [12, 20, 30], missed: [35] }, crap: 4.25,
+    },
+  ];
+  audit.lanes[0].entries[1].hotFunctions[0].coverage = { reason: "no coverage record for this file" };
+  return audit;
+}
+const coveredInventory = () => inventory({ coverage: COVERAGE });
 
 // 26 lane files with no hot function; src/f00.js has the fewest lines (1), so the 25-row cap omits it.
 const MANY_FILES = Array.from({ length: 26 }, (_, i) => `src/f${String(i).padStart(2, "0")}.js`);
@@ -108,6 +140,7 @@ const manyFilesReport = () => report({ lanes: [lane("many", MANY_FILES.map((file
 const manyFilesInventory = () => inventory({ files: Object.fromEntries(MANY_FILES.map((file, i) => [file, textFile(i + 1)])) });
 
 // 26 hot functions, at most 6 per file; fn00 has the lowest cyclomatic (2), so the 25-row cap omits it.
+// With full coverage each CRAP equals its cyclomatic value, so fn00 also has the lowest CRAP (2).
 const MANY_FUNCTION_FILES = ["src/g0.js", "src/g1.js", "src/g2.js", "src/g3.js", "src/g4.js"];
 const manyFunctionsReport = () =>
   report({
@@ -127,6 +160,16 @@ const manyFunctionsReport = () =>
     gaps: [],
   });
 const manyFunctionsInventory = () => inventory({ files: Object.fromEntries(MANY_FUNCTION_FILES.map((file) => [file, textFile(100)])) });
+const manyScoredReport = () => {
+  const audit = withCoverage(manyFunctionsReport());
+  for (const fn of audit.lanes[0].entries.flatMap((e) => e.hotFunctions)) {
+    Object.assign(fn, { coverage: { hit: [fn.line + 1], missed: [] }, crap: fn.cyclomatic });
+  }
+  return audit;
+};
+
+// One file: src/full.js, cyclomatic 1, 199 of 200 coverable lines hit. 199 x 100 / 200 = 99.5, floored to 99%.
+const NEARLY_FULL = { hit: Array.from({ length: 199 }, (_, i) => i + 2), missed: [201] };
 
 // The text from the `## <heading>` line up to the next `## ` heading, or "" when absent.
 function section(markdown, heading) {
@@ -136,6 +179,25 @@ function section(markdown, heading) {
   const end = lines.findIndex((line, i) => i > start && line.startsWith("## "));
   return lines.slice(start, end === -1 ? undefined : end).join("\n");
 }
+
+// The text from the `### <heading>` line up to the next heading of any level, or "" when absent.
+function subsection(text, heading) {
+  const lines = text.split("\n");
+  const start = lines.findIndex((line) => line.toLowerCase().startsWith(`### ${heading.toLowerCase()}`));
+  if (start === -1) return "";
+  const end = lines.findIndex((line, i) => i > start && line.startsWith("#"));
+  return lines.slice(start, end === -1 ? undefined : end).join("\n");
+}
+
+// The Change risk section without its Not scored subsection: the ranked table and its notes.
+const rankedChangeRisk = (markdown) => section(markdown, "Change risk").split("\n### ")[0];
+
+// Every `## ` heading of the report, in order, without the `## ` prefix.
+const level2Headings = (markdown) =>
+  markdown
+    .split("\n")
+    .filter((line) => line.startsWith("## "))
+    .map((line) => line.slice(3));
 
 const isSeparator = (line) => /^\|(\s*:?-+:?\s*\|)+\s*$/.test(line);
 
@@ -167,16 +229,35 @@ function perFileRow(markdown, file) {
   return {};
 }
 
+// Every data row of every Markdown table in `text`, as { header: cell }, in order.
+function rowObjects(text) {
+  const lines = text.split("\n");
+  const rows = [];
+  let headers = null;
+  for (let i = 0; i < lines.length; i += 1) {
+    if (isSeparator(lines[i + 1] ?? "")) headers = cellsOf(lines[i]);
+    else if (!lines[i].startsWith("|")) headers = null;
+    else if (headers && !isSeparator(lines[i])) {
+      const cells = cellsOf(lines[i]);
+      rows.push(Object.fromEntries(headers.map((header, k) => [header, cells[k]])));
+    }
+  }
+  return rows;
+}
+
+// The first table row in `text` with a cell that reads `key`, backticks aside, or {} when none does.
+const rowWith = (text, key) => rowObjects(text).find((row) => Object.values(row).some((cell) => cell?.replace(/`/g, "") === key)) ?? {};
+
 const column = (row, pattern) => row[Object.keys(row).find((header) => pattern.test(header))];
 const lineMatching = (text, pattern) => text.split("\n").find((line) => pattern.test(line)) ?? "";
 const missing = (argv, flags) => flags.filter((flag) => !argv.includes(flag));
 const afterDashes = (argv) => (argv.includes("--") ? argv.slice(argv.indexOf("--") + 1) : ["<no -->"]);
 
-function auditRequest(pathspecs) {
+function auditRequest(pathspecs, extraScope = {}) {
   return JSON.stringify({
     version: 1,
     skill: "audit-complexity",
-    scope: { root: "team", pathspecs, exclude: [], date: "2026-09-30" },
+    scope: { root: "team", pathspecs, exclude: [], date: "2026-09-30", ...extraScope },
   });
 }
 
@@ -604,6 +685,498 @@ test("renderReport ranks hot functions", async (t) => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// CRAP change risk from a coverage file
+
+test("validateReport rejects coverage evidence that does not add up", async (t) => {
+  await t.test("a report with coverage evidence has no errors", () => {
+    assert.deepEqual(validateReport(coveredReport(), coveredInventory()), []);
+  });
+
+  await t.test("a crap within 0.01 of the recount passes", () => {
+    const rounded = coveredReport();
+    rounded.lanes[0].entries[0].hotFunctions[0].crap = 4.26;
+    assert.deepEqual(validateReport(rounded, coveredInventory()), []);
+  });
+
+  await t.test("scope.coverage differs from inventory.json coverage", () => {
+    const errors = validateReport(coveredReport(), inventory({ coverage: "coverage/other.txt" }));
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /coverage\/other\.txt/);
+  });
+
+  await t.test("a hot function carries coverage when no coverage file was given", () => {
+    const broken = report();
+    broken.lanes[0].entries[0].hotFunctions[0].coverage = { hit: [12], missed: [20] };
+    const errors = validateReport(broken, inventory());
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /coverage/);
+  });
+
+  await t.test("a hot function lacks coverage when a coverage file was given", () => {
+    const broken = coveredReport();
+    delete broken.lanes[0].entries[0].hotFunctions[0].coverage;
+    delete broken.lanes[0].entries[0].hotFunctions[0].crap;
+    const errors = validateReport(broken, coveredInventory());
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /route/);
+    assert.match(errors[0], /coverage/);
+  });
+
+  await t.test("a <module> that carries coverage", () => {
+    const broken = coveredReport();
+    broken.lanes[0].entries[0].hotFunctions.push({
+      name: "<module>", line: 1, endLine: 120, cyclomatic: 2, decisions: [5], nesting: 1, deepestLine: 5, params: 0,
+      coverage: { reason: "no coverage record for this file" },
+    });
+    const errors = validateReport(broken, coveredInventory());
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /<module>/);
+    assert.match(errors[0], /coverage/);
+  });
+
+  await t.test("coverage that holds a reason and line lists together", () => {
+    const broken = coveredReport();
+    broken.lanes[0].entries[0].hotFunctions[0].coverage = { reason: "no coverage record for this file", hit: [12, 20, 30], missed: [35] };
+    const errors = validateReport(broken, coveredInventory());
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /reason/);
+  });
+
+  await t.test("coverage with an empty reason", () => {
+    const broken = coveredReport();
+    broken.lanes[0].entries[1].hotFunctions[0].coverage = { reason: "" };
+    const errors = validateReport(broken, coveredInventory());
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /reason/);
+  });
+
+  await t.test("a coverage line outside the function", () => {
+    // route spans lines 10-40.
+    const broken = coveredReport();
+    broken.lanes[0].entries[0].hotFunctions[0].coverage = { hit: [12, 20, 30], missed: [41] };
+    const errors = validateReport(broken, coveredInventory());
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /\b41\b/);
+  });
+
+  await t.test("a line in both the hit and missed lists", () => {
+    const broken = coveredReport();
+    broken.lanes[0].entries[0].hotFunctions[0].coverage = { hit: [12, 20, 30], missed: [30] };
+    const errors = validateReport(broken, coveredInventory());
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /\b30\b/);
+  });
+
+  await t.test("line lists that hold no line", () => {
+    const broken = coveredReport();
+    broken.lanes[0].entries[0].hotFunctions[0].coverage = { hit: [], missed: [] };
+    broken.lanes[0].entries[0].hotFunctions[0].crap = 4;
+    const errors = validateReport(broken, coveredInventory());
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /coverage/);
+  });
+
+  await t.test("a crap without line lists", () => {
+    const broken = coveredReport();
+    broken.lanes[0].entries[1].hotFunctions[0].crap = 1;
+    const errors = validateReport(broken, coveredInventory());
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /crap/);
+  });
+
+  await t.test("a crap that is not a finite number", () => {
+    const broken = coveredReport();
+    broken.lanes[0].entries[0].hotFunctions[0].crap = "4.25";
+    const errors = validateReport(broken, coveredInventory());
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /crap/);
+  });
+
+  await t.test("a crap off by more than 0.01 names the expected value", () => {
+    const broken = coveredReport();
+    broken.lanes[0].entries[0].hotFunctions[0].crap = 4.27;
+    const errors = validateReport(broken, coveredInventory());
+    assert.equal(errors.length, 1, errors.join("\n"));
+    assert.match(errors[0], /crap/);
+    assert.match(errors[0], /4\.25/);
+  });
+});
+
+test("renderReport ranks scored functions by CRAP under Change risk", async (t) => {
+  await t.test("cyclomatic 4 at 0%, 50%, and 100% coverage shows CRAP 20.0, 6.0, and 4.0", () => {
+    // 4^2 x 1^3 + 4 = 20; 4^2 x (1/2)^3 + 4 = 6; 4^2 x 0^3 + 4 = 4.
+    const markdown = renderReport(
+      withCoverage(
+        report({
+          lanes: [
+            lane("core", [
+              entry("src/app.js", {
+                functions: 3,
+                hotFunctions: [
+                  covered("untested", 1, 4, { hit: 0, missed: 2, crap: 20 }),
+                  covered("half", 10, 4, { hit: 1, missed: 1, crap: 6 }),
+                  covered("tested", 20, 4, { hit: 2, missed: 0, crap: 4 }),
+                ],
+              }),
+            ]),
+          ],
+          gaps: [],
+        }),
+      ),
+      inventory({ coverage: COVERAGE, files: { "src/app.js": textFile(120) } }),
+    );
+    const changeRisk = section(markdown, "Change risk");
+    assert.equal(rowWith(changeRisk, "untested").Coverage, "0%");
+    assert.equal(rowWith(changeRisk, "untested").CRAP, "20.0");
+    assert.equal(rowWith(changeRisk, "half").Coverage, "50%");
+    assert.equal(rowWith(changeRisk, "half").CRAP, "6.0");
+    assert.equal(rowWith(changeRisk, "tested").Coverage, "100%");
+    assert.equal(rowWith(changeRisk, "tested").CRAP, "4.0");
+  });
+
+  await t.test("rows rank by CRAP, then cyclomatic, file, and line", () => {
+    // top 20.0 (cyclomatic 4); half 6.0 (cyclomatic 4) before low 6.0 (cyclomatic 2);
+    // athree and bthree 3.0 by file; early and late 1.0 in src/a.js by line.
+    const markdown = renderReport(
+      withCoverage(
+        report({
+          lanes: [
+            lane("core", [
+              entry("src/b.js", {
+                functions: 2,
+                hotFunctions: [covered("low", 1, 2, { hit: 0, missed: 1, crap: 6 }), covered("bthree", 10, 3, { hit: 1, missed: 0, crap: 3 })],
+              }),
+              entry("src/a.js", {
+                functions: 4,
+                hotFunctions: [
+                  covered("late", 30, 1, { hit: 1, missed: 0, crap: 1 }),
+                  covered("early", 20, 1, { hit: 1, missed: 0, crap: 1 }),
+                  covered("athree", 10, 3, { hit: 1, missed: 0, crap: 3 }),
+                  covered("half", 1, 4, { hit: 1, missed: 1, crap: 6 }),
+                ],
+              }),
+              entry("src/c.js", { functions: 1, hotFunctions: [covered("top", 1, 4, { hit: 0, missed: 2, crap: 20 })] }),
+            ]),
+          ],
+          gaps: [],
+        }),
+      ),
+      inventory({ coverage: COVERAGE, files: { "src/a.js": textFile(50), "src/b.js": textFile(50), "src/c.js": textFile(50) } }),
+    );
+    const rows = tableRows(rankedChangeRisk(markdown));
+    assert.equal(rows.length, 7, rows.join("\n"));
+    assert.match(rows[0], /\btop\b/);
+    assert.match(rows[1], /\bhalf\b/);
+    assert.match(rows[2], /\blow\b/);
+    assert.match(rows[3], /\bathree\b/);
+    assert.match(rows[4], /\bbthree\b/);
+    assert.match(rows[5], /\bearly\b/);
+    assert.match(rows[6], /\blate\b/);
+  });
+
+  await t.test("26 scored functions show 25 rows and the omitted count", () => {
+    const ranked = rankedChangeRisk(renderReport(manyScoredReport(), inventory({ ...manyFunctionsInventory(), coverage: COVERAGE })));
+    assert.equal(tableRows(ranked).length, 25);
+    assert.doesNotMatch(ranked, /\bfn00\b/);
+    assert.match(lineMatching(ranked, /omitted/i), /\b1\b/);
+  });
+
+  await t.test("199 of 200 lines hit shows 99%, never 100%", () => {
+    const markdown = renderReport(
+      withCoverage(
+        report({
+          lanes: [lane("core", [entry("src/full.js", { functions: 1, hotFunctions: [hot("nearly", 1, 1, { endLine: 201, coverage: NEARLY_FULL, crap: 1 })] })])],
+          gaps: [],
+        }),
+      ),
+      inventory({ coverage: COVERAGE, files: { "src/full.js": textFile(201) } }),
+    );
+    assert.equal(rowWith(section(markdown, "Change risk"), "nearly").Coverage, "99%");
+  });
+
+  await t.test("Not scored lists each file with a reason by path, with its count and distinct reasons", () => {
+    const markdown = renderReport(
+      withCoverage(
+        report({
+          lanes: [
+            lane("core", [
+              entry("src/z.js", {
+                functions: 2,
+                hotFunctions: [
+                  hot("zone", 1, 2, { coverage: { reason: "no coverage record for this file" } }),
+                  hot("ztwo", 10, 2, { coverage: { reason: "no coverage record for this file" } }),
+                ],
+              }),
+              entry("src/k.js", { functions: 1, hotFunctions: [covered("scored", 1, 2, { hit: 1, missed: 0, crap: 2 })] }),
+              entry("src/m.js", {
+                functions: 2,
+                hotFunctions: [
+                  hot("mone", 1, 2, { coverage: { reason: "no coverable line in 1-6" } }),
+                  hot("mtwo", 10, 2, { coverage: { reason: "no coverable line in 10-15" } }),
+                ],
+              }),
+            ]),
+          ],
+          gaps: [],
+        }),
+      ),
+      inventory({ coverage: COVERAGE, files: { "src/z.js": textFile(50), "src/k.js": textFile(50), "src/m.js": textFile(50) } }),
+    );
+    const rows = rowObjects(subsection(section(markdown, "Change risk"), "Not scored"));
+    assert.equal(rows.length, 2, JSON.stringify(rows));
+    assert.match(rows[0].File, /src\/m\.js/);
+    assert.equal(rows[0].Count, "2");
+    assert.match(rows[0].Reasons, /no coverable line in 1-6.*no coverable line in 10-15/);
+    assert.match(rows[1].File, /src\/z\.js/);
+    assert.equal(rows[1].Count, "2");
+    assert.equal(rows[1].Reasons, "no coverage record for this file");
+  });
+
+  await t.test("without coverage the section says Not run and shows no number", () => {
+    const changeRisk = section(renderReport(report(), inventory()), "Change risk");
+    assert.match(changeRisk, /Not run: no coverage file was given\./);
+    assert.doesNotMatch(changeRisk, /\d/);
+  });
+
+  await t.test("without coverage the six existing sections keep their order, with Change risk after Functions", () => {
+    const headings = level2Headings(renderReport(report(), inventory()));
+    assert.deepEqual(headings.slice(0, 7), ["Summary", "Files", "Functions", "Change risk", "Lanes", "Gaps", "Not measured"]);
+  });
+});
+
+test("renderReport sums file CRAP into combined and average CRAP", async (t) => {
+  await t.test("combined CRAP sums every file, and average CRAP divides by files with a score", () => {
+    // src/a.js: 20.0 + 4.0 = 24.0; src/b.js: 6.0; src/c.js: no score.
+    // Combined 24.0 + 6.0 = 30.0 over 2 files and 3 functions; average 30.0 / 2 = 15.0.
+    const markdown = renderReport(
+      withCoverage(
+        report({
+          lanes: [
+            lane("core", [
+              entry("src/a.js", {
+                functions: 2,
+                hotFunctions: [covered("untested", 1, 4, { hit: 0, missed: 2, crap: 20 }), covered("tested", 10, 4, { hit: 2, missed: 0, crap: 4 })],
+              }),
+              entry("src/b.js", { functions: 1, hotFunctions: [covered("half", 1, 4, { hit: 1, missed: 1, crap: 6 })] }),
+              entry("src/c.js", { functions: 1, hotFunctions: [hot("unmatched", 1, 2, { coverage: { reason: "no coverage record for this file" } })] }),
+            ]),
+          ],
+          gaps: [],
+        }),
+      ),
+      inventory({ coverage: COVERAGE, files: { "src/a.js": textFile(50), "src/b.js": textFile(50), "src/c.js": textFile(50) } }),
+    );
+    const summary = section(markdown, "Summary");
+    assert.equal(rowWith(summary, "Combined CRAP").Value, "30.0");
+    assert.equal(rowWith(summary, "Average CRAP").Value, "15.0");
+    assert.equal(rowWith(summary, "Files with a CRAP score").Value, "2");
+    assert.equal(rowWith(summary, "Scored functions").Value, "3");
+  });
+
+  await t.test("with coverage and no scored function both values show -", () => {
+    const markdown = renderReport(
+      withCoverage(
+        report({
+          lanes: [
+            lane("core", [
+              entry("src/c.js", { functions: 1, hotFunctions: [hot("unmatched", 1, 2, { coverage: { reason: "no coverage record for this file" } })] }),
+            ]),
+          ],
+          gaps: [],
+        }),
+      ),
+      inventory({ coverage: COVERAGE, files: { "src/c.js": textFile(50) } }),
+    );
+    const summary = section(markdown, "Summary");
+    assert.equal(rowWith(summary, "Combined CRAP").Value, "-");
+    assert.equal(rowWith(summary, "Average CRAP").Value, "-");
+  });
+
+  await t.test("without coverage the Summary says Not run and shows no CRAP value", () => {
+    const summary = section(renderReport(report(), inventory()), "Summary");
+    assert.match(summary, /Not run: no coverage file was given\./);
+    assert.deepEqual(rowWith(summary, "Combined CRAP"), {});
+    assert.deepEqual(rowWith(summary, "Average CRAP"), {});
+  });
+});
+
+// Six files whose only hot function sits on each side of a cyclomatic band boundary, and one with none.
+const bandReport = () =>
+  report({
+    lanes: [
+      lane("bands", [
+        entry("src/cc06.js", { functions: 1, hotFunctions: [hot("f06", 1, 6)] }),
+        entry("src/cc07.js", { functions: 1, hotFunctions: [hot("f07", 1, 7)] }),
+        entry("src/cc09.js", { functions: 1, hotFunctions: [hot("f09", 1, 9)] }),
+        entry("src/cc10.js", { functions: 1, hotFunctions: [hot("f10", 1, 10)] }),
+        entry("src/cc20.js", { functions: 1, hotFunctions: [hot("f20", 1, 20)] }),
+        entry("src/cc21.js", { functions: 1, hotFunctions: [hot("f21", 1, 21)] }),
+        entry("src/none.js"),
+      ]),
+    ],
+    gaps: [],
+  });
+const bandInventory = () =>
+  inventory({
+    files: {
+      "src/cc06.js": textFile(10),
+      "src/cc07.js": textFile(10),
+      "src/cc09.js": textFile(10),
+      "src/cc10.js": textFile(10),
+      "src/cc20.js": textFile(10),
+      "src/cc21.js": textFile(10),
+      "src/none.js": textFile(10),
+    },
+  });
+
+// Five scored functions near the CRAP band boundaries. Each recount is worked out by hand.
+const crapBandReport = () =>
+  withCoverage(
+    report({
+      lanes: [
+        lane("risk", [
+          entry("src/risk.js", {
+            functions: 5,
+            hotFunctions: [
+              // 5^2 x 1^3 + 5 = 30 exactly.
+              covered("exact30", 1, 5, { hit: 0, missed: 1, crap: 30 }),
+              // 6^2 x (7/8)^3 + 6 = 12348/512 + 6 = 30.117, shown 30.1.
+              covered("above30", 1, 6, { hit: 1, missed: 7, crap: 30.12 }),
+              // 6^2 x (90/103)^3 + 6 = 26244000/1092727 + 6 = 30.017, shown 30.0.
+              covered("rounds30", 1, 6, { hit: 13, missed: 90, crap: 30.02 }),
+              // 8^2 x (14/15)^3 + 8 = 175616/3375 + 8 = 60.034, shown 60.0.
+              covered("rounds60", 1, 8, { hit: 1, missed: 14, crap: 60.03 }),
+              // 8^2 x (113/121)^3 + 8 = 92345408/1771561 + 8 = 60.127, shown 60.1.
+              covered("above60", 1, 8, { hit: 8, missed: 113, crap: 60.13 }),
+            ],
+          }),
+        ]),
+      ],
+      gaps: [],
+    }),
+  );
+const crapBandInventory = () => inventory({ coverage: COVERAGE, files: { "src/risk.js": textFile(200) } });
+
+test("renderReport labels each cyclomatic and CRAP value with its band", async (t) => {
+  await t.test("Files labels cyclomatic 6/7, 9/10, and 20/21 with the band each side of the boundary", () => {
+    const files = section(renderReport(bandReport(), bandInventory()), "Files");
+    assert.equal(rowWith(files, "src/cc06.js")["CC band"], "low");
+    assert.equal(rowWith(files, "src/cc07.js")["CC band"], "moderate");
+    assert.equal(rowWith(files, "src/cc09.js")["CC band"], "moderate");
+    assert.equal(rowWith(files, "src/cc10.js")["CC band"], "high");
+    assert.equal(rowWith(files, "src/cc20.js")["CC band"], "high");
+    assert.equal(rowWith(files, "src/cc21.js")["CC band"], "very complex");
+  });
+
+  await t.test("Functions labels cyclomatic 6/7, 9/10, and 20/21 with the band each side of the boundary", () => {
+    const functions = section(renderReport(bandReport(), bandInventory()), "Functions");
+    assert.equal(rowWith(functions, "f06")["CC band"], "low");
+    assert.equal(rowWith(functions, "f07")["CC band"], "moderate");
+    assert.equal(rowWith(functions, "f09")["CC band"], "moderate");
+    assert.equal(rowWith(functions, "f10")["CC band"], "high");
+    assert.equal(rowWith(functions, "f20")["CC band"], "high");
+    assert.equal(rowWith(functions, "f21")["CC band"], "very complex");
+  });
+
+  await t.test("Lanes labels cyclomatic 6/7, 9/10, and 20/21 with the band each side of the boundary", () => {
+    const lanes = section(renderReport(bandReport(), bandInventory()), "Lanes");
+    assert.equal(rowWith(lanes, "src/cc06.js")["CC band"], "low");
+    assert.equal(rowWith(lanes, "src/cc07.js")["CC band"], "moderate");
+    assert.equal(rowWith(lanes, "src/cc09.js")["CC band"], "moderate");
+    assert.equal(rowWith(lanes, "src/cc10.js")["CC band"], "high");
+    assert.equal(rowWith(lanes, "src/cc20.js")["CC band"], "high");
+    assert.equal(rowWith(lanes, "src/cc21.js")["CC band"], "very complex");
+  });
+
+  await t.test("a file with no hot function shows - as its CC band in Files and Lanes", () => {
+    const markdown = renderReport(bandReport(), bandInventory());
+    assert.equal(rowWith(section(markdown, "Files"), "src/none.js")["CC band"], "-");
+    assert.equal(rowWith(section(markdown, "Lanes"), "src/none.js")["CC band"], "-");
+  });
+
+  await t.test("a CRAP of exactly 30 reads acceptable", () => {
+    const row = rowWith(section(renderReport(crapBandReport(), crapBandInventory()), "Change risk"), "exact30");
+    assert.equal(row.CRAP, "30.0");
+    assert.equal(row["CRAP band"], "acceptable");
+  });
+
+  await t.test("a shown CRAP of 30.1 reads needs attention", () => {
+    const row = rowWith(section(renderReport(crapBandReport(), crapBandInventory()), "Change risk"), "above30");
+    assert.equal(row.CRAP, "30.1");
+    assert.equal(row["CRAP band"], "needs attention");
+  });
+
+  await t.test("a recount just above 30 that shows 30.0 reads acceptable", () => {
+    const row = rowWith(section(renderReport(crapBandReport(), crapBandInventory()), "Change risk"), "rounds30");
+    assert.equal(row.CRAP, "30.0");
+    assert.equal(row["CRAP band"], "acceptable");
+  });
+
+  await t.test("a recount just above 60 that shows 60.0 reads needs attention", () => {
+    const row = rowWith(section(renderReport(crapBandReport(), crapBandInventory()), "Change risk"), "rounds60");
+    assert.equal(row.CRAP, "60.0");
+    assert.equal(row["CRAP band"], "needs attention");
+  });
+
+  await t.test("a shown CRAP of 60.1 reads high risk", () => {
+    const row = rowWith(section(renderReport(crapBandReport(), crapBandInventory()), "Change risk"), "above60");
+    assert.equal(row.CRAP, "60.1");
+    assert.equal(row["CRAP band"], "high risk");
+  });
+});
+
+test("render-report.mjs exits 0 when a CRAP is above 60", (t) => {
+  // 8^2 x 1^3 + 8 = 72: high risk, and still no gate.
+  const dir = tempDir(t);
+  const risky = withCoverage(
+    report({
+      lanes: [lane("core", [entry("src/app.js", { functions: 1, hotFunctions: [covered("risky", 1, 8, { hit: 0, missed: 2, crap: 72 })] })])],
+      gaps: [],
+    }),
+  );
+  writeFileSync(join(dir, "report.json"), JSON.stringify(risky));
+  writeFileSync(join(dir, "inventory.json"), JSON.stringify(inventory({ coverage: COVERAGE, files: { "src/app.js": textFile(120) } })));
+  const run = runRender(join(dir, "report.json"));
+  assert.equal(run.status, 0, run.stderr);
+  assert.match(readFileSync(join(dir, "report.md"), "utf8"), /high risk/);
+});
+
+test("renderReport ends every report with Reading the numbers", async (t) => {
+  await t.test("with coverage the reading aid is the last section, once", () => {
+    const headings = level2Headings(renderReport(coveredReport(), coveredInventory()));
+    assert.equal(headings.at(-1), "Reading the numbers");
+    assert.equal(headings.indexOf("Reading the numbers"), headings.length - 1);
+  });
+
+  await t.test("without coverage the reading aid is the last section, once", () => {
+    const headings = level2Headings(renderReport(report(), inventory()));
+    assert.equal(headings.at(-1), "Reading the numbers");
+    assert.equal(headings.indexOf("Reading the numbers"), headings.length - 1);
+  });
+
+  await t.test("it holds both band tables, the four reduction strategies, and the trend tip, with attribution", () => {
+    const aid = section(renderReport(report(), inventory()), "Reading the numbers");
+    assert.match(aid, /\bmoderate\b/);
+    assert.match(aid, /very complex/);
+    assert.match(aid, /\bacceptable\b/);
+    assert.match(aid, /needs attention/);
+    assert.match(aid, /high risk/);
+    assert.match(aid, /extract/i);
+    assert.match(aid, /guard clause/i);
+    assert.match(aid, /polymorphism/i);
+    assert.match(aid, /lookup table/i);
+    assert.match(aid, /trend/i);
+    assert.match(aid, /getotterwise\.com\/blog\/understanding-crap-and-cyclomatic-complexity-metrics/);
+  });
+
+  await t.test("it frames the strategies as finding the 20 lines that replace the 200, figuratively", () => {
+    const aid = section(renderReport(report(), inventory()), "Reading the numbers");
+    assert.match(aid, /20 lines that replace the 200/);
+    assert.match(aid, /not a target line count/);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // The inventory reads git under any config
 
 test("buildGitArgs pins every parsed output", async (t) => {
@@ -803,5 +1376,88 @@ test("both CLIs exit 1 and write nothing", async (t) => {
     assert.equal(run.status, 1, run.stderr);
     assert.match(run.stderr, /^render-report\.mjs: .*report\.md/);
     assert.equal(readFileSync(join(dir, "victim.md"), "utf8"), "original\n");
+  });
+});
+
+test("inventory.mjs checks and copies scope.coverage", async (t) => {
+  await t.test("a tracked coverage file is copied into inventory.json", (st) => {
+    const dir = tempDir(st);
+    writeFileSync(join(dir, "report.json"), auditRequest(["docs/skills.md"], { coverage: "docs/skills.md" }));
+    writeFileSync(join(dir, "empty.gitconfig"), "");
+    const run = runInventory(join(dir, "report.json"), { cwd: TOP, env: isolatedGitEnv(join(dir, "empty.gitconfig")) });
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(JSON.parse(readFileSync(join(dir, "inventory.json"), "utf8")).coverage, "docs/skills.md");
+  });
+
+  await t.test("an absent scope.coverage writes no coverage key", (st) => {
+    const dir = tempDir(st);
+    writeFileSync(join(dir, "report.json"), auditRequest(["docs/skills.md"]));
+    writeFileSync(join(dir, "empty.gitconfig"), "");
+    const run = runInventory(join(dir, "report.json"), { cwd: TOP, env: isolatedGitEnv(join(dir, "empty.gitconfig")) });
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(Object.hasOwn(JSON.parse(readFileSync(join(dir, "inventory.json"), "utf8")), "coverage"), false);
+  });
+
+  await t.test("a non-string scope.coverage exits 1", (st) => {
+    const dir = tempDir(st);
+    writeFileSync(join(dir, "report.json"), auditRequest(["docs/skills.md"], { coverage: 42 }));
+    writeFileSync(join(dir, "empty.gitconfig"), "");
+    const run = runInventory(join(dir, "report.json"), { cwd: TOP, env: isolatedGitEnv(join(dir, "empty.gitconfig")) });
+    assert.equal(run.status, 1, run.stderr);
+    assert.match(run.stderr, /^inventory\.mjs: .*scope\.coverage/);
+    assert.equal(existsSync(join(dir, "inventory.json")), false);
+  });
+
+  await t.test("an absolute scope.coverage exits 1, even when it names a tracked file", (st) => {
+    const dir = tempDir(st);
+    writeFileSync(join(dir, "report.json"), auditRequest(["docs/skills.md"], { coverage: join(TOP, "docs/skills.md") }));
+    writeFileSync(join(dir, "empty.gitconfig"), "");
+    const run = runInventory(join(dir, "report.json"), { cwd: TOP, env: isolatedGitEnv(join(dir, "empty.gitconfig")) });
+    assert.equal(run.status, 1, run.stderr);
+    assert.match(run.stderr, /^inventory\.mjs: .*scope\.coverage/);
+    assert.equal(existsSync(join(dir, "inventory.json")), false);
+  });
+
+  await t.test("a scope.coverage with a .. segment exits 1, even when it resolves to a tracked file", (st) => {
+    const dir = tempDir(st);
+    writeFileSync(join(dir, "report.json"), auditRequest(["docs/skills.md"], { coverage: "docs/../docs/skills.md" }));
+    writeFileSync(join(dir, "empty.gitconfig"), "");
+    const run = runInventory(join(dir, "report.json"), { cwd: TOP, env: isolatedGitEnv(join(dir, "empty.gitconfig")) });
+    assert.equal(run.status, 1, run.stderr);
+    assert.match(run.stderr, /^inventory\.mjs: .*scope\.coverage/);
+    assert.equal(existsSync(join(dir, "inventory.json")), false);
+  });
+
+  await t.test("a symlinked coverage file exits 1 and says so", (st) => {
+    const dir = tempDir(st);
+    mkdirSync(join(dir, "repo"));
+    mkdirSync(join(dir, "out"));
+    writeFileSync(join(dir, "empty.gitconfig"), "");
+    const env = isolatedGitEnv(join(dir, "empty.gitconfig"));
+    const init = spawnSync("git", ["init", "-q"], { cwd: join(dir, "repo"), env, encoding: "utf8" });
+    assert.equal(init.status, 0, init.stderr);
+    writeFileSync(join(dir, "repo", "real.txt"), "src/app.js\n1 0\n");
+    symlinkSync("real.txt", join(dir, "repo", "link.txt"));
+    writeFileSync(join(dir, "out", "report.json"), auditRequest(["."], { coverage: "link.txt" }));
+    const run = runInventory(join(dir, "out", "report.json"), { cwd: join(dir, "repo"), env });
+    assert.equal(run.status, 1, run.stderr);
+    assert.match(run.stderr, /^inventory\.mjs: coverage file link\.txt is a symlink or leaves the top level/);
+    assert.equal(existsSync(join(dir, "out", "inventory.json")), false);
+  });
+
+  await t.test("an empty coverage file exits 1 and names it", (st) => {
+    const dir = tempDir(st);
+    mkdirSync(join(dir, "repo"));
+    mkdirSync(join(dir, "out"));
+    writeFileSync(join(dir, "empty.gitconfig"), "");
+    const env = isolatedGitEnv(join(dir, "empty.gitconfig"));
+    const init = spawnSync("git", ["init", "-q"], { cwd: join(dir, "repo"), env, encoding: "utf8" });
+    assert.equal(init.status, 0, init.stderr);
+    writeFileSync(join(dir, "repo", "nothing.txt"), "");
+    writeFileSync(join(dir, "out", "report.json"), auditRequest(["."], { coverage: "nothing.txt" }));
+    const run = runInventory(join(dir, "out", "report.json"), { cwd: join(dir, "repo"), env });
+    assert.equal(run.status, 1, run.stderr);
+    assert.match(run.stderr, /^inventory\.mjs: .*nothing\.txt/);
+    assert.equal(existsSync(join(dir, "out", "inventory.json")), false);
   });
 });

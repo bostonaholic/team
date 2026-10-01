@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.144.0] - 2026-10-01
+
+### Added
+
+- `/audit-complexity` takes an optional `--coverage <file>`, a per-line coverage file you already have inside the repository. The report then gives each hot function its covered and missed lines and a CRAP (Change Risk Anti-Patterns) score, which grows when complex code runs untested. A new Change risk section ranks the riskiest functions first, and lists each function with no score and the reason. The summary adds combined and average CRAP, so you can compare one audit with a later one. Without the flag, the report says CRAP did not run and never assumes a coverage value. Every report now labels each cyclomatic complexity and CRAP value with a band, such as "moderate" or "high risk". A final Reading the numbers section explains the bands, lists general ways to lower complexity under one direction (find the 20 lines that replace the 200, as a figure of speech), and tells you to track trends across runs. A band never fails the audit. The audit never runs your tests. **What this asks of you:** nothing, unless you want CRAP scores. Then pass `--coverage` with a top-level-relative path to a coverage file that lists each coverable line with its hit count, and each line that did not run with a count of 0. The audit stops before it measures anything when the file lists no count of 0.
+
 ## [0.143.0] - 2026-10-01
 
 ### Changed
@@ -1372,7 +1378,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.143.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.144.0...HEAD
+[0.144.0]: https://github.com/bostonaholic/team/compare/v0.143.0...v0.144.0
 [0.143.0]: https://github.com/bostonaholic/team/compare/v0.142.0...v0.143.0
 [0.142.0]: https://github.com/bostonaholic/team/compare/v0.141.0...v0.142.0
 [0.141.0]: https://github.com/bostonaholic/team/compare/v0.140.0...v0.141.0

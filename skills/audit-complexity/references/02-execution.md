@@ -9,6 +9,8 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
      flag, stop and name it.
    - On an `--out` value that breaks the input rules, stop and name the
      broken rule.
+   - On a `--coverage` value that breaks the input rules, stop and name the
+     broken rule. A coverage path inside the output directory breaks them.
    - Run `git rev-parse --show-toplevel`, then `git rev-parse --verify HEAD`.
      When either fails, stop and state that the audit needs a git work tree
      with at least one commit.
@@ -21,8 +23,9 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
 2. **Collect the inventory.** Build `scope.exclude` per the
    [input](01-input.md) rules. Write `<out>/report.json` with the Write
    tool. It holds only `version: 1`, `skill: "audit-complexity"`, and
-   `scope` with `root`, `pathspecs`, `exclude`, and `date`, per the
-   [report](04-report.md) schema. Then run:
+   `scope` with `root`, `pathspecs`, `exclude`, and `date`, and `coverage`
+   when `--coverage` names a file, per the [report](04-report.md) schema.
+   Then run:
 
    ```bash
    node <skill-dir>/scripts/inventory.mjs <out>/report.json
@@ -32,7 +35,25 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
    and writes `<out>/inventory.json`. User paths reach it only through
    `report.json`, never through the command text. On exit 1, relay its
    stderr line and stop. Exit 1 covers a git failure, a bad `report.json`, a
-   symlinked `inventory.json`, and a pathspec that matches no tracked file.
+   symlinked `inventory.json`, a pathspec that matches no tracked file, and
+   a bad coverage path or file.
+
+   When `scope.coverage` is set, probe the coverage file before any
+   dispatch. A file that lists only executed lines gives untested code a
+   false-low CRAP. Each stop below dispatches nothing:
+   1. Read the first 200 lines of the coverage file. When they hold no
+      per-line record under a source path, stop. State that the 200-line
+      probe found no per-line record.
+   2. When one text line holds records for two or more source files, stop.
+      State that each source file's records must sit on their own lines.
+   3. Search the whole file for one per-line record with a count of 0.
+      Take at most one match.
+   4. When the search finds none, stop with this message, with `<file>`
+      replaced by the coverage path:
+      "`<file>` lists no line with a hit count of 0. CRAP needs each unexecuted line listed with a count of 0. If every line ran, each CRAP equals its cyclomatic value. Rerun without `--coverage`."
+
+   The probe proves that the file's format lists unexecuted lines. It does
+   not prove that every record lists all of them.
 
    When `inventory.json` lists no file with `status: "text"`, stop, name the
    pathspecs, and dispatch nothing.
@@ -54,7 +75,9 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
    [lane analyst brief](03-lane-analyst.md), through the `Agent` tool with
    `subagent_type: Explore` and `model: sonnet`. Keep at most 4 in flight
    and batch the rest. Each prompt carries the brief, the lane name, its
-   owner paths, and its file list with each file's `lines`.
+   owner paths, and its file list with each file's `lines`. When
+   `scope.coverage` is set, each prompt also carries the coverage path and
+   `<top>`, the path that `git rev-parse --show-toplevel` printed in step 1.
    - Retry a return that is not the brief's JSON once, with the parse error.
    - On a second failure, or on a host with no `Agent` tool or `Explore`
      type, measure that lane inline with the same brief.
@@ -84,6 +107,10 @@ before step 1. Resolve `<skill-dir>` to this installed skill directory and
 7. **Reply.** Print these items:
    - The rendered summary.
    - The top 5 files and the top 5 functions.
+   - With a coverage file, combined and average CRAP.
+   - With a coverage file, the top 5 functions by CRAP, and one count per
+     `Not scored` reason kind. All `no coverable line in <line>-<endLine>`
+     reasons count as one kind.
    - The paths of `report.json`, `inventory.json`, and `report.md`.
    - Each exclusion with its reason.
    - One count per gap reason, and one count per `Not measured` status.
