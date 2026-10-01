@@ -31,7 +31,7 @@ Two modes:
 5. Read [tracking rules](references/tracking.md) for the in-review transition and the multi-repo home-only closing rule.
 6. After each push, refresh the body. Re-emit exactly one closing line: never duplicated, never dropped.
 7. **A branch that impacts a UI always carries screenshots.** Apply the ux-reviewer brief's UI-impact gate to the full branch diff. When it holds and no captured manifest exists, capture before rendering the section.
-8. **Post the deferred findings and cross-model dispositions as comments on the home PR, never in the body.** After the PR opens, run [review comments](references/07-review-comments.md).
+8. **Post the deferred findings and cross-model dispositions as comments on the home PR, never in the body.** After the PR opens and after each body refresh, run [review comments](references/07-review-comments.md). A refresh posts only the missing comments.
 
 Apply the detailed [body authoring rules](references/03-pr-body-template.md) to initial drafts and every refresh.
 

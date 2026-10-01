@@ -90,10 +90,11 @@
    one** closing line in footer position — never duplicated, never dropped.
    A companion PR re-emits its non-closing reference the same way, and a PR
    with no ticket has no closing line to re-emit. The post-open
-   `## Companion PRs` section is likewise preserved on every refresh. When
-   the current body has a line exactly `## Review notes`, the PR predates
-   [review comments](07-review-comments.md): carry that section through
-   verbatim. Never
+   `## Companion PRs` section is likewise preserved on every refresh. After
+   each push to the home PR, run [review comments](07-review-comments.md)
+   again, so a comment that failed to post earlier posts now. When the
+   current body has a line exactly `## Review notes`, the PR predates that
+   step: carry the section through verbatim, and skip the step. Never
    leave a stale description after a push. In multi-repo mode, do this for
    each repo's PR whose branch you pushed.
 11. **Leave the worktree(s) in place.** Do not remove a worktree after

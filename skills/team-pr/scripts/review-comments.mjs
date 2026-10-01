@@ -95,6 +95,30 @@ function partitionBySize(comments) {
   return { post, refused };
 }
 
+// A comment with no author flag cannot be told apart from the viewer's own,
+// and treating it as someone else's would post a duplicate.
+function viewerMarkerLines(existing) {
+  if (!Array.isArray(existing?.comments)) return { error: "the existing-comments file has no comments array" };
+  const invalid = existing.comments.findIndex(
+    (comment) => typeof comment?.body !== "string" || typeof comment?.viewerDidAuthor !== "boolean",
+  );
+  if (invalid >= 0) {
+    return { error: `existing comment ${invalid} needs a string body and a boolean viewerDidAuthor` };
+  }
+  const firstLine = (body) => body.split("\n")[0].replace(/\r$/, "");
+  return {
+    lines: new Set(existing.comments.filter((comment) => comment.viewerDidAuthor).map((comment) => firstLine(comment.body))),
+  };
+}
+
+function partitionByPosted(comments, postedMarkerLines) {
+  const isPosted = ({ key }) => postedMarkerLines.has(markerLine(key));
+  return {
+    pending: comments.filter((comment) => !isPosted(comment)),
+    skip: comments.filter(isPosted).map(({ key }) => ({ key })),
+  };
+}
+
 function readOptional(path) {
   if (path === undefined) return undefined;
   try {
@@ -123,15 +147,25 @@ function main(argv) {
   const notesPath = flag("--notes");
   if (!out || !existingPath || findingsPath === null || notesPath === null) fail(USAGE);
 
-  JSON.parse(readFileSync(existingPath, "utf8"));
-  const { post, refused } = partitionBySize(buildComments(readOptional(findingsPath) ?? "", readOptional(notesPath)));
+  let existing;
+  try {
+    existing = JSON.parse(readFileSync(existingPath, "utf8"));
+  } catch (error) {
+    fail(`cannot read the existing-comments file at "${existingPath}": ${error.message}`);
+  }
+  const posted = viewerMarkerLines(existing);
+  if (posted.error) fail(posted.error);
 
-  const posted = post.map(({ key, body }) => {
+  const comments = buildComments(readOptional(findingsPath) ?? "", readOptional(notesPath));
+  const { pending, skip } = partitionByPosted(comments, posted.lines);
+  const { post, refused } = partitionBySize(pending);
+
+  const written = post.map(({ key, body }) => {
     const file = join(out, `${key}.md`);
     writeFileSync(file, body);
     return { key, file, characters: body.length };
   });
-  process.stdout.write(`${JSON.stringify({ post: posted, skip: [], refused })}\n`);
+  process.stdout.write(`${JSON.stringify({ post: written, skip, refused })}\n`);
 }
 
 // Node realpaths import.meta.url but not argv[1], so a symlinked path needs realpathSync.

@@ -72,9 +72,9 @@ steps in order:
    ```
 
    The script prints one JSON object, `{post, skip, refused}`. A `post` entry
-   has `key`, `file`, and `characters`. A `refused` entry has `key` and
-   `reason`. The script writes one file for each `post` entry and no other
-   file.
+   has `key`, `file`, and `characters`. A `skip` entry has `key`. A `refused`
+   entry has `key` and `reason`. The script writes one file for each `post`
+   entry and no other file.
 5. Post each `post` entry in manifest order:
 
    ```sh
@@ -110,6 +110,29 @@ A block from a writer layout the label rule does not match goes to
 A body over 65536 characters, the GitHub comment limit, goes to `refused`.
 The script never cuts a body. The other keys still post.
 
+### Refresh
+
+Run the step at PR open and after each push to the home PR. The script puts a
+key in `skip` when the viewer already posted a comment whose first line is
+that key's marker. A trailing `\r` on that line still matches. A refresh with
+nothing missing posts nothing. A refresh after a failed post posts the
+missing keys.
+
+The skip rule reads `viewerDidAuthor` from `gh pr view --json comments`. An
+existing comment without a string `body` or a boolean `viewerDidAuthor` makes
+the script exit 2. A comment with the marker from another author does not
+count, so Team still posts its own.
+
+### Accepted limits
+
+- Team never edits or deletes a posted comment. Findings or IMPLEMENT blocks
+  added after the PR opens do not reach the PR.
+- Source (a) lives in the session only. When the `review-notes` post fails
+  and the session ends before a refresh, (a) is lost.
+- A different `gh` login between open and refresh sees no viewer markers, so
+  it posts duplicates.
+- Two sessions that post to one PR at the same time can both post.
+
 ### Failure rules
 
 The comment step never blocks the PR. Every branch ends with an open draft PR
@@ -123,6 +146,7 @@ and a report, per [focused work rules](../../team/principles/focused-work.md).
 
 ### Completion report
 
-List the URL of each posted comment. `gh pr comment` prints that URL. For each
-`refused` entry, report that the comment for its key did not post, with the
-`reason`.
+- List the URL of each posted comment. `gh pr comment` prints that URL.
+- List each skipped key as already posted.
+- For each `refused` entry, report that the comment for its key did not post,
+  with the `reason`.
