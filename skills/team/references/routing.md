@@ -24,7 +24,7 @@ carries ([external data rules](references/external-data.md)).
 
 | Route | Procedure | Stop condition | Completion |
 | --- | --- | --- | --- |
-| `investigate` | [research playbook](playbooks/research.md); [why](../why/SKILL.md) and [how](../how/SKILL.md) for rationale | cited diagnosis report written; no production edit | `5-research.md` + `routeStatus: complete` |
+| `investigate` | [research playbook](playbooks/research.md) | cited diagnosis report written; no production edit | `5-research.md` + `routeStatus: complete` |
 | `plan` | [plan playbook](playbooks/plan.md) | tactical plan written; no production edit | `8-plan.md` + `routeStatus: complete` |
 | `prototype` | disposable scratch + [decisions](references/decisions.md) + [verify playbook](playbooks/verify.md) | decision and evidence reported; no promotion to production | `prototype-report.md` + `routeStatus: complete` |
 | `feature` | [feature playbook](playbooks/feature.md) | draft PR opened | the feature phase artifacts |

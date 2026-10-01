@@ -32,7 +32,7 @@ Read [design template](references/design-template.md) before drafting. The requi
 - No implementation bodies or full type definitions; signatures are allowed only to fix a decision. Reference patterns by `file:line`, never duplicate them.
 - Prefer "follow `lib/foo.ts:30-60`" over copying those lines.
 - Prefer removing or replacing an existing mechanism over adding a parallel one; name what the change deletes in `## Decisions made` ([focused work rules](principles/focused-work.md)).
-- Existing rationale constrains changes to deliberate guards, thresholds, ownership, and layering. Default to `5-research.md`; use `skills/why/SKILL.md` for Preserve/Change/Avoid/Risk archaeology and `skills/how/SKILL.md` for current-state explanation when needed.
+- Existing rationale constrains changes to deliberate guards, thresholds, ownership, and layering. Default to `5-research.md`. When it is silent on why a guard or layer exists, trace the introducing commit (`git log -S`, `git blame` on the parent revision) and its PR or issue before changing it.
 
 ## Product-need lens
 

@@ -13,5 +13,5 @@ upload returned a non-null `operator_note`, the report carries that note
 verbatim (see Screenshot Upload, "Read the result"); it never enters a PR
 body.
 
-Next: say "the PR is ready for review" (or run /pr-watch-as-author with
-that wording) to arm the watch.
+Next: when the PR is ready for review, run `gh pr ready` and move its
+ticket to in-review per the [tracking rules](tracking.md).
