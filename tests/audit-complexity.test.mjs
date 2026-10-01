@@ -1168,6 +1168,12 @@ test("renderReport ends every report with Reading the numbers", async (t) => {
     assert.match(aid, /trend/i);
     assert.match(aid, /getotterwise\.com\/blog\/understanding-crap-and-cyclomatic-complexity-metrics/);
   });
+
+  await t.test("it frames the strategies as finding the 20 lines that replace the 200, figuratively", () => {
+    const aid = section(renderReport(report(), inventory()), "Reading the numbers");
+    assert.match(aid, /20 lines that replace the 200/);
+    assert.match(aid, /not a target line count/);
+  });
 });
 
 // ---------------------------------------------------------------------------------------------

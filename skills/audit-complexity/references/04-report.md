@@ -149,7 +149,9 @@ The renderer lays out these sections, in order:
 8. **Reading the numbers.** Always last, once. Both band tables, the four
    general reduction strategies, and the trend tip, attributed to
    <https://getotterwise.com/blog/understanding-crap-and-cyclomatic-complexity-metrics>.
-   The strategies name no function.
+   The strategies name no function. After them, one unattributed line
+   gives their direction: find the 20 lines that replace the 200, a
+   figure of speech, not a target line count.
 
 The bands come from that post. A value equal to a band's upper end takes
 the lower band:

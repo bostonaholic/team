@@ -477,6 +477,8 @@ function renderReadingAid() {
       "- Use early returns or guard clauses in place of nested conditions.\n" +
       "- Use polymorphism in place of conditionals.\n" +
       "- Use lookup tables or configuration in place of `switch`/`case`.\n",
+    "The direction behind every strategy: find the 20 lines that replace the 200. " +
+      "It is a figure of speech, not a target line count.\n",
     "Track the trend across runs, not only the absolute values. " +
       "A change that raises combined CRAP but lowers average CRAP can still improve quality per file.\n",
   ];
