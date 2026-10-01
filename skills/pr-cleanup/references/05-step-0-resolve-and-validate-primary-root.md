@@ -38,12 +38,15 @@ or `$REPO` (Hard Rule 11).** The `${VAR:?}` guards at the destructive
 sinks are the backstop, not the mechanism.
 
 From here on every git command is `git -C "$PRIMARY_ROOT"` (Hard Rule 9).
-Exactly four other anchors exist: step 0's `$INVOKE_BRANCH` capture above
+Exactly five other anchors exist: step 0's `$INVOKE_BRANCH` capture above
 (`git branch --show-current` against the invoking directory), the Input
 section's `git check-ref-format --branch` (reads no repository state, and
 re-runs after step 0 for stack-resolved names), step 3's dirty-tree check
 inside a still-present linked worktree
 (`git -C "$WORKTREE_PATH" status --porcelain`), and step A2's inspection of
-what blocks a removal (`git -C "$WORKTREE_PATH" status --short`). The
-bash call that removes a worktree first runs `cd "$PRIMARY_ROOT"`, so no
-later command depends on a working directory that no longer exists.
+what blocks a removal (`git -C "$WORKTREE_PATH" status --short`), and the
+[sweep](11-sweep-merged-worktrees.md) script, which starts in the invoking
+directory to recognize the current session's worktree and anchors its own
+commands. The bash call that removes a worktree first runs
+`cd "$PRIMARY_ROOT"`, so no later command depends on a working directory
+that no longer exists.

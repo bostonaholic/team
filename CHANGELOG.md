@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `/pr-cleanup` now removes the worktrees an earlier teardown left behind. A teardown that ran inside its own worktree could not remove it, and a host can keep an archived session's worktree instead of deleting it, so these piled up. Every `/pr-cleanup` run and every `/team` worktree teardown now sweeps the whole repository. The sweep removes each worktree and local branch whose PR merged, including a detached worktree and a squash merge, and prunes entries for deleted directories. It keeps a worktree that holds the current session, that a running process uses, that has untracked or changed files, or that has commits past its merged PR, and it says why. It never forces a removal. `/pr-cleanup sweep` runs the sweep with no PR named. **What this asks of you:** nothing. The sweep needs `jq`, and it uses `lsof`, when installed, to find worktrees in use.
+
 ## [0.142.0] - 2026-09-30
 
 ### Added

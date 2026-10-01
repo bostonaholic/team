@@ -5,6 +5,11 @@ branch via `gh` — or a branch name. With nothing, default to the branch
 checked out in the invoking directory (step 0 captures it as
 `$INVOKE_BRANCH` before commands are anchored to the primary clone).
 
+`sweep` as the whole argument names no PR and no branch. Run only the
+[sweep](11-sweep-merged-worktrees.md), from the invoking directory, and
+report its lines. The script does steps 0 and 1 itself. Skip steps 2 and 3
+and both modes. To clean up a branch named `sweep`, pass its PR number.
+
 Refusals, before anything else runs:
 
 - **The PR is open and should stay open.** Cleanup is for finished work;
