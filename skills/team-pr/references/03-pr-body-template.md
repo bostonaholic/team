@@ -138,7 +138,7 @@ The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
   "N states skipped — see manifest" note to the section.
 - **The section's wording is defined once, and not here.** Its success form,
   its failure list, and its pre-upload degraded form all live in
-  `skills/pr-screenshots/references/02-upload-and-body-edit.md`. Render the
+  `skills/team-pr/references/screenshot-upload-and-body-edit.md`. Render the
   degraded form at open time, before any upload runs, and never edit the
   section a second time from this skill — the upload's single write replaces
   it.

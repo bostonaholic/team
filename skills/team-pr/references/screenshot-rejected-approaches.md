@@ -1,5 +1,7 @@
 ## Rejected approaches
 
+Resolve links in this file from this file's own directory. `<team-pr-skill-dir>` is the absolute directory that holds the installed `skills/team-pr/SKILL.md`.
+
 Read this before improvising an upload route.
 
 1. **Rejected: commit the images to an orphan branch and link the blob URL.**

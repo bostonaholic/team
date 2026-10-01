@@ -20,7 +20,7 @@
  * by itself, with no section and no counts. It exists so the caller can run
  * those refusals in step A, against the pre-image, BEFORE the first
  * `gh pr edit --attach` — "refuse before mutating, never after"
- * (`SKILL.md`). A refusal discovered only after the attach step leaves live
+ * (`references/screenshot-rules.md`). A refusal discovered only after the attach step leaves live
  * assets on a body this transform then declines to write.
  *
  * ## The model, and why refusing is the default
@@ -176,7 +176,7 @@ const UNESCAPED = "(?<!\\\\)(?:\\\\\\\\)*";
  * matches, because the tag-name class takes `b` and the alternation accepts end
  * of line. That is the designed direction of error — a refusal leaves the body
  * byte-identical — but the recovery is not obvious from the reason alone, so
- * `references/02-upload-and-body-edit.md` names the class and the edit that
+ * `references/screenshot-upload-and-body-edit.md` names the class and the edit that
  * clears it.
  */
 const HTML_TAG = new RegExp(`${UNESCAPED}<\\/?[A-Za-z][A-Za-z0-9-]*(?:[ \\t/>]|$)`);
@@ -212,7 +212,7 @@ const BARE_IMAGE_URL =
 /**
  * Raw HTML in the SECTION, in any position, escaped or not. The section is
  * assembled from caller strings the normalization in
- * `references/01-input-and-result.md` backslash-escapes; this is the code-side
+ * `references/screenshot-input-and-result.md` backslash-escapes; this is the code-side
  * backstop for that rule, so a weakened or skipped escape cannot splice an
  * `<a href>` or an `<img src>` into a public body. An escaped `\<` is caller
  * text that renders as a literal and is left alone — `UNESCAPED` is what
@@ -237,7 +237,7 @@ const SECTION_LINK = new RegExp(`${UNESCAPED}\\]\\(`);
 /**
  * A `/` in the degraded tail — the basename half of the same backstop. The
  * degraded form renders each local path as its BASENAME
- * (`references/01-input-and-result.md`), because a PR body is public and an
+ * (`references/screenshot-input-and-result.md`), because a PR body is public and an
  * absolute path leaks the operator's home directory and username. A basename
  * holds no `/`, so a `/` after `captured, not yet uploaded:` is a path that
  * skipped that rule, and the rule is a normalization a rewrite can drop just
@@ -257,7 +257,7 @@ const OWN_IMAGE = /^!\[screenshot-\d+\]\(\s*https?:\/\/[^\s)]+\s*\)$/;
  * The `(<state>)` parenthetical the renderer emits beside a caption, and
  * nothing else. One level of nesting is allowed as a backstop: `state` is
  * caller text whose normalization removes parentheses
- * (`references/01-input-and-result.md`), and a section rendered before a run
+ * (`references/screenshot-input-and-result.md`), and a section rendered before a run
  * that did so is still a pre-image this transform has to recognize. With a
  * flat `[^)]*`, a state such as `mobile (dark)` makes the renderer's OWN
  * output unrecognizable — and since `team-pr` writes the degraded section at
@@ -269,7 +269,7 @@ const STATE = "(?:[ \\t]+\\((?:[^()]|\\([^()]*\\))*\\))?";
 /**
  * The remaining line shapes this skill writes into its own section. Together
  * with `OWN_IMAGE` they are the whole emitted vocabulary of
- * `references/02-upload-and-body-edit.md`, "The section's markdown shape" —
+ * `references/screenshot-upload-and-body-edit.md`, "The section's markdown shape" —
  * which is what lets a replace tell its own previous output apart from text a
  * reviewer typed there.
  *
