@@ -19,14 +19,17 @@ and rewrite.
 ### Build the entries file
 
 Write a JSON entries file under `$(mktemp -d)`, bound once as below because
-`result.json` comes back beside the entries file. The fence prints each value
-a later call needs, per the carrying rule in [screenshot rules](screenshot-rules.md):
+`result.json` comes back beside the entries file. The fence's first line binds
+`ARTIFACT_DIR` to the `$ARGUMENTS` directory, written out literally, and the
+fence prints each value a later call needs, per the carrying rule in
+[screenshot rules](screenshot-rules.md):
 
 ```bash
+ARTIFACT_DIR='<the $ARGUMENTS directory>'          # filled in literally, this call
 ENTRIES_DIR="$(mktemp -d)"
 ENTRIES_FILE="$ENTRIES_DIR/entries.json"
-# `$ARGUMENTS` is relative and the callee refuses a relative `root`: write the resolved value.
-CAPTURE_ROOT="$(cd -- "$ARGUMENTS/screenshots" && pwd -P)" || exit 2
+# `$ARTIFACT_DIR` may be relative and the callee refuses a relative `root`: write the resolved value.
+CAPTURE_ROOT="$(cd -- "$ARTIFACT_DIR/screenshots" && pwd -P)" || exit 2
 printf 'ENTRIES_DIR=%s\n' "$ENTRIES_DIR"
 printf 'ENTRIES_FILE=%s\n' "$ENTRIES_FILE"
 printf 'CAPTURE_ROOT=%s\n' "$CAPTURE_ROOT"
@@ -101,6 +104,7 @@ COMPANION_URL="https://github.com/owner/other-repo/pull/17"   # this companion's
 # Step 1: bind this companion's own values.
 COMPANION_DIR="$(mktemp -d)"                       # bound per companion, never reused
 "<team-pr-skill-dir>/scripts/resolve-pr.sh" "$COMPANION_URL" "$COMPANION_DIR" || exit 2
+printf 'COMPANION_DIR=%s\n' "$COMPANION_DIR"
 COMPANION_HOST="$(cat "$COMPANION_DIR/pr-host")"
 OWNER="$(cat "$COMPANION_DIR/owner")"
 REPO="$(cat "$COMPANION_DIR/repo")"
@@ -136,9 +140,12 @@ gh api --hostname "$COMPANION_HOST" repos/"$OWNER"/"$REPO"/pulls/"$NUMBER" \
    `--hostname` is mandatory: without it the read-back checks whatever PR of
    that number exists on the default host.
 
-   Apply the assertions in [screenshot verify](screenshot-verify.md). A
-   companion whose read-back does not pass is named in the report and left
-   *as written* — never reverted, never retried.
+   Apply the assertions in [screenshot verify](screenshot-verify.md). When
+   `body_html` comes back empty, run that file's fallback fence with `RUN_DIR`
+   re-bound to this companion's printed `COMPANION_DIR`, never to the home
+   run's: `resolve-pr.sh` wrote this companion's `pr-host`, `owner`, `repo`,
+   `number`, and `repo-spec` there. A companion whose read-back does not pass
+   is named in the report and left *as written* — never reverted, never retried.
 
 When the returned `section` is `null`, touch no companion body at all. Each
 companion already carries the open-time degraded note, which is the correct
