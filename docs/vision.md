@@ -109,11 +109,7 @@ way.
 | **Defined problem** | a problem inside a known context | the items, their order, and the delivery of each |
 | **Ambiguous problem** | an outcome worth moving | the framing, the context, the decisions, the systems, and the proof the outcome moved |
 
-The rungs extend the board in both directions. Rung two adds the work before the
-Backlog, turning a problem into ready items — the `Backlog → Ready` step
-[`/groom-backlog`](skills.md#groom-backlog) already performs. Rung three adds
-the work after Done: deciding what to measure, then reporting whether the
-shipped thing moved it.
+The rungs extend the board in both directions. Rung two adds the work before the Backlog, turning a problem into ready items: the `Backlog → Ready` step. Rung three adds the work after Done: deciding what to measure, then reporting whether the shipped thing moved it.
 
 At the top rung a builder is a one-person fleet, carrying company-significant
 work from problem definition through measured outcomes: creating the context
@@ -124,12 +120,7 @@ verification, at a scope that used to require a team.
 
 ## How we get there
 
-The loop is assembled from capabilities the pipeline already has (isolated runs,
-adversarial review, durable artifacts) plus a control loop over the board. The
-first of the loop's own steps to land as a capability is grooming:
-[`/groom-backlog`](skills.md#groom-backlog) does the `Backlog → Ready` work a
-grooming agent would do, still asking a human to approve each plan. The
-controller that decides *when* to run it is what remains. See
+The loop is assembled from capabilities the pipeline already has (isolated runs, adversarial review, durable artifacts) plus a control loop over the board. Grooming, the `Backlog → Ready` work, and the controller that decides when to run it are what remain. See
 [Ethos](ethos.md) for the principles that make the autonomous middle
 trustworthy.
 

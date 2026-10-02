@@ -334,7 +334,7 @@ Before returning text, fix every:
     condition.
 
 Do not self-lint quoted counter-examples. Review disagreements use the
-[finding format](../code-review/references/findings.md).
+[finding format](references/findings.md).
 
 ## Mechanical score
 
@@ -375,7 +375,7 @@ When reviewing documentation, evaluate three dimensions:
   answer to a specific question in under 30 seconds.
 
 For documentation-gap review and `REQUIRED`/`RECOMMENDED` classification, read
-`../code-review/references/documentation-reviewer.md`.
+`references/documentation-reviewer.md`.
 
 The detection categories above are inspired by Lauren Tan's [Cursor pstack
 unslop

@@ -192,11 +192,8 @@ of the work.
 > **a swap**, and never above the cap. Pick what is genuinely most important and
 > move the displaced card back to `Backlog`. GitHub Projects' column limits are
 > a view-level UI setting, and the API does not expose them reliably. Treat this
-> number as the source of truth, and keep the board UI limit in agreement. The
-> [`/groom-backlog`](skills.md#groom-backlog) skill consumes this number. Its
-> promotion mode carries the same `5` as this repo's worked example, and it
-> swaps a card out rather than exceed the cap. A change here must thus change
-> there too. This is the WIP-limited-kanban discipline that the
+> number as the source of truth, and keep the board UI limit in agreement.
+> This is the WIP-limited-kanban discipline that the
 > loop-driven controller in
 > [#90](https://github.com/bostonaholic/team/issues/90) builds on. Other columns
 > can carry their own limits under that model.
@@ -255,13 +252,6 @@ under `.claude/`. They are not part of the distributed plugin.
 A Team run (`/team`, or the individual `/team-*` phases) maps onto the board
 like this:
 
-- **Shaping work, before any run** →
-  [`/groom-backlog`](skills.md#groom-backlog) is the one board-touching command
-  that is not a pipeline phase. Its board-level pass places and prioritizes
-  items, and it fixes hygiene across the whole board. Its promotion mode moves
-  a single card from **Backlog** to **Ready** after that item meets the
-  ready-to-work standard. Both halves plan and wait for your approval. Nothing
-  moves before you answer. Neither half ever starts a run.
 - **Picking up work** → the card moves to **In progress** **automatically** as
   the first action of the run. It moves from whichever entry column holds it:
   **Ready**, **Backlog**, or **Bugs**. Give `/team` or `/team-fix` a ticket id
@@ -299,8 +289,8 @@ like this:
   `Closes #<N>`, so the merge closes the issue. The board's built-in "an item
   is closed → Done" automation then moves the card. In a multi-repo run,
   close-on-merge fires from the home repo PR's merge specifically. Companion
-  PRs carry no closing keyword. No manual move and no `/shipit` board logic
-  applies, because `/shipit` stays tracker-agnostic. The built-in "pull request
+  PRs carry no closing keyword. No manual move applies, and the land command
+  needs no board logic. The built-in "pull request
   merged → Done" automation also moves a PR that someone added to the board as
   its own item.
 

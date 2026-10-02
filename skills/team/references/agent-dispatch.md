@@ -1,6 +1,6 @@
 # Nested Sub-Agents — Guardrails
 
-Before each consuming step, read its linked shared rules from this installed references directory.
+Before each consuming step, read its linked shared rules from the installed `skills/team/` directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 Pipeline agents with `Agent` may dispatch helpers one level further down. These rules are non-negotiable.
@@ -21,7 +21,7 @@ Only `supported` with exit `0` permits nesting for the turn. Any non-zero, older
 
 ## Dispatch invariants
 
-For Team helpers, read [host dispatch](15-host-dispatch.md) before named or body-loaded dispatch.
+For Team helpers, read [host dispatch](references/15-host-dispatch.md) before named or body-loaded dispatch.
 Supply the installed root, definition, and applicable resource paths in every initial and follow-up prompt.
 These paths are operational context. Research task-derived inputs stay restricted to neutral questions and repository context.
 Keep the helper restrictions and inline fallback below.

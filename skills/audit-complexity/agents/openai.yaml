@@ -1,4 +1,0 @@
-interface:
-  display_name: "Audit Complexity"
-  short_description: "Rank where code complexity concentrates in a codebase"
-  default_prompt: "Use $audit-complexity to rank where code complexity concentrates in a codebase."

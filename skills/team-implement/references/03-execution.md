@@ -41,7 +41,7 @@
      contract.
 6. **Aggregate gate** — sort every finding into **Blocking**, **Major**, or
    **Minor and below** per the table under "Severity Tiers and the Auto-Fix
-   Boundary" in the [finding format](../code-review/references/findings.md).
+   Boundary" in the [finding format](../team/references/findings.md).
 7. **Persist the cross-model record.** Every code-reviewer report carries
    a `### Cross-model disposition` section, so read what it says rather
    than whether it is there: a section reading `Not run:` appends nothing.

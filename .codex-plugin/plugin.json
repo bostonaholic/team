@@ -27,9 +27,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Explain how this subsystem works.",
-      "Investigate why this code was written this way.",
-      "Review the open comments on this pull request."
+      "Run the Team pipeline on this feature.",
+      "Fix this bug with the Team bug-fix pipeline.",
+      "Draft a reviewed design for this change."
     ],
     "websiteURL": "https://team.bostonaholic.dev"
   }

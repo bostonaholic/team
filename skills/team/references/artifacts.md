@@ -41,7 +41,7 @@ plan, `prototype-report.md` for prototype); they create no production worktree.
 - Never restore the retired `^approved:` frontmatter gate; review records alone determine passage.
 - `design-review-<n>.md`: orchestrator-written at the highest existing `<n>` + 1, or 1. Frontmatter is `topic`, `date`, `phase: design-review`, and `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`; body is the verbatim report. Highest-round APPROVE or COMMENT passes. REQUEST CHANGES re-dispatches `design-author` with findings verbatim and increments numeric `revision`; missing/non-numeric means `0`, so the first rewrite writes `revision: 1`.
 - `cross-model-notes.md`: orchestrator-written, append-only, one already-blockquoted `### Cross-model disposition` block per DESIGN or IMPLEMENT review round. Frontmatter: copied `topic`, `date`, `phase: cross-model-review`; no `verdict`. A block starting `> **Design round <n>**` is from DESIGN; unlabeled means IMPLEMENT. Create only on first use; reviewers never read it as prior state.
-- `cross-model-raw.md`: orchestrator-written, append-only DESIGN capture with one result line plus fenced raw output per vendor call; zero calls append nothing. Frontmatter: copied `topic`, `date`, `phase: cross-model-raw`; no `verdict`. It supports live/pre-merge audit only because `docs/plans/` is gitignored and `/pr-cleanup` deletes the topic directory.
+- `cross-model-raw.md`: orchestrator-written, append-only DESIGN capture with one result line plus fenced raw output per vendor call; zero calls append nothing. Frontmatter: copied `topic`, `date`, `phase: cross-model-raw`; no `verdict`. It supports live/pre-merge audit only because `docs/plans/` is gitignored and the worktree teardown deletes the topic directory.
 
 ## Topic and ticket invariants
 

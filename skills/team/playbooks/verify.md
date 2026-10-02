@@ -1,13 +1,13 @@
 # Verify playbook
 
-Before each consuming step, read its linked shared rules. Resolve links from this installed playbook directory.
+Before each consuming step, read its linked shared rules. Resolve links from the installed `skills/team/` directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 ## Two roles, two verdicts
 
 Verification separates two jobs. A producer (the implementer, the author)
 exercises its own change before handoff. An independent reviewer (the verifier
-agent, `prove`) judges the resulting work and reproduces consequential
+agent) judges the resulting work and reproduces consequential
 claims. Self-checking grants no approval authority. A green build is not
 evidence for a behavior nobody drove.
 

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Team no longer ships 19 skills that are not part of its pipeline: `/agent-prompt`, `/audit-complexity`, `/audit-tests`, `/code-review`, `/eng-design-doc-review`, `/groom-backlog`, `/how`, `/no-comments`, `/paparazzi`, `/pr-cleanup`, `/pr-open-comments`, `/pr-rebase`, `/pr-screenshots`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/prove`, `/retro`, `/shipit`, and `/why`. Eighteen moved to [bostonaholic/skills](https://github.com/bostonaholic/skills), which installs without Team (docs: https://skills.bostonaholic.dev). The standalone `/pr-cleanup` command is retired; Team retains its internal pipeline cleanup. `/audit-complexity` moved with the features released in 0.142.0 and 0.144.0 unchanged, including `--coverage` and CRAP scoring. `/pr-watch-as-author` moved with the CI checks and CI fixes released in 0.146.0 unchanged, and `/pr-open-comments` with the 0.145.0 rule that leaves Team's review comments out of its triage. **What this asks of you:** if you use any of the 18 moved commands, update Team, then run `claude plugin marketplace add bostonaholic/skills` and `claude plugin install bostonaholic-skills@bostonaholic`, or `npx skills@latest add bostonaholic/skills`.
+
+### Changed
+
+- The pipeline runs as before without those skills. The reviewer agents and the design review gate read their briefs from Team itself, the PR phase uploads screenshots itself, and worktree teardown runs your `.teamteardown` itself. `/team-fix` and the design phase trace why deliberate-looking code exists with git history instead of calling `/why`, and the PR phase's final report tells you how to mark the PR ready instead of naming a watch command. **What this asks of you:** nothing.
+
 ## [0.146.0] - 2026-10-01
 
 ### Added

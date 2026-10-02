@@ -1,6 +1,6 @@
 Before each `design-author` dispatch or retry, read [host dispatch](references/15-host-dispatch.md).
 
-Before review dispatch, supply the installed plugin root and resolved `skills/eng-design-doc-review/references/design-reviewer.md` path.
+Before review dispatch, supply the installed plugin root, the resolved `skills/team/references/design-reviewer.md` path, the absolute installed `skills/team/` directory as the base of that brief's links, and the resolved paths of the manuals its `## Review brief` links, all in `skills/team/references/`: `code-reviewer.md`, `code-standards.md`, `design-template.md`, `decisions.md`, `findings.md`, `writing.md`, and `cross-model-review.md` when the prompt carries `## External review input`.
 Pass the applicable resource paths and require reads before work.
 If a required resource is missing, stop and report its resolved path; never use checkout fallback or recursive loading.
 
@@ -42,8 +42,8 @@ When the `design-author` returns a draft:
    few places worth the expensive model, and pinning it keeps a cheaper
    machine-wide subagent default from silently weakening the review.
    Pass the `## Review brief` from the
-   [design reviewer brief](../../eng-design-doc-review/references/design-reviewer.md)
-   as the prompt, with the artifact directory substituted. Each round gets a
+   [design reviewer brief](references/design-reviewer.md)
+   as the prompt, with the artifact directory substituted and the paths from the top of this file attached. Each round gets a
    fresh subagent context. `Explore` holds no Write/Edit tools, so the reviewer
    **cannot** change `6-design.md` or forge a verdict artifact. The verdict is
    written by the orchestrator alone (step 4), and downstream discovery fails

@@ -19,7 +19,7 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 - If `4-repos.md` exists, multi-repo work requires worktrees; refuse in-place execution.
 - Seed TodoWrite with `Review round 1`.
 - Retry as `Review round <n+1> (<b> Blocking, <m> Major open)`.
-- Read [finding format](../code-review/references/findings.md) before aggregate decisions.
+- Read [finding format](../team/references/findings.md) before aggregate decisions.
 - Persist `### Cross-model disposition` to `cross-model-notes.md` only when it does not begin `Not run:`.
 - Full pipeline: do **not** end the turn; call the Skill tool with `team-pr` in the same turn.
 - **Standalone**: after success, suggest `/team-pr`.

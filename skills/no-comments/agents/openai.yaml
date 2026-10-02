@@ -1,6 +1,0 @@
-interface:
-  display_name: "No Comments"
-  short_description: "Remove low-value source comments"
-  default_prompt: "Use $no-comments to remove low-value source comments."
-policy:
-  allow_implicit_invocation: false

@@ -24,7 +24,7 @@ carries ([external data rules](references/external-data.md)).
 
 | Route | Procedure | Stop condition | Completion |
 | --- | --- | --- | --- |
-| `investigate` | [research playbook](playbooks/research.md); [why](../why/SKILL.md) and [how](../how/SKILL.md) for rationale | cited diagnosis report written; no production edit | `5-research.md` + `routeStatus: complete` |
+| `investigate` | [research playbook](playbooks/research.md) | cited diagnosis report written; no production edit | `5-research.md` + `routeStatus: complete` |
 | `plan` | [plan playbook](playbooks/plan.md) | tactical plan written; no production edit | `8-plan.md` + `routeStatus: complete` |
 | `prototype` | disposable scratch + [decisions](references/decisions.md) + [verify playbook](playbooks/verify.md) | decision and evidence reported; no promotion to production | `prototype-report.md` + `routeStatus: complete` |
 | `feature` | [feature playbook](playbooks/feature.md) | draft PR opened | the feature phase artifacts |
@@ -35,7 +35,7 @@ carries ([external data rules](references/external-data.md)).
 
 `feature`, `fix`, and `refactor` run a full pipeline that ends in independent
 review and a draft PR, using the existing contracts: the [feature playbook](playbooks/feature.md),
-the [bug-fix playbook](../team-fix/playbooks/bug-fix.md), the [finding format](../code-review/references/findings.md),
+the [bug-fix playbook](../team-fix/playbooks/bug-fix.md), the [finding format](references/findings.md),
 and the [PR gate](references/13-orchestrator-emit-gate-pr-ship.md). A `refactor`
 route captures observable behavior first, changes structure within scope, and
 demonstrates equivalence through the inverted mechanical gate the feature

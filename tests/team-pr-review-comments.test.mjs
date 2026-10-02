@@ -8,7 +8,6 @@ import { join, resolve } from "node:path";
 import test from "node:test";
 
 const SCRIPT = resolve("skills/team-pr/scripts/review-comments.mjs");
-const TRIAGE_STEPS = resolve("skills/pr-open-comments/references/04-execution.md");
 
 const FRONTMATTER = "---\ntopic: demo\ndate: 2026-10-01\nphase: cross-model-review\n---\n";
 
@@ -125,24 +124,6 @@ test("nothing to report writes no comment", async (t) => {
     assert.deepEqual(manifestOf(run), { post: [], skip: [], refused: [] });
     assert.deepEqual(readdirSync(out), []);
   });
-});
-
-// Source-text test kept by the retention bar (skills/team/references/testing.md, Retention
-// bar): the marker is a published contract between two skills, and no runtime path joins them.
-test("pr-open-comments skips the marker prefix that review-comments.mjs writes", (t) => {
-  const root = scratch(t);
-  const out = emptyOut(root);
-  const run = runScript([
-    "--out", out,
-    "--existing", writeInput(root, "existing.json", NO_COMMENTS),
-    "--findings", writeInput(root, "findings.md", FINDINGS),
-  ]);
-  const markerLine = readFileSync(manifestOf(run).post[0].file, "utf8").split("\n")[0];
-
-  const stepThree = readFileSync(TRIAGE_STEPS, "utf8").split("### Step 3")[1].split("### Step 4")[0];
-  const prefix = stepThree.match(/`(<!-- team:pr-comment [^`]*)`/);
-  assert.ok(prefix, "step 3 of pr-open-comments/references/04-execution.md names no `<!-- team:pr-comment ` code span");
-  assert.ok(markerLine.startsWith(prefix[1]), `marker line ${JSON.stringify(markerLine)} does not start with ${JSON.stringify(prefix[1])}`);
 });
 
 // ---------------------------------------------------------------------------

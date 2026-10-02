@@ -1,6 +1,6 @@
 # Release on merge — tags and publishes every version that lands on main.
 #
-# Land-time versioning (docs/versioning.md): `shipit` assigns the version in
+# Land-time versioning (docs/versioning.md): `version-bump` assigns the version in
 # .claude-plugin/plugin.json and cuts its `## [X.Y.Z]` CHANGELOG section at
 # land time, just before merge. When the PR merges, this workflow creates the
 # annotated tag `vX.Y.Z` and the GitHub release, with that changelog section
@@ -10,7 +10,7 @@
 # partial failure (tag pushed, release create died) is repaired by re-running
 # the workflow. A push that does not change the version (e.g. a revert back
 # to a tagged version) no-ops. Version collisions are guarded twice:
-# `shipit`'s land-time assertion checks string agreement before the merge, and
+# `version-bump`'s land-time assertion checks string agreement before the merge, and
 # this workflow's tag push rejects a duplicate version here (post-merge
 # backstop) — a slipped duplicate fails loudly, never silently.
 name: Release on merge

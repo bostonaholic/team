@@ -17,7 +17,7 @@
 # The invariant is a MERGE precondition, not a "do it now" instruction. Team
 # assigns the version at land time, so `runtime changed + no bump` is the
 # EXPECTED state for a runtime PR's whole review lifetime — from the moment the
-# draft opens to the moment version-bump runs immediately before /shipit. The
+# draft opens to the moment version-bump runs immediately before the merge. The
 # verdict is therefore phrased as a condition on merging ("cannot merge until
 # version-bump runs at land time"), never as a bare imperative: an agent that
 # runs this script mid-review must read exit 1 as "this branch owes a bump

@@ -1,11 +1,9 @@
-Before this operation, read [external-data rules](../team/references/external-data.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before this operation, read [external-data rules](../../team/references/external-data.md).
+Resolve links in this file from this file's own directory. `<team-pr-skill-dir>` is the absolute directory that holds the installed `skills/team-pr/SKILL.md`. If a read fails, stop and report its resolved path.
 
 ## Screenshot Upload
 
-Caller policy only. The upload mechanics, the section's markdown shape, and the
-body write live in one place — `skills/pr-screenshots/` — and this file decides
-whether to run, when, and which manifest entries qualify.
+Caller policy only. The upload mechanics, the section's markdown shape, and the body write live in [screenshot rules](screenshot-rules.md), its procedure references, and `<team-pr-skill-dir>/scripts/`. This file decides whether to run, when, and which manifest entries qualify.
 
 ### When to call
 
@@ -21,13 +19,20 @@ and rewrite.
 ### Build the entries file
 
 Write a JSON entries file under `$(mktemp -d)`, bound once as below because
-`result.json` comes back beside the entries file:
+`result.json` comes back beside the entries file. The fence's first line binds
+`ARTIFACT_DIR` to the `$ARGUMENTS` directory, written out literally, and the
+fence prints each value a later call needs, per the carrying rule in
+[screenshot rules](screenshot-rules.md):
 
 ```bash
+ARTIFACT_DIR='<the $ARGUMENTS directory>'          # filled in literally, this call
 ENTRIES_DIR="$(mktemp -d)"
 ENTRIES_FILE="$ENTRIES_DIR/entries.json"
-# `$ARGUMENTS` is relative and the callee refuses a relative `root`: write the resolved value.
-CAPTURE_ROOT="$(cd -- "$ARGUMENTS/screenshots" && pwd -P)" || exit 2
+# `$ARTIFACT_DIR` may be relative and the callee refuses a relative `root`: write the resolved value.
+CAPTURE_ROOT="$(cd -- "$ARTIFACT_DIR/screenshots" && pwd -P)" || exit 2
+printf 'ENTRIES_DIR=%s\n' "$ENTRIES_DIR"
+printf 'ENTRIES_FILE=%s\n' "$ENTRIES_FILE"
+printf 'CAPTURE_ROOT=%s\n' "$CAPTURE_ROOT"
 ```
 
 The file itself carries:
@@ -45,23 +50,22 @@ The file itself carries:
   states were skipped and pointing at the manifest.
 
 The file's schema, and the worked `jq -n --args` construction that writes it,
-are in `skills/pr-screenshots/references/01-input-and-result.md`. Use that
+are in [screenshot input and result](screenshot-input-and-result.md). Use that
 construction: a path and a caption are caller text, so each is bound as a `jq`
 argument and never pasted into a JSON string
-([external-data rules](../team/references/external-data.md)).
+([external-data rules](../../team/references/external-data.md)).
 
-### Call the skill
+### Run the upload
 
-Call the Skill tool with `pr-screenshots`, passing the PR's URL and
-`--entries <path>` for the file just written. One call per run, on the home
-repository's PR.
+Bind `UPLOAD_ARGS` to the PR's URL followed by `--entries` and the printed `ENTRIES_FILE`, both written out as literal text. Assign it in the same shell call that runs `resolve-pr.sh` ([screenshot input and result](screenshot-input-and-result.md)): shell variables do not persist between calls, so a value bound in an earlier call reaches the script empty and the script refuses. Then follow [screenshot rules](screenshot-rules.md) and its procedure references in order. One run per PR phase, on the home repository's PR.
 
 ### Read the result
 
 `result.json` is the contract:
 
 ```bash
-RESULT_FILE="$ENTRIES_DIR/result.json"   # the skill writes it beside the entries file
+ENTRIES_DIR='<printed ENTRIES_DIR>'      # from the build call
+RESULT_FILE="$ENTRIES_DIR/result.json"   # the upload writes it beside the entries file
 [ -r "$RESULT_FILE" ] || exit 2
 ```
 
@@ -74,14 +78,14 @@ Three fields decide what happens next:
 - `failures` — named in the report, one line per entry, so a missing image is
   visible rather than silently absent.
 
-The skill owns the section's wording, the failure list, and the degraded form.
+The upload procedure owns the section's wording, the failure list, and the degraded form.
 Never edit the `## Screenshots` section a second time from this skill:
 `team-pr` renders it once, at open time, in the pre-upload wording, and the
-skill's single write replaces it.
+upload's single write replaces it.
 
 ### Multi-repo
 
-One call, on the home repository's PR. Never one call per repository: that
+One run, on the home repository's PR. Never one run per repository: that
 re-uploads the same image once per repo and orphans the extra assets.
 
 When the returned `section` is non-null, copy that exact string into each
@@ -90,30 +94,39 @@ companion PR's body, one companion at a time.
 This loop is the home write run once per companion, so it runs the same
 committed scripts the home write runs rather than restating them.
 
+Run steps 1 to 3 for one companion as **one shell call**, the fence below, so
+every value the write and the read-back expand is bound in that same call:
+
+```bash
+ENTRIES_DIR='<printed ENTRIES_DIR>'                # from the build call
+RESULT_FILE="$ENTRIES_DIR/result.json"
+COMPANION_URL='https://github.com/owner/other-repo/pull/17'   # this companion's PR, filled in literally
+# Step 1: bind this companion's own values.
+COMPANION_DIR="$(mktemp -d)"                       # bound per companion, never reused
+'<team-pr-skill-dir>/scripts/resolve-pr.sh' "$COMPANION_URL" "$COMPANION_DIR" || exit 2
+printf 'COMPANION_DIR=%s\n' "$COMPANION_DIR"
+COMPANION_HOST="$(cat "$COMPANION_DIR/pr-host")"
+OWNER="$(cat "$COMPANION_DIR/owner")"
+REPO="$(cat "$COMPANION_DIR/repo")"
+NUMBER="$(cat "$COMPANION_DIR/number")"
+# Step 2: splice the section in and write it, once.
+'<team-pr-skill-dir>/scripts/write-companion.sh' "$COMPANION_DIR" "$RESULT_FILE" || exit $?
+# Step 3: read this companion's own rendered body back.
+gh api --hostname "$COMPANION_HOST" repos/"$OWNER"/"$REPO"/pulls/"$NUMBER" \
+  -H "Accept: application/vnd.github.full+json" --jq .body_html
+```
+
 1. Bind that companion's own values with `resolve-pr.sh` over the companion's
    URL. The host is not optional: `--repo "$OWNER/$REPO"` resolves against
    whichever host `gh` considers default, so on an Enterprise PR every call
-   below would name a repository on github.com.
-
-   ```bash
-   COMPANION_URL="https://github.com/owner/other-repo/pull/17"   # this companion's PR
-   COMPANION_DIR="$(mktemp -d)"                       # bound per companion, never reused
-   "<pr-screenshots-skill-dir>/scripts/resolve-pr.sh" "$COMPANION_URL" "$COMPANION_DIR" || exit 2
-   COMPANION_HOST="$(cat "$COMPANION_DIR/pr-host")"
-   OWNER="$(cat "$COMPANION_DIR/owner")"
-   REPO="$(cat "$COMPANION_DIR/repo")"
-   NUMBER="$(cat "$COMPANION_DIR/number")"
-   ```
+   in the fence would name a repository on github.com.
 
    `$COMPANION_DIR` is bound *inside* this loop and nowhere above it. Bound
    once outside, a refusal here would leave the write putting the previous
    companion's body over this companion's description.
 
-2. Splice the section in and write it, once:
-
-   ```bash
-   "<pr-screenshots-skill-dir>/scripts/write-companion.sh" "$COMPANION_DIR" "$RESULT_FILE"
-   ```
+2. Splice the section in and write it, once. The fence stops on a non-zero
+   exit and passes that exit through:
 
    | Exit | Means | Do |
    | --- | --- | --- |
@@ -122,19 +135,17 @@ committed scripts the home write runs rather than restating them.
    | 2 | Fault — an unreadable or malformed input, a failed `gh` call, or `splice.mjs: <message>` | Report it as a fault, not as a refusal |
 
 3. Read that companion's own rendered body back, against its own host, owner,
-   repository, and number:
-
-   ```bash
-   gh api --hostname "$COMPANION_HOST" repos/"$OWNER"/"$REPO"/pulls/"$NUMBER" \
-     -H "Accept: application/vnd.github.full+json" --jq .body_html
-   ```
+   repository, and number. The fence runs this only after exit 0.
 
    `--hostname` is mandatory: without it the read-back checks whatever PR of
    that number exists on the default host.
 
-   Apply the assertions in `skills/pr-screenshots/references/03-verify.md`. A
-   companion whose read-back does not pass is named in the report and left
-   *as written* — never reverted, never retried.
+   Apply the assertions in [screenshot verify](screenshot-verify.md). When
+   `body_html` comes back empty, run that file's fallback fence with `RUN_DIR`
+   re-bound to this companion's printed `COMPANION_DIR`, never to the home
+   run's: `resolve-pr.sh` wrote this companion's `pr-host`, `owner`, `repo`,
+   `number`, and `repo-spec` there. A companion whose read-back does not pass
+   is named in the report and left *as written* — never reverted, never retried.
 
 When the returned `section` is `null`, touch no companion body at all. Each
 companion already carries the open-time degraded note, which is the correct
@@ -143,4 +154,4 @@ thing for it to say.
 **Failure posture:** every branch ends with an open PR, a visible note, and
 local paths. Upload problems never block the PR, retry-loop, or prompt the
 user — the upload is an enhancement per
-[focused work rules](../team/principles/focused-work.md).
+[focused work rules](../../team/principles/focused-work.md).
