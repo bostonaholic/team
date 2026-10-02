@@ -3,7 +3,7 @@
 # Land-time versioning (docs/versioning.md): `shipit` assigns the version in
 # .claude-plugin/plugin.json and cuts its `## [X.Y.Z]` CHANGELOG section at
 # land time, just before merge. When the PR merges, this workflow creates the
-# signed tag `vX.Y.Z` and the GitHub release, with that changelog section
+# signed annotated tag `vX.Y.Z` and the GitHub release, with that changelog section
 # verbatim as the notes. This replaces the old manual /release skill.
 #
 # IDEMPOTENT: keyed on release existence first, then tag existence — a

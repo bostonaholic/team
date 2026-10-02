@@ -323,7 +323,7 @@ On every push to `main`, `release-on-merge.yml`:
    safe to re-run after a partial failure).
 3. Extracts that version's `## [X.Y.Z]` section from `CHANGELOG.md` as the
    release notes (verbatim: the changelog section *is* the release notes).
-4. Creates the signed tag `vX.Y.Z` (message `Release vX.Y.Z`) if missing,
+4. Creates the signed annotated tag `vX.Y.Z` (message `Release vX.Y.Z`) if missing,
    verifies it, pushes it, and publishes the GitHub release. An existing tag
    must also verify before the workflow reuses it.
 
