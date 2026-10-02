@@ -323,8 +323,16 @@ On every push to `main`, `release-on-merge.yml`:
    safe to re-run after a partial failure).
 3. Extracts that version's `## [X.Y.Z]` section from `CHANGELOG.md` as the
    release notes (verbatim: the changelog section *is* the release notes).
-4. Creates the annotated tag `vX.Y.Z` (message `Release vX.Y.Z`) if missing,
-   pushes it, and publishes the GitHub release.
+4. Creates the signed tag `vX.Y.Z` (message `Release vX.Y.Z`) if missing,
+   verifies it, pushes it, and publishes the GitHub release. An existing tag
+   must also verify before the workflow reuses it.
+
+The workflow requires the repository secret `RELEASE_TAG_SIGNING_KEY` (a
+dedicated, unencrypted SSH private key) and repository variable
+`RELEASE_TAG_SIGNER_EMAIL` (a verified email on the key owner's GitHub account).
+Register the matching public key on that account as an **SSH signing key**.
+The workflow fails before publishing when either setting is missing or the
+tag signature cannot be verified. Keep the private key out of the repository.
 
 Because `version-bump` cut the section before landing, the section the release
 workflow reads is exactly what `version-bump` wrote.
@@ -382,7 +390,8 @@ the bump:
 ### A version string was missed and the tag is already pushed
 
 `git add` the fix, `git commit --amend --no-edit`, re-point the tag with
-`git tag -f -a vX.Y.Z -m "Release vX.Y.Z"`, then
+`git tag -f -s vX.Y.Z -m "Release vX.Y.Z"`, verify with
+`git tag -v vX.Y.Z`, then
 `git push --force-with-lease origin main && git push --force origin vX.Y.Z`.
 This is safe only if no commits landed after the broken one. First make sure
 that `origin/main` still equals your pre-amend commit. This case is
@@ -397,7 +406,7 @@ release existence first, then tag existence). For a fully manual fallback:
 ```sh
 V=$(jq -r .version .claude-plugin/plugin.json)
 awk "/^## \[$V\]/{f=1;next} /^## \[/{f=0} f" CHANGELOG.md > /tmp/notes.md
-git tag -a "v$V" -m "Release v$V" && git push origin "v$V"
+git tag -s "v$V" -m "Release v$V" && git tag -v "v$V" && git push origin "v$V"
 gh release create "v$V" --title "v$V" --notes-file /tmp/notes.md
 ```
 

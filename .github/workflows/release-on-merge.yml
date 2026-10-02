@@ -3,7 +3,7 @@
 # Land-time versioning (docs/versioning.md): `shipit` assigns the version in
 # .claude-plugin/plugin.json and cuts its `## [X.Y.Z]` CHANGELOG section at
 # land time, just before merge. When the PR merges, this workflow creates the
-# annotated tag `vX.Y.Z` and the GitHub release, with that changelog section
+# signed tag `vX.Y.Z` and the GitHub release, with that changelog section
 # verbatim as the notes. This replaces the old manual /release skill.
 #
 # IDEMPOTENT: keyed on release existence first, then tag existence — a
@@ -40,6 +40,9 @@ jobs:
           fetch-depth: 0
 
       - name: Tag and release
+        env:
+          RELEASE_TAG_SIGNING_KEY: ${{ secrets.RELEASE_TAG_SIGNING_KEY }}
+          RELEASE_TAG_SIGNER_EMAIL: ${{ vars.RELEASE_TAG_SIGNER_EMAIL }}
         run: |
           set -euo pipefail
           V=$(jq -r .version .claude-plugin/plugin.json)
@@ -59,12 +62,27 @@ jobs:
           fi
 
           git fetch --tags --quiet
+          if [[ -z "$RELEASE_TAG_SIGNING_KEY" || -z "$RELEASE_TAG_SIGNER_EMAIL" ]]; then
+            echo "::error::Set RELEASE_TAG_SIGNING_KEY and RELEASE_TAG_SIGNER_EMAIL before publishing a release"
+            exit 1
+          fi
+          umask 077
+          signing_key="$RUNNER_TEMP/release-tag-signing-key"
+          allowed_signers="$RUNNER_TEMP/release-tag-allowed-signers"
+          trap 'rm -f "$signing_key" "$allowed_signers"' EXIT
+          printf '%s\n' "$RELEASE_TAG_SIGNING_KEY" > "$signing_key"
+          printf '%s %s\n' "$RELEASE_TAG_SIGNER_EMAIL" "$(ssh-keygen -y -f "$signing_key")" > "$allowed_signers"
+          git config gpg.format ssh
+          git config user.signingkey "$signing_key"
+          git config gpg.ssh.allowedSignersFile "$allowed_signers"
+          git config user.name "Team release automation"
+          git config user.email "$RELEASE_TAG_SIGNER_EMAIL"
           if ! git rev-parse -q --verify "refs/tags/v$V" >/dev/null; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git tag -a "v$V" -m "Release v$V"
+            git tag -s "v$V" -m "Release v$V"
+            git tag -v "v$V"
             git push origin "v$V"
           else
+            git tag -v "v$V"
             echo "Tag v$V already exists; reusing it."
           fi
 
