@@ -17,6 +17,7 @@ expected to follow. It links out to the docs site rather than duplicating it.
 | [Ethos](docs/ethos.md) | Why the autonomous middle can be trusted: the principles behind every design choice. |
 | [Architecture](docs/architecture.md) | How Team is built: agents as microservices, the QRSPI pipeline, artifact frontmatter, phase inference. |
 | [Versioning](docs/versioning.md) | Land-time versioning and the release-on-merge flow. |
+| [Testing](docs/TESTING.md) | What gates a merge, what runs by hand, and where a new check belongs. |
 | [Skills](docs/skills.md) | The full per-skill reference. |
 | [Project Tracking](docs/project-tracking.md) | The GitHub Project board and how cards move. |
 
@@ -52,9 +53,10 @@ label taxonomy.
 
 1. **Branch off the latest `main`.** Keep history linear: never commit directly
    to `main`, and never create merge commits (rebase, do not merge).
-2. **Run the static checks.** `claude plugin validate .` and `git diff --check`
-   must pass. Team has no test suite at the moment: the previous harness was
-   removed and a new testing methodology is being designed from scratch.
+2. **Run the checks.** `claude plugin validate .`, `git diff --check`, and
+   `node --test` (the free checks under `tests/`) must pass. None of them runs
+   automatically yet; the strategy and the rollout plan live in
+   [Testing](docs/TESTING.md).
 3. **Keep the agent registry in sync.** When you add or rename an agent, update
    both `agents/*.md` and `skills/team/registry.json` in the same commit. The
    dev hook `.claude/hooks/check-registry-sync.mjs` enforces this.
