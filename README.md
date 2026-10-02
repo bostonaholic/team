@@ -12,7 +12,9 @@ The [shared principle resources](docs/skills.md#shared-principle-resources) defi
 
 ## Skills that moved
 
-Team now ships only its pipeline. These 19 skills moved to the `bostonaholic/skills` collection, which installs without Team: `agent-prompt`, `audit-complexity`, `audit-tests`, `code-review`, `eng-design-doc-review`, `groom-backlog`, `how`, `no-comments`, `paparazzi`, `pr-cleanup`, `pr-open-comments`, `pr-rebase`, `pr-screenshots`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `prove`, `retro`, `shipit`, and `why`.
+Team now ships only its pipeline. These 18 skills moved to the `bostonaholic/skills` collection, which installs without Team: `agent-prompt`, `audit-complexity`, `audit-tests`, `code-review`, `eng-design-doc-review`, `groom-backlog`, `how`, `no-comments`, `paparazzi`, `pr-open-comments`, `pr-rebase`, `pr-screenshots`, `pr-watch-as-author`, `pr-watch-as-reviewer`, `prove`, `retro`, `shipit`, and `why`.
+
+The standalone `pr-cleanup` command is retired. Team retains its internal pipeline cleanup.
 
 Install all of them as a Claude Code plugin:
 
