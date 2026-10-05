@@ -202,6 +202,40 @@ it, so edits are live and the next session picks them up.
 </details>
 
 <details>
+<summary><strong>Cursor</strong></summary>
+
+#### Native plugin installation
+
+Not supported yet. Team is not listed in Cursor's plugin marketplace. Clone the
+repo and use the live development installation below.
+
+#### Local git checkout installation
+
+Not supported by Cursor. Cursor loads local plugins only from
+`~/.cursor/plugins/local`, and skips a symlink there that points to a checkout
+elsewhere. Use the live development installation below.
+
+#### Live development installation
+
+```bash
+script/dev-install cursor
+script/dev-uninstall cursor
+```
+
+This copies the checkout's skills and agents into
+`~/.cursor/plugins/local/team` with a generated `.cursor-plugin/plugin.json`.
+Restart Cursor, or run **Developer: Reload Window**, to load it. Because it is a
+copy, an edit reaches Cursor only when you run the install again; the pull
+hooks do that after every pull.
+
+Team's agents are written for Claude Code. Cursor's subagent format has no
+`tools` or `permissionMode` field, so a reviewer agent is not held read-only
+there, and a tier such as `opus` is not a Cursor model ID. The full pipeline is
+not verified on Cursor.
+
+</details>
+
+<details>
 <summary><strong>OpenCode</strong></summary>
 
 #### Native plugin installation

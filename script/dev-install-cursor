@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Mirrors script/dev-install for Cursor. Copies this checkout's skills and
+# agents into Cursor's local plugin directory as a Cursor plugin.
+#
+# Cursor loads local plugins from ~/.cursor/plugins/local, but skips a symlink
+# there that points outside that folder, so linking the checkout (as the
+# Antigravity install does) loads nothing. The install is a copy instead: an
+# edit reaches Cursor only when this script runs again, which the pull hooks do
+# after every pull.
+#
+# The copy carries a generated .cursor-plugin/plugin.json, taken verbatim from
+# the root plugin.json: every field there is one Cursor's manifest accepts.
+# Nothing in the checkout is written. A marker file in the copy names the
+# checkout it came from; the install replaces only a copy carrying that marker
+# for this checkout, and the uninstall removes only a marked copy.
+
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+LOCAL_DIR="${HOME}/.cursor/plugins/local"
+TARGET="${LOCAL_DIR}/team"
+MARKER=".team-dev-install"
+
+for component in plugin.json skills agents; do
+  if [ ! -e "${PLUGIN_ROOT}/${component}" ]; then
+    echo "Error: no ${component} at ${PLUGIN_ROOT}" >&2
+    exit 1
+  fi
+done
+
+if [ -L "$TARGET" ]; then
+  echo "Error: ${TARGET} is a symlink, which Cursor does not load." >&2
+  echo "Remove it, then rerun script/dev-install cursor." >&2
+  exit 1
+fi
+
+if [ -e "$TARGET" ]; then
+  if [ ! -f "${TARGET}/${MARKER}" ]; then
+    echo "Error: ${TARGET} exists and was not created by Team's dev install." >&2
+    echo "Remove it, then rerun script/dev-install cursor." >&2
+    exit 1
+  fi
+  INSTALLED_FROM="$(cat "${TARGET}/${MARKER}")"
+  if [ "$INSTALLED_FROM" != "$PLUGIN_ROOT" ]; then
+    echo "Error: ${TARGET} was installed from a different checkout:" >&2
+    echo "  ${INSTALLED_FROM}" >&2
+    echo "Run script/dev-uninstall cursor from that checkout first." >&2
+    exit 1
+  fi
+fi
+
+echo "Installing Team for Cursor (dev)..."
+echo "  Source: ${PLUGIN_ROOT}"
+echo
+
+# Build beside the target, then swap, so a failed copy never leaves a partial
+# plugin where Cursor reads it.
+mkdir -p "$LOCAL_DIR"
+STAGING="$(mktemp -d "${LOCAL_DIR}/.team-staging.XXXXXX")"
+trap 'rm -rf "$STAGING"' EXIT INT TERM
+
+cp -R "${PLUGIN_ROOT}/skills" "${PLUGIN_ROOT}/agents" "$STAGING/"
+mkdir "${STAGING}/.cursor-plugin"
+cp "${PLUGIN_ROOT}/plugin.json" "${STAGING}/.cursor-plugin/plugin.json"
+printf '%s\n' "$PLUGIN_ROOT" > "${STAGING}/${MARKER}"
+
+rm -rf "$TARGET"
+mv "$STAGING" "$TARGET"
+echo "  Copied: ${TARGET}"
+
+echo
+echo "Done. Restart Cursor, or run Developer: Reload Window, to load it."

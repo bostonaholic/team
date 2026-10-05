@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Mirrors script/dev-uninstall for Cursor.
+#
+# Removes only the copy script/dev-install-cursor created, recognized by its
+# marker file. Anything else at that path is left alone and named. The parent
+# is Cursor's own local plugin directory and is never removed.
+
+PLUGIN_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+TARGET="${HOME}/.cursor/plugins/local/team"
+MARKER=".team-dev-install"
+
+echo "Uninstalling Team for Cursor (dev)..."
+echo
+
+if [ ! -L "$TARGET" ] && [ ! -e "$TARGET" ]; then
+  echo "  Nothing to do: ${TARGET} does not exist."
+  exit 0
+fi
+
+if [ -L "$TARGET" ] || [ ! -f "${TARGET}/${MARKER}" ]; then
+  echo "Error: ${TARGET} was not created by Team's dev install." >&2
+  echo "Nothing was removed." >&2
+  exit 1
+fi
+
+INSTALLED_FROM="$(cat "${TARGET}/${MARKER}")"
+rm -rf "$TARGET"
+echo "  Removed: ${TARGET}"
+if [ "$INSTALLED_FROM" != "$PLUGIN_ROOT" ]; then
+  echo "  Note: that copy came from another checkout, not ${PLUGIN_ROOT}."
+fi
+
+echo
+echo "Done. Restart Cursor, or run Developer: Reload Window, to drop it."
