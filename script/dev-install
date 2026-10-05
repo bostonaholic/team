@@ -17,7 +17,7 @@ set -euo pipefail
 # to any one harness — keep harness names out of the skip message the user
 # reads.
 
-HARNESSES=(claude codex antigravity opencode)
+HARNESSES=(claude codex antigravity cursor opencode)
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PLUGIN_ROOT="$(dirname "$HERE")"
 HOOK_MARKER="# Managed by Team dev install."
