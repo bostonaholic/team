@@ -87,7 +87,7 @@ When teardown is warranted (post-merge or on explicit request):
    branch on origin, follow with `git -C <repo-path> remote prune origin`:
    the surviving local `refs/remotes/origin/<id>` keeps every commit on the
    branch reachable, so `git branch -D` in step 3 frees nothing while it
-   stands. `skills/pr-cleanup/SKILL.md` Mode A step 6 covers this and the
+   stands. `skills/pr-cleanup/references/09-mode-a-merged.md` step 6 covers this and the
    space-reclaim sequence that follows it.
 6. Remove the feature's local planning docs. Verify the directory is
    untracked first (`git ls-files docs/plans/<id>` returns nothing), then

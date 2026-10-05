@@ -19,7 +19,7 @@ file exists.
 - Detect a linked checkout with `git rev-parse --git-dir` and `git rev-parse --git-common-dir`.
 - **Non-default branch** in an existing linked checkout → skip worktree creation for this repo.
 - **Default branch** → report and stop.
-- In single-repo mode run `git worktree add .claude/worktrees/<branch>`.
+- In single-repo mode create `.claude/worktrees/<branch>` with the host's native worktree support when it offers one, else `git worktree add`.
 - For every `4-repos.md` entry run `git -C <repo> worktree add .claude/worktrees/<branch>`.
 - Record every created path under `## Worktrees` in `4-repos.md`.
 
