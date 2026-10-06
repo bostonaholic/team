@@ -25,15 +25,12 @@ normative force, permission, or possibility.
 
 ## Compose prose methods in this order
 
-1. Save the untouched authored draft and classify protected text.
-2. Scan that draft for each distinct rule below. Record a checklist by rule and
-   affected claim. Zero initial matches make an empty checklist.
-3. Apply style rules only to unprotected prose. A recorded checklist item
-   cannot be erased, hidden, or closed by its edits.
-4. Resolve each recorded item against the original claim and evidence. A
-   grammar-only change does not resolve an unsupported claim.
-5. Then rescan the composed result for every distinct pattern.
-6. Run the self-audit and fix each remaining issue.
+Protect exact text first: keep the untouched draft and mark what it must not
+change. Scan that draft for each rule below and record every match by rule and
+claim. Resolve each match against the original claim and its evidence. A
+grammar-only change does not resolve an unsupported claim, and a style edit
+cannot close a recorded match. Apply style edits only to unprotected prose.
+Rescan the result and run the self-audit last.
 
 ## Self-audit (meaning)
 
@@ -149,8 +146,9 @@ the terminal line, keep the supporting detail above it.
   generality is a claim the reader cannot check.
 - **Take a stand.** State the recommendation you hold. A hedge hands the
   decision back to the reader.
-- **Keep it to one page.** A longer document opens with a summary that stands
-  alone. Headings and lists carry the rest.
+- **Size it to the decision.** Include what the reader needs to decide or act.
+  A longer document opens with a summary that stands alone. Headings and lists
+  carry the rest.
 - **Read it aloud before you send it.** Rewrite each sentence you cannot say
   out loud.
 
