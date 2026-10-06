@@ -10,6 +10,10 @@ Team is a plugin that orchestrates specialized agents to implement features end-
 
 > **North star: read [docs/vision.md](docs/vision.md) and [docs/ethos.md](docs/ethos.md).** Team is a *loop-driven development system*: a human fills the Backlog and reviews finished work. Everything in between (groom → start → implement → open PR) runs autonomously. The ethos explains *why* the autonomous middle can be trusted. Every agent should understand this end state, which is the target the whole project moves toward.
 
+## Installing Team
+
+Installing Team for a user? Follow [INSTALL.md](INSTALL.md), using the section for each harness they run.
+
 ## Runtime vs. development
 
 This project produces a **distributed plugin**. Two contexts exist:
