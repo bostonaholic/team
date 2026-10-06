@@ -20,7 +20,7 @@ Install all of them as a Claude Code plugin:
 
 ```bash
 claude plugin marketplace add bostonaholic/skills
-claude plugin install bostonaholic-skills@bostonaholic
+claude plugin install bostonaholic@skills
 ```
 
 Or pick skills for any agent with the command below. On Codex, Antigravity, or OpenCode, use the `npx skills` route. To install one skill, add `--skill <name>`.
@@ -29,7 +29,7 @@ Or pick skills for any agent with the command below. On Codex, Antigravity, or O
 npx skills@latest add bostonaholic/skills
 ```
 
-The command names do not change, and the `team:` prefix no longer applies. Update Team first, then install the skills, so you do not get two copies of a command. Docs: https://skills.bostonaholic.dev
+The command names do not change. In the Claude Code plugin they carry the `bostonaholic:` prefix instead of `team:`. Update Team first, then install the skills, so you do not get two copies of a command. Docs: https://skills.bostonaholic.dev
 
 The pipeline does not need these skills. It keeps its own copies of the reviewer briefs, the screenshot upload, and the worktree teardown.
 
