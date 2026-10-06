@@ -10,7 +10,7 @@ The questioner decomposes intent into `1-task.md`, neutral codebase questions in
 
 `topic` is identical across artifacts: the kebab portion of `<id>` after removing `<TICKET>-` or `<YYYY-MM-DD>-`. The questioner chooses it once; downstream phases copy it verbatim. Never use the ticket, date, or a rewording. `ticketId` appears only in `1-task.md`. Full schema: [artifact schema](references/artifacts.md).
 
-Read [question templates](references/question-templates.md) before writing the artifacts. Keep `1-task.md` under 80 lines. Write 8–15 questions answerable from code. `Codebase context` may name files, modules, and vocabulary, but MUST NOT state the goal or desired outcome; it replaces the legacy `brief.md`.
+Read [question templates](references/question-templates.md) before writing the artifacts. Keep `1-task.md` under 80 lines. Write 8–15 questions answerable from code. `Codebase context` may name files, modules, and vocabulary, but MUST NOT state the goal or desired outcome.
 
 ## Conditional PRD
 
