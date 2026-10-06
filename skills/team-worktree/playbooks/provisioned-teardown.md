@@ -16,6 +16,7 @@ in the caller.
 |---|---|
 | Worktrees, local branches, stale tracking refs | the worktree playbook teardown steps 1-5 (step 5 prunes the tracking ref) |
 | `docs/plans/<id>/` planning scratch | teardown step 6 |
+| Every other merged worktree and local branch in the repo | teardown step 7, the worktree sweep |
 | Leftover directories under `.claude/worktrees/` | teardown step 7 |
 | Databases, containers, queues, buckets, caches | **this skill** |
 
@@ -59,6 +60,10 @@ declaration is a file named `.teamteardown` at the repository root:
 dropdb --if-exists "app_test_$TEAM_BRANCH"
 docker compose --project-name "$TEAM_BRANCH" down --volumes
 ```
+
+The worktree sweep in teardown step 7 runs before this file. A command that
+reads `git worktree list` or `.claude/worktrees/` finds each worktree the
+sweep removed already gone.
 
 Each command runs with three environment variables set, and reads its values
 from them rather than from any substitution this skill performs:
