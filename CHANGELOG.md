@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The `/team` worktree teardown now removes worktrees that an earlier teardown left behind ([#512](https://github.com/bostonaholic/team/pull/512)). A session cannot remove its own worktree, and a host can park an archived session's worktree with a detached HEAD, so these piled up. Each teardown now removes every worktree and local branch in the repo whose PR merged, including a detached worktree and a squash merge. It also prunes worktree entries whose directory is gone, and it never forces a removal. It keeps a worktree that holds the current session, is in use, or is locked. It also keeps one with untracked or changed files or with commits past its merged PR, and prints why for each. **What this asks of you:** nothing, if `jq` is installed. Without `jq`, the sweep reports that it did not run, and the rest of teardown continues.
+
 ## [0.148.0] - 2026-10-06
 
 ### Removed

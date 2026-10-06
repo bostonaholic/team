@@ -95,9 +95,48 @@ teardown fence's `BRANCH` and `WORKTREE` lines.
    untracked first (`git ls-files docs/plans/<id>` returns nothing), then
    `rm -rf docs/plans/<id>` — only that feature's `<id>` directory, never
    sibling dirs for other in-flight work.
-7. **Sweep residue as the final action.** Recreation can land seconds to
-   hours after the removal command returns, so this sweep is not redundant
-   with step 4. Re-check the removed path plus every sibling under
+7. **Sweep residue as the final action.** First run the worktree sweep
+   once per repo. `<team-worktree-skill-dir>` is the absolute directory
+   that holds the installed `skills/team-worktree/SKILL.md`. For the home
+   repo, run the sweep from the session's working directory, with no `cd`:
+
+   ```sh
+   "<team-worktree-skill-dir>/scripts/sweep-worktrees.sh"
+   ```
+
+   For each other repo, paste its `<repo-path>` as a single-quoted
+   literal. Refuse a path that contains a single quote. The subshell keeps
+   the session's working directory:
+
+   ```sh
+   (cd '<repo-path>' && "<team-worktree-skill-dir>/scripts/sweep-worktrees.sh")
+   ```
+
+   The sweep runs `git worktree prune`. Then it removes each worktree and
+   local branch in the repo whose PR merged, including a detached worktree.
+   A commit is merged when it is exactly the head commit of a `MERGED` PR
+   from the repo's owner. That PR's merge commit must also be an ancestor
+   of `origin/<default>`. A squash merge passes this check. A commit past
+   the PR head fails it. The sweep never passes `--force`, and it keeps
+   each worktree that:
+
+   - holds the directory the sweep starts in. A session cannot remove its
+     own worktree. A later teardown's sweep removes it once its PR merges.
+   - is the working directory of a live process.
+   - has no merged PR.
+   - lies outside `.claude/worktrees/`. The sweep prints the command that
+     removes it.
+   - is locked.
+   - has untracked or changed files.
+
+   The sweep prints one line per item, with the reason for each kept
+   worktree. Do not remove a kept worktree by hand to finish the sweep. If
+   the sweep exits non-zero, report its stderr verbatim and continue the
+   teardown. The script header lists each output line and exit code.
+
+   Then sweep residue. Recreation can land seconds to hours after the
+   removal command returns, so the residue sweep is not redundant with
+   step 4. Re-check the removed path plus every sibling under
    `.claude/worktrees/` that `git worktree list` no longer knows about.
    Delete a directory only when it is pure regenerable residue: no `.git`
    entry, and no files outside `tmp/`, `.omc/`, and `docs/plans/`.
@@ -121,7 +160,8 @@ teardown fence's `BRANCH` and `WORKTREE` lines.
    done
    ```
 
-   Report each swept directory, or that no residue was found. A kept
+   Report the worktree sweep's lines. Report each swept directory, or that
+   no residue was found. A kept
    directory is surfaced to the user with the files it holds — never
    deleted silently, never left unreported.
 
@@ -130,9 +170,8 @@ teardown fence's `BRANCH` and `WORKTREE` lines.
    `<team-worktree-skill-dir>/playbooks/provisioned-teardown.md`, all
    sections, filling its Step 1 fence's `REPO_PATH`, `BRANCH`, and
    `WORKTREE` lines with that repo's `<repo-path>` and the `BRANCH` and
-   `WORKTREE` recorded before step 1. `<team-worktree-skill-dir>` is the
-   absolute directory that holds the installed
-   `skills/team-worktree/SKILL.md`. The file runs the teardown commands
+   `WORKTREE` recorded before step 1. Step 7 defines
+   `<team-worktree-skill-dir>`. The file runs the teardown commands
    the repo declares in `.teamteardown`, and runs nothing when the repo
    declares none.
 

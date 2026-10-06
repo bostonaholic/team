@@ -210,8 +210,8 @@ reporting, mismatch handling, and unsupported-host limits.
 - **Runtime vs. development split** (`CLAUDE.md`, `docs/architecture.md`). Only
   the distributed set ports: `agents/`, `skills/*/SKILL.md` + `registry.json` +
   the bundled skill scripts (`supports-nesting.mjs`, `ste-lint.mjs`,
-  `external-review.mjs`, `discover-topic.sh`, and `team-pr`'s `scripts/splice.mjs` plus its
-  `scripts/*.sh`),
+  `external-review.mjs`, `discover-topic.sh`, `team-pr`'s `scripts/splice.mjs` plus its
+  `scripts/*.sh`, and `team-worktree`'s `scripts/sweep-worktrees.sh`),
   `.claude-plugin/`. The entire `.claude/`
   tree, `docs/`, `.github/` never ship and are out of every
   port's scope.
