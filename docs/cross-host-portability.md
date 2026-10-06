@@ -433,12 +433,12 @@ full parity. It starts from the matrix and works around the named gaps.
   runs the new code under the old number (#355).
 - **Codex's plugin validator rejects `disable-model-invocation`.**
   `plugin-creator`'s `validate_plugin.py` requires the key to be absent or
-  `false`, and Team's guarded skill, `principle-fix-root-causes`, sets it `true` because Claude Code
+  `false`, and Team's guarded skills, `principle-fix-root-causes` and `team-migrate`, set it `true` because Claude Code
   needs it. The runtime does not enforce the rule, and this host's own
   equivalent — `policy.allow_implicit_invocation: false` in each skill's
   `agents/openai.yaml` — keeps it out of the implicit catalog. The
   divergence is deliberate and the validator finding is expected.
-- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 11 commands remain in the picker. Principles are guarded `disable-model-invocation` skills read by installed path, so they add no implicit-invocation entries.
+- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 12 commands remain in the picker. Principles are guarded `disable-model-invocation` skills read by installed path, so they add no implicit-invocation entries.
   Historical probe evidence: the `$` picker was fed by the `skills/list` app-server method, which returned all
   100 Team skills with `enabled: true`, `team:principle-fix-root-causes` among
   them. Its `SkillMetadata` payload carries nine fields — `dependencies`,
