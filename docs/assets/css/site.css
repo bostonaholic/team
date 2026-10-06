@@ -346,6 +346,75 @@ pre code {
   padding: 0;
 }
 
+/* Copy button: icon at top-right of each code block, tooltip to its left. */
+.code-block {
+  position: relative;
+}
+
+.code-block pre {
+  padding-right: 3.25rem;
+}
+
+.copy-code {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.copy-code svg {
+  fill: currentColor;
+}
+
+.code-block:hover .copy-code,
+.copy-code:focus-visible,
+.copy-code.copied {
+  opacity: 1;
+}
+
+.copy-code:hover {
+  color: var(--fg);
+}
+
+.copy-code::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 0.5rem);
+  transform: translateY(-50%);
+  padding: 0.3rem 0.6rem;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--bg);
+  background: var(--fg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.copy-code:hover::after,
+.copy-code:focus-visible::after,
+.copy-code.copied::after {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .copy-code {
+    opacity: 1;
+  }
+}
+
 /* --- tables (thin borders, header tint, no zebra) ------------------------ */
 table {
   width: 100%;
