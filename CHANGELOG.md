@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.150.0] - 2026-10-06
+
+### Added
+
+- **`/team-migrate` moves a machine set up before 0.147.0 onto the native plugins.** It reads every harness on the machine (Claude Code, Codex, Antigravity, OpenCode, Cursor), prints one ordered plan that names each gap and the exact command that closes it, and runs only after you confirm that plan. It installs `bostonaholic/skills` first, so no moved skill goes missing. It removes the stale `bostonaholic-skills@bostonaholic` registration. It moves old-name copies such as `shipit` out of every directory an agent loads skills from, and moves bare copies that double a plugin, into a `-retired` folder beside that directory. Then it runs a full `script/dev-uninstall` from each checkout that installed Team, which also removes the pull hooks that reinstalled Team on every pull. Last, it installs Team from GitHub on Claude Code and Codex, and from a clean clone of the latest release on Antigravity, OpenCode, and Cursor. Those three get the collection as copies in their own skill folders, not through `npx skills`, which would put them in `~/.agents/skills` where Codex shows each one twice. It deletes no skill copy, never overwrites a retired copy, and a second run has nothing to do. `scripts/verify.sh` checks the result in every harness and lists what is left on disk. **What this asks of you:** if your setup predates 0.147.0, run `/team-migrate` once, confirm the plan, restart your agent sessions, and empty the `-retired` folders when you no longer need them.
+
 ## [0.149.0] - 2026-10-06
 
 ### Fixed
@@ -1412,7 +1418,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.149.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.150.0...HEAD
+[0.150.0]: https://github.com/bostonaholic/team/compare/v0.149.0...v0.150.0
 [0.149.0]: https://github.com/bostonaholic/team/compare/v0.148.0...v0.149.0
 [0.148.0]: https://github.com/bostonaholic/team/compare/v0.147.0...v0.148.0
 [0.147.0]: https://github.com/bostonaholic/team/compare/v0.146.0...v0.147.0

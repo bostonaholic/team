@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: the pipeline entry-point slash commands, the bug-fix pipeline, and the guarded root-cause principle, each with the skills it loads."
+description: "The Team plugin's skills: the pipeline entry-point slash commands, the bug-fix pipeline, the setup migration, and the guarded root-cause principle, each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -42,7 +42,7 @@ This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 11 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 12 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 Skills outside the pipeline moved out of Team; see [Skills that moved](index.md#skills-that-moved).
@@ -131,6 +131,20 @@ Runs the compressed bug-fix pipeline.
 **Used by:** None
 
 **Uses:** `principle-fix-root-causes`, `team-worktree`
+
+## Setup migration
+
+An explicit-only command that changes the user's agent setup rather than a
+repository.
+
+### [team-migrate](https://github.com/bostonaholic/team/blob/main/skills/team-migrate/SKILL.md)
+
+Moves a machine set up before v0.147.0 onto the Team and bostonaholic/skills
+plugins in every harness, with no moved skill missing or shown twice.
+
+**Used by:** None
+
+**Uses:** None
 
 ## Principles
 

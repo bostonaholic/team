@@ -1,0 +1,7 @@
+interface:
+  display_name: "Team Migrate"
+  short_description: "Move a pre-0.147 setup onto the native plugins"
+  default_prompt: "Use $team-migrate to move a pre-0.147 setup onto the native plugins."
+
+policy:
+  allow_implicit_invocation: false
