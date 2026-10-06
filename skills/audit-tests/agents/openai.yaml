@@ -1,4 +1,0 @@
-interface:
-  display_name: "Audit Tests"
-  short_description: "Audit a test suite for low-value tests"
-  default_prompt: "Use $audit-tests to audit a test suite for low-value tests."

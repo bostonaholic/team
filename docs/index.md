@@ -66,6 +66,57 @@ problem statement, then an outcome to move — until one person carries
 company-significant work from problem definition through measured outcomes.
 [Vision](vision.md) has the ladder.
 
+## Skills that moved
+
+Team now ships only its pipeline. Its other 18 skills moved to the `bostonaholic/skills` collection, which installs without Team, and took gerund names there:
+
+| Team command | Now in bostonaholic/skills |
+| --- | --- |
+| `/agent-prompt` | `/composing-agent-prompts` |
+| `/audit-complexity` | `/auditing-complexity` |
+| `/audit-tests` | `/auditing-tests` |
+| `/code-review` | `/reviewing-code` |
+| `/eng-design-doc-review` | `/reviewing-design-docs` |
+| `/groom-backlog` | `/grooming-backlogs` |
+| `/how` | `/explaining-architecture` |
+| `/no-comments` | `/removing-comments` |
+| `/paparazzi` | `/capturing-screenshots` |
+| `/pr-open-comments` | `/addressing-pr-comments` |
+| `/pr-rebase` | `/rebasing-branches` |
+| `/pr-screenshots` | `/attaching-pr-screenshots` |
+| `/pr-watch-as-author` | `/watching-authored-prs` |
+| `/pr-watch-as-reviewer` | `/watching-reviewed-prs` |
+| `/prove` | `/proving-claims` |
+| `/retro` | `/running-retros` |
+| `/shipit` | `/landing-prs` |
+| `/why` | `/investigating-design-rationale` |
+
+The standalone `pr-cleanup` command is retired. Team retains its internal pipeline cleanup.
+
+Install the collection as a plugin on Claude Code:
+
+```bash
+claude plugin marketplace add bostonaholic/skills
+claude plugin install bostonaholic@skills
+```
+
+On Codex:
+
+```bash
+codex plugin marketplace add bostonaholic/skills
+codex plugin add bostonaholic@skills
+```
+
+On other agents, such as Antigravity or OpenCode, pick skills with the command below. To install one skill, add `--skill <name>`.
+
+```bash
+npx skills@latest add bostonaholic/skills
+```
+
+As plugins, the skills carry the `bostonaholic:` prefix instead of `team:`. Update Team first, then install the skills. Docs: https://skills.bostonaholic.dev
+
+The pipeline does not need these skills. It keeps its own copies of the reviewer briefs, the screenshot upload, and the worktree teardown.
+
 ## Install
 
 Each host installs Team through its own plugin mechanism. Every section below
@@ -84,7 +135,7 @@ claude plugin install team@team-dev
 ```
 
 The first command clones this repo as a marketplace; the second installs from
-it. Skills register as slash commands (`/team`, `/shipit`), and agents load
+it. Skills register as slash commands (`/team`, `/team-fix`), and agents load
 with them.
 
 #### Local git checkout installation
@@ -202,7 +253,7 @@ picks up new skills with no extra links and no sync step. Remove it with:
 codex plugin remove team@team-dev
 ```
 
-Skills arrive **namespaced** — ask for `team:shipit`, not `shipit`. Codex
+Skills arrive **namespaced** — ask for `team:team-fix`, not `team-fix`. Codex
 budgets its skill catalog, so it shortens the longest descriptions; the skills
 still work.
 
@@ -249,7 +300,7 @@ Team ships `plugin.json` at the repo root, which is this host's plugin marker,
 so it installs as a native Antigravity plugin — every skill and every agent
 installs with it. `agy plugin uninstall team` removes it.
 
-Skills arrive under **bare names** — ask for `shipit`, not `team:shipit`. The
+Skills arrive under **bare names** — ask for `team-fix`, not `team:team-fix`. The
 install copies the checkout, so upgrading means installing again.
 
 #### Live development installation
@@ -347,9 +398,7 @@ separate command and nothing to reinstall.
 
 **Supported:** native registration, skill discovery, canonical file-reading
 commands, and this lifecycle. Full QRSPI execution, specialist/nested dispatch,
-and reviewer isolation on OpenCode remain unverified. `/retro`
-appears in the command menu and resolves OpenCode sessions from the host's
-SQLite store.
+and reviewer isolation on OpenCode remain unverified.
 Methodology skills marked `user-invocable: false` also appear as commands.
 See [OpenCode support](cross-host-portability.md#opencode) for command permissions, native argument preprocessing,
 external skill sources, and discovery diagnostics.

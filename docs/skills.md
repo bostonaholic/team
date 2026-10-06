@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: pipeline entry-point slash commands and standalone utilities (shipit, pr-open-comments, pr-watch-as-author, pr-watch-as-reviewer, groom-backlog, pr-cleanup, prove, pr-screenshots, paparazzi, pr-rebase, retro, why, how, no-comments, agent-prompt, audit-tests, audit-complexity), each with the skills it loads."
+description: "The Team plugin's skills: the pipeline entry-point slash commands, the bug-fix pipeline, and the guarded root-cause principle, each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -32,8 +32,8 @@ that only locates a skill's install directory — "the directory containing
 `skills/<name>/SKILL.md`" names a location, not the skill.
 
 The edges are therefore **directed**, and reading them transitively gives the
-graph. `team-implement` loads `team-pr`, which loads `pr-screenshots`. None of
-the three loads back. `**Uses:** None` marks a
+graph. `team-implement` loads `team-pr`. Neither loads back.
+`**Uses:** None` marks a
 leaf with no further consumption.
 
 References are collected across every `.md` file in the skill's directory, so a
@@ -42,8 +42,10 @@ This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 30 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 11 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
+
+Skills outside the pipeline moved out of Team; see [Skills that moved](index.md#skills-that-moved).
 
 ## Entry-point skills
 
@@ -56,7 +58,7 @@ Runs the 8-phase QRSPI feature pipeline, or a leading-argument route.
 
 **Used by:** None
 
-**Uses:** `how`, `team-implement`, `team-pr`, `team-worktree`, `why`
+**Uses:** `team-implement`, `team-pr`, `team-worktree`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -104,7 +106,7 @@ Prepares isolated git worktrees.
 
 **Used by:** `team`, `team-fix`
 
-**Uses:** `pr-cleanup`
+**Uses:** None
 
 ### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
 
@@ -120,7 +122,7 @@ Opens PRs with project terms, evidence, and risk.
 
 **Used by:** `team`, `team-implement`
 
-**Uses:** `pr-screenshots`
+**Uses:** None
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
@@ -128,164 +130,7 @@ Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
-**Uses:** `pr-screenshots`, `principle-fix-root-causes`, `team-worktree`, `why`
-
-### [eng-design-doc-review](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/SKILL.md)
-
-Reviews a technical design document with fresh context.
-
-**Used by:** None
-
-**Uses:** None
-
-## Standalone utilities
-
-Each carries `argument-hint` (so it is a slash command) but is **not** a
-QRSPI phase: a self-contained action a user runs on demand.
-
-### [shipit](https://github.com/bostonaholic/team/blob/main/skills/shipit/SKILL.md)
-
-Lands a reviewed pull request.
-
-**Used by:** None
-
-**Uses:** None
-
-### [pr-open-comments](https://github.com/bostonaholic/team/blob/main/skills/pr-open-comments/SKILL.md)
-
-Triages unresolved PR review comments.
-
-**Used by:** `pr-watch-as-author`, `pr-watch-as-reviewer`
-
-**Uses:** `pr-screenshots`
-
-### [pr-watch-as-author](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/SKILL.md)
-
-Watches an authored PR for feedback and CI checks.
-
-**Used by:** None
-
-**Uses:** `pr-open-comments`
-
-### [pr-watch-as-reviewer](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-reviewer/SKILL.md)
-
-Watches a reviewed PR and approves settled feedback.
-
-**Used by:** None
-
-**Uses:** `pr-open-comments`
-
-### [groom-backlog](https://github.com/bostonaholic/team/blob/main/skills/groom-backlog/SKILL.md)
-
-Grooms a project backlog and proposes tracker changes.
-
-**Used by:** None
-
-**Uses:** None
-
-### [pr-cleanup](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/SKILL.md)
-
-Cleans PR state.
-
-**Used by:** `team-worktree`
-
-**Uses:** None
-
-### [prove](https://github.com/bostonaholic/team/blob/main/skills/prove/SKILL.md)
-
-Proves any claim with evidence-rated verdicts.
-
-**Used by:** None
-
-**Uses:** `how`, `paparazzi`, `why`
-
-### [pr-screenshots](https://github.com/bostonaholic/team/blob/main/skills/pr-screenshots/SKILL.md)
-
-Attaches local images to a PR body.
-
-**Used by:** `pr-open-comments`, `team-fix`, `team-pr`
-
-**Uses:** None
-
-### [paparazzi](https://github.com/bostonaholic/team/blob/main/skills/paparazzi/SKILL.md)
-
-Captures verified screenshots of an app.
-
-**Used by:** `prove`
-
-**Uses:** None
-
-### [pr-rebase](https://github.com/bostonaholic/team/blob/main/skills/pr-rebase/SKILL.md)
-
-Rebases a branch onto its base.
-
-**Used by:** None
-
-**Uses:** None
-
-### [retro](https://github.com/bostonaholic/team/blob/main/skills/retro/SKILL.md)
-
-Mines a session for durable learnings.
-
-**Used by:** None
-
-**Uses:** None
-
-### [why](https://github.com/bostonaholic/team/blob/main/skills/why/SKILL.md)
-
-Investigates design rationale behind code.
-
-**Used by:** `code-review`, `how`, `prove`, `team`, `team-fix`
-
-**Uses:** `how`
-
-### [how](https://github.com/bostonaholic/team/blob/main/skills/how/SKILL.md)
-
-Explains subsystem architecture and runtime flow.
-
-**Used by:** `prove`, `team`, `why`
-
-**Uses:** `why`
-
-### [code-review](https://github.com/bostonaholic/team/blob/main/skills/code-review/SKILL.md)
-
-Reviews a diff with fresh context.
-
-**Used by:** None
-
-**Uses:** `why`
-
-### [no-comments](https://github.com/bostonaholic/team/blob/main/skills/no-comments/SKILL.md)
-
-Removes low-value source comments and encodes valid constraints.
-
-**Used by:** None
-
-**Uses:** None
-
-### [agent-prompt](https://github.com/bostonaholic/team/blob/main/skills/agent-prompt/SKILL.md)
-
-Composes an agent-optimized prompt for a task.
-
-**Used by:** None
-
-**Uses:** None
-
-### [audit-tests](https://github.com/bostonaholic/team/blob/main/skills/audit-tests/SKILL.md)
-
-Audits a whole test suite against the test value bar and reports which tests to keep, fix, consolidate, or delete, with the evidence for each. Changes no code.
-
-**Used by:** None
-
-**Uses:** None
-
-### [audit-complexity](https://github.com/bostonaholic/team/blob/main/skills/audit-complexity/SKILL.md)
-
-Ranks where complexity concentrates in a codebase by each file's most complex function, then its size, and shows each file's fan-out, its writes to shared mutable state, and its functions' cyclomatic complexity, nesting depth, length, and parameters, with line evidence. Given a coverage file, it also ranks hot functions by CRAP (Change Risk Anti-Patterns) change risk. Labels each cyclomatic and CRAP value with a band and ends with a reading aid. Changes no code.
-
-**Used by:** None
-
-**Uses:** None
+**Uses:** `principle-fix-root-causes`, `team-worktree`
 
 ## Principles
 
@@ -325,7 +170,6 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 | `team-research` | `researcher` | Skill dispatches the Research phase. The agent is the doer that runs the research. |
 | `team-question` | `questioner` | Skill drives the Question phase. The agent decomposes the intent. |
 | `team-design` | `design-author` | Skill drives the Design phase. The agent drafts the alignment doc. |
-| `eng-design-doc-review` | `design-author` | The review skill dispatches a read-only `Explore` subagent, **not** the `design-author` agent, which keeps the audit independent of the author. |
 
 ## See also
 
@@ -337,7 +181,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 - **`skills/team/registry.json`**: the phase-tagged inventory of the 13
   specialist agents, in the source tree.
 
-## Shared resources
+## Shared principle resources
 
 Read these ordinary documents at their consuming step. They add no registrations or picker entries.
 
@@ -367,18 +211,17 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [PRD template](https://github.com/bostonaholic/team/blob/main/skills/team/references/prd-template.md)
 - [execution](https://github.com/bostonaholic/team/blob/main/skills/team/references/execution.md)
 - [external data](https://github.com/bostonaholic/team/blob/main/skills/team/references/external-data.md)
-- [code reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/code-reviewer.md)
-- [security reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/security-reviewer.md)
-- [documentation reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/documentation-reviewer.md)
-- [ux reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/ux-reviewer.md)
-- [finding format](https://github.com/bostonaholic/team/blob/main/skills/code-review/references/findings.md)
-- [design reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/eng-design-doc-review/references/design-reviewer.md)
-- [comment reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/no-comments/references/reviewer.md)
+- [code reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/team/references/code-reviewer.md)
+- [security reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/team/references/security-reviewer.md)
+- [documentation reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/team/references/documentation-reviewer.md)
+- [ux reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/team/references/ux-reviewer.md)
+- [finding format](https://github.com/bostonaholic/team/blob/main/skills/team/references/findings.md)
+- [design reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/team/references/design-reviewer.md)
 - [cross-model review](https://github.com/bostonaholic/team/blob/main/skills/team/references/cross-model-review.md)
 - [agent dispatch](https://github.com/bostonaholic/team/blob/main/skills/team/references/agent-dispatch.md)
 - [commit discipline](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/commit.md)
 - [changelog rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/changelog.md)
 - [tracking rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/tracking.md)
-- [watch loop](https://github.com/bostonaholic/team/blob/main/skills/pr-watch-as-author/references/watch-loop.md)
 - [worktree playbook](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/playbooks/worktree.md)
-- [cleanup playbook](https://github.com/bostonaholic/team/blob/main/skills/pr-cleanup/playbooks/cleanup.md)
+- [provisioned-resource teardown](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/playbooks/provisioned-teardown.md)
+- [screenshot upload rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/screenshot-rules.md)

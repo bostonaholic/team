@@ -1,6 +1,6 @@
 {
   "name": "team",
-  "version": "0.146.0",
+  "version": "0.147.0",
   "description": "Orchestrates specialized agents to autonomously implement entire features end-to-end",
   "author": {
     "name": "Matthew Boston",
@@ -27,9 +27,9 @@
       "Write"
     ],
     "defaultPrompt": [
-      "Explain how this subsystem works.",
-      "Investigate why this code was written this way.",
-      "Review the open comments on this pull request."
+      "Run the Team pipeline on this feature.",
+      "Fix this bug with the Team bug-fix pipeline.",
+      "Draft a reviewed design for this change."
     ],
     "websiteURL": "https://team.bostonaholic.dev"
   }

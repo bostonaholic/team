@@ -15,7 +15,7 @@
 # assigned at land time against current `main`, and landing is SERIALIZED — one
 # PR is versioned-and-merged at a time. So bump(main, level) is always free and
 # there is intentionally NO open-PR collision scan. A concurrent race is handled
-# by shipit (rebase onto new main + recompute the bump) and backstopped by
+# by the land command (rebase onto new main + recompute the bump) and backstopped by
 # release-on-merge.yml's duplicate-tag rejection.
 #
 # NOTE: earlier revisions walked past versions "claimed" by other open PRs through

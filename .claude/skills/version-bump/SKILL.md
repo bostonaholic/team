@@ -1,15 +1,16 @@
 ---
 name: version-bump
-description: 'Use for version bumps on explicit request or during PR landing through shipit. Never infer from finished, reviewed, green, or draft-ready work. Assigns SemVer.'
+description: 'Use for version bumps on explicit request or as the pre-merge step of a PR land. Never infer from finished, reviewed, green, or draft-ready work. Assigns SemVer.'
 ---
 
 # Version Bump — version a project at land time
 
-This repository's own versioning procedure. `AGENTS.md` declares it as a
-pre-merge step, so `/shipit` runs it before merging. Tagging and the GitHub
-release are **not** part of it; `release-on-merge.yml` does that on merge. When invoked directly, run this skill **before**
-`/shipit`, against the version of `main` you intend to land onto. When
-`/shipit` invokes this skill, return to `/shipit` after step 8.
+This repository's own versioning procedure. `AGENTS.md` declares it as the
+pre-merge step, so the land command runs it before merging. Tagging and the
+GitHub release are **not** part of it; `release-on-merge.yml` does that on
+merge. When invoked directly, run this skill **before** the land command,
+against the version of `main` you intend to land onto. When a land command
+invokes this skill, return to it after step 8.
 
 ## Precondition — explicit land intent
 
@@ -19,9 +20,9 @@ guard then denies the merge.
 
 **This skill fires only on explicit land intent**, meaning one of:
 
-- The user asked to land: "ship it", "land the PR", "land this", `/shipit`.
+- The user asked to land: "ship it", "land the PR", "land this".
 - The user asked for the bump itself: "bump the version", "version this PR".
-- A `/shipit` run is already in flight and reached the project's pre-merge steps.
+- A land command is already in flight and reached the project's pre-merge steps.
 
 **Never infer land intent.** None of the following is a cue to bump:
 
@@ -76,10 +77,10 @@ HEAD_SHA=$(git rev-parse HEAD) BASE_SHA=$(git rev-parse "refs/remotes/origin/$DE
   still carries a stale `vX.Y.Z` prefix from an earlier bump, strip it now
   (`gh pr edit --title`) — the title backstop never strips a stale prefix,
   and this is the one step-8 action a no-bump exit still owes. Then go
-  straight to `/shipit`. This exit **requires** that OK line — the quick look
+  straight to the land command. This exit **requires** that OK line — the quick look
   alone never authorizes it.
 - Exit 0, stdout starting `OK: runtime_changed=true bumped=true` → already
-  bumped (a recovery re-entry). Never re-bump — proceed to `/shipit`.
+  bumped (a recovery re-entry). Never re-bump — proceed to the land command.
 - Exit 1, verdict containing `cannot merge until version-bump runs at land time`
   → bump warranted. It is actionable here only because the land-intent
   precondition already passed; read outside a land it states a merge
@@ -258,7 +259,7 @@ is purely local.
 
 ### 8. Title the PR
 
-`vX.Y.Z <type>: <subject>` — e.g. `v0.6.0 feat: add the shipit land skill`. Set
+`vX.Y.Z <type>: <subject>` — e.g. `v1.4.0 feat: add a design review gate`. Set
 it on the existing PR (`gh pr edit --title`). The `PR title sync` workflow is a
 backstop — do not rely on it.
 
@@ -267,4 +268,4 @@ stale-bump recovery re-titles with the recomputed version, and a re-entry that
 ends at "no bump" strips the `vX.Y.Z` prefix explicitly — the title backstop
 never strips a stale prefix.
 
-Return to `/shipit` to push, wait for CI, and squash-merge.
+Return to the land command to push, wait for CI, and squash-merge.

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.147.0] - 2026-10-06
+
+### Removed
+
+- Team no longer ships 19 skills that are not part of its pipeline: `/agent-prompt`, `/audit-complexity`, `/audit-tests`, `/code-review`, `/eng-design-doc-review`, `/groom-backlog`, `/how`, `/no-comments`, `/paparazzi`, `/pr-cleanup`, `/pr-open-comments`, `/pr-rebase`, `/pr-screenshots`, `/pr-watch-as-author`, `/pr-watch-as-reviewer`, `/prove`, `/retro`, `/shipit`, and `/why`. Eighteen moved to [bostonaholic/skills](https://github.com/bostonaholic/skills), which installs without Team, under gerund names: for example `/shipit` is now `/landing-prs` and `/code-review` is now `/reviewing-code`. The README's "Skills that moved" table maps every name (docs: https://skills.bostonaholic.dev). The standalone `/pr-cleanup` command is retired; Team retains its internal pipeline cleanup. `/audit-complexity` moved with the features released in 0.142.0 and 0.144.0 unchanged, including `--coverage` and CRAP scoring. `/pr-watch-as-author` moved with the CI checks and CI fixes released in 0.146.0 unchanged, and `/pr-open-comments` with the 0.145.0 rule that leaves Team's review comments out of its triage. **What this asks of you:** if you use any of the 18 moved commands, update Team, then install the collection: `claude plugin marketplace add bostonaholic/skills` and `claude plugin install bostonaholic@skills` on Claude Code, `codex plugin marketplace add bostonaholic/skills` and `codex plugin add bostonaholic@skills` on Codex, or `npx skills@latest add bostonaholic/skills` elsewhere, and invoke each skill by its new name.
+
+### Changed
+
+- The pipeline runs as before without those skills. The reviewer agents and the design review gate read their briefs from Team itself, the PR phase uploads screenshots itself, and worktree teardown runs your `.teamteardown` itself. `/team-fix` and the design phase trace why deliberate-looking code exists with git history instead of calling `/why`, and the PR phase's final report tells you how to mark the PR ready instead of naming a watch command. **What this asks of you:** nothing.
+
 ## [0.146.0] - 2026-10-01
 
 ### Added
@@ -1390,7 +1400,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.146.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.147.0...HEAD
+[0.147.0]: https://github.com/bostonaholic/team/compare/v0.146.0...v0.147.0
 [0.146.0]: https://github.com/bostonaholic/team/compare/v0.145.0...v0.146.0
 [0.145.0]: https://github.com/bostonaholic/team/compare/v0.144.0...v0.145.0
 [0.144.0]: https://github.com/bostonaholic/team/compare/v0.143.0...v0.144.0

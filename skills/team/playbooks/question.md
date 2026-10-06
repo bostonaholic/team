@@ -1,7 +1,7 @@
 # Question playbook
 
 Before this operation, read [artifact schema](references/artifacts.md), [external-data rules](references/external-data.md), and [decisions rules](references/decisions.md).
-Before each consuming step, read its linked shared rules. Resolve links from this installed playbook directory.
+Before each consuming step, read its linked shared rules. Resolve links from the installed `skills/team/` directory.
 If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 The questioner decomposes intent into `1-task.md`, neutral codebase questions in `2-questions.md`, a conditional `3-prd.md`, and a resolved `4-repos.md`.

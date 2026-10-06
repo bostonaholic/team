@@ -1,7 +1,7 @@
 # Cross-Model Review
 
 Before this operation, read [external-data rules](references/external-data.md).
-Before each consuming step, read its linked shared rules. Resolve links from this installed references directory.
+Before each consuming step, read its linked shared rules. Resolve links from the installed `skills/team/` directory.
 If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 Read this file completely before running a pass; it owns invocation,
@@ -51,7 +51,7 @@ the vendor's own privileges (see `## Untrusted output`).
 - Emit one paraphrase-only `### Cross-model disposition` block per round.
   Never reproduce vendor sentences or verdict tokens. The block is Minor-tier
   and never auto-fixed. Its position follows `## Report Format` in
-  `skills/code-review/references/code-reviewer.md` ([durable state rules](principles/durable-state.md)).
+  `skills/team/references/code-reviewer.md` ([durable state rules](principles/durable-state.md)).
 
 ## When a vendor CLI is unavailable
 
@@ -239,8 +239,7 @@ Per round:
    reference. The reviewer judges those claims under `## Disposition` and
    reports its own findings alongside.
 6. **Record the transcript** — on the surfaces that persist records (the
-   design-review gates in `skills/team/SKILL.md` and `/team-design`;
-   standalone `/eng-design-doc-review` records nothing): append to
+   design-review gates in `skills/team/SKILL.md` and `/team-design`): append to
    `docs/plans/<id>/cross-model-raw.md`, created on first use
    (frontmatter schema in [artifact schema](references/artifacts.md)), one
    result line per call — `round <n> <cli>: skip` or
@@ -273,7 +272,7 @@ Emit the whole per-round record under one literal heading in your report:
 
 The report format sets where that heading sits: in a code review it is
 the last section, after `### Refuted by verification`, per
-`## Report Format` in `skills/code-review/references/code-reviewer.md`.
+`## Report Format` in `skills/team/references/code-reviewer.md`.
 
 One block per round, one subsection per CLI, covering: adopted claims (with
 their tiers), refuted claims (with the `file:line` you checked),
@@ -291,7 +290,7 @@ and it never relaxes your own verdict. Adopted findings
 elsewhere in your report stay tagged bare `[code-reviewer]` per convention,
 with `via <cli>` in the finding text. The block itself is Minor-tier — a
 record, not a verdict — so it can never cross the auto-fix boundary in
-`skills/code-review/references/findings.md`
+`skills/team/references/findings.md`
 ("Severity Tiers and the Auto-Fix Boundary").
 One severity map, owned elsewhere and consulted here
 ([durable state rules](principles/durable-state.md)).

@@ -18,7 +18,7 @@
    changes.
    In either mode, gather the shared [inputs](01-input.md) for each changed repository.
 4. **Decide UI impact and resolve the screenshot manifest.** Read the
-   [ux reviewer brief](../code-review/references/ux-reviewer.md) and apply its
+   [ux reviewer brief](../team/references/ux-reviewer.md) and apply its
    `## Screenshot Capture (UI projects)` UI-impact gate to the full branch
    diff, never this round's delta. A backend change that alters the interface
    counts. When UI impact is uncertain, capture. Only a branch that does not
@@ -76,7 +76,7 @@
    Retain claims only when available evidence supports them.
    Label earlier-commit evidence and unresolved current coverage when prior checks no longer prove the changed behavior.
    When the push changed the UI, read the
-   [ux reviewer brief](../code-review/references/ux-reviewer.md) and
+   [ux reviewer brief](../team/references/ux-reviewer.md) and
    re-capture per its "Screenshot Capture (UI projects)" section (it wipes
    and recaptures). Then re-render the `## Screenshots` section and run the
    Screenshot Upload procedure again, so the embedded images show the UI the

@@ -26,19 +26,19 @@ notes can surface.
 
 ## Review methodology
 
-Read the [ux reviewer brief](../skills/code-review/references/ux-reviewer.md)
+Read the [ux reviewer brief](../skills/team/references/ux-reviewer.md)
 for your full verification procedure: project-type detection (UI, API, CLI, or
 library), the UI and API verification steps, CLI and library consumer checks,
 and screenshot capture for UI-impacting changes — one PNG per affected page or
 state, plus a manifest under `docs/plans/<id>/screenshots/` that team-pr
 consumes.
 
-Read the [code reviewer brief](../skills/code-review/references/code-reviewer.md)
+Read the [code reviewer brief](../skills/team/references/code-reviewer.md)
 for generator-evaluator
 separation (fresh context, no shared history). This agent's REQUEST CHANGES
 findings auto-fix in the loop as a *major*. The severity and
 verdict-aggregation tier map lives in the
-[finding format](../skills/code-review/references/findings.md),
+[finding format](../skills/team/references/findings.md),
 which the orchestrator applies. Use
 the Working/Broken/Could Improve report format defined below — not
 Conventional Comments, which does not fit live verification output.
@@ -79,4 +79,4 @@ UI | API | CLI | Library
 would expect]
 ```
 
-Reporting and reproducibility rules live in the [ux reviewer brief](../skills/code-review/references/ux-reviewer.md).
+Reporting and reproducibility rules live in the [ux reviewer brief](../skills/team/references/ux-reviewer.md).
