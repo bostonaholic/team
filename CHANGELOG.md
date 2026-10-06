@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- The worktree teardown no longer has a step that deletes recorded temp paths. No step recorded any, and the folder it read them from was deleted before it ran, so it never removed anything.
+
 ## [0.147.0] - 2026-10-06
 
 ### Removed
