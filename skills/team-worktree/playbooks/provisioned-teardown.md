@@ -5,7 +5,7 @@ Read [external-data rules](../../team/references/external-data.md) before teardo
 
 The worktree playbook's teardown step 8 follows this file after the worktree is removed.
 
-Shell variables do not persist between calls, so each fence below binds and derives everything it expands, and runs as one call. A value is pasted only inside single quotes, or into Step 2's quoted here-doc. A supplied value is refused, not pasted, when it contains a single quote, a newline, `$`, or a backtick; when it equals the here-doc's end line `RECORDED_TEMP_PATHS`, which would end the here-doc early and run the lines after it as commands; or, for a temp path, when it is not absolute.
+Shell variables do not persist between calls, so each fence below binds and derives everything it expands, and runs as one call. A value is pasted only inside single quotes. A supplied value is refused, not pasted, when it contains a single quote, a newline, `$`, or a backtick.
 
 ## Ownership boundary
 
@@ -18,7 +18,6 @@ in the caller.
 | `docs/plans/<id>/` planning scratch | teardown step 6 |
 | Leftover directories under `.claude/worktrees/` | teardown step 7 |
 | Databases, containers, queues, buckets, caches | **this skill** |
-| Temp-directory scratch the run recorded | **this skill** |
 
 Never re-run a step the worktree playbook owns: a second pass at the same target bypasses the guards that playbook applies.
 
@@ -79,8 +78,7 @@ finished branch's copy are never read: a PR that adds or edits
 cleaning up after it. On a fork PR against a public repo, that is anyone.
 
 Both `git show` forms failing means the repo declares no teardown — the
-common case, not an error: report that no declaration exists and move to the
-temp-path sweep.
+common case, not an error: report that no declaration exists.
 
 ## Procedure
 
@@ -152,51 +150,7 @@ never stop the caller's git teardown. If a line has not returned after roughly
 A teardown command that needs them reads them the way the repo's own tooling
 does. This skill does not open `.env` files and does not prompt for secrets.
 
-### Step 2 — sweep recorded temp paths
-
-Remove a temp path only when the run wrote it down: a caller that made
-scratch under `$TMPDIR` records its absolute path in `docs/plans/<id>/`,
-and this step reads those paths back. A caller that recorded none has
-nothing to sweep, and the report says so rather than going looking.
-
-**Never delete a temp path the run did not record**, and never a path
-outside `${TMPDIR:-/tmp}`, containing `..`, or reached through a symlink.
-
-Each recorded path passes three checks before `rm -rf` sees it. Strip trailing
-slashes from the temp root first: on macOS `TMPDIR` ends in `/`, and the
-unstripped prefix pattern would refuse every path. Run this fence as one call,
-with the recorded paths pasted one per line into its quoted here-doc; a path
-that fails a check is skipped, and only a path that passes all three reaches
-`rm -rf`:
-
-```sh
-TMPROOT="${TMPDIR:-/tmp}"
-while [ "${TMPROOT%/}" != "$TMPROOT" ]; do TMPROOT="${TMPROOT%/}"; done
-# `TMPDIR=/` strips to empty, and an empty root matches every absolute path.
-case "$TMPROOT" in
-  /?*) ;;
-  *) echo "refusing: temp root '$TMPROOT' is empty or not absolute" >&2; exit 1 ;;
-esac
-while IFS= read -r P; do
-  [ -n "$P" ] || continue
-  case "$P" in
-    "$TMPROOT"/?*) ;;
-    *) echo "refusing: '$P' is not under $TMPROOT" >&2; continue ;;
-  esac
-  case "$P" in *..*) echo "refusing: '$P' contains '..'" >&2; continue ;; esac
-  [ -L "$P" ] && { echo "refusing: '$P' is a symlink" >&2; continue; }
-  rm -rf "${P:?}" && echo "removed: $P"
-done <<'RECORDED_TEMP_PATHS'
-<one recorded absolute temp path per line>
-RECORDED_TEMP_PATHS
-```
-
-**Never wildcard-sweep the temp directory** (for example
-`rm -rf "$TMPROOT"/<tool>.*`): it cannot tell a dead run's directory
-from a live one's, and deleting a live one kills a run in progress. An
-unrecorded temp path is left on disk and named in the report instead.
-
-### Step 3 — report
+### Step 2 — report
 
 Report per [Report](#report) below, then hand back to the caller.
 
@@ -206,11 +160,9 @@ One line per thing that happened, and nothing else:
 
 - Each declared command that ran, and its outcome — `ok`, `FAILED (exit N)`,
   or `TIMEOUT`.
-- Each temp path removed.
 - Each refusal, with the check that fired.
 - `No .teamteardown on <default> — nothing declared.` when the file is absent,
   rather than silence that reads as a clean sweep.
-- `No recorded temp paths.` when the caller recorded none.
 
 Anything left on disk is named.
 Never block caller teardown ([verified results rules](../../team/principles/verified-results.md)).

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.148.0] - 2026-10-06
+
+### Removed
+
+- The worktree teardown no longer has a step that deletes recorded temp paths. No step recorded any, and the folder it read them from was deleted before it ran, so it never removed anything.
+
 ## [0.147.0] - 2026-10-06
 
 ### Removed
@@ -1400,7 +1406,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.147.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.148.0...HEAD
+[0.148.0]: https://github.com/bostonaholic/team/compare/v0.147.0...v0.148.0
 [0.147.0]: https://github.com/bostonaholic/team/compare/v0.146.0...v0.147.0
 [0.146.0]: https://github.com/bostonaholic/team/compare/v0.145.0...v0.146.0
 [0.145.0]: https://github.com/bostonaholic/team/compare/v0.144.0...v0.145.0
