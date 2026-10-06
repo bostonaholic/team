@@ -592,7 +592,7 @@ remain unported on this host. That work stays with
 OpenCode loads the native `opencode/team.js` plugin through one symlink in its
 configuration directory. `script/dev-install opencode` and
 `script/dev-uninstall opencode` manage that exact-owned registration; see
-[installation](index.md#opencode) for prerequisites, overrides, restart, worktrees,
+[installation](https://github.com/bostonaholic/team/blob/main/INSTALL.md#opencode) for prerequisites, overrides, restart, worktrees,
 conflicts, dangling targets, and lock recovery. Installation validates the
 checkout without reading user JSON/JSONC or invoking OpenCode. Its success says
 registered. Malformed native configuration can still prevent loading afterward.
