@@ -42,7 +42,7 @@ bump before it can merge, and wait for the user. Do not bump "to be helpful".
 **Run this before everything else. Most steps below only apply if it says yes.**
 
 The quick look is orientation only — it never decides the exit:
-`git diff origin/main...HEAD --name-only`. The decision comes from **the
+`git diff "origin/<default>...HEAD" --name-only`. The decision comes from **the
 invariant run**, the same invocation contract the pre-merge guard enforces:
 
 1. Resolve the default branch by asking GitHub (`gh repo view`), falling back
@@ -104,8 +104,12 @@ Reached **only when step 0 said a bump is warranted**; the only question is how
 big the bump is.
 
 ```bash
-git log origin/main..HEAD --oneline
-git diff origin/main...HEAD --stat
+# Re-derive the base: shell variables do not persist from step 0's call.
+DEFAULT=$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name 2>/dev/null)
+DEFAULT=${DEFAULT:-$(git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's|^refs/remotes/origin/||')}
+: "${DEFAULT:?cannot resolve the default branch}"
+git log "origin/$DEFAULT..HEAD" --oneline
+git diff "origin/$DEFAULT...HEAD" --stat
 ```
 
 [SemVer 2.0.0](https://semver.org/spec/v2.0.0.html), quoted verbatim. Items 6,
