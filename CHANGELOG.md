@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Docs no longer claim `permissionMode: plan` holds reviewers read-only.** Claude Code ignores `permissionMode` for plugin subagents, so a reviewer's `tools:` grant is the only enforcement, and a reviewer's `Bash` access is bounded by its prompt. The independent-review rules and host-dispatch reference now say so. **What this asks of you:** nothing.
+
 ## [0.153.0] - 2026-10-07
 
 ### Changed
