@@ -2,7 +2,7 @@
 
 ## Root-cause correction
 
-Call the Skill tool with `fixing-root-causes` from `bostonaholic/skills` and apply it. It owns the debugging invariant. If it is not installed, apply the rule directly: reproduce before fixing, ask why until you reach a cause you can change, add no guard that silences a crash, fix the pattern rather than the instance, instrument instead of guessing, and after a restart suspect stale persistent state (config, caches, lock files, serialized state) before code. Add an absence guard only when absence is legal; otherwise correct why the value is missing. Search for sibling occurrences: fix only those inside approved scope and record the rest without editing them. Make the smallest scoped correction and verify the reproduction and affected callers.
+Fix the root cause, not the symptom: reproduce before fixing, ask why until you reach a cause you can change, add no guard that silences a crash, fix the pattern rather than the instance, instrument instead of guessing, and after a restart suspect stale persistent state (config, caches, lock files, serialized state) before code. Add an absence guard only when absence is legal; otherwise correct why the value is missing. Search for sibling occurrences: fix only those inside approved scope and record the rest without editing them. Make the smallest scoped correction and verify the reproduction and affected callers.
 
 ## Triage
 

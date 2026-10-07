@@ -129,7 +129,7 @@ Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
-**Uses:** `fixing-root-causes` (from bostonaholic/skills), `team-worktree`
+**Uses:** `team-worktree`
 
 ## Setup migration
 
