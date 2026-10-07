@@ -6,6 +6,9 @@ fields); the body is a complete role prompt. To run a phase, dispatch that
 definition through the host's subagent facility. Read this reference before the
 first dispatch of a run.
 
+A skill step with no named agent runs in a fresh general subagent per
+[step delegation](step-delegation.md).
+
 Dispatch needs only that the host can read a file and spawn a subagent.
 Before every named or body-loaded dispatch, resolve the installed plugin root
 and `agents/<name>.md`. Claude uses `${CLAUDE_PLUGIN_ROOT}`. Codex and

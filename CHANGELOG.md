@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Skills hand each step to a fresh subagent.** `/team-fix` now runs Reproduce, Red, Green, Verify, and Ship each in its own subagent, and `/team-pr` does the same for input gathering, screenshots, the changelog, the PR body, screenshot upload, and review comments. The test gate in `/team` and `/team-implement` hands its suite and static-check run to a subagent and still decides the gate itself. The main session keeps only user questions, gate decisions, one-command steps, and the todo list, so long runs keep less noise in context. One shared rule covers Claude Code, Codex (`spawn_agent` with `fork_turns: "none"`), Antigravity, and OpenCode, and a host without subagents runs the step inline. **What this asks of you:** nothing.
+
 ## [0.152.0] - 2026-10-07
 
 ### Removed

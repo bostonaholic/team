@@ -19,6 +19,7 @@ for an inline fix, not this pipeline.
 - Run `WORKTREE → REPRODUCE → RED → GREEN → VERIFY → SHIP` in order.
 - For a ticket, read [tracking rules](../team-pr/references/tracking.md); move the ticket to in-progress before work and in-review only after its draft PR becomes ready.
 - When behavior looks deliberate, trace its rationale before changing it (see Execution).
+- After Worktree, run each step in its own fresh subagent per the Execution reference's `## Step dispatch`; keep gates, aborts, and ticket moves inline.
 
 ## Procedure references
 

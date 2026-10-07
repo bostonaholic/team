@@ -19,6 +19,10 @@
    `Expected results derived independently: NO`, send it back to the
    `test-architect`. This gate applies to a fresh `test-architect` run only.
    A resumed run that skips step 2 skips this gate too.
+   Gather the suite and static-check results, the inverted baseline
+   included, in one fresh subagent per
+   [step delegation](../team/references/step-delegation.md). Rerun one
+   reported assertion failure yourself and decide the gate inline.
    **Inverted for a zero-behavior-change refactor:** capture the suite and
    the static checks as a baseline **before** any file moves
    ([durable state rules](../team/principles/durable-state.md)), and advance
