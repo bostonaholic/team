@@ -66,7 +66,8 @@ Capability mapping for the body-load path:
   the enforcement, and the orchestrator verifies the subagent holds no mutating
   tool before dispatch. Claude Code ignores `permissionMode` for plugin agents
   and under an auto, `acceptEdits`, or `bypassPermissions` main session, so
-  there the tool grant is the only enforcement.
+  there the tool grant is the only enforcement. IMPLEMENT's tree check
+  detects a reviewer's shell mutation.
 
 Dispatch independent agents concurrently — RESEARCH's pair, IMPLEMENT's five
 reviewers — up to the host's concurrent-subagent cap. Batch the fan-out when it

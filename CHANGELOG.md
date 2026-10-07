@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Docs no longer claim `permissionMode: plan` holds reviewers read-only.** Claude Code ignores `permissionMode` for plugin subagents, so a reviewer's `tools:` grant is the only enforcement, and a reviewer's `Bash` access is bounded by its prompt. The independent-review rules and host-dispatch reference now say so. **What this asks of you:** nothing.
+- **IMPLEMENT now catches a reviewer that changes the tree.** Claude Code ignores `permissionMode` for plugin subagents, so `permissionMode: plan` never held the five reviewers read-only, and each holds `Bash`. The orchestrator now records `HEAD` and `git status` before and after the reviewer dispatch, and any change is a Blocking finding the implementer resolves. The docs no longer claim plan mode enforces read-only. **What this asks of you:** nothing, unless your checks leave untracked files that aren't gitignored; a reviewer round now reports those as Blocking.
 
 ## [0.153.0] - 2026-10-07
 

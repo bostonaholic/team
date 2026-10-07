@@ -383,8 +383,11 @@ The `permissionMode` column is declared, not enforced. Claude Code
 and it ignores any subagent's `permissionMode` when the main session runs in
 auto, `acceptEdits`, or `bypassPermissions` mode. Plan mode would not close the
 gap anyway: it blocks edits but only prompts for shell commands, and an allow
-rule runs them. All five reviewers hold `Bash`, so shell mutation by a reviewer
-is prevented by its prompt only.
+rule runs them. All five reviewers hold `Bash`, so nothing prevents a reviewer's
+shell mutation. The IMPLEMENT phase detects one instead: the orchestrator
+compares `HEAD` and `git status` before and after the five-reviewer dispatch
+and turns any change into a Blocking finding
+(`skills/team-implement/references/03-execution.md`, step 5).
 
 One path steps outside that enforcement: the cross-model pass
 (`skills/team/references/cross-model-review.md`) shells out to external vendor CLIs
