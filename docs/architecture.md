@@ -874,6 +874,21 @@ An overage requires a reviewed reason stating its exact line count.
    true` so the model never applies them on its own. Do not add unguarded
    principle registrations, recursive loading, compatibility stubs, or a resource registry.
 
+### Step delegation
+
+A skill's main session orchestrates; it does not do the step work itself.
+Each numbered step runs in a fresh-context subagent with a self-contained
+brief (goal, input paths, boundaries, return shape, done condition) and
+returns a status line plus evidence. The main session keeps user questions,
+gate and verdict decisions, one-command steps, and the TodoWrite ledger.
+Dependent steps run one at a time; independent steps fan out in one turn.
+`/team-fix` delegates Reproduce, Red, Green, Verify, and Ship. `/team-pr`
+delegates input gathering, screenshots, the changelog, body authoring,
+upload, and review comments. The mechanical test gate delegates its
+evidence run. The host mapping (Claude Code `Agent`, Codex `spawn_agent`
+with `fork_turns: "none"`, Antigravity `invoke_subagent`) and the inline
+fallback live in `skills/team/references/step-delegation.md`.
+
 ### Codex host manifests
 
 Every skill under `skills/` carries `agents/openai.yaml`, the per-skill

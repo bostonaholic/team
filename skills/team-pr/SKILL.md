@@ -32,6 +32,7 @@ Two modes:
 6. After each push, refresh the body. Re-emit exactly one closing line: never duplicated, never dropped.
 7. **A branch that impacts a UI always carries screenshots.** Apply the ux-reviewer brief's UI-impact gate to the full branch diff. When it holds and no captured manifest exists, capture before rendering the section.
 8. **Post the deferred findings and cross-model dispositions as comments on the home PR, never in the body.** After the PR opens and after each body refresh, run [review comments](references/07-review-comments.md). A refresh posts only the missing comments.
+9. Run gathering, capture, changelog, body authoring, upload, and review comments in fresh subagents per `## Step dispatch` in [Execution](references/02-execution.md). Pushes, `gh pr create`, and ticket moves stay inline.
 
 Apply the detailed [body authoring rules](references/03-pr-body-template.md) to initial drafts and every refresh.
 

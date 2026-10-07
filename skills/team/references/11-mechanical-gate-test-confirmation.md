@@ -8,6 +8,11 @@ When the `test-architect` returns failing tests:
    the way it does. Skip the test entry there: step 1 already ran it.
 3. Require `Expected results derived independently: YES` in the test-architect
    report.
+Steps 1 and 2 run in one fresh subagent per [step delegation](references/step-delegation.md).
+Its brief carries the verify playbook path and the test-architect's test files.
+It returns each static check's result and, for each failing test, `assertion` or `crash` with its failure line.
+Rerun one reported assertion failure yourself, then decide steps 4 to 6 inline.
+
 4. Advance only when all three hold: all tests fail with assertion errors (not
    crashes), that report line says `YES`, **and** every static check passes.
 5. If tests crash or error, fix infrastructure and re-run.

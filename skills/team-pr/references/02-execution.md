@@ -106,3 +106,29 @@
    default-branch update, and deletion of the feature's untracked
    `docs/plans/<id>` scratch dir. In multi-repo mode, run cleanup for
    every involved repo.
+
+## Step dispatch
+
+Read [step delegation](../team/references/step-delegation.md) before the
+first dispatch. Mode and worktree inventory, base-branch detection, the
+standalone checks, the ship commit, every push, `gh pr create`, the
+`## Companion PRs` edit, and the ticket transition stay inline. The work
+below runs in fresh subagents. The scratch directory is `$ARGUMENTS`, or the
+run-scoped `mktemp -d` directory in standalone mode. Every brief carries the
+worktree path, the base branch, and the scratch directory.
+
+| Subagent | Brief adds | Edits | Returns |
+| --- | --- | --- | --- |
+| Inputs | [Input](01-input.md); `1-task.md` and `6-design.md` in resume mode; skip `CHANGELOG.md`, which Changelog owns | writes only `<scratch>/pr-inputs.md` | the `pr-inputs.md` path: project terms, the why, available check results, evidence gaps |
+| Screenshots | step 4 above; the [ux reviewer brief](../team/references/ux-reviewer.md) | the capture directory and its manifest | UI-impact decision, the manifest path or the skip reason |
+| Changelog | [Changelog Update](05-changelog-update.md) | `CHANGELOG.md` only; no commit | the added bullets, or the absent-file skip |
+| Body | `pr-inputs.md`; the manifest; the Changelog return; the [PR Body Template](03-pr-body-template.md); the [writing standards](../team/references/writing.md) | writes only `<scratch>/pr-body.md` | the `pr-body.md` path and the title |
+| Upload | the PR URL; the manifest; [Screenshot Upload](04-screenshot-upload.md) | the PR body's `## Screenshots` section | uploaded asset count, or the degraded-note reason |
+| Review comments | the PR URL; [Review Comments](07-review-comments.md) | PR comments only | posted, skipped, and failed comment counts |
+
+Dispatch Inputs, Screenshots, and Changelog together. Body starts after
+all three return. Open the PR inline from `pr-body.md`. Then
+dispatch Upload and Review comments together. A step 10 refresh re-runs
+Body with the pushed commits, then Upload when the UI changed, then Review
+comments. In multi-repo mode, dispatch Inputs, Changelog, and Body once per
+repo with commits.
