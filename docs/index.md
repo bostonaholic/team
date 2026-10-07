@@ -78,7 +78,7 @@ company-significant work from problem definition through measured outcomes.
 
 ## Skills that moved
 
-Team now ships only its pipeline. Its other 19 skills moved to the `bostonaholic/skills` collection, which installs without Team, and took gerund names there:
+Team now ships only its pipeline. Its other 18 skills moved to the `bostonaholic/skills` collection, which installs without Team, and took gerund names there:
 
 | Team command | Now in bostonaholic/skills |
 | --- | --- |
@@ -96,7 +96,6 @@ Team now ships only its pipeline. Its other 19 skills moved to the `bostonaholic
 | `/pr-screenshots` | `/attaching-pr-screenshots` |
 | `/pr-watch-as-author` | `/watching-authored-prs` |
 | `/pr-watch-as-reviewer` | `/watching-reviewed-prs` |
-| `/principle-fix-root-causes` | `/fixing-root-causes` |
 | `/prove` | `/proving-claims` |
 | `/retro` | `/running-retros` |
 | `/shipit` | `/landing-prs` |

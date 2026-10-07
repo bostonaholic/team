@@ -1,7 +1,6 @@
 # What the migration changes
 
-Team v0.147.0 stopped shipping 18 skills, and a later release dropped
-`principle-fix-root-causes`. They moved to `bostonaholic/skills`
+Team v0.147.0 stopped shipping 18 skills. They moved to `bostonaholic/skills`
 under the names in the README's "Skills that moved" table, which the scripts
 read as the moved-skill set. A machine set up before then can lose those
 skills, show each one twice, or keep registrations that fail to load. The

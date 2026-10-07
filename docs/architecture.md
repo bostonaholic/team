@@ -691,12 +691,6 @@ skill: it lives in ordinary references such as the
 and [writing standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/writing.md),
 which consumers read by path before work.
 
-**Team ships no principle skills.** The last one, `principle-fix-root-causes`,
-moved to `bostonaholic/skills` as `fixing-root-causes`. The
-[bug-fix playbook](https://github.com/bostonaholic/team/blob/main/skills/team-fix/playbooks/bug-fix.md)
-loads it through the Skill tool and states the rule inline for when the
-collection is not installed.
-
 **Two reference forms, and the form is the contract.** Every skill-to-skill
 reference is one of two kinds, and each has its own encoding:
 
