@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.154.0] - 2026-10-07
+
+### Fixed
+
+- **IMPLEMENT now catches a reviewer that changes the tree** ([#535](https://github.com/bostonaholic/team/pull/535)). Claude Code ignores `permissionMode` for plugin subagents, so `permissionMode: plan` never held the five reviewers read-only, and each holds `Bash`. The orchestrator now records `HEAD` and `git status` before and after the reviewer dispatch, and any change is a Blocking finding the implementer resolves. The docs no longer claim plan mode enforces read-only. **What this asks of you:** nothing, unless your checks leave untracked files that aren't gitignored; a reviewer round now reports those as Blocking.
+
 ## [0.153.0] - 2026-10-07
 
 ### Changed
@@ -1436,7 +1442,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.153.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.154.0...HEAD
+[0.154.0]: https://github.com/bostonaholic/team/compare/v0.153.0...v0.154.0
 [0.153.0]: https://github.com/bostonaholic/team/compare/v0.152.0...v0.153.0
 [0.152.0]: https://github.com/bostonaholic/team/compare/v0.151.0...v0.152.0
 [0.151.0]: https://github.com/bostonaholic/team/compare/v0.150.0...v0.151.0

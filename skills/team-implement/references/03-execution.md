@@ -43,6 +43,15 @@
    - Write `unknown` when step 2 was skipped because the tests exist.
    - Send no line when step 2 was skipped for a zero-behavior-change
      contract.
+
+   **Tree check.** Immediately before the dispatch, record
+   `git rev-parse HEAD` and `git status --porcelain --untracked-files=all`.
+   When all five return, record both again before anything else writes.
+   Reviewers judge and never write, and Claude Code ignores a plugin
+   agent's `permissionMode`, so only this check catches a reviewer's shell
+   mutation. A moved HEAD or any changed status line is a **Blocking**
+   `review` finding that names the new HEAD or each changed path. Do not
+   revert it yourself; the implementer resolves it in step 8.
 6. **Aggregate gate** — sort every finding into **Blocking**, **Major**, or
    **Minor and below** per the table under "Severity Tiers and the Auto-Fix
    Boundary" in the [finding format](../team/references/findings.md).
@@ -67,8 +76,8 @@
      just produced. The count starts on the round-2 item: the round-1 seed
      is written before any aggregate has sorted anything.
    - Re-dispatch implementer with the typed class(es), then re-dispatch
-     ALL 5 reviewers for a fresh review; reviewers carry no memory of
-     earlier rounds. The `code-reviewer` dispatch carries the same
+     ALL 5 reviewers for a fresh review, wrapped in step 5's tree check;
+     reviewers carry no memory of earlier rounds. The `code-reviewer` dispatch carries the same
      `Locked acceptance tests:` line as step 5.
    - **Never** stop to ask the user which Blocking or Major items to address
      (the no-consult rule). A prompt that lists a blocking or major finding

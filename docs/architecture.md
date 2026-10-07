@@ -371,12 +371,23 @@ holds both powers, and neither role can complete a review cycle alone.
 | Role | Agents | Tools | `permissionMode` | Power |
 |------|--------|-------|------------------|-------|
 | Producer | `questioner`, `design-author`, `structure-planner`, `planner`, `test-architect`, `implementer` | include `Write`/`Edit` | `acceptEdits` | Changes the tree. Casts no verdict. |
-| Reviewer | `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` | read-only | `plan` | Blocks the line. Changes nothing. |
+| Reviewer | `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` | no `Write`/`Edit` | `plan` | Blocks the line. Changes nothing. |
 
-**This is enforced by frontmatter, not by prompt text.** A reviewer that could
+**The `tools:` grant is the enforcement, not prompt text.** A reviewer that could
 edit could fix the defect it found and then approve its own fix, which collapses
-the generator and the evaluator into one role. Read-only tool grants plus
-`permissionMode: plan` make that impossible at the harness layer.
+the generator and the evaluator into one role. Withholding `Write` and `Edit`
+removes that power at the harness layer.
+
+The `permissionMode` column is declared, not enforced. Claude Code
+[ignores `permissionMode` for plugin subagents](https://code.claude.com/docs/en/sub-agents#choose-the-subagent-scope),
+and it ignores any subagent's `permissionMode` when the main session runs in
+auto, `acceptEdits`, or `bypassPermissions` mode. Plan mode would not close the
+gap anyway: it blocks edits but only prompts for shell commands, and an allow
+rule runs them. All five reviewers hold `Bash`, so nothing prevents a reviewer's
+shell mutation. The IMPLEMENT phase detects one instead: the orchestrator
+compares `HEAD` and `git status` before and after the five-reviewer dispatch
+and turns any change into a Blocking finding
+(`skills/team-implement/references/03-execution.md`, step 5).
 
 One path steps outside that enforcement: the cross-model pass
 (`skills/team/references/cross-model-review.md`) shells out to external vendor CLIs

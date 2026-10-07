@@ -15,7 +15,7 @@ Assign each claim to one fresh judge. Never reuse a checker that judged earlier 
 
 ## Enforced capabilities
 
-Reviewers hold no `Write` or `Edit` tools and use `permissionMode: plan`. Prompts do not change actual grants.
+Reviewers hold no `Write` or `Edit` tools. They declare `permissionMode: plan`, but Claude Code ignores it for plugin agents, so the tool grant is the enforcement. A reviewer holding `Bash` runs no mutating command; this rule prevents it, and the dispatcher's tree check detects a breach. Prompts do not change actual grants.
 Give child processes explicit environment allowlists and vendor-specific credentials, never the parent's full environment or another vendor's credentials.
 Choose the narrowest capable target. Reject command-sink targets for required read-only work when a narrower target exists.
 If only broader targets exist, state the prompt restriction and report that the structural guarantee is unavailable.
