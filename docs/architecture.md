@@ -691,15 +691,11 @@ skill: it lives in ordinary references such as the
 and [writing standards](https://github.com/bostonaholic/team/blob/main/skills/team/references/writing.md),
 which consumers read by path before work.
 
-**Principles are the third flavor.** A principle is a guarded command: it
-sets `disable-model-invocation: true`, so the model never applies it on its
-own, and it carries no `argument-hint`. It stays user-invocable through `/`,
-and a consuming procedure reads it through its installed path — the same
-citation form ordinary references use. The catalog files it under
-`## Principles`, and a read of its `SKILL.md` is a `Uses` edge in the catalog
-just as a load is. [`principle-fix-root-causes`](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md)
-is read by the [bug-fix playbook](https://github.com/bostonaholic/team/blob/main/skills/team-fix/playbooks/bug-fix.md);
-its `agents/openai.yaml` declares `allow_implicit_invocation: false` for Codex.
+**Team ships no principle skills.** The last one, `principle-fix-root-causes`,
+moved to `bostonaholic/skills` as `fixing-root-causes`. The
+[bug-fix playbook](https://github.com/bostonaholic/team/blob/main/skills/team-fix/playbooks/bug-fix.md)
+loads it through the Skill tool and states the rule inline for when the
+collection is not installed.
 
 **Two reference forms, and the form is the contract.** Every skill-to-skill
 reference is one of two kinds, and each has its own encoding:
@@ -758,9 +754,9 @@ command.
 
 The field is honored by Claude Code only. Codex reads no invocability
 field at all, so it lists every registered methodology skill in
-its `$` picker and a user can invoke any of them. Principles avoid that leak
-with `disable-model-invocation: true` plus `allow_implicit_invocation: false`
-in their `agents/openai.yaml`, which keeps them out of Codex's implicit
+its `$` picker and a user can invoke any of them. Guarded commands such as
+`team-migrate` avoid that leak with `disable-model-invocation: true` plus
+`allow_implicit_invocation: false` in their `agents/openai.yaml`, which keeps them out of Codex's implicit
 catalog. There is no fix on
 Team's side, and the workarounds that look plausible all fail — see
 [cross-host-portability.md](cross-host-portability.md#57-codex-port)
@@ -878,8 +874,8 @@ An overage requires a reviewed reason stating its exact line count.
    Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
    Twelve agent bodies read execution rules. File-finder retains its single-step contract.
-   Resources use no skill frontmatter or discovery metadata. Keep the 12 commands registered.
-   Guarded principles are their own tier: they carry skill frontmatter and
+   Resources use no skill frontmatter or discovery metadata. Keep the 11 commands registered.
+   Guarded commands such as `team-migrate` carry skill frontmatter and
    `agents/openai.yaml`, register as commands, and set `disable-model-invocation:
    true` so the model never applies them on its own. Do not add unguarded
    principle registrations, recursive loading, compatibility stubs, or a resource registry.

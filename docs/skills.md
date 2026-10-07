@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: the pipeline entry-point slash commands, the bug-fix pipeline, the setup migration, and the guarded root-cause principle, each with the skills it loads."
+description: "The Team plugin's skills: the pipeline entry-point slash commands, the bug-fix pipeline, and the setup migration, each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -11,8 +11,7 @@ nav_label: skills
 > **The features you use.** Every entry-point skill is a slash command you can
 > run (`/team`, `/team-fix`, …). There are no methodology skills: what agents
 > used to preload now lives in ordinary playbooks and references they read by
-> path. A principle is a guarded command — explicitly invoked, never applied by
-> the model on its own — that a consuming procedure reads by installed path.
+> path.
 >
 > **Source of truth:** the skill bodies themselves, `skills/*/SKILL.md`.
 > This page is a hand-maintained reference. When it disagrees with a
@@ -42,7 +41,7 @@ This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 12 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 11 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 Skills outside the pipeline moved out of Team; see [Skills that moved](index.md#skills-that-moved).
@@ -130,7 +129,7 @@ Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
-**Uses:** `principle-fix-root-causes`, `team-worktree`
+**Uses:** `fixing-root-causes` (from bostonaholic/skills), `team-worktree`
 
 ## Setup migration
 
@@ -143,19 +142,6 @@ Moves a machine set up before v0.147.0 onto the Team and bostonaholic/skills
 plugins in every harness, with no moved skill missing or shown twice.
 
 **Used by:** None
-
-**Uses:** None
-
-## Principles
-
-Guarded commands: an explicit invocation starts them; the model never applies
-them on its own. Consuming procedures read them by installed path.
-
-### [principle-fix-root-causes](https://github.com/bostonaholic/team/blob/main/skills/principle-fix-root-causes/SKILL.md)
-
-Requires diagnosis and repair of root causes.
-
-**Used by:** `team-fix`
 
 **Uses:** None
 

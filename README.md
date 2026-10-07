@@ -22,7 +22,7 @@ Or 🔗 [check the installation instructions](INSTALL.md).
 
 ## Skills that moved
 
-Team now ships only its pipeline. Its other 18 skills moved to the `bostonaholic/skills` collection, which installs without Team, and took gerund names there:
+Team now ships only its pipeline. Its other 19 skills moved to the `bostonaholic/skills` collection, which installs without Team, and took gerund names there:
 
 | Team command | Now in bostonaholic/skills |
 | --- | --- |
@@ -40,6 +40,7 @@ Team now ships only its pipeline. Its other 18 skills moved to the `bostonaholic
 | `/pr-screenshots` | `/attaching-pr-screenshots` |
 | `/pr-watch-as-author` | `/watching-authored-prs` |
 | `/pr-watch-as-reviewer` | `/watching-reviewed-prs` |
+| `/principle-fix-root-causes` | `/fixing-root-causes` |
 | `/prove` | `/proving-claims` |
 | `/retro` | `/running-retros` |
 | `/shipit` | `/landing-prs` |
@@ -172,7 +173,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **12 skills** in `skills/`: the `/team` orchestrator, the eight phase commands, `/team-fix`, the explicit-only `/team-migrate`, and the guarded `principle-fix-root-causes`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
+- **11 skills** in `skills/`: the `/team` orchestrator, the eight phase commands, `/team-fix`, and the explicit-only `/team-migrate`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
 
