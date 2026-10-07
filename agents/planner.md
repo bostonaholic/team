@@ -51,7 +51,7 @@ blocks.
 
 The 8-plan.md document template and the tactical rules live in the
 [plan playbook](../skills/team/playbooks/plan.md). Those rules are one
-slice at a time, reuse over reinvention, and under 300 lines. They also
+slice at a time and reuse over reinvention. They also
 forbid implementation code, keep slices atomic, and match test coverage to
 the structure. In multi-repo mode, each step carries a `[repo: <slug>]`
 prefix so the implementer cd's into that repo's worktree before applying

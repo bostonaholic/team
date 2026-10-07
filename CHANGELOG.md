@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Pipeline artifacts and agent returns no longer carry a length cap.** The file-finder (80/120 lines), researcher (100/140), and nested scout (80) returns, the assembled `5-research.md` (191/271), the design (~300 lines), the structure (~2 pages), the plan (under 300 lines), `1-task.md` (under 80 lines), and skeptic (10 lines) and helper (30 lines) replies now run as long as their content needs. Research no longer counts lines, retries an oversized return, or stops blocked on a second one. Concurrency limits, the 8–15 question range, and the cross-model byte limits stay. **What this asks of you:** nothing.
+
 ## [0.150.0] - 2026-10-06
 
 ### Added

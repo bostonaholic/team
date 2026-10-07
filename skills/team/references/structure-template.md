@@ -81,8 +81,6 @@ does not accidentally include it>
   the design decision that justified it.
 - **No implementation code.** Slice descriptions name files and behaviors,
   not function bodies.
-- **Stay under ~200 lines.** If you need more, you have too many slices —
-  consolidate, or push some out of scope and run a fresh design review.
 
 ## Heuristics for slicing
 

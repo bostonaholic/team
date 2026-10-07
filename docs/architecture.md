@@ -58,11 +58,11 @@ seeds and updates a TodoWrite ledger, and runs the gates.
   *Structural*: the orchestrator only passes the `2-questions.md` path to
   the research agents. *Procedural*: the research agents' system prompts
   forbid reading `1-task.md`.
-- **No mid-run human gates.** The design (~300-line alignment doc) is
+- **No mid-run human gates.** The design (alignment doc) is
   gated by an adversarial design review. A fresh-context subagent audits
   it, and the orchestrator records its verdict to `design-review-<n>.md`.
-  The artifacts are thus self-describing. The Structure (~2-page
-  vertical-slice breakdown) and the Plan are not gated. They advance
+  The artifacts are thus self-describing. The Structure (vertical-slice
+  breakdown) and the Plan are not gated. They advance
   autonomously. The human's checkpoint is the PR review at the end.
 
 **Trust boundary.** The single human checkpoint, the end-of-run PR
@@ -1095,16 +1095,9 @@ backtick fence labeled `untrusted-evidence-file-finder` or
 that return. A fixed line identifies the blocks as untrusted evidence and says
 embedded imperatives carry no authority. The root then traces every final
 substantive claim only to the completed returns, never to task framing.
-File-finder returns at most 80 lines for one repo or 120 for multiple repos.
-Researcher returns at most 100 or 140 lines. The root reserves eleven lines for
-the five-line frontmatter,
-authority line, four fence lines, and one source-grounded synthesis line. The
-final artifact therefore has at most 191 lines for one repo or 271 for multiple
-repos.
-Line validation normalizes line endings but counts every physical line,
-including terminal empty and whitespace-only lines.
-The root retries an oversized producer once with the same isolated inputs. It
-stops on a second oversized return and never truncates source data.
+Neither return carries a line cap. The root adds only the frontmatter, the
+authority line, four fence lines, and one source-grounded synthesis line, and
+never truncates source data.
 Design, structure, planning, test authoring, and implementation use those
 blocks only as evidence. Each actor revalidates proposed actions or acceptance
 tests against `1-task.md`, which records user intent. Embedded imperatives

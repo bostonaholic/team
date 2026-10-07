@@ -41,8 +41,8 @@ text, not task-derived Research content.
 - Every call passes `model:`: `haiku` for location, grep, and bulk reading; `sonnet` for subsystem traces or claim checks; `opus` only after a `sonnet` helper was inconclusive, with that failure named. Effort: `low` for lookups, `medium` for tracing, never `xhigh`.
 - You are at depth 2 of 5. Spawn at most ONE more level; every helper must work directly and never spawn ([focused work rules](principles/focused-work.md)).
 - Helpers never ask users. Resolve ambiguity or record it in your artifact's open questions/assumptions ([decisions rules](references/decisions.md)).
-- At most **4 helpers** may be in flight. Dispatch independent work in parallel. Bound each response. Spot-verify every reported claim; you own it.
-- Use `SendMessage` for an in-scope follow-up to a live scout when available; it uses the same cap and reply bound. Otherwise respawn. Skeptics are always fresh and one-shot: one skeptic per claim ([independent review rules](principles/independent-review.md)).
+- At most **4 helpers** may be in flight. Dispatch independent work in parallel. Spot-verify every reported claim; you own it.
+- Use `SendMessage` for an in-scope follow-up to a live scout when available; it uses the same in-flight cap. Otherwise respawn. Skeptics are always fresh and one-shot: one skeptic per claim ([independent review rules](principles/independent-review.md)).
 
 ## Verification helpers get neutral claims
 
@@ -71,7 +71,7 @@ Fan out read-only exploration when questions cluster into independent areas or `
 
 - Scout types: `team:file-finder` or built-in `Explore`; nothing else.
 - Include the writing standards path and ordered audit in every initial and follow-up
-  prompt. Preserve `file:line` evidence and the <= 80 lines cap.
+  prompt. Preserve `file:line` evidence.
 - The isolation invariant extends downward. Restrict task-derived content in
   prompts and follow-ups to question text copied verbatim from
   `2-questions.md`, its `Codebase context`, and repo slugs/paths from
@@ -79,26 +79,24 @@ Fan out read-only exploration when questions cluster into independent areas or `
   caps, and output contract above are allowed operational method text. Never
   add task framing, mention `1-task.md`, or speculate about intent.
 - Spawn only when a cluster requires more reading than the report will quote. Handle one or two pointed questions directly.
-- At most 4 scouts, preferably parallel. Each returns <= 80 lines of
-  `file:line` findings and spawns nothing. The researcher compresses their
-  evidence within its 100-line single-repo or 140-line multi-repo producer
-  budget.
+- At most 4 scouts, preferably parallel. Each returns `file:line` findings
+  and spawns nothing. The researcher folds their evidence into its own
+  return.
 
 ### `code-reviewer` and `security-reviewer` — skeptic passes
 
 A hard gate is Blocking-tier `issue:` for code review or CRITICAL/HIGH for security. Before reporting one, send it to a fresh `general-purpose` skeptic: one per finding, at most 4 in flight; batch overflow into one dispatch.
 
 - Include the writing standards path and ordered audit in every skeptic prompt.
-  Preserve `REFUTED` or `CONFIRMED`, `file:line` evidence, and the <= 10 lines
-  cap.
+  Preserve `REFUTED` or `CONFIRMED` and `file:line` evidence.
 
 Use this template for code or exploitability claims:
 
-> Read <file> around line <n>. Claim: "<one-sentence falsifiable statement, e.g. `user` may be null on the early-return path. Or, for a security finding, user input from the `q` parameter reaches this SQL string without parameterization>". Attempt to REFUTE this claim with concrete evidence (guards, callers, sanitization, validation layers, type definitions, tests). Reply REFUTED or CONFIRMED with file:line evidence, <= 10 lines. If your evidence is inconclusive, reply CONFIRMED. Do not write files or spawn agents.
+> Read <file> around line <n>. Claim: "<one-sentence falsifiable statement, e.g. `user` may be null on the early-return path. Or, for a security finding, user input from the `q` parameter reaches this SQL string without parameterization>". Attempt to REFUTE this claim with concrete evidence (guards, callers, sanitization, validation layers, type definitions, tests). Reply REFUTED or CONFIRMED with file:line evidence. If your evidence is inconclusive, reply CONFIRMED. Do not write files or spawn agents.
 
 For rule violations, name the rule but omit verdict and severity:
 
-> Read <file> around line <n>. Claim: "<what is there> violates <rule>, stated in `skills/<skill>/SKILL.md`". Read that rule, then attempt to REFUTE the claim: does the rule say what the claim says, and does this code fall outside it through an allowed case declared by the rule or because the rule does not reach this case? Reply REFUTED or CONFIRMED with file:line evidence, <= 10 lines. If your evidence is inconclusive, reply CONFIRMED. Do not write files or spawn agents.
+> Read <file> around line <n>. Claim: "<what is there> violates <rule>, stated in `skills/<skill>/SKILL.md`". Read that rule, then attempt to REFUTE the claim: does the rule say what the claim says, and does this code fall outside it through an allowed case declared by the rule or because the rule does not reach this case? Reply REFUTED or CONFIRMED with file:line evidence. If your evidence is inconclusive, reply CONFIRMED. Do not write files or spawn agents.
 
 A conflict between convention and rule is a report finding, not a refutation.
 
@@ -115,7 +113,7 @@ verbatim without applying either prose method.
 
 Spawn a built-in `Explore` or `team:file-finder` scout when a slice touches a subsystem the plan does not explain and direct mapping would require reading more than ~3 files you will not edit.
 
-- At most 2 scouts in flight. Each returns <= 80 lines of `file:line` findings and spawns nothing.
+- At most 2 scouts in flight. Each returns `file:line` findings and spawns nothing.
 - Include the writing standards path and ordered audit in every initial and follow-up
   prompt.
 - Run scouts in the background: dispatch for the next unfamiliar slice while completing the current slice, then collect it when that slice starts.

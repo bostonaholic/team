@@ -10,7 +10,7 @@ Two read-only roles serve RESEARCH. The file-finder locates files; the researche
 
 Given `2-questions.md` codebase scope and vocabulary, find every relevant file. In multi-repo mode from `4-repos.md`, repeat each strategy in every listed repo and namespace results by slug.
 
-Return at most 80 physical lines, or 120 in multi-repo mode. Terminal empty or whitespace-only lines count toward the limit. Keep one finding per line so the Research assembler can preserve the return unchanged. Write no blank or separator lines; emit a category heading only when it has findings.
+Keep one finding per line so the Research assembler can preserve the return unchanged. Write no blank or separator lines; emit a category heading only when it has findings.
 
 Search strategies, broad to narrow:
 
@@ -37,7 +37,7 @@ Answer every neutral question in `2-questions.md` with objective, compressed, fi
 - In multi-repo mode, record shared types/API schemas under `## Constraints` and differing conventions under `## Patterns Observed`.
 - Choose the investigation path needed to answer all questions; never infer the user's goal.
 
-Return at most 100 physical lines, or 140 in multi-repo mode. Terminal empty or whitespace-only lines count toward the limit. The assembler keeps this return unchanged inside a labeled, untrusted-evidence fence in `5-research.md`. Prefix multi-repo references with the `4-repos.md` slug, e.g. `frontend:src/App.tsx:42`.
+The assembler keeps this return unchanged inside a labeled, untrusted-evidence fence in `5-research.md`. Prefix multi-repo references with the `4-repos.md` slug, e.g. `frontend:src/App.tsx:42`.
 
 ```markdown
 ## Tech Stack
@@ -73,7 +73,6 @@ Reporting rules:
 
 - Report what IS, never what SHOULD BE or recommended approaches ([independent review rules](principles/independent-review.md)).
 - Compress without generalizing: retain function names, type signatures, and paths; delete prose without information.
-- If over budget, remove the least information-dense material.
 - Return underspecified questions in `## Open Questions`; never guess.
 
 ## System dependency checks
