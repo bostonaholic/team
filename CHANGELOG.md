@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.152.0] - 2026-10-07
+
 ### Removed
 
 - **Team no longer ships `/principle-fix-root-causes`** ([#533](https://github.com/bostonaholic/team/pull/533)). The `/team-fix` bug-fix playbook states the root-cause rule inline. **What this asks of you:** nothing, unless you invoked `/principle-fix-root-causes` directly; that command is gone.
@@ -1428,7 +1430,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.151.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.152.0...HEAD
+[0.152.0]: https://github.com/bostonaholic/team/compare/v0.151.0...v0.152.0
 [0.151.0]: https://github.com/bostonaholic/team/compare/v0.150.0...v0.151.0
 [0.150.0]: https://github.com/bostonaholic/team/compare/v0.149.0...v0.150.0
 [0.149.0]: https://github.com/bostonaholic/team/compare/v0.148.0...v0.149.0
