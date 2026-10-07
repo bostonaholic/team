@@ -38,8 +38,6 @@ Then include:
 - Order by user value. Slice 1 is the smallest usable behavior or walking
   skeleton, not infrastructure.
 - Cite non-obvious design decisions. Name files and behavior, never bodies.
-- Keep the structure under about 200 lines; consolidate or reduce scope when
-  needed.
 
 ## Slicing heuristics
 

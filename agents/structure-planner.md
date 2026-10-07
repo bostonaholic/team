@@ -1,6 +1,6 @@
 ---
 name: structure-planner
-description: Use after the design review passes to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a ~2-page document that the planner and implementer consume; it advances autonomously to PLAN with no approval gate.
+description: Use after the design review passes to break the work into vertical slices with verification checkpoints. Each slice is end-to-end (touches every layer needed to deliver one piece of functionality), independently testable, and atomically committable. Produces a document that the planner and implementer consume; it advances autonomously to PLAN with no approval gate.
 color: purple
 model: opus
 effort: xhigh
@@ -73,13 +73,11 @@ The `topic` value MUST be copied verbatim from the predecessor
 `6-design.md`. Never re-derive, re-word, or combine it with the ticket
 id. Every artifact in `docs/plans/<id>/` carries the same `topic` slug.
 
-Aim for ~2 pages (≈100–200 lines, excluding frontmatter).
-
 ## Rules
 
 - **Obey the slicing rules** in the
   [structure playbook](../skills/team/playbooks/structure.md),
-  including its content and length constraints on the document itself.
+  including its content constraints on the document itself.
 - **Apply the product-need lens** while you order the slices in
   `## Slices` and `## Out of structure`. Make sure that slice 1 ships
   something a real person wants, not infrastructure, that no slice serves

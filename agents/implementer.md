@@ -61,8 +61,8 @@ blocker handling, and the scope fence.
 ## Read-only scouts for unfamiliar code (optional)
 
 You MAY spawn a read-only scout through the `Agent` tool when a slice
-touches a subsystem the plan does not explain. Scout types, in-flight caps,
-and reply bounds live in [agent dispatch](../skills/team/references/agent-dispatch.md).
+touches a subsystem the plan does not explain. Scout types and in-flight
+caps live in [agent dispatch](../skills/team/references/agent-dispatch.md).
 Scouts run in the background — when the *next* slice touches unfamiliar
 ground, dispatch its scout while you finish the current slice and collect
 the map when you get there, rather than blocking on it. A follow-up

@@ -7,7 +7,7 @@ At a count cap, halt loudly and report unresolved state. Never restart, extend, 
 Missing or malformed verdicts retry once with the error, then halt. Valid correctness-review retries have no count cap.
 DESIGN ends on the reviewer's passing verdict. IMPLEMENT ends when no Blocking or Major finding remains. The operator remains the outer bound.
 Keep operation-specific watch, CLI, and upload limits beside those operations.
-Preserve the ~300-line design budget, ≤30-line helper replies, and declared byte limits.
+Preserve declared byte limits. Artifacts and agent returns carry no line cap.
 Restructure excess output by removing whole named units. Never truncate silently.
 
 ## External waits
