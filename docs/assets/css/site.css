@@ -461,6 +461,27 @@ a:focus-visible,
   }
 }
 
+/* --- fork me on github ribbon ------------------------------------------- */
+a.fork-ribbon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+}
+
+a.fork-ribbon:hover {
+  background: none;
+}
+
+/* hide where the ribbon would cover the header nav */
+@media (max-width: 1100px) {
+  a.fork-ribbon {
+    display: none;
+  }
+}
+
 /* --- responsive header reflow (narrow viewports) ------------------------- */
 @media (max-width: 600px) {
   header .container {
