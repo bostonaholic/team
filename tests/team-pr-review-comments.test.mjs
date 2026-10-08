@@ -811,7 +811,7 @@ test("invalid notes, output directory, or arguments exit 2 and write nothing", a
 // Slice 5: The PR carries Team's code review once per reviewed commit
 // ---------------------------------------------------------------------------
 
-// The verdict and commit lines are pinned here; the script holds them as named constants (8-plan.md).
+// The verdict and commit lines are pinned here; the script holds them as named constants.
 test("a verdict run posts the code review after the comments with its verdict, commit, and findings", async (t) => {
   await t.test("a comment verdict on a 40-hex commit with two findings", (t) => {
     const root = scratch(t);
@@ -1158,7 +1158,7 @@ test("the code review posts, skips, or is refused while the comments always post
 // Slice 6: The review event follows the verdict
 // ---------------------------------------------------------------------------
 
-// The reason lines are pinned here; the script holds them as named constants (8-plan.md).
+// The reason lines are pinned here; the script holds them as named constants.
 const SELF_AUTHORED_LINE = "This review posts as a comment, because GitHub does not accept an approval or a change request from the PR author.";
 const HEAD_CHANGED_LINE = "This review posts as a comment, because the PR head has changes outside `CHANGELOG.md` that no Team reviewer saw.";
 const SCOPE_UNKNOWN_LINE = "This review posts as a comment, because the reviewed commit could not be compared with the PR head.";

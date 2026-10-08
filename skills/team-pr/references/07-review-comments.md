@@ -116,7 +116,7 @@ these steps in order:
    case "$VERDICT" in approve|comment|request-changes) ;; *) exit 1 ;; esac
    case "$REVIEWED_SHA" in ''|*[!0-9a-f]*) exit 1 ;; esac
    case "${#REVIEWED_SHA}" in 40|64) ;; *) exit 1 ;; esac
-   git -C "<home worktree>" diff --name-only "$REVIEWED_SHA" HEAD -- \
+   git -C "<home worktree>" diff --no-renames --name-only "$REVIEWED_SHA" HEAD -- \
      > "$RUN_DIR/since-review.tmp" \
      && mv "$RUN_DIR/since-review.tmp" "$RUN_DIR/since-review.txt"
    node "<team-pr-skill-dir>/scripts/review-comments.mjs" --out "$OUT_DIR" \
