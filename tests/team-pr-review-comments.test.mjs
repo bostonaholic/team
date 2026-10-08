@@ -769,6 +769,42 @@ test("invalid notes, output directory, or arguments exit 2 and write nothing", a
     assert.equal(run.stdout, "");
     assert.deepEqual(readdirSync(out), []);
   });
+
+  // Slice 6: the scope diff flag.
+  await t.test("--verdict without --since-review", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const run = runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      "--verdict", "comment",
+      "--reviewed", "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a",
+      "--viewer", writeInput(root, "viewer.json", VIEWER_JSON),
+      "--review-findings", writeInput(root, "review-findings.md", REVIEW_FINDINGS),
+    ]);
+
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /^review-comments\.mjs: /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readdirSync(out), []);
+  });
+
+  await t.test("--since-review without --verdict", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const run = runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      "--since-review", writeInput(root, "since-review.txt", ""),
+    ]);
+
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /^review-comments\.mjs: /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readdirSync(out), []);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -1099,5 +1135,246 @@ test("the code review posts, skips, or is refused while the comments always post
 
     assert.deepEqual(manifest.refused.map((entry) => entry.key), ["code-review-5e8d1a4c7b0f3e6d9c2b5a8f1e4d7c0b3a6f9e2d"]);
     assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes"]);
+  });
+
+  // Slice 6 row: the self-authored rule needs the PR author.
+  await t.test("an --existing without a string author.login refuses the review", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const existing = JSON.stringify({ author: null, comments: [], reviews: [] });
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", existing),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]));
+
+    assert.deepEqual(manifest.refused.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes"]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Slice 6: The review event follows the verdict
+// ---------------------------------------------------------------------------
+
+// The reason lines are pinned here; the script holds them as named constants (8-plan.md).
+const SELF_AUTHORED_LINE = "This review posts as a comment, because GitHub does not accept an approval or a change request from the PR author.";
+const HEAD_CHANGED_LINE = "This review posts as a comment, because the PR head has changes outside `CHANGELOG.md` that no Team reviewer saw.";
+const SCOPE_UNKNOWN_LINE = "This review posts as a comment, because the reviewed commit could not be compared with the PR head.";
+const OTHER_AUTHOR = JSON.stringify({ author: { login: "pr-opener" }, comments: [], reviews: [] });
+const VIEWER_AUTHOR = JSON.stringify({ author: { login: "mboston" }, comments: [], reviews: [] });
+
+test("the code review event follows the verdict unless the viewer opened the PR or the head changed after review", async (t) => {
+  await t.test("approve, another author, an empty scope diff: approve", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", OTHER_AUTHOR),
+      ...reviewFlags(root, { verdict: "approve", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", sinceReview: "" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[0].event, "approve");
+    assert.deepEqual(manifest.post[0].reasons, []);
+    const review = readFileSync(manifest.post[0].file, "utf8");
+    assert.ok(
+      review.startsWith(`${REVIEW_MARKER}\n\n**Verdict: APPROVE**\nReviewed commit: \`3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a\`\n\n`),
+      `the commit line is not followed by a blank line:\n${review}`,
+    );
+  });
+
+  await t.test("approve, another author, CHANGELOG.md only: approve", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", OTHER_AUTHOR),
+      ...reviewFlags(root, { verdict: "approve", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", sinceReview: "CHANGELOG.md\n" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[0].event, "approve");
+    assert.deepEqual(manifest.post[0].reasons, []);
+    const review = readFileSync(manifest.post[0].file, "utf8");
+    assert.ok(
+      review.startsWith(`${REVIEW_MARKER}\n\n**Verdict: APPROVE**\nReviewed commit: \`3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a\`\n\n`),
+      `the commit line is not followed by a blank line:\n${review}`,
+    );
+  });
+
+  await t.test("request-changes, another author, an empty scope diff: request-changes", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", OTHER_AUTHOR),
+      ...reviewFlags(root, { verdict: "request-changes", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", sinceReview: "" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[0].event, "request-changes");
+    assert.deepEqual(manifest.post[0].reasons, []);
+    const review = readFileSync(manifest.post[0].file, "utf8");
+    assert.ok(
+      review.startsWith(`${REVIEW_MARKER}\n\n**Verdict: REQUEST CHANGES**\nReviewed commit: \`3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a\`\n\n`),
+      `the commit line is not followed by a blank line:\n${review}`,
+    );
+  });
+
+  await t.test("comment, the viewer is the author: comment with no reasons", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", VIEWER_AUTHOR),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", sinceReview: "" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[0].event, "comment");
+    assert.deepEqual(manifest.post[0].reasons, []);
+    const review = readFileSync(manifest.post[0].file, "utf8");
+    assert.ok(
+      review.startsWith(`${REVIEW_MARKER}\n\n**Verdict: COMMENT**\nReviewed commit: \`3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a\`\n\n`),
+      `the commit line is not followed by a blank line:\n${review}`,
+    );
+  });
+
+  await t.test("approve, logins that differ only in case: comment, self-authored", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const existing = JSON.stringify({ author: { login: "MBoston" }, comments: [], reviews: [] });
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", existing),
+      ...reviewFlags(root, { verdict: "approve", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", sinceReview: "" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[0].event, "comment");
+    assert.deepEqual(manifest.post[0].reasons, ["self-authored"]);
+    const review = readFileSync(manifest.post[0].file, "utf8");
+    assert.ok(
+      review.startsWith(`${REVIEW_MARKER}\n\n**Verdict: APPROVE**\nReviewed commit: \`3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a\`\n${SELF_AUTHORED_LINE}\n\n`),
+      `the self-authored line does not follow the commit line:\n${review}`,
+    );
+  });
+
+  await t.test("request-changes, the viewer is the author: comment, self-authored", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", VIEWER_AUTHOR),
+      ...reviewFlags(root, { verdict: "request-changes", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", sinceReview: "" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[0].event, "comment");
+    assert.deepEqual(manifest.post[0].reasons, ["self-authored"]);
+    const review = readFileSync(manifest.post[0].file, "utf8");
+    assert.ok(
+      review.startsWith(`${REVIEW_MARKER}\n\n**Verdict: REQUEST CHANGES**\nReviewed commit: \`3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a\`\n${SELF_AUTHORED_LINE}\n\n`),
+      `the self-authored line does not follow the commit line:\n${review}`,
+    );
+  });
+
+  await t.test("approve, another author, CHANGELOG.md and src/uploader.mjs: comment, head-changed", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", OTHER_AUTHOR),
+      ...reviewFlags(root, { verdict: "approve", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", sinceReview: "CHANGELOG.md\nsrc/uploader.mjs\n" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[0].event, "comment");
+    assert.deepEqual(manifest.post[0].reasons, ["head-changed"]);
+    const review = readFileSync(manifest.post[0].file, "utf8");
+    assert.ok(
+      review.startsWith(`${REVIEW_MARKER}\n\n**Verdict: APPROVE**\nReviewed commit: \`3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a\`\n${HEAD_CHANGED_LINE}\n\n`),
+      `the head-changed line does not follow the commit line:\n${review}`,
+    );
+  });
+
+  await t.test("approve, another author, a nested packages/a/CHANGELOG.md: comment, head-changed", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", OTHER_AUTHOR),
+      ...reviewFlags(root, { verdict: "approve", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", sinceReview: "packages/a/CHANGELOG.md\n" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[0].event, "comment");
+    assert.deepEqual(manifest.post[0].reasons, ["head-changed"]);
+    const review = readFileSync(manifest.post[0].file, "utf8");
+    assert.ok(
+      review.startsWith(`${REVIEW_MARKER}\n\n**Verdict: APPROVE**\nReviewed commit: \`3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a\`\n${HEAD_CHANGED_LINE}\n\n`),
+      `the head-changed line does not follow the commit line:\n${review}`,
+    );
+  });
+
+  await t.test("approve, another author, an absent scope file: comment, scope-unknown", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", OTHER_AUTHOR),
+      ...reviewFlags(root, { verdict: "approve", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", sinceReviewPath: join(root, "absent-since-review.txt") }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[0].event, "comment");
+    assert.deepEqual(manifest.post[0].reasons, ["scope-unknown"]);
+    const review = readFileSync(manifest.post[0].file, "utf8");
+    assert.ok(
+      review.startsWith(`${REVIEW_MARKER}\n\n**Verdict: APPROVE**\nReviewed commit: \`3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a\`\n${SCOPE_UNKNOWN_LINE}\n\n`),
+      `the scope-unknown line does not follow the commit line:\n${review}`,
+    );
+  });
+
+  await t.test("approve, another author, a scope path that is a directory: comment, scope-unknown", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const sinceReviewPath = join(root, "since-review-dir");
+    mkdirSync(sinceReviewPath);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", OTHER_AUTHOR),
+      ...reviewFlags(root, { verdict: "approve", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", sinceReviewPath }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[0].event, "comment");
+    assert.deepEqual(manifest.post[0].reasons, ["scope-unknown"]);
+    const review = readFileSync(manifest.post[0].file, "utf8");
+    assert.ok(
+      review.startsWith(`${REVIEW_MARKER}\n\n**Verdict: APPROVE**\nReviewed commit: \`3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a\`\n${SCOPE_UNKNOWN_LINE}\n\n`),
+      `the scope-unknown line does not follow the commit line:\n${review}`,
+    );
+  });
+
+  await t.test("approve, the viewer is the author, src/uploader.mjs: comment, self-authored then head-changed", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", VIEWER_AUTHOR),
+      ...reviewFlags(root, { verdict: "approve", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", sinceReview: "src/uploader.mjs\n" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[0].event, "comment");
+    assert.deepEqual(manifest.post[0].reasons, ["self-authored", "head-changed"]);
+    const review = readFileSync(manifest.post[0].file, "utf8");
+    assert.ok(
+      review.startsWith(`${REVIEW_MARKER}\n\n**Verdict: APPROVE**\nReviewed commit: \`3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a\`\n${SELF_AUTHORED_LINE}\n${HEAD_CHANGED_LINE}\n\n`),
+      `the reason lines do not follow the commit line in order:\n${review}`,
+    );
   });
 });

@@ -340,7 +340,9 @@ blocks as PR review comments
 (`skills/team-pr/references/07-review-comments.md`), replacing the final
 round's inline disposition block so every round appears exactly once.
 team-pr also posts Team's code review as a PR review, one per reviewed
-commit, with the verdict and the final round's findings. The worktree stays in place
+commit, with the verdict and the final round's findings. The review event
+follows the verdict, but it is a comment when Team's login opened the PR or
+the head has changes outside `CHANGELOG.md` since the reviewed commit. The worktree stays in place
 after the PR opens. Teardown is deferred until the PR merges or the user
 asks, so the branch remains available for iteration. The final report tells the user how to mark the PR ready for review and move its ticket.
 

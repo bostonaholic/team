@@ -3,7 +3,8 @@
 // cross-model-notes.md, plus Team's code review body, and prints which bodies to post.
 // No network, no `gh`.
 // Usage: review-comments.mjs --out <dir> --existing <file> [--findings <file>] [--notes <file>]
-//   [--verdict approve|comment|request-changes --reviewed <sha> --viewer <file> --review-findings <file>]
+//   [--verdict approve|comment|request-changes --reviewed <sha> --viewer <file>
+//    --since-review <file> --review-findings <file>]
 import { readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -13,7 +14,8 @@ const REVIEW_NOTES_HEADING = "## Review notes";
 const NOTES_TAG_LINE = "Cross-model dispositions with no design-round label, from `cross-model-notes`:";
 const USAGE =
   "usage: review-comments.mjs --out <dir> --existing <file> [--findings <file>] [--notes <file>]" +
-  " [--verdict approve|comment|request-changes --reviewed <sha> --viewer <file> --review-findings <file>]";
+  " [--verdict approve|comment|request-changes --reviewed <sha> --viewer <file>" +
+  " --since-review <file> --review-findings <file>]";
 // GitHub rejects a comment body over 65536 characters. The code review assumes the same limit.
 const BODY_LIMIT = 65536;
 
@@ -24,6 +26,13 @@ const VERDICT_WORDS = new Map([
 ]);
 const REVIEWED_COMMIT = /^(?:[0-9a-f]{40}|[0-9a-f]{64})$/;
 const NO_FINDINGS_LINE = "No findings.";
+// The ship commit adds only the root changelog after review, so that path alone keeps the head covered.
+const COVERED_PATH = "CHANGELOG.md";
+const REASON_LINES = new Map([
+  ["self-authored", "This review posts as a comment, because GitHub does not accept an approval or a change request from the PR author."],
+  ["head-changed", "This review posts as a comment, because the PR head has changes outside `CHANGELOG.md` that no Team reviewer saw."],
+  ["scope-unknown", "This review posts as a comment, because the reviewed commit could not be compared with the PR head."],
+]);
 
 const DISPOSITION_HEADING = /^>\s*### Cross-model disposition\s*$/;
 const DESIGN_ROUND_LABEL = /^>\s*\*\*Design round (\d+)\*\*\s*$/;
@@ -159,23 +168,42 @@ function viewerPostedReview(reviews, login, marker) {
   );
 }
 
-function codeReviewBody(key, verdict, reviewed, findingsText) {
+// GitHub refuses an approval or a change request from the PR author.
+const authorMayNotUse = (verdict) => verdict === "approve" || verdict === "request-changes";
+
+function scopeReason(sinceReview) {
+  if (sinceReview.error) return "scope-unknown";
+  const paths = sinceReview.text.split("\n").filter((line) => !isBlank(line));
+  return paths.every((path) => path === COVERED_PATH) ? null : "head-changed";
+}
+
+function downgradeReasons({ verdict, authorLogin, viewerLogin, sinceReview }) {
+  const selfAuthored = authorMayNotUse(verdict) && sameLogin(authorLogin, viewerLogin);
+  return [selfAuthored ? "self-authored" : null, scopeReason(sinceReview)].filter((reason) => reason !== null);
+}
+
+function codeReviewBody(key, verdict, reviewed, reasons, findingsText) {
   const findings = trimBlankLines(findingsText.split("\n"));
-  const summary = [verdictLine(verdict), commitLine(reviewed)].join("\n");
+  const reasonLines = reasons.map((reason) => REASON_LINES.get(reason));
+  const summary = [verdictLine(verdict), commitLine(reviewed), ...reasonLines].join("\n");
   const findingsPart = findings.length > 0 ? findings.join("\n") : NO_FINDINGS_LINE;
   return `${reviewMarkerLine(key)}\n\n${summary}\n\n${findingsPart}\n`;
 }
 
 // A fault in a review-only input refuses the review and never stops the comments.
-function codeReviewEntry({ existing, viewer, reviewFindings, verdict, reviewed }) {
+function codeReviewEntry({ existing, viewer, reviewFindings, sinceReview, verdict, reviewed }) {
   const key = codeReviewKey(reviewed);
   const refuse = (reason) => ({ refused: { key, reason } });
   if (!Array.isArray(existing.reviews)) return refuse("the existing-comments file has no reviews array");
+  if (typeof existing.author?.login !== "string") return refuse("the existing-comments file has no string author.login");
   const login = viewerLogin(viewer);
   if (login.error) return refuse(login.error);
   if (reviewFindings.error) return refuse(`cannot read the review-findings file: ${reviewFindings.error}`);
   if (viewerPostedReview(existing.reviews, login.login, reviewMarkerLine(key))) return { skip: { key } };
-  return { pending: { key, body: codeReviewBody(key, verdict, reviewed, reviewFindings.text), verdict } };
+  const reasons = downgradeReasons({ verdict, authorLogin: existing.author.login, viewerLogin: login.login, sinceReview });
+  const event = reasons.length === 0 ? verdict : "comment";
+  const body = codeReviewBody(key, verdict, reviewed, reasons, reviewFindings.text);
+  return { pending: { key, body, verdict, event, reasons } };
 }
 
 function readReviewInput(path) {
@@ -208,14 +236,15 @@ function main(argv) {
   const reviewed = flag("--reviewed");
   const viewerPath = flag("--viewer");
   const reviewFindingsPath = flag("--review-findings");
+  const sinceReviewPath = flag("--since-review");
   if (verdict === undefined) {
-    if ([reviewed, viewerPath, reviewFindingsPath].some((value) => value !== undefined)) fail(USAGE);
+    if ([reviewed, viewerPath, reviewFindingsPath, sinceReviewPath].some((value) => value !== undefined)) fail(USAGE);
   } else {
     if (!VERDICT_WORDS.has(verdict)) fail(`--verdict must be one of ${[...VERDICT_WORDS.keys()].join(", ")}`);
     if (typeof reviewed !== "string" || !REVIEWED_COMMIT.test(reviewed)) {
       fail("--reviewed must be 40 or 64 lowercase hex characters");
     }
-    if (!viewerPath || !reviewFindingsPath) fail(USAGE);
+    if (!viewerPath || !reviewFindingsPath || !sinceReviewPath) fail(USAGE);
   }
 
   // Every check runs before the first write, so an exit 2 leaves --out empty
@@ -261,6 +290,7 @@ function main(argv) {
           existing,
           viewer: readReviewInput(viewerPath),
           reviewFindings: readReviewInput(reviewFindingsPath),
+          sinceReview: readReviewInput(sinceReviewPath),
           verdict,
           reviewed,
         });

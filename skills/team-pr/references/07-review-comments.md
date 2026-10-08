@@ -49,8 +49,8 @@ it a second time.
 
 Resolve `<team-pr-skill-dir>` to the absolute directory containing
 `skills/team-pr/SKILL.md`. Bind `$PR_URL` to the home PR URL. The review
-flags are `--verdict`, `--reviewed`, `--viewer`, and `--review-findings`.
-They go to the script only when the brief holds a round result, step 1
+flags are `--verdict`, `--reviewed`, `--viewer`, `--since-review`, and
+`--review-findings`. They go to the script only when the brief holds a round result, step 1
 passes, and both lookups in step 2 succeed. Shell state does not persist
 between calls. At the start of each call after step 2, bind `$PR_URL`, and
 bind `$RUN_DIR` and `$OUT_DIR` from the line that step 2 prints. Then run
@@ -101,7 +101,14 @@ these steps in order:
    ```
 
 5. Build the bodies. With review flags, bind the step 1 values again and
-   repeat its checks in this call:
+   repeat its checks in this call. The same call saves the scope diff: the
+   paths that changed between the reviewed commit and the home worktree's
+   HEAD.
+
+   **Warning:** never write the scope diff with a plain `> file` redirect.
+   A failed `git` call then leaves an empty file, and the script reads an
+   empty file as covered. Write to a temporary name, and rename it only on
+   exit 0, so the file exists only when `git` succeeds.
 
    ```sh
    export LC_ALL=C
@@ -109,21 +116,27 @@ these steps in order:
    case "$VERDICT" in approve|comment|request-changes) ;; *) exit 1 ;; esac
    case "$REVIEWED_SHA" in ''|*[!0-9a-f]*) exit 1 ;; esac
    case "${#REVIEWED_SHA}" in 40|64) ;; *) exit 1 ;; esac
+   git -C "<home worktree>" diff --name-only "$REVIEWED_SHA" HEAD -- \
+     > "$RUN_DIR/since-review.tmp" \
+     && mv "$RUN_DIR/since-review.tmp" "$RUN_DIR/since-review.txt"
    node "<team-pr-skill-dir>/scripts/review-comments.mjs" --out "$OUT_DIR" \
      --existing "$RUN_DIR/existing.json" --findings "$RUN_DIR/findings.md" \
      --notes "docs/plans/<id>/cross-model-notes.md" \
      --verdict "$VERDICT" --reviewed "$REVIEWED_SHA" \
      --viewer "$RUN_DIR/viewer.json" \
+     --since-review "$RUN_DIR/since-review.txt" \
      --review-findings "$RUN_DIR/review-findings.md"
    ```
 
+   Always pass `--since-review` with the other review flags. Only the file
+   can be absent, and an absent file sets the `scope-unknown` reason.
    Without review flags, run only the `node` command, and end it after
    `--notes`.
 
    The script prints one JSON object, `{post, skip, refused}`. A `post` entry
    has `key`, `file`, and `characters`. The code review's `post` entry has
-   the key `code-review-<sha>` and also has `verdict`. It is the last `post`
-   entry. A `skip` entry has `key`. A `refused` entry has `key` and `reason`.
+   the key `code-review-<sha>` and also has `verdict`, `event`, and
+   `reasons`. It is the last `post` entry. A `skip` entry has `key`. A `refused` entry has `key` and `reason`.
    The code review's `skip` or `refused` entry follows the comments' entries.
    The script writes one file for each `post` entry and no other file.
 6. Post each comment `post` entry in manifest order:
@@ -132,11 +145,17 @@ these steps in order:
    gh pr comment "$PR_URL" --body-file "<file from the post entry>"
    ```
 
-   Then post the `code-review-<sha>` entry, last:
+   Then post the `code-review-<sha>` entry, last, with the one fixed command
+   for its `event`:
 
-   ```sh
-   gh pr review "$PR_URL" --comment --body-file "<file from the code-review entry>"
-   ```
+   | `event` | Command |
+   | --- | --- |
+   | `approve` | `gh pr review "$PR_URL" --approve --body-file "<file>"` |
+   | `comment` | `gh pr review "$PR_URL" --comment --body-file "<file>"` |
+   | `request-changes` | `gh pr review "$PR_URL" --request-changes --body-file "<file>"` |
+
+   Refuse any other `event` value. Post nothing for that entry, and report
+   the value.
 
    Use the PR URL as the target, so `gh` takes the host from the URL. On
    GitHub Enterprise, `--repo` resolves to the default host instead.
@@ -178,8 +197,23 @@ line, the body has these parts:
 1. The verdict line: `**Verdict: APPROVE**`, `**Verdict: COMMENT**`, or
    `**Verdict: REQUEST CHANGES**`.
 2. The commit line: ``Reviewed commit: `<sha>` ``.
-3. A blank line, then the round result's findings verbatim, or
+3. One line for each reason in `reasons`, in order. Each line says why the
+   review posts as a comment.
+4. A blank line, then the round result's findings verbatim, or
    `No findings.` for a round with none.
+
+The `event` equals the verdict when `reasons` is empty. Otherwise, it is
+`comment`. The reasons, in their fixed order:
+
+- `self-authored`: the verdict is `approve` or `request-changes`, and the PR
+  author's login equals the viewer's login, compared case-insensitively.
+  GitHub refuses those events from the PR author.
+- `head-changed`: the scope diff lists a path other than the root
+  `CHANGELOG.md`.
+- `scope-unknown`: the scope diff file is absent or unreadable.
+
+`--existing` without a string `author.login` sends the code review to
+`refused`.
 
 The code review body has the same 65536-character limit. An oversized body
 goes to `refused`, and the comments still post.
@@ -220,6 +254,14 @@ unreadable.
   round appears twice.
 - The PR gets one code review per reviewed commit that reaches the PR phase.
   Team never edits, dismisses, or deletes an earlier review.
+- The scope diff reads the local home HEAD. A push by another account between
+  Team's push and the post goes undetected.
+- Companion repos go unchecked. In multi-repo mode, a companion change after
+  review does not set `head-changed`.
+- A changelog-only change after review stays unreviewed, as the ship commit
+  does today.
+- Uncommitted changes that the reviewers saw and the ship commit drops leave
+  a clean scope diff.
 - A different `gh` login between open and refresh sees no viewer markers, so
   it posts duplicates.
 - Two sessions that post to one PR at the same time can both post.
@@ -239,9 +281,10 @@ and a report, per [focused work rules](../../team/principles/focused-work.md).
   file.
 - When a `gh pr comment` fails, stop posting. Report the key, the `gh` error,
   and each key not attempted, including the code review key.
-- When `gh pr review` fails, report the verdict and the `gh` error. The draft
-  PR stays open. A refresh in the same session posts the review for the same
-  commit.
+- When `gh pr review` fails, report the event, the verdict, and the `gh`
+  error. The draft PR stays open. A refresh in the same session posts the
+  review for the same commit. Its scope diff reads the head at that time,
+  so new commits set `head-changed`.
 - When the brief holds no round result, post no code review. Post (b)-(d),
   and report that no round result was in this session.
 
@@ -252,7 +295,8 @@ and a report, per [focused work rules](../../team/principles/focused-work.md).
 - For each `refused` entry, report that the comment for its key did not post,
   with the `reason`.
 - Give one code review outcome:
-  - Posted, with the verdict and the reviewed commit.
+  - Posted, with the event, the verdict, the reviewed commit, and the
+    reasons.
   - Skipped, as already posted for that commit.
   - Refused, with the reason.
   - Failed, with the `gh` error.
