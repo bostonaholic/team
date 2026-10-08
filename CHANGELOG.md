@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.156.0] - 2026-10-08
+
 ### Changed
 
 - **Codex bundled defaults now name model classes.** The `opus`, `sonnet`, and `haiku` tiers map to the Codex classes `astra`, `sol`, and `luna`, and Team sends the newest model in each class from the running host's catalog that supports the agent effort. A new or retired Codex model no longer needs a Team release. A class override in `.team/config.json` resolves the same way, and a concrete catalog ID still pins one version. The run report now shows the configured class beside the model ID Team sent. **What this asks of you:** if you want the models Team sent before, pin the concrete ID from your Codex catalog in `.team/config.json`.
@@ -1452,7 +1454,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.155.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.156.0...HEAD
+[0.156.0]: https://github.com/bostonaholic/team/compare/v0.155.0...v0.156.0
 [0.155.0]: https://github.com/bostonaholic/team/compare/v0.154.0...v0.155.0
 [0.154.0]: https://github.com/bostonaholic/team/compare/v0.153.0...v0.154.0
 [0.153.0]: https://github.com/bostonaholic/team/compare/v0.152.0...v0.153.0
