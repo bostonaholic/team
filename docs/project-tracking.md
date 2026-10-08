@@ -268,7 +268,7 @@ like this:
   by hand before you launch.
 - **Opening the PR** → the PR phase links the PR to the issue. This covers
   `/team-pr`, the `/team` PR gate, and `/team-fix` Ship. The link is
-  `Closes #<N>` as the final line of the PR body, so the issue closes on merge.
+  `Closes #<N>` as the first line of the PR body, so the issue closes on merge.
   In a multi-repo run, only the home repo's PR carries the closing keyword.
   Companion PRs carry a non-closing qualified reference, either
   `owner/repo#<N>` or the issue URL. The pipeline opens the PR as a **draft**.

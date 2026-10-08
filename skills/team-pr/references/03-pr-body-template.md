@@ -1,6 +1,8 @@
 ## PR Body Template
 
 ```
+Closes #<n>
+
 ## Summary
 [Observable change, effect, and reason in project terms]
 
@@ -24,8 +26,6 @@
 
 ## References
 - [Available, reviewer-accessible supporting references; omit unavailable artifacts]
-
-Closes #<n>
 ```
 
 ### Explain the change
@@ -94,17 +94,17 @@ no dependency item.
 
 **Timing.** Dependency URLs are unknown at creation time, exactly like
 `## Companion PRs`, so reuse that mechanism: open the PRs first, then edit each
-body to add the section once all URLs are known. A post-open `## Pre-merge`
-appended after the closing line is expected, not a violation. `## Pre-merge`
-comes before `## Companion PRs` in the final body.
+body to add the section once all URLs are known. `## Pre-merge` comes before
+`## Companion PRs` in the final body.
 
-The `Closes` line is a standalone footer, with no heading, rendered as the
-final line of the PR body. Three things live in `tracking.md` (this skill's
-tracking reference): if it renders at all (conditional on `ticketId`), how
-`ticketId` is interpreted, and the multi-repo home-only closing rule. When
-that reference says to omit the line, drop its preceding blank line with it,
-so the body ends at the last `## References` bullet with no trailing blank
-line.
+The `Closes` line is a standalone line, with no heading, rendered as the
+first line of the PR body, followed by one blank line and then `## Summary`.
+It stays first on every refresh and every post-open edit. Three things live
+in `tracking.md` (this skill's tracking reference): if it renders at all
+(conditional on `ticketId`), how `ticketId` is interpreted, and the
+multi-repo home-only closing rule. When that reference says to omit the
+line, drop its following blank line with it, so the body starts at
+`## Summary`.
 
 In multi-repo mode, append a `## Companion PRs` section to each PR. It
 lists the URLs of every other PR opened for the same topic, so a reviewer
@@ -118,9 +118,8 @@ This change spans multiple repos. The companion PRs are:
 ```
 
 Open the PRs first, then edit each PR's body to add the section once all URLs
-are known. This post-open edit appends the section *after* the closing line.
-"Final line of the PR body" refers to creation-time authoring, so the appended
-`## Companion PRs` section following it is expected, not a violation.
+are known. This post-open edit appends the section at the end of the body and
+leaves the closing line first.
 
 ### Screenshots section rendering
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The PR ticket link now leads the PR body.** `/team-pr`, the `/team` PR gate, and `/team-fix` Ship render `Closes #<n>` (or a companion PR's `Part of` reference) as the first line of the body, above `## Summary`, instead of the last, so reviewers see the linked ticket without scrolling. Body refreshes keep it first. **What this asks of you:** nothing.
+
 ## [0.154.0] - 2026-10-07
 
 ### Fixed

@@ -20,7 +20,7 @@
 4. **Ticket — link now, in-review when ready.** If `ticketId` is non-null in
    `1-task.md`'s frontmatter, read [tracking rules](../team-pr/references/tracking.md) and
    apply its ticket-lifecycle rules: link the PR to the ticket through the
-   conditional closing footer, keep the ticket in-progress while the PR is a
+   conditional closing line at the top of the body, keep the ticket in-progress while the PR is a
    draft and move it to in-review only once the PR is marked ready for
    review, and never close the ticket by hand. Best-effort. Never block.
    Surface the `ticketId` in the completion report.
