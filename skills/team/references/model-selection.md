@@ -19,7 +19,7 @@ Its entries replace individual bundled selections, not the whole map:
 ```json
 {
   "codex": {
-    "sonnet": { "model": "gpt-5.6-terra", "reasoning_effort": "medium" }
+    "sonnet": { "model": "terra", "reasoning_effort": "medium" }
   },
   "antigravity": {
     "sonnet": { "model": "flash" }
@@ -35,6 +35,11 @@ selects effort with the native model tier. Record that limitation, rather than
 claiming the agent's Claude effort was applied. Explicit `inherit` is permitted
 for Antigravity only; it deliberately chooses the parent model.
 
+A Codex `model` is a class name or a concrete catalog ID. A class name has only
+lowercase letters, such as `sol`. An exact catalog key always wins. Otherwise a
+class resolves to the newest catalog model in that class that supports the
+effort. A concrete catalog ID pins one version.
+
 Capture current capabilities from the host before the first dispatch, and again
 if its provider or model configuration changes. For Codex, use its exposed model
 catalog (CLI app-server `model/list` where available), including supported
@@ -46,8 +51,8 @@ cannot expose the required capabilities, stop this dispatch and report why.
 Prepare request JSON in the run's scratch directory. Read-only callers instead
 supply the JSON on stdin with `-`, using a quoted heredoc and no file write.
 `available` maps each
-currently available model ID to its supported efforts, or each Antigravity tier
-to `[]`. Example shape, with the catalog populated from the running host:
+currently available model ID, passed unchanged from the host catalog, to its
+supported efforts, or each Antigravity tier to `[]`. Example shape, with the catalog populated from the running host:
 
 ```json
 {
@@ -55,7 +60,7 @@ to `[]`. Example shape, with the catalog populated from the running host:
   "host": "codex",
   "tier": "opus",
   "effort": "high",
-  "available": { "gpt-6-astra": ["low", "medium", "high", "xhigh"] }
+  "available": { "<family>-<version>-astra": ["low", "medium", "high", "xhigh"] }
 }
 ```
 
@@ -82,8 +87,10 @@ a fresh dispatch.
 ## Report selection and resolution separately
 
 For each spawn, add a row to the run report (or the standalone command's final
-report): agent, host, requested tier, config source, sent model/effort arguments,
-child ID, observed model/effort, evidence location, and status.
+report): agent, host, requested tier, config source, configured model, sent
+model/effort arguments, child ID, observed model/effort, evidence location, and
+status. For Codex, the configured model is the class or pin, and the sent model
+is the catalog ID the resolver chose.
 
 Use host runtime metadata to fill observed values, never a child's self-report.
 Codex turn-context metadata records model and effort; Antigravity generation

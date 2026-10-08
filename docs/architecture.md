@@ -425,9 +425,9 @@ Three more balances bound the checks themselves:
 
 The principle:
 **complex work runs on `opus`. Bounded judgment runs on `sonnet`.
-Mechanical checks run on `haiku`.** `fable` (Fable 5) is the tier above
-`opus`: an agent runs there on a demonstrated, concrete need `opus`
-cannot meet. The tier is empty.
+Mechanical checks run on `haiku`.** `fable` is the tier above `opus`:
+an agent runs there on a demonstrated, concrete need `opus` cannot
+meet. The tier is empty.
 
 - **`opus` (complex work, the default):** `researcher`, `design-author`,
   `structure-planner`, `planner`, `test-architect`, `implementer`,
@@ -445,25 +445,25 @@ Notes:
 - **Overriding up to fable.** After the flip, `fable` is the override
   tier and `opus` is the shipped default, so a user without fable access
   needs no override at all. What the `fable` override requires of plugin
-  users: Claude Code ≥ v2.1.170 and Fable access. Fable 5 is not
-  available under zero data retention (30-day retention is necessary),
-  and on Bedrock/Vertex/Foundry `ANTHROPIC_DEFAULT_FABLE_MODEL` must be
-  pinned.
+  users: Claude Code ≥ v2.1.170 and Fable access. As of 2026-07-13,
+  Fable 5 is not available under zero data retention (30-day retention
+  is necessary), and on Bedrock/Vertex/Foundry
+  `ANTHROPIC_DEFAULT_FABLE_MODEL` must be pinned.
   - **The recommended mechanism is a per-agent file copy:** copy the
     agent file into the `.claude/agents/` directory of the session that
     runs it, with the one-line edit `model: fable`, one file per agent.
     **Never copy `security-reviewer`.** This is a named, load-bearing
     constraint on the recipe, and here is the fact behind it: Fable 5's
-    cybersecurity safety classifiers flag security-review content, and in
-    a non-interactive subagent context a flagged request ends the turn
-    with a refusal rather than a fallback, so the review dies mid-run.
-    `opus` is a floating alias — it resolves to Claude Code's current
-    Opus (Opus 5 today) — and riding the latest Opus rather than a dated
-    one is deliberate: the constraint is about Fable's classifiers, not
-    about freezing a specific Opus. Opus-tier models carry cybersecurity
-    safeguards of their own (far milder than Fable's), so if security
-    reviews ever start ending in refusals after an Opus upgrade,
-    overriding to the prior Opus is the escape hatch.
+    cybersecurity safety classifiers flag security-review content
+    (observed 2026-07-13), and in a non-interactive subagent context a
+    flagged request ends the turn with a refusal rather than a fallback,
+    so the review dies mid-run. `opus` is a floating alias — it resolves
+    to Claude Code's current Opus — and riding the latest Opus rather
+    than a dated one is deliberate: the constraint is about Fable's
+    classifiers, not about freezing a specific Opus. Opus-tier models
+    carry cybersecurity safeguards of their own (far milder than
+    Fable's), so if security reviews ever start ending in refusals after
+    an Opus upgrade, overriding to the prior Opus is the escape hatch.
   - **Placement is part of the recommendation.** An override takes
     effect only where the host looks for it, and a `/team` run has two
     candidate directories: the orchestrating session keeps its own
@@ -579,9 +579,9 @@ Notes:
     the evidential target, not proof on its own that the tier caused a
     difference — two opus failures alone prove the task is hard, not
     that the tier caused it.
-- **1M context window comes for free at the opus tier.** The current
-  Opus models (Opus 5, like 4.8 before it) always run with the 1M window
-  on the Anthropic API. Max, Team, and Enterprise plans include
+- **1M context window comes for free at the opus tier.** As of
+  2026-08-13, Opus 5, like Opus 4.8 before it, always runs with the 1M
+  window on the Anthropic API. Max, Team, and Enterprise plans include
   the 1M upgrade with the subscription, and Pro degrades gracefully to
   200K. These agents thus need no `[1m]` suffix. The sonnet agents stay
   at 200K, because their bounded single-pass work is nowhere near the

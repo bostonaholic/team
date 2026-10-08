@@ -115,7 +115,7 @@ dispatch ignores it.
 ```json
 {
   "codex": {
-    "sonnet": { "model": "gpt-5.6-terra", "reasoning_effort": "medium" }
+    "sonnet": { "model": "terra", "reasoning_effort": "medium" }
   },
   "antigravity": {
     "sonnet": { "model": "flash" }
@@ -125,6 +125,8 @@ dispatch ignores it.
 
 Only the `codex` and `antigravity` hosts, the `opus`/`sonnet`/`haiku` tiers, and
 the `model` (required) and `reasoning_effort` (Codex only) fields are accepted.
+A Codex `model` can name a class such as `sol`, which resolves to the newest
+model in that class, or a concrete catalog ID, which pins one version.
 Overrides replace individual bundled selections. Team validates each selection
 against the running host's capabilities and fails on an unknown, unavailable, or
 unsupported value rather than falling back to a default. See

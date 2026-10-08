@@ -137,11 +137,11 @@ The [installed procedure](../skills/team/references/model-selection.md) and
 [resolver](../skills/team/references/resolve-model.mjs) define the config and
 validation contract. [Bundled selections](../skills/team/references/model-defaults.json):
 
-| Agent `model:` | Codex model ID | Antigravity invocation tier |
+| Agent `model:` | Codex model class | Antigravity invocation tier |
 | --- | --- | --- |
-| `opus` | `gpt-6-astra` | `pro` |
-| `sonnet` | `gpt-5.6-sol` | `flash` |
-| `haiku` | `gpt-5.6-luna` | `flash_lite` |
+| `opus` | `astra` | `pro` |
+| `sonnet` | `sol` | `flash` |
+| `haiku` | `luna` | `flash_lite` |
 
 Codex preserves each agent's effort unless an override specifies
 `reasoning_effort`. Antigravity's invocation tier selects its effort; there is
@@ -151,14 +151,16 @@ replaces individual selections, for example:
 ```json
 {
   "codex": {
-    "sonnet": { "model": "gpt-5.6-terra", "reasoning_effort": "medium" }
+    "sonnet": { "model": "terra", "reasoning_effort": "medium" }
   }
 }
 ```
 
 The resolver rejects unknown config fields, unavailable selections, and
-unsupported Codex effort using capability data from the running host. It does
-not query a provider or spawn an agent. The orchestrator supplies that data and
+unsupported Codex effort using capability data from the running host. It turns
+a Codex class into the newest catalog ID in that class that supports the effort,
+and a concrete catalog ID pins one version. It does not query a provider or
+spawn an agent. The orchestrator supplies that data and
 applies the returned arguments. Missing overrides use bundled selections;
 invalid overrides fail. Claude named-agent dispatch never reads this config.
 The `.team/` ignore entry reserves local overrides; pipeline state still lives
