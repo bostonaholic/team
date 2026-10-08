@@ -63,7 +63,7 @@
 9. **Tracking ticket — link now, in-review when ready.** If `ticketId` is
    non-null, read [tracking rules](tracking.md) and apply its
    ticket-lifecycle rules. Render the ticket link as the closing line that
-   the PR Body Template below ends with. Best-effort. Never block the
+   the PR Body Template below starts with. Best-effort. Never block the
    pipeline.
 10. **Whenever you push to a PR, review and adjust its description.** This
    applies to any push that adds, removes, or changes commits on a PR's
@@ -87,7 +87,8 @@
    degraded note the rendering rules define. A screenshot problem never
    blocks or delays the push. When the body carries a closing line (the
    home repo's PR of a ticketed topic), each refresh re-emits **exactly
-   one** closing line in footer position — never duplicated, never dropped.
+   one** closing line as the body's first line — never duplicated, never
+   dropped, never moved.
    A companion PR re-emits its non-closing reference the same way, and a PR
    with no ticket has no closing line to re-emit. The post-open
    `## Companion PRs` section is likewise preserved on every refresh. After

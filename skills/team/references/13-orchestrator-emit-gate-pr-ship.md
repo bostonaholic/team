@@ -20,7 +20,7 @@ When the aggregate gate passes:
 5. **Ticket — link now, in-review when ready.** If `1-task.md` frontmatter
    has `ticketId` set, read [tracking rules](../team-pr/references/tracking.md) and apply
    its ticket-lifecycle rules. Link the PR to the ticket through the
-   conditional closing footer (in multi-repo mode the home repo's PR
+   conditional closing line at the top of the body (in multi-repo mode the home repo's PR
    alone carries the closing keyword. Companions get a non-closing
    qualified reference). Keep the ticket in-progress while the PR is a
    draft. Move it to in-review only once the PR is marked ready for review.

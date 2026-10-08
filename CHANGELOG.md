@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.155.0] - 2026-10-08
+
+### Changed
+
+- **The PR ticket link now leads the PR body.** `/team-pr`, the `/team` PR gate, and `/team-fix` Ship render `Closes #<n>` (or a companion PR's `Part of` reference) as the first line of the body, above `## Summary`, instead of the last, so reviewers see the linked ticket without scrolling. Body refreshes keep it first. **What this asks of you:** nothing.
+
 ## [0.154.0] - 2026-10-07
 
 ### Fixed
@@ -1442,7 +1448,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.154.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.155.0...HEAD
+[0.155.0]: https://github.com/bostonaholic/team/compare/v0.154.0...v0.155.0
 [0.154.0]: https://github.com/bostonaholic/team/compare/v0.153.0...v0.154.0
 [0.153.0]: https://github.com/bostonaholic/team/compare/v0.152.0...v0.153.0
 [0.152.0]: https://github.com/bostonaholic/team/compare/v0.151.0...v0.152.0
