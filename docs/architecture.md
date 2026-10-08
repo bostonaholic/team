@@ -70,8 +70,8 @@ review, is a *code* checkpoint, and it happens **after** the run has
 already executed. Local Bash execution (implementer, verifier),
 branch creation, pushes to remotes, and any multi-repo worktree effects
 all occur before a human sees the PR. The PR review contains the diff,
-the design's recorded assumptions, and the deferred findings in the
-`review-notes` comment. It
+the design's recorded assumptions, and the deferred findings in Team's
+code review on the PR. It
 does **not** contain the run's local side effects. The pipeline also
 assumes that repository content the researcher reads is trusted: a repo
 that accepts untrusted contributions feeds untrusted text into agent
@@ -296,8 +296,8 @@ No gate. The plan is mechanically derived from the structure.
    fix the typed failure class. It then re-runs all 5 reviewers
    automatically. It never consults the user. This is the *no-consult
    rule*. Once Blocking and Major are clean, any remaining Minor-and-below
-   findings are recorded in the PR's `review-notes` comment for the
-   human's PR review.
+   findings and the verdict go into the PR's code review for the human's
+   PR review.
 
 The orchestrator tracks the round count by appending
 `Review round <n+1> (<b> Blocking, <m> Major open)` items to the
@@ -338,7 +338,9 @@ ux-reviewer brief before rendering the section.
 When `docs/plans/<id>/cross-model-notes.md` exists, team-pr posts its
 blocks as PR review comments
 (`skills/team-pr/references/07-review-comments.md`), replacing the final
-round's inline disposition block so every round appears exactly once. The worktree stays in place
+round's inline disposition block so every round appears exactly once.
+team-pr also posts Team's code review as a PR review, one per reviewed
+commit, with the verdict and the final round's findings. The worktree stays in place
 after the PR opens. Teardown is deferred until the PR merges or the user
 asks, so the branch remains available for iteration. The final report tells the user how to mark the PR ready for review and move its ticket.
 

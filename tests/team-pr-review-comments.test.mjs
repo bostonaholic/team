@@ -64,6 +64,25 @@ function assertEveryNotesLineOnce(notesBody, bodies) {
   }
 }
 
+// Code review inputs. The PR author differs from the viewer, so no self-authored
+// downgrade applies unless a test sets the author.
+const VIEWER_JSON = '{"login":"mboston"}\n';
+const NO_REVIEWS = JSON.stringify({ author: { login: "pr-opener" }, comments: [], reviews: [] });
+const DESIGN_FINDINGS = "- [design-reviewer, round 2] COMMENT: state the retry budget default in the README.\n";
+const REVIEW_FINDINGS = "- [code-reviewer] Minor: rename retryCount to retryBudget in uploader.mjs:42.\n";
+
+// Builds the code review flags. Each text option is the file's content; a *Path
+// option points the flag at a path the test prepared, such as an absent file.
+function reviewFlags(root, { verdict, reviewed, viewer = VIEWER_JSON, reviewFindings = REVIEW_FINDINGS, sinceReview = "", reviewFindingsPath, sinceReviewPath }) {
+  return [
+    "--verdict", verdict,
+    "--reviewed", reviewed,
+    "--viewer", writeInput(root, "viewer.json", viewer),
+    "--review-findings", reviewFindingsPath ?? writeInput(root, "review-findings.md", reviewFindings),
+    "--since-review", sinceReviewPath ?? writeInput(root, "since-review.txt", sinceReview),
+  ];
+}
+
 // ---------------------------------------------------------------------------
 // Slice 1: Review notes post as one PR comment
 // ---------------------------------------------------------------------------
@@ -595,5 +614,490 @@ test("invalid notes, output directory, or arguments exit 2 and write nothing", a
     assert.match(run.stderr, /^review-comments\.mjs: /);
     assert.equal(run.stdout, "");
     assert.deepEqual(readdirSync(out), []);
+  });
+
+  // Slice 5: the code review flags.
+  await t.test("a --verdict of APPROVE", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const run = runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "APPROVE", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]);
+
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /^review-comments\.mjs: /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readdirSync(out), []);
+  });
+
+  await t.test("a --reviewed in uppercase", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const run = runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3F1C9A7E5B2D4C6A8E0F1B3D5C7A9E2F4B6D8C0A" }),
+    ]);
+
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /^review-comments\.mjs: /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readdirSync(out), []);
+  });
+
+  await t.test("a --reviewed of 39 characters", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const run = runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0" }),
+    ]);
+
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /^review-comments\.mjs: /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readdirSync(out), []);
+  });
+
+  await t.test("--verdict without --reviewed", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const run = runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      "--verdict", "comment",
+      "--viewer", writeInput(root, "viewer.json", VIEWER_JSON),
+      "--review-findings", writeInput(root, "review-findings.md", REVIEW_FINDINGS),
+      "--since-review", writeInput(root, "since-review.txt", ""),
+    ]);
+
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /^review-comments\.mjs: /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readdirSync(out), []);
+  });
+
+  await t.test("--verdict without --viewer", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const run = runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      "--verdict", "comment",
+      "--reviewed", "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a",
+      "--review-findings", writeInput(root, "review-findings.md", REVIEW_FINDINGS),
+      "--since-review", writeInput(root, "since-review.txt", ""),
+    ]);
+
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /^review-comments\.mjs: /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readdirSync(out), []);
+  });
+
+  await t.test("--verdict without --review-findings", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const run = runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      "--verdict", "comment",
+      "--reviewed", "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a",
+      "--viewer", writeInput(root, "viewer.json", VIEWER_JSON),
+      "--since-review", writeInput(root, "since-review.txt", ""),
+    ]);
+
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /^review-comments\.mjs: /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readdirSync(out), []);
+  });
+
+  await t.test("--reviewed without --verdict", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const run = runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      "--reviewed", "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a",
+    ]);
+
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /^review-comments\.mjs: /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readdirSync(out), []);
+  });
+
+  await t.test("--viewer without --verdict", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const run = runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      "--viewer", writeInput(root, "viewer.json", VIEWER_JSON),
+    ]);
+
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /^review-comments\.mjs: /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readdirSync(out), []);
+  });
+
+  await t.test("--review-findings without --verdict", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const run = runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      "--review-findings", writeInput(root, "review-findings.md", REVIEW_FINDINGS),
+    ]);
+
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /^review-comments\.mjs: /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readdirSync(out), []);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Slice 5: The PR carries Team's code review once per reviewed commit
+// ---------------------------------------------------------------------------
+
+// The verdict and commit lines are pinned here; the script holds them as named constants (8-plan.md).
+test("a verdict run posts the code review after the comments with its verdict, commit, and findings", async (t) => {
+  await t.test("a comment verdict on a 40-hex commit with two findings", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const reviewFindings = `- [code-reviewer] Minor: rename retryCount to retryBudget in uploader.mjs:42.
+- [security-reviewer] LOW: the retry log line prints the upload URL with its query string.
+`;
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", reviewFindings }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes", "code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.equal(manifest.post[1].verdict, "comment");
+    const bodies = postedBodies(manifest);
+    const review = bodies["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"];
+    assert.ok(
+      review.startsWith("<!-- team:pr-review code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a -->\n\n**Verdict: COMMENT**\nReviewed commit: `3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a`\n"),
+      `the review does not open with its marker, verdict line, and commit line:\n${review}`,
+    );
+    assert.ok(review.endsWith(`\n\n${reviewFindings}`), `the review does not end with the findings verbatim:\n${review}`);
+    assertEveryNotesLineOnce(reviewFindings, bodies);
+    assert.ok(!bodies["review-notes"].includes("rename retryCount to retryBudget"), `a code review finding landed in review-notes:\n${bodies["review-notes"]}`);
+    assert.ok(!bodies["review-notes"].includes("prints the upload URL"), `a code review finding landed in review-notes:\n${bodies["review-notes"]}`);
+  });
+
+  await t.test("a request-changes verdict on a 64-hex commit", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const reviewFindings = `- [code-reviewer] Blocking: the upload retry loop never stops after five failures in uploader.mjs:57.
+- [verifier] Major: no test covers the retry budget in tests/uploader.test.mjs.
+`;
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "request-changes", reviewed: "9b4e2d7c1a6f3e8b5d0c2a7f4e9b1d6c3a8f5e2b7d4c9a1f6e3b8d5c0a2f7e4b", reviewFindings }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), [
+      "review-notes",
+      "code-review-9b4e2d7c1a6f3e8b5d0c2a7f4e9b1d6c3a8f5e2b7d4c9a1f6e3b8d5c0a2f7e4b",
+    ]);
+    assert.equal(manifest.post[1].verdict, "request-changes");
+    const bodies = postedBodies(manifest);
+    const review = bodies["code-review-9b4e2d7c1a6f3e8b5d0c2a7f4e9b1d6c3a8f5e2b7d4c9a1f6e3b8d5c0a2f7e4b"];
+    assert.ok(
+      review.startsWith(
+        "<!-- team:pr-review code-review-9b4e2d7c1a6f3e8b5d0c2a7f4e9b1d6c3a8f5e2b7d4c9a1f6e3b8d5c0a2f7e4b -->\n\n**Verdict: REQUEST CHANGES**\nReviewed commit: `9b4e2d7c1a6f3e8b5d0c2a7f4e9b1d6c3a8f5e2b7d4c9a1f6e3b8d5c0a2f7e4b`\n",
+      ),
+      `the review does not open with its marker, verdict line, and commit line:\n${review}`,
+    );
+    assert.ok(review.endsWith(`\n\n${reviewFindings}`), `the review does not end with the findings verbatim:\n${review}`);
+    assertEveryNotesLineOnce(reviewFindings, bodies);
+    assert.ok(!bodies["review-notes"].includes("never stops after five failures"), `a code review finding landed in review-notes:\n${bodies["review-notes"]}`);
+    assert.ok(!bodies["review-notes"].includes("no test covers the retry budget"), `a code review finding landed in review-notes:\n${bodies["review-notes"]}`);
+  });
+
+  await t.test("a whitespace-only review-findings file says No findings.", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "approve", reviewed: "c0ffee1234567890abcdef0123456789abcdef01", reviewFindings: "  \n\n\t\n" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes", "code-review-c0ffee1234567890abcdef0123456789abcdef01"]);
+    assert.equal(manifest.post[1].verdict, "approve");
+    const review = postedBodies(manifest)["code-review-c0ffee1234567890abcdef0123456789abcdef01"];
+    assert.ok(
+      review.startsWith("<!-- team:pr-review code-review-c0ffee1234567890abcdef0123456789abcdef01 -->\n\n**Verdict: APPROVE**\nReviewed commit: `c0ffee1234567890abcdef0123456789abcdef01`\n"),
+      `the review does not open with its marker, verdict line, and commit line:\n${review}`,
+    );
+    assert.ok(review.endsWith("\n\nNo findings.\n"), `the review does not end with "No findings.":\n${review}`);
+  });
+});
+
+// A comment-verdict review with no reasons is this head, the findings, and one newline.
+const SIZE_REVIEW_HEAD =
+  "<!-- team:pr-review code-review-5e8d1a4c7b0f3e6d9c2b5a8f1e4d7c0b3a6f9e2d -->\n\n**Verdict: COMMENT**\nReviewed commit: `5e8d1a4c7b0f3e6d9c2b5a8f1e4d7c0b3a6f9e2d`\n\n";
+const reviewFindingsForBody = (characters) => `- ${"x".repeat(characters - SIZE_REVIEW_HEAD.length - "- ".length - "\n".length)}\n`;
+const REVIEW_MARKER = "<!-- team:pr-review code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a -->";
+
+test("the code review posts, skips, or is refused while the comments always post", async (t) => {
+  await t.test("an empty reviews array posts", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes", "code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+  });
+
+  await t.test("a marker review from another login posts", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const existing = JSON.stringify({ author: { login: "pr-opener" }, comments: [], reviews: [
+      { author: { login: "someone-else" }, body: `${REVIEW_MARKER}\n\n**Verdict: COMMENT**\n`, state: "COMMENTED", submittedAt: "2026-10-08T12:00:00Z" },
+    ] });
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", existing),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes", "code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.deepEqual(manifest.skip, []);
+  });
+
+  await t.test("a viewer review for another commit posts", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const existing = JSON.stringify({ author: { login: "pr-opener" }, comments: [], reviews: [
+      { author: { login: "mboston" }, body: "<!-- team:pr-review code-review-c0ffee1234567890abcdef0123456789abcdef01 -->\n\n**Verdict: COMMENT**\n", state: "COMMENTED", submittedAt: "2026-10-08T12:00:00Z" },
+    ] });
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", existing),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes", "code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.deepEqual(manifest.skip, []);
+  });
+
+  await t.test("a viewer review with the marker on line 2 posts", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const existing = JSON.stringify({ author: { login: "pr-opener" }, comments: [], reviews: [
+      { author: { login: "mboston" }, body: `Quoting the old marker:\n${REVIEW_MARKER}\n`, state: "COMMENTED", submittedAt: "2026-10-08T12:00:00Z" },
+    ] });
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", existing),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes", "code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.deepEqual(manifest.skip, []);
+  });
+
+  await t.test("a marker review with a null author posts", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const existing = JSON.stringify({ author: { login: "pr-opener" }, comments: [], reviews: [
+      { author: null, body: `${REVIEW_MARKER}\n\n**Verdict: COMMENT**\n`, state: "COMMENTED", submittedAt: "2026-10-08T12:00:00Z" },
+    ] });
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", existing),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes", "code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.deepEqual(manifest.skip, []);
+  });
+
+  await t.test("a viewer review with a non-string body posts", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const existing = JSON.stringify({ author: { login: "pr-opener" }, comments: [], reviews: [
+      { author: { login: "mboston" }, body: null, state: "COMMENTED", submittedAt: "2026-10-08T12:00:00Z" },
+    ] });
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", existing),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes", "code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.deepEqual(manifest.skip, []);
+  });
+
+  await t.test("a review body of exactly 65536 characters posts", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "5e8d1a4c7b0f3e6d9c2b5a8f1e4d7c0b3a6f9e2d", reviewFindings: reviewFindingsForBody(65536) }),
+    ]));
+
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes", "code-review-5e8d1a4c7b0f3e6d9c2b5a8f1e4d7c0b3a6f9e2d"]);
+    assert.equal(manifest.post[1].characters, 65536);
+    assert.deepEqual(manifest.refused, []);
+  });
+
+  await t.test("a viewer review whose line 1 is the marker skips", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const existing = JSON.stringify({ author: { login: "pr-opener" }, comments: [], reviews: [
+      { author: { login: "mboston" }, body: `${REVIEW_MARKER}\n\n**Verdict: COMMENT**\n`, state: "COMMENTED", submittedAt: "2026-10-08T12:00:00Z" },
+    ] });
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", existing),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]));
+
+    assert.deepEqual(manifest.skip, [{ key: "code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }]);
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes"]);
+  });
+
+  await t.test("a viewer marker line ending in \\r skips", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const existing = JSON.stringify({ author: { login: "pr-opener" }, comments: [], reviews: [
+      { author: { login: "mboston" }, body: `${REVIEW_MARKER}\r\n\r\n**Verdict: COMMENT**\r\n`, state: "COMMENTED", submittedAt: "2026-10-08T12:00:00Z" },
+    ] });
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", existing),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]));
+
+    assert.deepEqual(manifest.skip, [{ key: "code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }]);
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes"]);
+  });
+
+  await t.test("a dismissed viewer review skips", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const existing = JSON.stringify({ author: { login: "pr-opener" }, comments: [], reviews: [
+      { author: { login: "mboston" }, body: `${REVIEW_MARKER}\n\n**Verdict: COMMENT**\n`, state: "DISMISSED", submittedAt: "2026-10-08T12:00:00Z" },
+    ] });
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", existing),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]));
+
+    assert.deepEqual(manifest.skip, [{ key: "code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }]);
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes"]);
+  });
+
+  await t.test("an --existing with no reviews array refuses the review", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const existing = JSON.stringify({ author: { login: "pr-opener" }, comments: [] });
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", existing),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a" }),
+    ]));
+
+    assert.deepEqual(manifest.refused.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes"]);
+  });
+
+  await t.test("a viewer file without a string login refuses the review", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", viewer: '{"id":583231}\n' }),
+    ]));
+
+    assert.deepEqual(manifest.refused.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes"]);
+  });
+
+  await t.test("an absent review-findings file refuses the review", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", reviewFindingsPath: join(root, "absent-review-findings.md") }),
+    ]));
+
+    assert.deepEqual(manifest.refused.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes"]);
+  });
+
+  await t.test("a review-findings path that is a directory refuses the review", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const reviewFindingsPath = join(root, "review-findings-dir");
+    mkdirSync(reviewFindingsPath);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a", reviewFindingsPath }),
+    ]));
+
+    assert.deepEqual(manifest.refused.map((entry) => entry.key), ["code-review-3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e2f4b6d8c0a"]);
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes"]);
+  });
+
+  await t.test("a review body of 65537 characters refuses the review", (t) => {
+    const root = scratch(t);
+    const out = emptyOut(root);
+    const manifest = manifestOf(runScript([
+      "--out", out,
+      "--existing", writeInput(root, "existing.json", NO_REVIEWS),
+      "--findings", writeInput(root, "findings.md", DESIGN_FINDINGS),
+      ...reviewFlags(root, { verdict: "comment", reviewed: "5e8d1a4c7b0f3e6d9c2b5a8f1e4d7c0b3a6f9e2d", reviewFindings: reviewFindingsForBody(65537) }),
+    ]));
+
+    assert.deepEqual(manifest.refused.map((entry) => entry.key), ["code-review-5e8d1a4c7b0f3e6d9c2b5a8f1e4d7c0b3a6f9e2d"]);
+    assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes"]);
   });
 });

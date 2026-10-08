@@ -9,7 +9,14 @@ returned:
 1. Collect all verdicts from the most recent round. Sort every finding into
    a severity tier: **Blocking**, **Major**, or **Minor and below**. Use
    the authoritative table under "Severity Tiers and the Auto-Fix
-   Boundary": read the [finding format](references/findings.md).
+   Boundary": read the [finding format](references/findings.md). At each
+   tier sort, record one round result in the session and replace the
+   previous one. It holds four values: the artifact `<id>`, the reviewed
+   commit (the pre-dispatch `git rev-parse HEAD`), the verdict
+   (`request-changes` when a Blocking or Major finding is open, else the
+   code-reviewer's token in lowercase), and the findings, tagged by source
+   reviewer and tier, Blocking first, without the
+   `### Cross-model disposition` section.
 2. Persist the cross-model record. Every code-reviewer report carries a
    `### Cross-model disposition` section, so read what it says rather than
    whether it is there: a section reading `Not run:` records no pass and
@@ -36,8 +43,8 @@ returned:
    5 reviewers re-run from scratch. **Never** stop to consult the user while a
    Blocking or Major finding is open — loop automatically (the no-consult
    rule).
-5. Once Blocking and Major are clean → record any **Minor-and-below**
-   findings for the PR's `review-notes` comment, tagged by source
+5. Once Blocking and Major are clean → the round result carries any
+   **Minor-and-below** findings to the PR's code review, tagged by source
    reviewer. Never present them mid-run, and advance to PR
    **in the same turn**. Do not summarize and end the turn. The run is
    complete only when the draft PR URL is reported.
@@ -50,7 +57,9 @@ there re-derive the current finding set, which the loop then fixes, at the
 cost of one round. The round counter is session-scoped through TodoWrite and
 starts fresh on re-invocation. A re-invoked session seeds no `PR` phase item,
 so `/team-implement` reads as standalone and names `/team-pr` as the next
-command. Run it to reach the draft PR.
+command. Run it to reach the draft PR. After an operator stop, the loop does
+not resume from the open findings, but the session's round result still
+names them, so a same-session `/team-pr` posts them in the code review.
 
 **The loop is: IMPLEMENT → VERIFY (5 reviewers) → typed gate check →
 IMPLEMENT → VERIFY → ...** Each round is a complete re-review.

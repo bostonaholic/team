@@ -225,7 +225,7 @@ decoration — a blocking-regime hit reads
 - **REQUEST CHANGES:** At least one Broken item. Treated as a *major* —
   auto-fixed in the loop, not surfaced to the user.
 - **COMMENT:** Could-Improve notes only (minor-and-below — recorded in the
-  PR's `review-notes` comment, never presented mid-run).
+  PR's code review, never presented mid-run).
 
 ### Technical Writer
 

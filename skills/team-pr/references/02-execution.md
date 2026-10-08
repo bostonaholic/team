@@ -93,7 +93,8 @@
    with no ticket has no closing line to re-emit. The post-open
    `## Companion PRs` section is likewise preserved on every refresh. After
    each push to the home PR, run [review comments](07-review-comments.md)
-   again, so a comment that failed to post earlier posts now. When the
+   again, so a comment or the code review that failed to post earlier posts
+   now. When the
    current body has a line exactly `## Review notes`, the PR predates that
    step: carry the section through verbatim, and skip the step. Never
    leave a stale description after a push. In multi-repo mode, do this for
@@ -125,7 +126,7 @@ worktree path, the base branch, and the scratch directory.
 | Changelog | [Changelog Update](05-changelog-update.md) | `CHANGELOG.md` only; no commit | the added bullets, or the absent-file skip |
 | Body | `pr-inputs.md`; the manifest; the Changelog return; the [PR Body Template](03-pr-body-template.md); the [writing standards](../team/references/writing.md) | writes only `<scratch>/pr-body.md` | the `pr-body.md` path and the title |
 | Upload | the PR URL; the manifest; [Screenshot Upload](04-screenshot-upload.md) | the PR body's `## Screenshots` section | uploaded asset count, or the degraded-note reason |
-| Review comments | the PR URL; [Review Comments](07-review-comments.md) | PR comments only | posted, skipped, and failed comment counts |
+| Review comments | the PR URL; [Review Comments](07-review-comments.md); when the session's round result `<id>` equals this PR phase's `<id>`, the reviewed commit, the verdict, and the findings, else the reason none is carried | PR comments and the code review only | posted, skipped, and failed comment counts, and the code review outcome |
 
 Dispatch Inputs, Screenshots, and Changelog together. Body starts after
 all three return. Open the PR inline from `pr-body.md`. Then

@@ -55,6 +55,18 @@
 6. **Aggregate gate** — sort every finding into **Blocking**, **Major**, or
    **Minor and below** per the table under "Severity Tiers and the Auto-Fix
    Boundary" in the [finding format](../team/references/findings.md).
+   At each tier sort, record one round result and replace the previous one.
+   It holds four values:
+   - The artifact `<id>`.
+   - The reviewed commit: step 5's pre-dispatch `git rev-parse HEAD`.
+   - The verdict: `request-changes` when a Blocking or Major finding is
+     open, else the code-reviewer's word token in lowercase, `approve` or
+     `comment`.
+   - The findings, tagged by source reviewer and tier, Blocking first,
+     without the `### Cross-model disposition` section.
+
+   Hold the round result in the session only. The PR phase posts it as
+   Team's code review.
 7. **Persist the cross-model record.** Every code-reviewer report carries
    a `### Cross-model disposition` section, so read what it says rather
    than whether it is there: a section reading `Not run:` appends nothing.
@@ -91,9 +103,9 @@
    is session-scoped (TodoWrite) and starts fresh on re-invocation. The
    re-invoked session's ledger carries no `PR` phase item, so step 9 takes
    the standalone branch and names `/team-pr`.
-9. **Once Blocking and Major are clean:** record any **Minor-and-below**
-   findings for the PR's `review-notes` comment, tagged by source
-   reviewer — never present them mid-run. Then present all review verdicts
+9. **Once Blocking and Major are clean:** the round result carries any
+   **Minor-and-below** findings to the PR's code review — never present
+   them mid-run. Then present all review verdicts
    and:
    - **Full pipeline** (the TodoWrite ledger carries a `PR` phase item —
      `/team` seeded it): do **not** end the turn. Proceed directly to the

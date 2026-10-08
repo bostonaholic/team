@@ -2,22 +2,25 @@
 
 The findings deferred to the human's PR review go to comments on the home PR,
 never to the PR body. The cross-model dispositions in
-`docs/plans/<id>/cross-model-notes.md` go there too.
+`docs/plans/<id>/cross-model-notes.md` go there too. Team's code review posts
+as a pull-request review on the home PR.
 [`review-comments.mjs`](../scripts/review-comments.mjs) builds each comment
-body. The agent runs every `gh` call.
+body and the code review body. The agent runs every `gh` call.
 
 ### Sources
 
-**The governing rule: every round appears across the PR comments exactly
-once, never twice.** That rule decides where a `### Cross-model disposition`
-finding goes. When `docs/plans/<id>/cross-model-notes.md` exists, the notes
+**The governing rule: each finding appears once across the PR comments and
+the code review, never twice.** That rule decides where a
+`### Cross-model disposition` finding goes. When `docs/plans/<id>/cross-model-notes.md` exists, the notes
 file is the single carrier of those findings. Sources (a) and (b) each exclude
 any finding under the `### Cross-model disposition` heading.
 
-- (a) Every Minor-and-below finding from the final aggregate review round,
-  tagged by source reviewer, such as `[code-reviewer]` or
-  `[security-reviewer]`. Apply the exclusion to the final round's inline
-  disposition block.
+- (a) The brief's round result: the verdict, the reviewed commit, and every
+  finding from the final aggregate review round. Each finding is tagged by
+  source reviewer and tier, such as `[code-reviewer] Minor:` or
+  `[security-reviewer] LOW:`, Blocking first. Apply the exclusion to the
+  final round's inline disposition block. (a) goes only to the code review
+  body, never to a comment.
 - (b) COMMENT findings from the latest `design-review-<n>.md`, tagged
   `design-review-<n>`. Apply the exclusion the same way.
 - (c) The loud unresolved-repo omission note from `6-design.md` `## Risks`, or
@@ -32,8 +35,8 @@ it a second time.
 
 ### When to skip the step
 
-- When (a)-(c) are empty and no notes file exists, skip the step. Make no `gh`
-  call.
+- When (b)-(c) are empty, no notes file exists, and the brief holds no round
+  result, skip the step. Make no `gh` call.
 - In standalone mode, skip the step. No artifact directory and no aggregate
   gate exist.
 - When the PR body has a line exactly `## Review notes`, skip the step. That
@@ -45,42 +48,94 @@ it a second time.
 ### Sequence
 
 Resolve `<team-pr-skill-dir>` to the absolute directory containing
-`skills/team-pr/SKILL.md`. Bind `$PR_URL` to the home PR URL. Then run these
-steps in order:
+`skills/team-pr/SKILL.md`. Bind `$PR_URL` to the home PR URL. The review
+flags are `--verdict`, `--reviewed`, `--viewer`, and `--review-findings`.
+They go to the script only when the brief holds a round result, step 1
+passes, and both lookups in step 2 succeed. Shell state does not persist
+between calls. At the start of each call after step 2, bind `$PR_URL`, and
+bind `$RUN_DIR` and `$OUT_DIR` from the line that step 2 prints. Then run
+these steps in order:
 
-1. Create two temporary directories:
+1. When the brief holds a round result, validate its verdict and reviewed
+   commit before they reach any command. Fill in both values literally:
 
    ```sh
-   RUN_DIR="$(mktemp -d)"; OUT_DIR="$(mktemp -d)"
+   export LC_ALL=C
+   VERDICT='<verdict>'; REVIEWED_SHA='<reviewed commit>'
+   case "$VERDICT" in approve|comment|request-changes) ;; *) exit 1 ;; esac
+   case "$REVIEWED_SHA" in ''|*[!0-9a-f]*) exit 1 ;; esac
+   case "${#REVIEWED_SHA}" in 40|64) ;; *) exit 1 ;; esac
    ```
 
-2. Write (a)-(c) to `$RUN_DIR/findings.md` with the Write tool, one tagged
+   Exit 1 refuses the values, per the
+   [external data rules](../../team/references/external-data.md). Never
+   normalize a value to make it pass. On a refusal, drop the review flags,
+   skip the review lookups in step 2, and report the refused value.
+2. Create two temporary directories. In the same call, resolve the PR host
+   and save the viewer's login:
+
+   ```sh
+   PR_URL='<home PR URL>'
+   RUN_DIR="$(mktemp -d)"; OUT_DIR="$(mktemp -d)"
+   printf 'RUN_DIR=%s\nOUT_DIR=%s\n' "$RUN_DIR" "$OUT_DIR"
+   '<team-pr-skill-dir>/scripts/resolve-pr.sh' "$PR_URL" "$RUN_DIR" || exit 1
+   PR_HOST="$(cat "$RUN_DIR/pr-host")"
+   gh api --hostname "$PR_HOST" user > "$RUN_DIR/viewer.json"
+   ```
+
+   Without review flags, run only the first three lines. A nonzero exit
+   from `resolve-pr.sh` or `gh api` takes the failure rules below.
+3. Write (b)-(c) to `$RUN_DIR/findings.md` with the Write tool, one tagged
    finding per line. Never write it with a heredoc or a shell argument. The
    findings are reviewer text, so pass them by file only, per the
-   [external data rules](../../team/references/external-data.md). When (a)-(c)
-   are empty, write no findings file.
-3. Read the existing PR comments:
+   [external data rules](../../team/references/external-data.md). When (b)-(c)
+   are empty, write no findings file. With review flags, also write the round
+   result's findings to `$RUN_DIR/review-findings.md` with the Write tool,
+   one tagged finding per line, Blocking first. For a round with no
+   findings, write an empty file. The script refuses the review when this
+   file is absent.
+4. Read the existing PR comments and reviews:
 
    ```sh
-   gh pr view "$PR_URL" --json comments > "$RUN_DIR/existing.json"
+   gh pr view "$PR_URL" --json author,comments,reviews > "$RUN_DIR/existing.json"
    ```
 
-4. Build the comment bodies:
+5. Build the bodies. With review flags, bind the step 1 values again and
+   repeat its checks in this call:
 
    ```sh
+   export LC_ALL=C
+   VERDICT='<verdict>'; REVIEWED_SHA='<reviewed commit>'
+   case "$VERDICT" in approve|comment|request-changes) ;; *) exit 1 ;; esac
+   case "$REVIEWED_SHA" in ''|*[!0-9a-f]*) exit 1 ;; esac
+   case "${#REVIEWED_SHA}" in 40|64) ;; *) exit 1 ;; esac
    node "<team-pr-skill-dir>/scripts/review-comments.mjs" --out "$OUT_DIR" \
      --existing "$RUN_DIR/existing.json" --findings "$RUN_DIR/findings.md" \
-     --notes "docs/plans/<id>/cross-model-notes.md"
+     --notes "docs/plans/<id>/cross-model-notes.md" \
+     --verdict "$VERDICT" --reviewed "$REVIEWED_SHA" \
+     --viewer "$RUN_DIR/viewer.json" \
+     --review-findings "$RUN_DIR/review-findings.md"
    ```
 
+   Without review flags, run only the `node` command, and end it after
+   `--notes`.
+
    The script prints one JSON object, `{post, skip, refused}`. A `post` entry
-   has `key`, `file`, and `characters`. A `skip` entry has `key`. A `refused`
-   entry has `key` and `reason`. The script writes one file for each `post`
-   entry and no other file.
-5. Post each `post` entry in manifest order:
+   has `key`, `file`, and `characters`. The code review's `post` entry has
+   the key `code-review-<sha>` and also has `verdict`. It is the last `post`
+   entry. A `skip` entry has `key`. A `refused` entry has `key` and `reason`.
+   The code review's `skip` or `refused` entry follows the comments' entries.
+   The script writes one file for each `post` entry and no other file.
+6. Post each comment `post` entry in manifest order:
 
    ```sh
    gh pr comment "$PR_URL" --body-file "<file from the post entry>"
+   ```
+
+   Then post the `code-review-<sha>` entry, last:
+
+   ```sh
+   gh pr review "$PR_URL" --comment --body-file "<file from the code-review entry>"
    ```
 
    Use the PR URL as the target, so `gh` takes the host from the URL. On
@@ -96,7 +151,7 @@ that block when only blank `>` lines separate the two. The comments, in post
 order:
 
 1. `review-notes`: the `## Review notes` heading, then the findings from
-   (a)-(c). Then, under a `cross-model-notes` tag line, every unlabeled block
+   (b)-(c). Then, under a `cross-model-notes` tag line, every unlabeled block
    in file order. The IMPLEMENT blocks carry no label, so they go here. Text
    above the first block goes here too.
 2. `design-round-<n>`, in ascending `<n>`: every block labeled
@@ -112,6 +167,23 @@ A block from a writer layout the label rule does not match goes to
 A body over 65536 characters, the GitHub comment limit, goes to `refused`.
 The script never cuts a body. The other keys still post.
 
+### Code review
+
+The code review posts last, after every comment. Its key is
+`code-review-<sha>`, where `<sha>` is the reviewed commit. Line 1 of its body
+is a hidden marker, `<!-- team:pr-review code-review-<sha> -->`. The
+`pr-review` prefix keeps it apart from the comment markers. After a blank
+line, the body has these parts:
+
+1. The verdict line: `**Verdict: APPROVE**`, `**Verdict: COMMENT**`, or
+   `**Verdict: REQUEST CHANGES**`.
+2. The commit line: ``Reviewed commit: `<sha>` ``.
+3. A blank line, then the round result's findings verbatim, or
+   `No findings.` for a round with none.
+
+The code review body has the same 65536-character limit. An oversized body
+goes to `refused`, and the comments still post.
+
 ### Refresh
 
 Run the step at PR open and after each push to the home PR. The script puts a
@@ -125,12 +197,29 @@ existing comment without a string `body` or a boolean `viewerDidAuthor` makes
 the script exit 2. A comment with the marker from another author does not
 count, so Team still posts its own.
 
+The code review skips when a review by the viewer's login has the review
+marker as its first line. The script compares the logins case-insensitively,
+and a trailing `\r` on the marker line still matches. A dismissed review
+counts as posted. A marker review from another login does not count. A
+review with no author login, or with a body that is not a string, is not the
+viewer's.
+
+Review data faults never stop the comments. The script puts the code review
+in `refused` with the reason when `--existing` has no `reviews` array, the
+viewer file has no string `login`, or the review-findings file is absent or
+unreadable.
+
 ### Accepted limits
 
 - Team never edits or deletes a posted comment. Findings or IMPLEMENT blocks
   added after the PR opens do not reach the PR.
-- Source (a) lives in the session only. When the `review-notes` post fails
-  and the session ends before a refresh, (a) is lost.
+- Source (a) travels in the code review and lives in the session only. When
+  no code review post succeeds in the session, (a) is lost.
+- A PR opened before this change keeps its `review-notes` comment with that
+  session's final round. A later round posts in its own code review, so no
+  round appears twice.
+- The PR gets one code review per reviewed commit that reaches the PR phase.
+  Team never edits, dismisses, or deletes an earlier review.
 - A different `gh` login between open and refresh sees no viewer markers, so
   it posts duplicates.
 - Two sessions that post to one PR at the same time can both post.
@@ -140,15 +229,21 @@ count, so Team still posts its own.
 The comment step never blocks the PR. Every branch ends with an open draft PR
 and a report, per [focused work rules](../../team/principles/focused-work.md).
 
+- When `resolve-pr.sh` or `gh api user` fails, run the script without the
+  review flags. The comments post. Report the lookup error.
 - When `gh pr view` fails, post nothing. Report the `gh` error.
 - When the script exits 2, post nothing. Report its stderr line, then
   continue the PR flow. Exit 2 means an invalid input: a missing flag, an
-  `--out` that is missing or not empty, a notes file with no frontmatter, an
-  unreadable file, or a malformed existing-comments file.
+  invalid review flag, an `--out` that is missing or not empty, a notes file
+  with no frontmatter, an unreadable file, or a malformed existing-comments
+  file.
 - When a `gh pr comment` fails, stop posting. Report the key, the `gh` error,
-  and each key not attempted.
-- In a new session that does not hold the aggregate result, (a) is not
-  available. Post (b)-(d) and report that (a) was not in this session.
+  and each key not attempted, including the code review key.
+- When `gh pr review` fails, report the verdict and the `gh` error. The draft
+  PR stays open. A refresh in the same session posts the review for the same
+  commit.
+- When the brief holds no round result, post no code review. Post (b)-(d),
+  and report that no round result was in this session.
 
 ### Completion report
 
@@ -156,3 +251,12 @@ and a report, per [focused work rules](../../team/principles/focused-work.md).
 - List each skipped key as already posted.
 - For each `refused` entry, report that the comment for its key did not post,
   with the `reason`.
+- Give one code review outcome:
+  - Posted, with the verdict and the reviewed commit.
+  - Skipped, as already posted for that commit.
+  - Refused, with the reason.
+  - Failed, with the `gh` error.
+  - Not run, with the lookup error, the refused value, the `<id>` mismatch,
+    or "no round result in this session".
+- When the code review did not post, give the number of round result
+  findings that reached no PR surface.

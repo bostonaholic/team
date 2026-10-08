@@ -1,7 +1,7 @@
 # Human control
 
 The user decides what to build and what to ship. Accepted pipeline intent authorizes its automatic middle steps.
-Run Blocking and Major corrections autonomously. Put eligible lower-tier findings in PR review notes under the owning severity contract.
+Run Blocking and Major corrections autonomously. Put eligible lower-tier findings in the PR's code review under the owning severity contract.
 Defer questions that can wait to PR review. If blocked, stop and report the blocker.
 
 ## Authority and scope
