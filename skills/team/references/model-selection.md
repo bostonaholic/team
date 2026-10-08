@@ -87,8 +87,10 @@ a fresh dispatch.
 ## Report selection and resolution separately
 
 For each spawn, add a row to the run report (or the standalone command's final
-report): agent, host, requested tier, config source, sent model/effort arguments,
-child ID, observed model/effort, evidence location, and status.
+report): agent, host, requested tier, config source, configured model, sent
+model/effort arguments, child ID, observed model/effort, evidence location, and
+status. For Codex, the configured model is the class or pin, and the sent model
+is the catalog ID the resolver chose.
 
 Use host runtime metadata to fill observed values, never a child's self-report.
 Codex turn-context metadata records model and effort; Antigravity generation

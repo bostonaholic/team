@@ -46,7 +46,7 @@ export function resolveModel(request, overrides = {}, defaults = readJson(new UR
     throw new Error(`unavailable model: ${host}.${tier} -> ${model}`);
   }
   return {
-    host, tier, source: project ? "project" : "bundled",
+    host, tier, source: project ? "project" : "bundled", configured: model,
     spawn: host === "codex"
       ? { model: resolved, reasoning_effort: selectedEffort, fork_turns: "none" }
       : { Model: resolved },

@@ -261,3 +261,42 @@ for (const row of ERROR_NAMING_IDS_ROWS) {
     assert.match(error.message, row.secondId);
   });
 }
+
+const CONFIGURED_ROWS = [
+  {
+    label: "a bundled class is reported beside the resolved ID",
+    request: { host: "codex", tier: "sonnet", effort: "high", available: CATALOG },
+    overrides: {},
+    defaults: undefined,
+    configured: "sol",
+    spawnField: "model",
+    spawnValue: "gpt-6.1-sol",
+  },
+  {
+    label: "a project pin is reported as the pin",
+    request: { host: "codex", tier: "haiku", effort: "low", available: CATALOG },
+    overrides: { codex: { haiku: { model: "gpt-5.6-luna" } } },
+    defaults: CLASS_DEFAULTS,
+    configured: "gpt-5.6-luna",
+    spawnField: "model",
+    spawnValue: "gpt-5.6-luna",
+  },
+  {
+    label: "an Antigravity bundled tier word is reported",
+    request: { host: "antigravity", tier: "sonnet", effort: "high", available: { flash: [] } },
+    overrides: {},
+    defaults: undefined,
+    configured: "flash",
+    spawnField: "Model",
+    spawnValue: "flash",
+  },
+];
+
+for (const row of CONFIGURED_ROWS) {
+  test(`resolver output names the configured model: ${row.label}`, () => {
+    const result = resolveOrFail(row.request, row.overrides, row.defaults);
+
+    assert.equal(result.configured, row.configured);
+    assert.equal(result.spawn[row.spawnField], row.spawnValue);
+  });
+}
