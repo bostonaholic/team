@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team-pr` now posts Team's code review to the PR as a GitHub review.** It posts with no confirmation step, one review per reviewed commit, and the review event follows the code-reviewer verdict: approve, comment, or request changes. GitHub does not let a PR's author approve or request changes, so when Team's `gh` login opened the PR the review posts as a comment and its body states the real verdict. It also posts as a comment when the PR head has changes outside `CHANGELOG.md` that no reviewer saw. The final round's findings move from the `review-notes` comment into the review body. **What this asks of you:** nothing. With one `gh` login every review shows as "Commented"; a native approval needs a second login.
+
 ## [0.156.0] - 2026-10-08
 
 ### Changed
