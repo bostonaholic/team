@@ -616,7 +616,6 @@ test("invalid notes, output directory, or arguments exit 2 and write nothing", a
     assert.deepEqual(readdirSync(out), []);
   });
 
-  // Slice 5: the code review flags.
   await t.test("a --verdict of APPROVE", (t) => {
     const root = scratch(t);
     const out = emptyOut(root);
@@ -770,7 +769,6 @@ test("invalid notes, output directory, or arguments exit 2 and write nothing", a
     assert.deepEqual(readdirSync(out), []);
   });
 
-  // Slice 6: the scope diff flag.
   await t.test("--verdict without --since-review", (t) => {
     const root = scratch(t);
     const out = emptyOut(root);
@@ -808,7 +806,7 @@ test("invalid notes, output directory, or arguments exit 2 and write nothing", a
 });
 
 // ---------------------------------------------------------------------------
-// Slice 5: The PR carries Team's code review once per reviewed commit
+// The PR carries Team's code review once per reviewed commit
 // ---------------------------------------------------------------------------
 
 // The verdict and commit lines are pinned here; the script holds them as named constants.
@@ -1137,7 +1135,6 @@ test("the code review posts, skips, or is refused while the comments always post
     assert.deepEqual(manifest.post.map((entry) => entry.key), ["review-notes"]);
   });
 
-  // Slice 6 row: the self-authored rule needs the PR author.
   await t.test("an --existing without a string author.login refuses the review", (t) => {
     const root = scratch(t);
     const out = emptyOut(root);
@@ -1155,7 +1152,7 @@ test("the code review posts, skips, or is refused while the comments always post
 });
 
 // ---------------------------------------------------------------------------
-// Slice 6: The review event follows the verdict
+// The review event follows the verdict
 // ---------------------------------------------------------------------------
 
 // The reason lines are pinned here; the script holds them as named constants.

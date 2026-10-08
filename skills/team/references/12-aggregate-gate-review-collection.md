@@ -14,8 +14,9 @@ returned:
    previous one. It holds four values: the artifact `<id>`, the reviewed
    commit (the pre-dispatch `git rev-parse HEAD`), the verdict
    (`request-changes` when a Blocking or Major finding is open, else the
-   code-reviewer's token in lowercase), and the findings, tagged by source
-   reviewer and tier, Blocking first, without the
+   code-reviewer's token in lowercase, `approve` or
+   `comment`), and the findings, tagged by source reviewer and tier,
+   Blocking first, without the
    `### Cross-model disposition` section.
 2. Persist the cross-model record. Every code-reviewer report carries a
    `### Cross-model disposition` section, so read what it says rather than
