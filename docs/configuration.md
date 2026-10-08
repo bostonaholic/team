@@ -35,11 +35,14 @@ claim through it.
 
 Bundled selections map each Claude tier to a host model:
 
-| Agent `model:` | Codex model ID | Antigravity invocation tier |
+| Agent `model:` | Codex model class | Antigravity invocation tier |
 | --- | --- | --- |
-| `opus` | `gpt-6-astra` | `pro` |
-| `sonnet` | `gpt-5.6-sol` | `flash` |
-| `haiku` | `gpt-5.6-luna` | `flash_lite` |
+| `opus` | `astra` | `pro` |
+| `sonnet` | `sol` | `flash` |
+| `haiku` | `luna` | `flash_lite` |
+
+At dispatch, Team resolves each Codex class to the newest model in that class
+that the running host offers and that supports the agent effort.
 
 An override replaces individual bundled selections, not the whole map. Tiers you
 do not name keep their bundled value.
@@ -49,7 +52,7 @@ do not name keep their bundled value.
 ```json
 {
   "codex": {
-    "sonnet": { "model": "gpt-5.6-terra", "reasoning_effort": "medium" }
+    "sonnet": { "model": "terra", "reasoning_effort": "medium" }
   },
   "antigravity": {
     "sonnet": { "model": "flash" }
@@ -64,8 +67,12 @@ do not name keep their bundled value.
 
 ### Codex
 
-`model` must be a concrete model ID — not a Claude alias (`opus`, `sonnet`,
-`haiku`), `fable`, or `inherit`. The optional `reasoning_effort` replaces the
+`model` is a model class or a concrete catalog ID. It is not a Claude alias
+(`opus`, `sonnet`, `haiku`), `fable`, or `inherit`. A class name has only
+lowercase letters. A catalog ID belongs to class `sol` when its last
+hyphen-separated part is `sol` and the part before that is a numeric version.
+A concrete catalog ID pins one version, even when a newer model in its class
+exists. The optional `reasoning_effort` replaces the
 agent's own effort; without it the agent's effort is preserved. Accepted
 efforts: `low`, `medium`, `high`, `xhigh`, `max`, `ultra`.
 
@@ -84,7 +91,9 @@ exposes the `invoke_subagent` model enum.
 
 Team rejects the file when it names an unknown host, tier, or field; omits
 `model`; uses a Claude alias as a Codex model; or selects a model, tier, or
-effort the host does not currently offer. A missing or invalid override is an
+effort the host does not currently offer. A Codex class also fails when the
+catalog has no model in that class, when two models tie at the newest version,
+or when no model in the class supports the effort. A missing or invalid override is an
 error, never a silent fall back to a default. The resolver validates selections
 only — it does not query a provider or spawn an agent.
 

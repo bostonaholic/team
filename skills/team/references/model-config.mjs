@@ -37,7 +37,7 @@ export function validateConfig(config) {
         throw new Error(`invalid Antigravity model tier: ${model}`);
       }
       if (host === "codex" && [...TIERS, "fable", "inherit"].includes(model)) {
-        throw new Error(`Codex needs a concrete model ID: ${model}`);
+        throw new Error(`Codex model must be a Codex class or model ID: ${model}`);
       }
       if (Object.hasOwn(selection, "reasoning_effort") && !EFFORTS.includes(effort)) {
         throw new Error(`unsupported effort: ${effort}`);

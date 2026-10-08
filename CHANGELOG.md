@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Codex bundled defaults now name model classes.** The `opus`, `sonnet`, and `haiku` tiers map to the Codex classes `astra`, `sol`, and `luna`, and Team sends the newest model in each class from the running host's catalog that supports the agent effort. A new or retired Codex model no longer needs a Team release. A class override in `.team/config.json` resolves the same way, and a concrete catalog ID still pins one version. **What this asks of you:** if you want the models Team sent before, pin the concrete ID from your Codex catalog in `.team/config.json`.
+
 ## [0.155.0] - 2026-10-08
 
 ### Changed
