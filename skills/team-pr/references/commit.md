@@ -37,7 +37,7 @@ Breaking changes require a `BREAKING CHANGE:` footer or `!` in `feat!:` / `feat(
 
 1. Summarize the complete user-visible feature, not implementation steps.
 2. Briefly list important affected files/subsystems in the body.
-3. Cite the issue or plan: `Closes #42` or `Implements docs/plans/2026-01-15-auth-plan.md`.
+3. Cite the issue when one exists: `Closes #42`.
 4. Omit attempts, WIP notes, and details evident from the diff.
 
 Complex changes need a body. Squash every `WIP: still debugging` commit before shipping.
