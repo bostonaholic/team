@@ -33,7 +33,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 
 **Standalone mode** — whenever the directory (explicit, user-given, or freshly
 derived) lacks `8-plan.md`, run `test-architect` → `implementer` → reviewers
-from `$ARGUMENTS/1-task.md` alone.
+from `$ARGUMENTS/1-task.md` alone. The [worktree check](02-worktree-check.md)
+still applies: standalone mode never runs on the default branch.
 
 Seed TodoWrite:
 `Test-architect → Mechanical gate → Implementer (per slice) → Review round 1`.

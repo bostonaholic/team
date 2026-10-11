@@ -15,7 +15,8 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 
 ## Core contracts
 
-- Require `7-structure.md`, `8-plan.md`, and a non-default-branch worktree. Use `AskUserQuestion` only for missing standalone setup.
+- Require `7-structure.md` and `8-plan.md`, or run standalone from `1-task.md` alone ([Input](references/01-input.md)). Use `AskUserQuestion` only for missing standalone setup.
+- Never implement on the default branch. Run in a linked worktree, or in place only on a non-default branch ([Worktree Check](references/02-worktree-check.md)).
 - If `4-repos.md` exists, multi-repo work requires worktrees; refuse in-place execution.
 - Seed TodoWrite with `Review round 1`.
 - Retry as `Review round <n+1> (<b> Blocking, <m> Major open)`.
