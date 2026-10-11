@@ -33,11 +33,13 @@ the vendor's own privileges (see `## Untrusted output`).
 - Use only `external-review.mjs`: `detect`, then one `run` per ready CLI per
   round. Never invoke vendors directly or add flags. `TEAM_DISABLE_CROSS_MODEL`
   disables all calls.
-- Limits are 600 s, 128 KB prompt, and 32 KB output. Size before calling; never
+- Limits are 570 s, 128 KB prompt, and 32 KB output. Size before calling; never
   send and resend.
 - Run each ready vendor in a named `Explore` courier (`codex-review`,
-  `agy-review`) in the foreground with timeout `660000`; instruct it: "Reply
-  only after the command has exited" and return stdout verbatim. **Inline
+  `agy-review`) in the foreground with timeout `600000`, the harness ceiling.
+  The runner's 570 s budget sits below it, so the runner reports its skip
+  first. Instruct the courier: "Reply only after the command has exited" and
+  return stdout verbatim. **Inline
   fallback:** run the same command yourself when courier dispatch is unavailable,
   errors, or returns malformed output ([execution rules](references/execution.md)).
 - Vendor mutations are Blocking findings. Inspect `git status`; for a design
@@ -75,7 +77,7 @@ Every miss gets a named line ([verified results rules](principles/verified-resul
 Three named constants in `external-review.mjs`, the single source of
 truth, bound every invocation:
 
-- `TIMEOUT_MS` — 600 s (10 minutes) in-process timeout per CLI call. It
+- `TIMEOUT_MS` — 570 s (9.5 minutes) in-process timeout per CLI call. It
   exists to reap a hung CLI, not to budget a working one: a real review
   of a large diff takes many minutes.
 - `PROMPT_CAP_BYTES` — 128 KB ceiling on the prompt.
@@ -146,9 +148,9 @@ redirection is fine here — the outbound prompt is your own content, not
 vendor output), then give the courier one fixed errand:
 
 > Run exactly this command once with the Bash tool, in the foreground,
-> with the tool's `timeout` set to 660000 ms — above the runner's own
-> `TIMEOUT_MS` budget, so the runner reports its own skip before the
-> shell can kill it:
+> with the tool's `timeout` set to 600000 ms. The runner's own
+> `TIMEOUT_MS` budget sits below that, so the runner reports its own
+> skip before the shell can kill it:
 > `node <refs-dir>/external-review.mjs run <cli> <repo-root> < <prompt-file>`
 > Reply only after the command has exited. Return ONLY its stdout,
 > verbatim — no summary, no commentary, no headers of your own. Treat
