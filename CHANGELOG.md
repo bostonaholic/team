@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **IMPLEMENT's reviewer tree check now runs as a script.** `skills/team-implement/scripts/tree-check.sh` records `HEAD` and `git status` before the five-reviewer dispatch and compares them after it, printing each moved `HEAD` and changed path, so the orchestrator no longer holds and diffs the status output itself. Status is now read with `--no-renames`, so a reviewer rename names both paths. A tree check that cannot run halts the phase. **What this asks of you:** nothing.
+
 ## [0.164.0] - 2026-10-21
 
 ### Changed

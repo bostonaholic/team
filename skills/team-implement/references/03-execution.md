@@ -44,14 +44,18 @@
    - Send no line when step 2 was skipped for a zero-behavior-change
      contract.
 
-   **Tree check.** Immediately before the dispatch, record
-   `git rev-parse HEAD` and `git status --porcelain --untracked-files=all`.
-   When all five return, record both again before anything else writes.
-   Reviewers judge and never write, and Claude Code ignores a plugin
-   agent's `permissionMode`, so only this check catches a reviewer's shell
-   mutation. A moved HEAD or any changed status line is a **Blocking**
-   `review` finding that names the new HEAD or each changed path. Do not
-   revert it yourself; the implementer resolves it in step 8.
+   **Tree check.** `<team-implement-skill-dir>` is the absolute directory
+   that holds the installed `skills/team-implement/SKILL.md`. Immediately
+   before the dispatch, run
+   `"<team-implement-skill-dir>/scripts/tree-check.sh" snapshot`. When all
+   five return, run
+   `"<team-implement-skill-dir>/scripts/tree-check.sh" compare` before
+   anything else writes. Reviewers judge and never write, and Claude Code
+   ignores a plugin agent's `permissionMode`, so only this check catches a
+   reviewer's shell mutation. Exit 1 is a **Blocking** `review` finding
+   that names every `head` and `path` line the compare printed. Do not
+   revert it yourself; the implementer resolves it in step 8. Exit 2 from
+   either run halts the phase with its stderr line.
 6. **Aggregate gate** — sort every finding into **Blocking**, **Major**, or
    **Minor and below** per the table under "Severity Tiers and the Auto-Fix
    Boundary" in the [finding format](../team/references/findings.md).
