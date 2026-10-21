@@ -8,8 +8,8 @@ effort: low
 # Team Migrate
 
 Move a machine set up before Team v0.147.0 onto the pipeline-only Team plugin
-plus the `bostonaholic/skills` plugin, in every agent harness on the machine,
-with no moved skill missing and none shown twice.
+plus the `bostonaholic/skills` plugin in every agent harness, with no moved
+skill missing and none shown twice.
 
 **Explicit only.** It rewrites the user's plugin registrations and moves skill
 directories in their home, so the model never starts it on its own.
@@ -45,9 +45,8 @@ Apply [execution rules](../team/references/execution.md): one todo per step.
    "<skill-dir>/scripts/migrate.sh" plan
    ```
 
-   It names every harness on the machine, then each step in order with the
-   gap it closes and its exact command, any blocker, any other running agent
-   session, and the `Plan id:`.
+   It names every harness, each step in order with its gap and exact command,
+   any blocker, any other running agent session, and the `Plan id:`.
    - Exit 0 with `Nothing to do.`: skip to step 4.
    - Exit 4 (blocked): report each blocker with its remedy, then stop.
    - Exit 1: report the error, then stop.
@@ -71,17 +70,14 @@ Apply [execution rules](../team/references/execution.md): one todo per step.
      the new plan.
    - Exit 1: report the failed step and its `not run:` lines, then stop. A
      later run plans only what is left.
-4. **Verify.** Re-query every harness, right away; it starts its own fresh
-   sessions. After an apply, run the copy apply ran from; otherwise run
+4. **Verify.** Re-query every harness right away. After an apply, run the copy apply ran from; otherwise run
    `"<skill-dir>/scripts/verify.sh"`:
 
    ```sh
    "${XDG_DATA_HOME:-$HOME/.local/share}/team-migrate/run/skills/team-migrate/scripts/verify.sh"
    ```
 
-   It checks plugin lists and marketplace sources, the skills Codex shows the
-   model, a fresh headless `claude -p` session, and each directory harness's
-   install. Exit 1 means at least one `FAIL` line.
+   Exit 1 means at least one `FAIL` line.
 5. **Report.** Give each step's outcome, each skip, each `FAIL`, and each
    `left` line: what stays on disk and why. Close with the restart each
    harness needs: a new Claude Code session or `/reload-plugins`, a new Codex

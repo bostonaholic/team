@@ -2,187 +2,122 @@
 
 Every `/team` run works in one isolated git worktree per repository the topic
 touches; main working trees are never touched. The router owns isolation, not
-individual agents. Read this playbook before setup or teardown.
+agents.
 
 ## Single-repo (default)
 
-Without `docs/plans/<id>/4-repos.md`, the topic touches only the home repo
-(the repo the user invoked `/team` from): one worktree on branch `<id>` off
-`origin/HEAD`, at `<repo>/.claude/worktrees/<id>`.
+Without `docs/plans/<id>/4-repos.md`, only the home repo (where the user
+invoked `/team`) gets a worktree: branch `<id>` off `origin/HEAD`, at
+`<repo>/.claude/worktrees/<id>`.
 
 ## Multi-repo
 
-With `docs/plans/<id>/4-repos.md` present, each listed repo gets one worktree
-at `<repo-path>/.claude/worktrees/<id>`, all on branch `<id>` off that repo's
-`origin/HEAD` (commands: `references/04-execution.md`). Containment comes
-first: each `<repo-path>`'s `realpath` must resolve to a direct child of the
-home repo's parent directory. A repo that fails is refused and reported —
-`4-repos.md` content is not trusted blindly.
-
-Only the **home repo's worktree** holds the canonical `docs/plans/<id>/`
-artifact directory. The other worktrees do not duplicate it; agents read
-artifacts from the home worktree path the orchestrator passes in.
+With `docs/plans/<id>/4-repos.md`, each listed repo gets the same layout
+(commands: `references/04-execution.md`); a repo outside the home repo's
+sibling set is refused and reported. Only the **home repo's worktree** holds
+the canonical `docs/plans/<id>/`; agents read artifacts from the home
+worktree path the orchestrator passes in.
 
 ## Worktree creation
 
-For the home repo, use the host's native worktree support when it offers one
-(Claude Code's `--worktree <topic>` or dispatch into a worktree context) and
-`git worktree add` otherwise. For the other repos in multi-repo mode, use
-plain `git worktree add`, because a native flag only knows about the repo the
-session was launched from.
+For the home repo, use the host's native worktree support when offered
+(Claude Code's `--worktree <topic>` or dispatch into a worktree context),
+else `git worktree add`. Other repos always use plain `git worktree add`.
 
 ## Lifecycle
 
 ### Setup (router responsibility)
 
-At the **leading WORKTREE phase** — phase 1 of 9, before QUESTION — the
-router creates the home repo's worktree on branch `<id>` off `origin/HEAD`
-and authors `docs/plans/<id>/` **inside** it, so no copy is ever needed.
+At the **leading WORKTREE phase** (phase 1, before QUESTION) the router
+creates the home worktree and authors `docs/plans/<id>/` **inside** it.
 Secondary repos get theirs after the design review, once `4-repos.md`
 confirms the repo set.
 
 ### Reusing an existing worktree
 
-If the session already runs inside a linked worktree on a **non-default
-branch**, WORKTREE reuses it in place, with no new branch and no artifact
-copy. On the default branch it refuses and stops. Follow "Detect existing
-worktree" (`references/03-detect-existing-worktree.md`).
+A session already inside a linked worktree reuses it in place on a
+non-default branch and refuses on the default branch, per
+`references/03-detect-existing-worktree.md`.
 
 ### Why first
 
-Worktree creation is the leading phase — it runs first, before QUESTION —
-for two load-bearing reasons. First, authoring `docs/plans/<id>/` inside the
-worktree from phase 1 keeps the home checkout's `git status` clean for the
-entire run. Second, it gives resume detection a genuine first state: "a
-worktree exists for `<id>`, no `1-task.md` yet" ⇒ WORKTREE.
+WORKTREE leads so `docs/plans/<id>/` lives inside the worktree from phase 1
+and resume detection has a first state: "a worktree exists for `<id>`, no
+`1-task.md` yet" ⇒ WORKTREE.
 
 ### Ship (teardown)
 
-Opening a PR does **not** tear down the worktree. Keep it until the PR is
-merged or the user explicitly asks to remove it. The same holds when commits
-are kept locally without a PR.
+Opening a PR does **not** tear down the worktree. Run the steps below only
+after the merge or on the user's explicit request, including when commits
+stay local without a PR.
 
-The numbered steps below are the orchestrator's in-pipeline teardown.
-
-When teardown is warranted (post-merge or on explicit request):
-
-Before step 1, record for each repo `BRANCH`, the branch its worktree used
-(`<id>`, or the existing branch when WORKTREE reused a linked worktree), and
-`WORKTREE`, that worktree's absolute path (empty when the run fell back to
-in-place work). Step 8 passes both, as single-quoted literals, to the
-teardown script.
+Before step 1, record for each repo `BRANCH` (the worktree's branch: `<id>`,
+or the existing branch when WORKTREE reused a linked worktree) and
+`WORKTREE` (its absolute path; empty when the run fell back to in-place
+work). Step 8 passes both as single-quoted literals.
 
 1. For each worktree with commits ahead of its base branch, cherry-pick
-   or rebase those commits onto the target branch in that repo. Then let
-   the host remove the worktree, or run `git worktree remove`.
+   or rebase them onto the target branch in that repo. Then let the host
+   remove the worktree, or run `git worktree remove`.
 2. Empty worktrees clean up automatically.
-3. If manual cleanup is needed: `git -C <repo-path> worktree remove
+3. Manual cleanup if needed: `git -C <repo-path> worktree remove
    <worktree-path>` and `git -C <repo-path> branch -D <id>`.
-4. **Assert the path is actually gone.** A long-lived process anchored to
-   the old path (an editor language server, a hook) can recreate it after
-   `git worktree remove` exits 0. Re-check the path, and delete a
-   reappeared one only when it is `<repo-root>/.claude/worktrees/<name>`:
-   never a path still listed by `git worktree list`, and never a primary
-   clone.
-5. After the worktree is gone, update the repo's local default branch
-   with the merge: `git -C <repo-path> pull --rebase origin <base>`.
-   Always rebase — never a merge commit. When the merge also deleted the
-   branch on origin, follow with `git -C <repo-path> remote prune origin`:
-   the surviving local `refs/remotes/origin/<id>` keeps every commit on the
-   branch reachable, so `git branch -D` in step 3 frees nothing while it
-   stands.
+4. **Assert the path is gone.** A long-lived process can recreate it after
+   `git worktree remove` exits 0. Re-check, and delete a reappeared path
+   only when it is `<repo-root>/.claude/worktrees/<name>`: never a path
+   still in `git worktree list`, never a primary clone.
+5. Update the repo's local default branch with the merge:
+   `git -C <repo-path> pull --rebase origin <base>`. Always rebase, never a
+   merge commit. When the merge deleted the branch on origin, follow with
+   `git -C <repo-path> remote prune origin` so no stale
+   `refs/remotes/origin/<id>` keeps the branch's commits reachable.
 6. Remove the feature's local planning docs. Verify the directory is
-   untracked first (`git ls-files docs/plans/<id>` returns nothing), then
-   `rm -rf docs/plans/<id>` — only that feature's `<id>` directory, never
-   sibling dirs for other in-flight work.
-7. **Sweep residue as the final action.** First run the worktree sweep
-   once per repo. `<team-worktree-skill-dir>` is the absolute directory
-   that holds the installed `skills/team-worktree/SKILL.md`. For the home
-   repo, run the sweep from the session's working directory, with no `cd`:
+   untracked (`git ls-files docs/plans/<id>` returns nothing), then
+   `rm -rf docs/plans/<id>` — only this `<id>`, never sibling dirs.
+7. **Sweep residue as the final action.** First run the worktree sweep once
+   per repo. `<team-worktree-skill-dir>` is the absolute directory holding
+   the installed `skills/team-worktree/SKILL.md`. For the home repo, run it
+   from the session's working directory, with no `cd`:
 
    ```sh
    "<team-worktree-skill-dir>/scripts/sweep-worktrees.sh"
    ```
 
-   For each other repo, paste its `<repo-path>` as a single-quoted
-   literal. Refuse a path that contains a single quote. The subshell keeps
-   the session's working directory:
+   For each other repo, paste `<repo-path>` single-quoted (refuse one
+   containing a single quote); the subshell keeps the session's directory:
 
    ```sh
    (cd '<repo-path>' && "<team-worktree-skill-dir>/scripts/sweep-worktrees.sh")
    ```
 
-   The sweep runs `git worktree prune`. Then it removes each worktree and
-   local branch in the repo whose PR merged, including a detached worktree.
-   A commit is merged when it is exactly the head commit of a `MERGED` PR
-   from the repo's owner. That PR's merge commit must also be an ancestor
-   of `origin/<default>`. A squash merge passes this check. A commit past
-   the PR head fails it. The sweep never passes `--force`, and it keeps
-   each worktree that:
-
-   - holds the directory the sweep starts in. A session cannot remove its
-     own worktree. A later teardown's sweep removes it once its PR merges.
-   - is the working directory of a live process.
-   - has no merged PR.
-   - lies outside `.claude/worktrees/`. The sweep prints the command that
-     removes it.
-   - is locked.
-   - has untracked or changed files.
-
-   The sweep prints one line per item, with the reason for each kept
-   worktree. Do not remove a kept worktree by hand to finish the sweep. If
-   the sweep exits non-zero, report its stderr verbatim and continue the
-   teardown. The script header lists each output line and exit code.
-
-   Then sweep residue. Recreation can land seconds to hours after the
-   removal command returns, so the residue sweep is not redundant with
-   step 4. For each repo, run:
+   Then sweep residue for each repo:
 
    ```sh
    "<team-worktree-skill-dir>/scripts/sweep-residue.sh" '<repo-path>'
    ```
 
-   Report the worktree sweep's lines and the residue sweep's lines. A kept
-   directory is surfaced to the user with the files it holds — never
-   deleted silently, never left unreported. If the residue sweep exits
-   non-zero, report its stderr verbatim and continue the teardown.
+   Each script header lists its output lines and exit codes. Report every
+   line of both sweeps, including each `kept` item and the files it holds;
+   never remove a kept item by hand. On non-zero exit, report its stderr
+   verbatim and continue the teardown.
 
-8. **Tear down what the worktree provisioned**, not only the worktree.
-   For each repo, follow
+8. **Tear down what the worktree provisioned** (databases, containers, and
+   the like a root `.teamteardown` declares). For each repo, follow
    `<team-worktree-skill-dir>/playbooks/provisioned-teardown.md`, all
-   sections, passing that repo's `<repo-path>` and the `BRANCH` and
-   `WORKTREE` recorded before step 1. Step 7 defines
-   `<team-worktree-skill-dir>`. The file runs the teardown commands
-   the repo declares in `.teamteardown`, and runs nothing when the repo
-   declares none.
+   sections, passing that repo's `<repo-path>` and the recorded `BRANCH` and
+   `WORKTREE`.
 
 ## Gitignored Files
 
-A worktree is a fresh checkout without untracked files. To copy these
-automatically (e.g. `.env`, `.env.local`), add a `.worktreeinclude` file to
-the project root, in `.gitignore` syntax. Only files matching a pattern that are
-also gitignored get copied. In multi-repo mode, each repo honors its own
-`.worktreeinclude` independently.
-
-## Provisioned resources
-
-The teardown half of `.worktreeinclude` is `.teamteardown`, also at the
-project root: one command per line, run when the worktree's work is
-finished, so a database or container created for the branch does not
-outlive it. Only the copy committed to the default branch ever runs.
-`<team-worktree-skill-dir>/playbooks/provisioned-teardown.md` carries the
-format and the rules; teardown step 8 runs it.
+A root `.worktreeinclude` (`.gitignore` syntax) copies matching gitignored
+files such as `.env` into the worktree; each repo honors its own.
 
 ## Fallback
 
 If worktree creation fails in any repo (shallow clones, certain CI systems):
 
-1. Report the failure for that repo: "Worktree creation failed in <name>.
-   Falling back to main tree for that repo."
-2. Continue the pipeline. Other repos still get worktrees. The failing
-   repo's portion of the work runs in its main working tree.
-3. If creation fails in the home repo, the orchestrator proceeds with
-   in-place work for the entire pipeline.
-
-Never block the pipeline because worktree creation failed — isolation is
-a best-practice enhancement, not a hard requirement.
+1. Report it: "Worktree creation failed in <name>. Falling back to main tree
+   for that repo."
+2. Continue: other repos still get worktrees; the failing repo's work runs in
+   its main working tree. If the home repo fails, the whole pipeline runs in
+   place. Never block the pipeline on this failure.

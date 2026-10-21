@@ -15,9 +15,10 @@ For each numbered slice record:
 
 - user-visible Goal;
 - Repos and Layers touched;
-- 1–3 named acceptance Tests, each with the behavior it protects and chosen
-  through the [authoring gate](references/testing.md#authoring-gate), with
-  repo prefixes in multi-repo work;
+- 1–3 named acceptance Tests (a parameterized test counts as one; three is a
+  ceiling), each with the behavior it protects, chosen through the
+  [authoring gate](references/testing.md#authoring-gate), repo-prefixed in
+  multi-repo work;
 - an isolated Verification checkpoint;
 - one Atomic commit message per affected repo.
 
@@ -32,21 +33,25 @@ Then include:
 - Every slice ends in a passing test or runnable check. Fold scaffolding into
   its first consumer.
 - Include designed boundary, invalid-input, failure, concurrency, auth, and
-  resource-limit cases. Cover each with a new test, a new case in a listed
-  parameterized test, or a cited existing test that already fails on that
-  regression. Cite an out-of-scope decision for omissions.
+  resource-limit cases; a happy-path-only test list is incomplete. Cover each
+  with a new test, a new case in a listed parameterized test, or a cited
+  existing test that already fails on that regression. Cite an out-of-scope
+  decision for omissions.
 - Order by user value. Slice 1 is the smallest usable behavior or walking
-  skeleton, not infrastructure.
+  skeleton (hardcoded internals allowed; the user-visible surface works),
+  not infrastructure.
 - Cite non-obvious design decisions. Name files and behavior, never bodies.
 
 ## Slicing heuristics
 
 - Slice by user capability, never by technical layer.
 - Migrations are never standalone; pair each with its first read/write.
-- A multi-repo behavior remains one slice with one atomic commit per repo.
+- A multi-repo behavior remains one slice with one atomic commit per repo; the
+  slice ships when all its commits land.
 - Define a producer contract before its consumer and cite the defining slice.
-- A destructive, irreversible, or externally-visible mutation may deserve its
-  own PR. Apply the [decision method](references/decisions.md) before
-  choosing whether to split it. Include review cost, a second land-time bump,
-  and dependency cost. State the decision in `## Cross-slice concerns` either
-  way.
+- A destructive, irreversible, or externally-visible mutation (a delete, a
+  public write, a credential, an outbound message) may deserve its own PR.
+  Decide whether to split it with the
+  [decision method](references/decisions.md), weighing review cost, a second
+  land-time bump, and dependency cost; state the decision in
+  `## Cross-slice concerns` either way.

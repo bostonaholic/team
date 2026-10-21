@@ -1,28 +1,27 @@
 ## Ship
 
-1. Commit in two commits: `test:` with the failing test, then `fix:` with the
-   minimal fix.
-2. **Open a draft PR automatically — do not stop to ask.** Re-assert the
-   branch gate first — run `'<team-fix-skill-dir>/scripts/branch-gate.sh'`
-   from the worktree, where `<team-fix-skill-dir>` is the absolute directory
-   that holds the installed `skills/team-fix/SKILL.md`. Any exit other than
-   0 → push nothing and report its output. On `ok <branch>`, push that
-   branch and open the PR as a **draft** (`gh pr create --draft`).
-3. **Screenshots for a UI-impacting fix.** Read the
-   [ux reviewer brief](../team/references/ux-reviewer.md) and apply its
-   `## Screenshot Capture (UI projects)` UI-impact gate to the full branch
-   diff. A backend fix that changes the interface counts. When UI impact is
-   uncertain, capture. Only a fix that does not change the interface attaches
-   nothing. When it does, run the brief's capture procedure into
-   `docs/plans/<id>/screenshots/`, then run the
+1. Commit twice: `test:` with the failing test, then `fix:` with the minimal
+   fix.
+2. **Open a draft PR automatically — do not ask.** First re-assert the branch
+   gate: run `'<team-fix-skill-dir>/scripts/branch-gate.sh'` from the
+   worktree (`<team-fix-skill-dir>` is the absolute directory holding the
+   installed `skills/team-fix/SKILL.md`). Any exit other than 0 → push
+   nothing and report its output. On `ok <branch>`, push that branch and
+   open the PR as a **draft** (`gh pr create --draft`).
+3. **Screenshots for a UI-impacting fix.** Apply the `## Screenshot Capture
+   (UI projects)` UI-impact gate from the
+   [ux reviewer brief](../team/references/ux-reviewer.md) to the full branch
+   diff. Any interface change counts, not only a substantial one; when
+   uncertain, capture. Only a fix that leaves the interface unchanged attaches
+   nothing. On capture, run the brief's capture procedure into
+   `docs/plans/<id>/screenshots/`, then the
    [Screenshot Upload](../team-pr/references/04-screenshot-upload.md)
-   procedure, with the run's `docs/plans/<id>/` directory as the
-   `$ARGUMENTS` that reference names.
-   A capture that cannot run degrades to the note; it never blocks the PR.
-4. **Ticket — link now, in-review when ready.** If `ticketId` is non-null in
-   `1-task.md`'s frontmatter, read [tracking rules](../team-pr/references/tracking.md) and
-   apply its ticket-lifecycle rules: link the PR to the ticket through the
-   conditional closing line at the top of the body, keep the ticket in-progress while the PR is a
-   draft and move it to in-review only once the PR is marked ready for
-   review, and never close the ticket by hand. Best-effort. Never block.
+   procedure with the run's `docs/plans/<id>/` as its `$ARGUMENTS`. A capture
+   that cannot run degrades to the note; it never blocks the PR.
+4. **Ticket — link now, in-review when ready.** If `1-task.md`'s `ticketId`
+   is non-null, apply the ticket-lifecycle rules in
+   [tracking rules](../team-pr/references/tracking.md): link the PR through
+   the conditional closing line at the top of the body, keep the ticket
+   in-progress while the PR is a draft, move it to in-review only once the PR
+   is marked ready, and never close it by hand. Best-effort; never block.
    Surface the `ticketId` in the completion report.

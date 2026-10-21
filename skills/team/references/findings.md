@@ -1,6 +1,6 @@
 # Review Findings
 
-Resolve links in this file from the installed `skills/team/` directory, whichever skill or agent reads it.
+Resolve links in this file from the installed `skills/team/` directory.
 
 ## Finding Format
 
@@ -13,11 +13,11 @@ Working/Broken/Could Improve. Every finding includes a specific `file:line`.
 
 ### Comment Style
 
-Address code, not its author; assume competence. Explain why. Reserve `issue:`
-for correctness, security, or maintainability defects; use `suggestion:`/
-`nitpick:` for preferences. More than ~10 substantive comments on one change
-indicates a design problem: propose splitting the change or continuing design
-discussion outside review.
+Address code, not its author. Explain why. Reserve `issue:` for correctness,
+security, or maintainability defects; use `suggestion:`/`nitpick:` for
+preferences. More than ~10 substantive comments on one change signals a
+design problem: propose splitting the change or moving design discussion
+outside review.
 
 A finding whose mistake can recur names its class and lists the other
 instances found in the review range. A finding with no recurring class names
@@ -54,10 +54,10 @@ file: 3f9c2a1e7b4d8c6f0a5e2b9d1c7f4a8e6b3d0c2f:src/csv/parse.ts:88
 
 | Reviewer | Gate Type | Blocks Ship? |
 |----------|-----------|--------------|
-| `security-reviewer` | HARD | Yes — critical or high findings are non-negotiable |
-| `verifier` | HARD | Yes — tests must pass, build must succeed |
-| `code-reviewer` | HARD | Yes — blocking issues must be resolved |
-| `ux-reviewer` | AUTO-FIX | REQUEST CHANGES is auto-applied in the loop (a *major*). Only COMMENT notes may reach you |
+| `security-reviewer` | HARD | Yes — CRITICAL or HIGH |
+| `verifier` | HARD | Yes — any failing check |
+| `code-reviewer` | HARD | Yes — any blocking issue |
+| `ux-reviewer` | AUTO-FIX | REQUEST CHANGES (a *major*) is auto-fixed in the loop; only COMMENT notes reach you |
 | `technical-writer` | ADVISORY | No — findings recorded, pipeline proceeds |
 
 ## Severity Tiers and the Auto-Fix Boundary
@@ -67,23 +67,20 @@ Every finding has one tier.
 | Tier | Findings in this tier | Action |
 |------|-----------------------|--------|
 | **Blocking** | `issue (blocking)`, a bare `issue:` with no decoration, code-reviewer REQUEST CHANGES, security CRITICAL/HIGH, any verifier failure | Auto-fixed in the loop. **Never** surfaced to the user. |
-| **Major** | ux-reviewer REQUEST CHANGES | Auto-fixed in the loop. **Never** surfaced to the user. |
+| **Major** | ux-reviewer REQUEST CHANGES | Same as Blocking. |
 | **Minor and below** | `issue (pre-existing)`, `suggestion (non-blocking)`, `nitpick (non-blocking)`, security MEDIUM, security LOW, technical-writer GAPS (REQUIRED and RECOMMENDED alike), any COMMENT-level note | Recorded in the home PR's `review-notes` comment — never presented mid-run. |
 
 **A non-blocking finding never costs a round.** Each auto-fix reruns the
 implementer and the phase's reviewers. Minor reaches the human in PR review,
-regardless of importance. The human decides what to build and what to ship;
-the middle runs autonomously
-([human control rules](principles/human-control.md)).
-
-**No consult:** never present findings mid-run. Loop Blocking/Major until zero;
-write Minor-and-below to the PR's `review-notes` comment, tagged by reviewer.
+regardless of importance
+([human control rules](principles/human-control.md)). Never present findings
+mid-run. Tag each Minor-and-below entry in the `review-notes` comment by
+reviewer.
 
 ## Aggregating Verdicts
 
 1. Any Blocking/Major: FAIL; re-dispatch the implementer with no consult.
-2. Only Minor-and-below: PASS with the PR's `review-notes` comment; proceed to SHIP.
-3. No findings: PASS; proceed to SHIP.
+2. Otherwise PASS, recording any Minor-and-below in the PR's `review-notes` comment; proceed to SHIP.
 
-Loop until Blocking/Major are zero. No round limit or consultation ends it.
+Loop until Blocking/Major are zero; no round limit or consultation ends it.
 Never aggregate a Blocking/Major away; one CRITICAL blocks shipping.

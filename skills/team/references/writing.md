@@ -1,182 +1,94 @@
 # Writing Standards
 
-The authoring procedure and prose bar for every artifact and finding. Read this
-file before finalizing any prose you author. Apply exact-text and meaning
-protection before prose style.
+The prose bar for every artifact and finding. Read this file before
+finalizing any prose you author.
 
 ## Protect exact text first
 
-Do not rewrite source material: user text, quotes, vendor output, code,
-identifiers, commands, flags, numbers, frontmatter, schemas, parser tokens, or
-templates. Use source material as evidence, but keep its bytes unchanged.
+Keep source material byte-identical: user text, quotes, vendor output, code,
+identifiers, commands, flags, numbers, frontmatter, schemas, parser tokens,
+and templates.
 
 ## Preserve meaning
 
-Protect normative `must`, `shall`, and `should`. Protect `may` when it grants
-permission or states possibility. Preserve real uncertainty carried by `may`,
+Protect normative `must`, `shall`, and `should`, `may` when it grants
+permission or states possibility, and real uncertainty carried by `may`,
 `might`, or `could`. Preserve progressive and perfect tense when they encode
-current activity, completion, duration, or event order. Change these forms only
-when the resulting claim has the same meaning.
+current activity, completion, duration, or event order. Change these forms
+only when the claim keeps the same meaning.
 
-Exact-text contracts take first precedence. This semantic guard takes second.
-Style edits take third. The Simplified Technical English substitution table is
-a style edit and never overrides this guard: keep the modal when it carries
-normative force, permission, or possibility.
+Precedence: exact-text contracts, then this semantic guard, then style edits.
+A consuming skill's format contract wins over the modes and busy-reader rules,
+never over this semantic guard. The STE substitution table is a
+style edit and never overrides this guard.
 
 ## Compose prose methods in this order
 
-1. Save the untouched authored draft and classify protected text.
-2. Scan that draft for each distinct rule below. Record a checklist by rule and
-   affected claim. Zero initial matches make an empty checklist.
-3. Apply style rules only to unprotected prose. A recorded checklist item
-   cannot be erased, hidden, or closed by its edits.
-4. Resolve each recorded item against the original claim and evidence. A
-   grammar-only change does not resolve an unsupported claim.
-5. Then rescan the composed result for every distinct pattern.
-6. Run the self-audit and fix each remaining issue.
+1. Classify protected text in the untouched draft.
+2. Record each rule match by affected claim. Resolve each against the
+   original claim and evidence; a style or grammar edit does not resolve an
+   unsupported claim.
+3. Apply style rules only to unprotected prose, then rescan for every pattern.
 
 ## Self-audit (meaning)
 
-- Does each claim retain its evidence, tone, normative force, uncertainty, and
-  time relation?
-- Did every recorded match receive a substantive resolution?
-- Did the rescan find no unresolved owned pattern?
-- Is every protected source span byte-identical?
+A rewrite passes only when it removes the pattern, every recorded match got a
+substantive resolution, each claim keeps its evidence, tone, normative force,
+uncertainty, and time relation, and every protected span is byte-identical.
+Otherwise keep the original wording.
 
 ## Rules
 
-Pattern detection and meaning preservation come first; sentence mechanics such
-as plain words, active voice, sentence length, filler, and consistent names
-follow.
-
-### Claims must earn their place
-
-- Remove a claim when the available evidence does not support it. A participle
-  such as "ensuring" or "showcasing" does not prove an effect.
-- Name the source of a claim. Replace "experts say" or "reports suggest" with
-  a citation, or remove the attribution.
-- Replace praise, importance claims, and generic conclusions with a fact,
-  instruction, measurement, or cited decision.
-- Keep real uncertainty. Do not make evidence sound stronger than it is.
-
-### State facts directly
-
-- Prefer `is`, `has`, or the concrete action over inflated substitutes.
-- Remove contrast frames such as "not only X, but also Y" when two direct facts
-  say the same thing.
-- Do not force facts into groups of three or any rhetorical list of attributes.
-  Use the number the subject requires, including none: if the sentence states
-  the fact without the list, remove the list.
-- Use "from X to Y" only for actual endpoints on one scale. Otherwise name the
-  topics separately.
-- Replace supporting adverbs with a measured result or a precise verb.
-
-### Name the concrete subject
-
-- Remove stock AI vocabulary such as "seamless", "robust", "holistic", or
-  "transformative" when it contributes no technical meaning.
-- Replace vague metaphors with the file, function, service, boundary, action, or
-  measured effect they hide.
-- In particular, rewrite "center of gravity", "moves the needle", "surface
-  area", "shape of the problem", "the right seam", "unlocks", and "tees up".
-- Do not personify code or use an aphorism where a literal statement works.
-
-### Format only for structure
-
-- Use headings, lists, and bold text only when they express real hierarchy.
-- Use sentence case for headings.
-- Remove repeated bold-label-and-colon prefixes from list items.
-- Keep a colon for a list or example, not as a dramatic sentence connector.
-- Replace curly quotation marks with straight quotation marks in authored text.
-- Remove decorative emoji.
-- Avoid em dashes and imitation dashes. Split the sentence or use a comma when
-  the relationship remains clear.
-
-### Remove assistant mannerisms
-
-- Start with the requested information. Remove greetings, congratulations,
-  praise, and agreement that add no information.
-- Remove offers for more help and statements about the act of answering.
-- Remove canned openings and conclusions, rhetorical fragments, and repeated
-  sentence templates.
-- Keep the user's tone unless it conflicts with evidence or an exact contract.
-
-### Remove incidentals
-
-An explanation carries the point and the evidence for it. Delete the rest.
-
-- Delete background the reader did not ask for. Keep context only when it
-  changes the reader's decision.
-- Give the finding, not the search. Do not narrate the order in which you
-  looked, what you ruled out, or how long it took.
-- Delete restatement of the question, the instruction, or a point already made.
-- Delete caveats, alternatives, and history that do not change the decision.
-
-When the reader asked for history or rationale, that material is the subject,
-not an incidental.
-
-### Decide whether a rewrite passes
-
-A rewrite passes only when it removes the pattern and preserves the original
-claim, evidence, normative force, uncertainty, and time relation. If a style
-change would alter any of those, keep the original wording. Protected source
-text stays byte-identical.
+- **Claims earn their place.** Remove claims the evidence does not support; a
+  participle such as "ensuring" does not prove an effect. Name the source or
+  drop the attribution ("experts say"). Replace praise, importance claims,
+  and generic conclusions with a fact, measurement, or cited decision.
+- **State facts directly.** No "not only X, but also Y" frames, forced groups
+  of three, "from X to Y" without real endpoints, or adverbs in place of a
+  measured result.
+- **Name the concrete subject.** Replace stock AI vocabulary and vague
+  metaphors ("center of gravity", "moves the needle", "surface area", "shape
+  of the problem", "the right seam", "unlocks", "tees up") with the file,
+  function, boundary, action, or measured effect. Do not personify code.
+- **Format only for structure.** Headings, lists, and bold only for real
+  hierarchy. Sentence-case headings. No repeated bold-label-and-colon list
+  prefixes, dramatic colons, curly quotes, decorative emoji, or em dashes and
+  imitation dashes.
+- **No assistant mannerisms** (greetings, praise, offers of more help, canned
+  openings and closers, rhetorical fragments, repeated sentence templates,
+  statements about the act of answering). Keep the user's tone unless it
+  conflicts with evidence or an exact contract.
+- **Remove incidentals.** Delete background, caveats, and history that do not
+  change the reader's decision, narration of your search, and restatement.
+  When the reader asked for history or rationale, it is the subject.
 
 ## One busy reader
 
-The rules that follow govern sentences. This one governs the whole document.
+Applies to any text that asks a reader to decide or act: a PR description,
+design summary, changelog entry, review comment, or status report. When a
+brief requires the verdict as the terminal line, keep the supporting detail
+above it.
 
-Kenneth Roman and Joel Raphaelson wrote *Writing That Works: How to Communicate
-Effectively in Business* about memos and proposals. A pull request description
-is the same job: one busy reader, one decision, no time. So are a design
-summary, a changelog entry, a review comment, and a status report. Apply these
-rules to any text that asks a reader to decide or act. A consuming skill's
-format contract outranks them: when a brief requires the verdict or decision as
-the terminal line, keep the supporting detail above it.
-
-- **Lead with the recommendation.** Put the recommendation, the finding, or the
-  request in the first sentence. Support follows it. A reader who stops after
-  the first paragraph must still know what you want.
-- **Make the title say something.** A PR title states the change, not the area
-  it touches.
-- **Name the action, the owner, and the date.** Close with what the reader does
-  next. A document that asks for nothing gets nothing.
-- **Cut the throat-clearing.** Delete "The purpose of this document is to" and
-  every other sentence that describes the document instead of the subject.
-- **Write to a person.** Use "you" and "we". Answer the reader's question: what
-  does this change for me?
-- **Be specific.** Give the number, the date, the file, or the measurement. A
-  generality is a claim the reader cannot check.
-- **Take a stand.** State the recommendation you hold. A hedge hands the
-  decision back to the reader.
-- **Keep it to one page.** A longer document opens with a summary that stands
-  alone. Headings and lists carry the rest.
-- **Read it aloud before you send it.** Rewrite each sentence you cannot say
-  out loud.
+- Lead with the recommendation, finding, or request in the first sentence.
+- A PR title states the change, not the area it touches.
+- Close with the action, the owner, and the date.
+- Delete sentences that describe the document instead of the subject.
+- Write to a person ("you", "we"). Be specific. Take a stand.
+- Keep it to one page; a longer document opens with a standalone summary.
 
 ## Plain language
 
-- **Write at a seventh-grade reading level.** Use short sentences and common
-  words.
-- **Define acronyms at first use.** Write the full name when the acronym first
-  appears.
-- **One idea per sentence.** Prefer one plain verb to a nominalization.
-- **Use American spelling.** "color", not "colour"; "analyze", not "analyse".
+Write at a seventh-grade reading level. Define acronyms at first use. One idea
+per sentence; prefer a plain verb to a nominalization. Use American spelling.
 
 ### No unexplained specialist terms
 
-A specialist term is a word or phrase that has a field-specific meaning and
-that the intended reader may not know.
-
-- Replace the term with plain language, or define it at first use.
-- When the term controls an action or decision, its definition must state:
-  - what the reader does.
-  - which inputs or sources the reader may use.
-  - what condition passes or fails.
-- A link may add detail. It cannot replace the definition when the term
-  controls an action or a pass-or-fail decision.
-- Keep an established technical term when its first use gives the reader enough
-  information to act and judge the result.
+Replace a field-specific term the reader may not know with plain language, or
+define it at first use. When the term controls an action or decision, its
+definition states what the reader does, which inputs or sources they may use,
+and what condition passes or fails; a link cannot replace that definition.
+Keep an established technical term when its first use gives the reader enough
+to act and judge the result.
 
 ## Two modes
 
@@ -189,51 +101,31 @@ Choose per sentence:
   review comments. Cap at 25 words. Declarative prose is allowed. Use `would`
   or `could` only for an actual alternative or consequence. Ban `might`.
 
-A consuming skill's format contract wins. These modes govern sentence prose.
-
 ## Simplified Technical English (ASD-STE100)
 
-STE removes ambiguity for every reader, including readers whose first language
-is not English. Plain language above is the foundation; STE adds mechanical
-rules.
-
-The delete-list idea, the two-mode split, and the self-lint structure come
-from the "cure for AI slop" writing kit at
-<https://github.com/woosal1337/blog/tree/main/videos/ep01-the-cure-for-ai-slop>.
-The kit carries the MIT License, © 2026 Ege Çelebi. This file restates the
-ideas in its own words.
+Credit: the delete-list idea, the two-mode split, and the self-lint structure
+come from the MIT-licensed "cure for AI slop" kit
+(<https://github.com/woosal1337/blog/tree/main/videos/ep01-the-cure-for-ai-slop>,
+© 2026 Ege Çelebi), restated in Team's own words.
 
 ### The mechanical rules
 
-- **Use simple verb tenses only** — simple present, simple past, simple future,
-  imperative, infinitive, and past participle as an adjective. No perfect or
-  progressive tenses. Use an "-ing" form only inside a technical noun ("error
-  handling", "logging").
-- **Use the active voice.** Passive is permitted only when the actor is
-  unknown, irrelevant, or deliberately omitted ("The request was rejected").
-- **Do not stack auxiliaries.**
-- **Write one instruction per sentence.** Combine actions only when the reader
+- Simple tenses only (present, past, future, imperative, infinitive, past
+  participle as adjective). "-ing" only inside a technical noun ("error
+  handling").
+- Active voice. Passive only when the actor is unknown, irrelevant, or
+  deliberately omitted. No stacked auxiliaries.
+- Condition first, divided by a comma. Combine actions only when the reader
   must do them at the same time.
-- **Use the imperative for instructions.**
-- **Put the condition before the command, divided by a comma.**
-- **Give each word one meaning, and each thing one name.** No synonyms for
-  variety.
-- **Limit noun clusters to three words.**
-- **Do not omit words to shorten a sentence.** Keep subjects, verbs, and
-  articles. No contractions.
-- **Use a vertical list for complex text.** End the lead-in with a colon, one
-  item per line. Never a semicolon — write two sentences.
-- **Keep paragraphs short.** No more than six sentences, one topic each, topic
-  sentence first.
-- **Put warnings and cautions before the step they protect.**
-- **Name the thing.** "The component" → "the UserProfile component". "The
-  file" → "`config/database.yml`". Put commands, paths, and identifiers in
-  code blocks.
+- One meaning per word, one name per thing. Noun clusters of three words or
+  fewer.
+- Keep subjects, verbs, and articles. No contractions. No semicolons; write
+  two sentences or a vertical list.
+- Paragraphs of six sentences or fewer, one topic each, topic sentence first.
+- Warnings and cautions before the step they protect.
+- Name the thing; put commands, paths, and identifiers in code.
 
 ### STE word substitutions
-
-STE approves about 900 general words, each with one meaning. These cover the
-non-approved words that appear most often in software documentation:
 
 | Instead of | Write |
 |------------|-------|
@@ -276,24 +168,18 @@ non-approved words that appear most often in software documentation:
 | tear down | remove |
 | ramp up | increase |
 
-Modals are not substitutions: `must`, `shall`, `should`, `may`, `might`, and
-`could` are governed by [Preserve meaning](#preserve-meaning), never by this
-table. Keep the modal the sentence requires.
+Modals (`must`, `shall`, `should`, `may`, `might`, `could`) are governed by
+[Preserve meaning](#preserve-meaning), never by this table.
 
-Restricted meanings writers commonly get wrong:
-
-- *check* is approved only as a noun: "do a check of the logs", never "check
-  the logs".
-- *follow* means only "come after": "obey the instructions".
-- *select* means choose from alternatives; *set* means put a control in a
-  state ("set the flag to TEST").
-- *since* is approved for time only; for causation write *because*.
-- *or* never means "otherwise". Write a separate sentence.
-- *monitor* means to check something over a period of time for change.
+Restricted meanings: *check* is a noun only ("do a check of the logs");
+*follow* means only "come after" (write "obey the instructions"); *select*
+means choose from alternatives, *set* means put a control in a state; *since*
+is for time only (causation is *because*); *or* never means "otherwise";
+*monitor* means to check over a period of time for change.
 
 ### Words and phrases to delete
 
-These add no meaning. Delete them. Do not replace them.
+Delete these. Do not replace them.
 
 - **Marketing adjectives:** battle-tested, best-in-class, blazing-fast,
   cutting-edge, disruptive, effortless, enterprise-grade, game-changing,
@@ -303,17 +189,13 @@ These add no meaning. Delete them. Do not replace them.
   worth noting", "please note that", "as mentioned above".
 - **Filler:** "in order to", "a variety of", "in the event that", "due to the
   fact that", "aforementioned", "henceforth".
-- **False ease:** "simply", "just", "of course", "obviously" — they imply an
-  ease the reader may not feel.
+- **False ease:** "simply", "just", "of course", "obviously".
 
-A delete-list word survives in three places only: verbatim quotes and cited
-external text; code, identifiers, and proper nouns (`spin_up()`, "Leverage
-API"); and established terms of art where the substitute changes the technical
-meaning ("robust statistics").
-
-Evaluative prose gets no exemption. Delete the adjective and state the
-measurable property: "the error handling is robust" becomes "the error
-handling retries twice, then surfaces the error".
+A delete-list word survives only in verbatim quotes and cited external text;
+code, identifiers, and proper nouns (`spin_up()`, "Leverage API"); and terms
+of art where the substitute changes the meaning ("robust statistics").
+Evaluative prose gets no exemption: "the error handling is robust" becomes
+"the error handling retries twice, then surfaces the error".
 
 ## Self-lint
 
@@ -345,39 +227,23 @@ A bundled script scores prose against the mechanical rules, as violations per
 node "<skill-dir>/ste-lint.mjs" --breakdown --cap 25 "<file>"
 ```
 
-Replace `<skill-dir>` with the absolute path of the directory holding
-`ste-lint.mjs`. On Claude Code that is
-`${CLAUDE_PLUGIN_ROOT}/skills/team/references`, and the host sets that
-variable only for a skill loaded from an installed plugin. Codex sets no
-equivalent variable, so give the literal directory there. The script reads no
-environment variable — only the paths you pass it.
-
-The default cap of 20 scores instruction text; `--cap 25` scores descriptive
-prose. The score is a drift signal, not a gate. Nothing runs it automatically.
-`## Self-lint` remains the check you run before governed text is final.
+`<skill-dir>` is the absolute directory holding `ste-lint.mjs`: on Claude Code,
+`${CLAUDE_PLUGIN_ROOT}/skills/team/references`; elsewhere, the literal
+directory. Omit `--cap 25` (default 20) to score instruction text. The score
+is a drift signal, not a gate; `## Self-lint` remains the final check.
 
 ## Assessing documentation quality
 
-When reviewing documentation, evaluate three dimensions:
-
-- **Accuracy.** Stale documentation is worse than missing documentation
-  because it actively misleads. Do the examples still run? Do the APIs and
-  flags still exist? Does documented behavior match actual behavior? Flag a
-  stale version reference even when behavior has not changed — and flag
-  "as of the latest release" wording, which names no version at all.
-- **Completeness.** Most documentation covers only the happy path. Assess
-  whether failure cases, edge cases, and common mistakes are covered, whether
-  prerequisites are stated upfront, and whether adjacent concepts the reader
-  needs are linked or explained.
-- **Readability.** Hold prose to the rules above — strict mode for instruction
-  text, STE-flavored for descriptive prose, applied per sentence. Check that
-  one concept carries one name throughout, and that a reader can locate the
-  answer to a specific question in under 30 seconds.
+- **Accuracy.** Do examples run, do APIs and flags exist, does documented
+  behavior match? Flag a stale version reference even when behavior is
+  unchanged, and flag "as of the latest release" wording.
+- **Completeness.** Failure cases, edge cases, common mistakes, upfront
+  prerequisites, and links to needed adjacent concepts.
+- **Readability.** The rules above. A reader finds the answer to a specific
+  question in under 30 seconds.
 
 For documentation-gap review and `REQUIRED`/`RECOMMENDED` classification, read
 `references/documentation-reviewer.md`.
 
-The detection categories above are inspired by Lauren Tan's [Cursor pstack
-unslop
+Detection categories inspired by Lauren Tan's [Cursor pstack unslop
 skill](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md).
-The categories, contracts, and wording were authored for Team.

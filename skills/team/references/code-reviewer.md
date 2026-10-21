@@ -1,60 +1,46 @@
 # Code Reviewer Brief
 
-Resolve links in this file from the installed `skills/team/` directory, whichever skill or agent reads it.
+Resolve links in this file from the installed `skills/team/` directory.
 If a required read fails, stop that step with the exact path. Never use
 checkout fallback or recursive loading.
 
-Reviews must be performed by agents with fresh context. The generator (the
-agent that wrote the code) must never evaluate its own output.
 Read [focused work rules](principles/focused-work.md) and
 [verified results rules](principles/verified-results.md) before review.
 
-Write the prose this brief governs at a seventh-grade reading level, in
-STE-flavored mode. Read the [writing standards](references/writing.md)
+Write in STE-flavored mode. Read the [writing standards](references/writing.md)
 and apply its `## Self-lint` checklist before you finalize.
 
 ## Generator-Evaluator Separation
 
-- Reviewers MUST have fresh context with no shared conversation history.
-- Reviewers read the diff and the plan — not the implementation discussion.
-- Reviewers take intent from artifacts, never from the implementer's
-  explanation.
+- Reviewers MUST have fresh context with no shared conversation history. The
+  generator (the agent that wrote the code) never evaluates its own output.
+- Reviewers take intent from the diff, the plan, and other artifacts, never
+  from the implementation discussion or the implementer's explanation.
 - A reviewer needing clarification flags it as an open question. It never asks
   the implementer.
 
-The cross-gate canon lives at [independent review rules](principles/independent-review.md);
-this brief owns the code-review application.
+The cross-gate canon lives at [independent review rules](principles/independent-review.md).
 
 ## Veto Without Authorship
 
-Block the line, change nothing
-([independent review rules](principles/independent-review.md)).
-
-- **You hold no write tool.** Every reviewer agent has read-only tool grants
-  and `permissionMode: plan`. Report the defect. Never fix it.
-- **The veto holds until the finding is resolved** — for as many rounds as it
-  takes; a check that can never be satisfied grinds until a person stops the
-  run. Report the finding you actually have — do not hold the line on one you
-  cannot support with evidence.
+Report the defect; never fix it. The veto holds until the finding is
+resolved, for as many rounds as it takes. Report only findings you can
+support with evidence.
 
 ## Finding Format
 
-Format follows the artifact. A code-reviewer **finding** uses the
-Conventional Comments format in [finding format](references/findings.md). The
-security-reviewer and technical-writer keep their agent-file templates, and
-[finding format](references/findings.md) maps their severities to tiers. A
-**live-verification report** (the ux-reviewer's) uses Working/Broken/Could
-Improve.
+A code-reviewer finding uses Conventional Comments. Read [finding
+format](references/findings.md); it also maps every reviewer's template to a
+tier and owns how each verdict gates the pipeline.
 
 ## Report Format
 
 One report shape binds every surface a code review crosses: the
-code-reviewer's final report, a subagent's report when it reviews a diff on a
-dispatcher's behalf, and the full output the top-level session presents after
-a direct invocation. A relay reproduces the report in full — never a
-paraphrase, never a subset. A reviewer that carries its own report template
-in its agent file (the security-reviewer, the ux-reviewer, the
-technical-writer, the verifier) keeps it; this shape governs the code review.
+code-reviewer's final report, a subagent's report reviewing a diff for a
+dispatcher, and the top-level session's output after a direct invocation. A
+relay reproduces the report in full, never a paraphrase or subset. Reviewers
+with their own agent-file template (security-reviewer, ux-reviewer,
+technical-writer, verifier) keep it.
 
 ```markdown
 **Verdict: <✅ APPROVE | ❌ REQUEST CHANGES | 💬 COMMENT>**
@@ -89,44 +75,31 @@ that pass did not run.>
 
 - **The verdict line comes first.** The orchestrator parses it. The
   tokens are the Code Reviewer list in `## Verdict Criteria` — no other
-  token, no prose verdict. Each token carries its standard emoji prefix
-  (✅ APPROVE, ❌ REQUEST CHANGES, 💬 COMMENT); the word token, not the
-  emoji, is what the orchestrator matches on.
-- `### Findings` entries use Conventional Comments (`## Finding Format`
-  above), each with its `file:line` reference.
-- **The output format is not a choice.** Emit all five headings, in the
-  order the template gives them, on every report. Invent no section,
-  rename none, move none, and drop none.
-- **A section with nothing to report says so on its own line** — the way
-  `### Findings` reads "No findings." when there are none. The last two
-  sections record the two optional passes, the skeptic pass and then the
-  cross-model pass; a pass that did not run says `Not run: <reason>.` in
-  its section. This is where "skip loudly" lands in the report.
-  What did not happen is reported as visibly as what did ([verified results rules](principles/verified-results.md)).
+  token, no prose verdict — each with its emoji prefix; the orchestrator
+  matches the word token, not the emoji.
+- `### Findings` entries use Conventional Comments, each with its
+  `file:line` reference.
+- **Emit all five headings**, in template order, on every report. Invent no
+  section, rename none, move none, and drop none. An empty section states its
+  placeholder text on its own line
+  ([verified results rules](principles/verified-results.md)).
 - **A receiver reports a deviation. It never repairs one.** When a report
   that reaches you drops a heading, adds one this template does not list, or
   reorders them, pass it on as it arrived and name the deviation on its own
-  line. This binds every surface named above — the relay after a direct
-  invocation, and a dispatcher folding in what a subagent returned.
-
-## Gate Types and Severity Tiers
-
-Read [finding format](references/findings.md). It owns how each reviewer's
-verdict gates the pipeline.
+  line. This binds every surface named above.
 
 ## Verdict Criteria
 
 ### Security Reviewer
 
-- **PASS:** No CRITICAL or HIGH findings. MEDIUM/LOW findings are reported but
-  do not block.
+- **PASS:** No CRITICAL or HIGH findings; MEDIUM/LOW are reported, not blocking.
 - **FAIL:** Any CRITICAL or HIGH finding. The pipeline MUST re-dispatch the
   implementer. No override.
 
 ### Verifier
 
 - **PASS:** All detected checks (format, lint, typecheck, build, test) pass.
-- **FAIL:** Any check fails. The pipeline re-dispatches the implementer.
+- **FAIL:** Any check fails; the pipeline re-dispatches the implementer.
 
 ### Code Reviewer
 
@@ -141,16 +114,15 @@ branch owns. An unmet done criterion or a failing test suite is an
 `issue (blocking)` finding.
 
 A finding whose only fix is to edit a locked acceptance test is
-`suggestion (non-blocking)`. No agent may edit a locked test during
-IMPLEMENT, CODE REVIEW, and SECURITY REVIEW, so a block on it has no fix.
+`suggestion (non-blocking)`, because no agent may edit a locked test during
+IMPLEMENT, CODE REVIEW, and SECURITY REVIEW.
 
 ### UX Reviewer
 
 - **APPROVE:** Every exercised flow works.
-- **REQUEST CHANGES:** At least one Broken item. Treated as a *major* —
-  auto-fixed in the loop, not surfaced to the user.
-- **COMMENT:** Could-Improve notes only (minor-and-below — recorded in the
-  PR's `review-notes` comment, never presented mid-run).
+- **REQUEST CHANGES:** At least one Broken item (a *major*, auto-fixed).
+- **COMMENT:** Could-Improve notes only (minor-and-below, recorded in the
+  PR's `review-notes` comment).
 
 ### Technical Writer
 
@@ -159,10 +131,8 @@ IMPLEMENT, CODE REVIEW, and SECURITY REVIEW, so a block on it has no fix.
 
 ## Code Reviewer Contract
 
-This section sets what the pipeline needs from a code review. It does not set
-how to review. Use your own judgment on the method and on the severity of
-each finding. The [finding format](references/findings.md) maps each label to
-its tier.
+This section sets what the pipeline needs from a code review, not how to
+review. Use your own judgment on method and severity.
 
 - **Input.** Review the range your dispatch names, or `git diff HEAD~1` when
   it names none. Judge the range against the intent artifacts your dispatch

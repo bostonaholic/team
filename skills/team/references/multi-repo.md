@@ -3,15 +3,13 @@ Resolve these links from the installed `skills/team/` directory. If a read fails
 
 # Multi-repo detection and output
 
-Read this before resolving or recording multiple repositories.
-
 ## Detection
 
 Suspect multiple repos only when the description names two or more directories/projects, says `across`, `spans`, `in both`, names a contract in another repo, or gives absolute paths/names absent from the current repo. Use `ls` to verify.
 
 Validate every candidate against `^[A-Za-z0-9._-]+$`; reject `.` and `..`, separators, absolute paths, traversal, `$()`, backticks, and shell metacharacters. Pass data as one argv argument. Resolve only sibling directories `<root>/../<name>`. Verify git with `git -C <path> rev-parse --git-dir`. Require `realpath "<root>/../<name>"` to equal `"$(dirname "$(realpath "<root>")")/<name>"`.
 
-All candidates must resolve. Otherwise use single-repo mode, omit `4-repos.md`, and record the named omission in `1-task.md` `## Open assumptions`. Unresolvable includes allowlist failure, missing sibling, non-git directory, and escape from the home repo's parent.
+All candidates must pass these checks. Otherwise use single-repo mode, omit `4-repos.md`, and record the named omission in `1-task.md` `## Open assumptions`.
 
 ## `4-repos.md`
 

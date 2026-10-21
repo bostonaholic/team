@@ -15,18 +15,18 @@ If a required read fails, stop that step with the exact path. Never use checkout
 
 Before finalizing prose you author, read the [writing standards](../team/references/writing.md).
 
-Run the STRUCTURE phase. It runs autonomously and advances to PLAN — there
-is **no gate** here. Nothing is presented for approval mid-run.
+Run the STRUCTURE phase autonomously. There is **no gate**: nothing is
+presented for approval, and within a full `/team` run the orchestrator
+advances to PLAN automatically.
 
 ## Input
 
-`$ARGUMENTS` is the artifact directory: `docs/plans/<id>/`. If empty, the
-discovery command below resolves it.
+`$ARGUMENTS` is the artifact directory `docs/plans/<id>/`; if empty, the
+discovery command resolves it.
 
 The `structure-planner` reads:
 
-- `$ARGUMENTS/6-design.md` (the reviewed design — the latest
-  `$ARGUMENTS/design-review-<n>.md` must carry a passing verdict)
+- `$ARGUMENTS/6-design.md` (the reviewed design)
 - `$ARGUMENTS/5-research.md`
 - `$ARGUMENTS/1-task.md` (the authority for user intent)
 
@@ -36,33 +36,23 @@ dispatching or accepting `7-structure.md`. Reject a test that lacks task
 support.
 
 Resolve `<team-skill-dir>` to the absolute directory containing
-`skills/team/SKILL.md`. From the repository root, run the command below. Its
-predecessor filter requires a `6-design.md` whose latest
-`design-review-<n>.md` carries a passing verdict (APPROVE or COMMENT), so
-unreviewed or REQUEST-CHANGES candidates are skipped:
+`skills/team/SKILL.md`. From the repository root, run:
 
 ```sh
 "<team-skill-dir>/discover-topic.sh" "${ARGUMENTS:-}" "6-design.md" --require-passing-review
 ```
 
-- **If the command printed a path**, use it as `$ARGUMENTS` for the rest of this
-  skill (tier 1 explicit arg, or tier 2 discovery of a reviewed predecessor).
-  When the path came from tier 2 (no explicit arg), announce the resolved
-  directory to the user before proceeding, so an auto-picked topic is never
-  silent.
-- **If the command printed nothing** (tier 3 — no directory holds a
-  `6-design.md` with a passing design review), do not hard-error. Fire
-  `AskUserQuestion` with a `Setup` header
-  and labeled options:
-  - **Run the producer** — run `/team-design docs/plans/<id>/` to produce
-    and review `6-design.md`.
-  - **Give a path** — the user supplies the `docs/plans/<id>/` directory
-    directly (run `ls docs/plans/` to find your topic directory).
+- **Printed a path:** use it as `$ARGUMENTS`. If it came from tier 2 (no
+  explicit arg), announce the resolved directory before proceeding.
+- **Printed nothing:** do not hard-error. Fire `AskUserQuestion` with a
+  `Setup` header and labeled options:
+  - **Run the producer** — run `/team-design docs/plans/<id>/`.
+  - **Give a path** — the user supplies `docs/plans/<id>/` (`ls docs/plans/`
+    lists them).
 
 ## Execution
 
-1. Use the directory resolved in `## Input`, then **verify the review gate**.
-   Run:
+1. Use the directory resolved in `## Input`, then **verify the review gate**:
 
    ```sh
    "<team-skill-dir>/scripts/design-review-status.sh" "$ARGUMENTS"
@@ -72,18 +62,11 @@ unreviewed or REQUEST-CHANGES candidates are skipped:
    - **Exit 1:** **refuse**. Report the printed review file and verdict, state
      that the design has not passed review, and suggest
      `/team-design $ARGUMENTS` — never slice an unreviewed design.
-     No recorded verdict counts as not passed ([verified results rules](../team/principles/verified-results.md)).
    - **Exit 2:** stop and report the stderr line.
 2. Dispatch `structure-planner`, which writes `$ARGUMENTS/7-structure.md`
-   with vertical slices. The artifact carries plain frontmatter
-   (`topic`, `date`, `phase: structure`) — no approval fields, because
-   structure is not gated.
-3. **No gate. Nothing is presented for approval mid-run.** Within a full
-   `/team` run the orchestrator advances to PLAN automatically. Run
-   standalone, this skill stops after writing the structure and reports the
-   next command.
-4. **Stop once `$ARGUMENTS/7-structure.md` exists.**
+   with vertical slices and plain frontmatter (`topic`, `date`,
+   `phase: structure`) — no approval fields.
+3. **Stop once `$ARGUMENTS/7-structure.md` exists.**
 
 Report the structure path. When run standalone, tell the user:
 **"Next: run `/team-plan docs/plans/<id>/`"**
-(Within a full `/team` run the orchestrator advances to PLAN automatically.)

@@ -2,7 +2,7 @@
 
 ## `4-repos.md`
 
-Write this only when a topic touches more than one repository. Its presence enables multi-repo mode under `skills/team-worktree/playbooks/worktree.md`. The home worktree is created in leading WORKTREE, secondary worktrees after design review.
+Write this only when a topic touches more than one repository. Its presence enables multi-repo mode under `skills/team-worktree/playbooks/worktree.md`.
 
 ```yaml
 ---
@@ -16,24 +16,22 @@ phase: repos
 ## Home repo
 - **name:** <short-slug>
 - **path:** <absolute-path>
-- **role:** One sentence describing what kind of work happens here.
+- **role:** <one sentence: the work done here>
 
 ## Additional repos
 - **name:** <short-slug>
   **path:** <absolute-path>
-  **role:** One sentence describing what kind of work happens here.
-- **name:** <short-slug>
-  **path:** <absolute-path>
-  **role:** ...
+  **role:** <one sentence: the work done here>
+- ...
 
 ## Worktrees
-<written by the orchestrator after design review; back-records the home worktree plus secondary paths>
+<orchestrator-written after design review>
 - home: <home-worktree-path>
 - <repo-name>: <repo-path>/.claude/worktrees/<id>
 - ...
 ```
 
-Names are unique short slugs such as `frontend`, `api`, or `shared-types`, used as `[repo: api]`. Paths are absolute git working trees. The invocation repo is home and alone owns canonical `docs/plans/<id>/`; secondary worktrees do not duplicate artifacts. The questioner/design-author lists repos but MUST NOT write `## Worktrees`; the orchestrator adds it after design review.
+Names are unique short slugs such as `frontend`, `api`, or `shared-types`, used as `[repo: api]`. Paths are absolute git working trees. The invocation repo is home and alone owns canonical `docs/plans/<id>/`; secondary worktrees do not duplicate artifacts. The questioner/design-author lists repos but MUST NOT write `## Worktrees`.
 
 ## `3-prd.md`
 

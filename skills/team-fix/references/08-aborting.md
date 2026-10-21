@@ -1,8 +1,7 @@
 ## Aborting
 
-If reproduction fails: report "Bug could not be reproduced with the
-given description." and stop. Do not write a test for an unconfirmed bug.
+Reproduction fails: report "Bug could not be reproduced with the given
+description." and stop. Never write a test for an unconfirmed bug.
 
-If the fix is larger than expected (touching many files, requiring new
-APIs, or revealing an architectural problem): stop, report the scope,
-and recommend switching to the full `/team` pipeline.
+Fix larger than expected (many files, new APIs, or an architectural
+problem): stop, report the scope, and recommend the full `/team` pipeline.

@@ -1,139 +1,38 @@
 ## Execution
 
-`<team-pr-skill-dir>` is the absolute directory that holds the installed
-`skills/team-pr/SKILL.md`.
+`<team-pr-skill-dir>` is the absolute directory that holds the installed `skills/team-pr/SKILL.md`.
 
-1. **Detect mode and inventory worktrees with commits.**
-   - Read `$ARGUMENTS/4-repos.md` if present. When present, you are in
-     **multi-repo mode** — read the `## Worktrees` section to get each
-     repo's worktree path.
-   - For each involved worktree (single-repo: the current one; multi-repo:
-     each from `4-repos.md`), run step 2's script. Skip any with `ahead=0`.
-2. **Detect the base branch (per repo).** Run
-   `"<team-pr-skill-dir>/scripts/ship-state.sh" <worktree-path>`. Exit 0
-   prints `base=`, `ahead=`, and `dirty=` lines; bind `base` as that repo's
-   base branch. Exit 2 is a fault: report its stderr line and stop.
-3. **Resume path** — `$ARGUMENTS/1-task.md` exists: read `ticketId` from
-   its frontmatter. Read `$ARGUMENTS/6-design.md` for the "why" behind the
-   changes.
-   Before step 6 edits the changelog and step 7 makes the ship commit, read
-   the newest `$ARGUMENTS/review-<n>.md` and the newest
-   `$ARGUMENTS/security-review-<n>.md` once each. Bind before any edit outside
-   `docs/plans/`, this run's or a caller's: the `/team` PR gate leaves the
-   changelog to step 6 for this reason. Read the
-   [artifact schema](../team/references/artifacts.md) for the record
-   states. Resolve the worktrees by the home-worktree order in
-   [the team-code-review input](../team-code-review/references/01-input.md). For the
-   whole run, bind the review record path with one review status, and the
-   security record path with one security status. Each status is one of:
+1. **Detect mode and inventory worktrees with commits.** If `$ARGUMENTS/4-repos.md` exists, you are in **multi-repo mode**; its `## Worktrees` section gives each repo's worktree path. Run step 2's script for each involved worktree (single-repo: the current one); skip any with `ahead=0`.
+2. **Detect the base branch (per repo).** Run `"<team-pr-skill-dir>/scripts/ship-state.sh" <worktree-path>`. Exit 0 prints `base=`, `ahead=`, and `dirty=`; bind `base` as that repo's base branch. Exit 2: report its stderr line and stop.
+3. **Resume path** — `$ARGUMENTS/1-task.md` exists: read `ticketId` from its frontmatter, and `$ARGUMENTS/6-design.md` for the "why".
+   Read the newest `$ARGUMENTS/review-<n>.md` and the newest `$ARGUMENTS/security-review-<n>.md` once each, before any edit outside `docs/plans/` (this run's or a caller's), so before steps 6 and 7. Record states are in the [artifact schema](../team/references/artifacts.md). Resolve the worktrees by the home-worktree order in [the team-code-review input](../team-code-review/references/01-input.md). For the whole run, bind the review record path with one review status, and the security record path with one security status. Each status is one of:
    - `current`: the newest record is PASS and current.
    - `stale`: the newest record is PASS and stale.
-   - `missing`: no record exists, or the newest record is FAIL or
-     malformed.
+   - `missing`: no record exists, or the newest record is FAIL or malformed.
    In either mode, gather the shared [inputs](01-input.md) for each changed repository.
-4. **Decide UI impact and resolve the screenshot manifest.** Read the
-   [ux reviewer brief](../team/references/ux-reviewer.md) and apply its
-   `## Screenshot Capture (UI projects)` UI-impact gate to the full branch
-   diff, never this round's delta. A backend change that alters the interface
-   counts. When UI impact is uncertain, capture. Only a branch that does not
-   change the interface omits the section — non-UI changes are never forced to
-   include one. A branch that does change it must carry the section, so
-   capture when needed. Run
-   `node "<team-pr-skill-dir>/scripts/manifest-entries.mjs" "$ARGUMENTS" "$ARGUMENTS/entries.json"`:
-   - Exit 0 (`render`): the manifest renders. The entries file and the
-     printed `notes` feed the Screenshots section (see PR Body Template
-     below) and the upload.
-   - Exit 1 (`capture-gap`) is a capture gap, not a non-UI change. Run the
-     brief's capture procedure now, then run the script again. A second
-     exit 1 renders the capture-failure note with its `reason`.
-   - Exit 2 is a fault: render the capture-failure note with its stderr
-     line. A screenshot problem never blocks the PR.
-   In standalone mode no artifact directory exists, so capture into a
-   run-scoped `$(mktemp -d)` directory and bind that directory as `$ARGUMENTS`
-   for the capture and upload steps.
-5. **Standalone path** — no matching artifact directory:
-   - From step 2's output: `ahead=0` with `dirty=0` means "Nothing to
-     ship." Report it and stop. With `ahead=0` and `dirty` above 0, read
-     `git status` and judge whether the uncommitted changes are worth
-     shipping; if not, report "Nothing to ship." and stop. (Standalone mode
-     is single-repo only.)
-   - No review record applies in standalone mode. Warn the user once that
-     they are taking responsibility for correctness.
-6. **Update an existing CHANGELOG.md** before committing (see Changelog Update
-   below). If the root file is absent, leave it absent and report the skip
-   unless the user explicitly requested a new changelog. In multi-repo mode,
-   apply this rule per repo and add only that repo's entries.
-7. **Open a draft PR automatically — do not stop to ask.** Push the branch
-   and open the PR as a **draft** (`gh pr create --draft`). Pass the
-   body to `gh pr create`/`gh pr edit` through `--body-file` or a quoted
-   heredoc — never interpolated into a double-quoted shell argument. Any
-   uncommitted final changes (typically `CHANGELOG.md`) land as a single
-   trailing ship commit before the push. In multi-repo mode this opens
-   **one draft PR per repo with commits** and cross-links them. When a
-   capture manifest exists, the screenshot upload runs after the PR opens
-   (see Screenshot Upload below). After `gh pr create`, and in multi-repo
-   mode after the `## Companion PRs` edit, read
-   [review comments](07-review-comments.md) and run it on the home PR
-   before the hand-off.
-8. In multi-repo mode, push each repo's branch independently. Cross-link the
-   PRs in their bodies (see PR Body Template below).
-9. **Tracking ticket — link now, in-review when ready.** If `ticketId` is
-   non-null, read [tracking rules](tracking.md) and apply its
-   ticket-lifecycle rules. Render the ticket link as the closing line that
-   the PR Body Template below starts with. Best-effort. Never block the
-   pipeline.
-10. **Whenever you push to a PR, review and adjust its description.** This
-   applies to any push that adds, removes, or changes commits on a PR's
-   branch, including the initial open *and* every follow-up push (such as review
-   feedback, fixups, and rebases). After each one, re-read the body
-   against the now-pushed commits and update it
-   (`gh pr edit --body-file`, or a quoted heredoc per step 7) so the
-   explanations, terminology, representations, evidence, merge risk, and references match the pushed diff.
-   Reassess these facts through the shared input and body authoring rules.
-   Retain claims only when available evidence supports them.
-   Label earlier-commit evidence and unresolved current coverage when prior checks no longer prove the changed behavior.
-   When the push changed the UI, read the
-   [ux reviewer brief](../team/references/ux-reviewer.md) and
-   re-capture per its "Screenshot Capture (UI projects)" section (it wipes
-   and recaptures). Then re-render the `## Screenshots` section and run the
-   Screenshot Upload procedure again, so the embedded images show the UI the
-   branch now produces. When the push left the UI alone, the refresh
-   carries the uploaded `## Screenshots` section through verbatim: never
-   dropped, never re-run — the asset URLs already in the body stay
-   valid. A re-capture that cannot run falls back to the
-   degraded note the rendering rules define. A screenshot problem never
-   blocks or delays the push. When the body carries a closing line (the
-   home repo's PR of a ticketed topic), each refresh re-emits **exactly
-   one** closing line as the body's first line — never duplicated, never
-   dropped, never moved.
-   A companion PR re-emits its non-closing reference the same way, and a PR
-   with no ticket has no closing line to re-emit. The post-open
-   `## Companion PRs` section is likewise preserved on every refresh. After
-   each push to the home PR, run [review comments](07-review-comments.md)
-   again, so a comment that failed to post earlier posts now. When the
-   current body has a line exactly `## Review notes`, the PR predates that
-   step: carry the section through verbatim, and skip the step. Never
-   leave a stale description after a push. In multi-repo mode, do this for
-   each repo's PR whose branch you pushed.
-11. **Leave the worktree(s) in place.** Do not remove a worktree after
-   opening a PR. Clean up only after the PR is merged or when the user
-   explicitly asks. Read the
-   [worktree playbook](../team-worktree/playbooks/worktree.md) and follow
-   its "Ship (teardown)" procedure:
-   commit preservation, worktree and branch removal, the rebase-only
-   default-branch update, and deletion of the feature's untracked
-   `docs/plans/<id>` scratch dir. In multi-repo mode, run cleanup for
-   every involved repo.
+4. **Decide UI impact and resolve the screenshot manifest.** Apply the [ux reviewer brief](../team/references/ux-reviewer.md)'s `## Screenshot Capture (UI projects)` UI-impact gate to the full branch diff, never this round's delta. A backend change that alters the interface counts; when uncertain, capture. Only a branch that does not change the interface omits the section. Run `node "<team-pr-skill-dir>/scripts/manifest-entries.mjs" "$ARGUMENTS" "$ARGUMENTS/entries.json"`:
+   - Exit 0 (`render`): the entries file and printed `notes` feed the Screenshots section and the upload.
+   - Exit 1 (`capture-gap`), not a non-UI change: run the brief's capture procedure, then the script again. A second exit 1 renders the capture-failure note with its `reason`.
+   - Exit 2 is a fault: render the capture-failure note with its stderr line.
+   A screenshot problem never blocks the PR. In standalone mode, capture into a run-scoped `$(mktemp -d)` directory and bind it as `$ARGUMENTS` for the capture and upload steps.
+5. **Standalone path** — no matching artifact directory (single-repo only):
+   - From step 2: `ahead=0` with `dirty=0`, or with `dirty` above 0 and `git status` showing nothing worth shipping: report "Nothing to ship." and stop.
+   - No review record applies. Warn the user once that they take responsibility for correctness.
+6. **Update an existing CHANGELOG.md** before committing, per [Changelog Update](05-changelog-update.md) (its absent-file rule included). In multi-repo mode, per repo with only that repo's entries.
+7. **Open a draft PR automatically — do not stop to ask.** Uncommitted final changes (typically `CHANGELOG.md`) land as one trailing ship commit before the push. Push the branch and run `gh pr create --draft`. Pass every body through `--body-file` or a quoted heredoc, never a double-quoted shell argument. Multi-repo mode opens **one draft PR per repo with commits**. After `gh pr create` (and in multi-repo mode the `## Companion PRs` edit), run the [screenshot upload](04-screenshot-upload.md) when a capture manifest exists and [review comments](07-review-comments.md) on the home PR before the hand-off.
+8. In multi-repo mode, push each repo's branch independently; cross-linking follows the [PR Body Template](03-pr-body-template.md).
+9. **Tracking ticket — link now, in-review when ready.** If `ticketId` is non-null, apply [tracking rules](tracking.md), rendering the ticket link as the body's closing line.
+10. **After every push to a PR, refresh its description** — the initial open and every push that adds, removes, or changes commits (review feedback, fixups, rebases). Update the body (`gh pr edit --body-file`, or a quoted heredoc) so every section matches the pushed diff, per the input and body authoring rules. Retain claims only when evidence supports them; label earlier-commit evidence and unresolved coverage when prior checks no longer prove the changed behavior.
+   - **UI changed:** re-capture per the [ux reviewer brief](../team/references/ux-reviewer.md)'s "Screenshot Capture (UI projects)" section, re-render `## Screenshots`, and rerun the Screenshot Upload. A re-capture that cannot run falls back to the degraded note; never block the push.
+   - **UI unchanged:** carry the uploaded `## Screenshots` section through verbatim; its asset URLs stay valid.
+   - Re-emit **exactly one** closing line as the body's first line (the home PR of a ticketed topic) — never duplicated, dropped, or moved. A companion PR re-emits its non-closing reference the same way. Preserve the post-open `## Companion PRs` section.
+   - Run [review comments](07-review-comments.md) again after each push to the home PR, unless the body has a line exactly `## Review notes`: then carry that section through verbatim.
+   In multi-repo mode, do this for each repo's PR whose branch you pushed.
+11. **Leave the worktree(s) in place.** Clean up only after merge or on explicit user request, via the "Ship (teardown)" procedure in the [worktree playbook](../team-worktree/playbooks/worktree.md), for every involved repo.
 
 ## Step dispatch
 
-Read [step delegation](../team/references/step-delegation.md) before the
-first dispatch. Mode and worktree inventory, base-branch detection, the
-standalone checks, the ship commit, every push, `gh pr create`, the
-`## Companion PRs` edit, and the ticket transition stay inline. The work
-below runs in fresh subagents. The scratch directory is `$ARGUMENTS`, or the
-run-scoped `mktemp -d` directory in standalone mode. Every brief carries the
-worktree path, the base branch, and the scratch directory.
+Read [step delegation](../team/references/step-delegation.md) before the first dispatch. Inline: steps 1, 2, 5, the ship commit, every push, `gh pr create`, the `## Companion PRs` edit, and the ticket transition. The work below runs in fresh subagents; every brief carries the worktree path, the base branch, and the scratch directory (`$ARGUMENTS`, or the standalone `mktemp -d` directory).
 
 | Subagent | Brief adds | Edits | Returns |
 | --- | --- | --- | --- |
@@ -144,9 +43,4 @@ worktree path, the base branch, and the scratch directory.
 | Upload | the PR URL; the manifest; [Screenshot Upload](04-screenshot-upload.md) | the PR body's `## Screenshots` section | uploaded asset count, or the degraded-note reason |
 | Review comments | the PR URL; the bound review and security record paths and statuses; [Review Comments](07-review-comments.md) | PR comments only | posted, skipped, and failed comment counts |
 
-Dispatch Inputs, Screenshots, and Changelog together. Body starts after
-all three return. Open the PR inline from `pr-body.md`. Then
-dispatch Upload and Review comments together. A step 10 refresh re-runs
-Body with the pushed commits, then Upload when the UI changed, then Review
-comments. In multi-repo mode, dispatch Inputs, Changelog, and Body once per
-repo with commits.
+Dispatch Inputs, Screenshots, and Changelog together; Body starts after all three return. Open the PR inline from `pr-body.md`, then dispatch Upload and Review comments together. A step 10 refresh re-runs Body with the pushed commits, then Upload when the UI changed, then Review comments. In multi-repo mode, dispatch Inputs, Changelog, and Body once per repo with commits.

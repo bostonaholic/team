@@ -7,11 +7,11 @@ Each commit records one independently correct decision: what changed, why, and h
 ## The 50/72 Rule
 
 - Subject: under 50 characters, imperative, specific, first word capitalized after any type prefix, and no final period. Complete “This commit will…”.
-- Body: blank line after subject, wrap at 72 characters, explain motivation and non-obvious caller, migration, or compatibility effects. The diff already shows what changed.
+- Body: blank line after subject, wrap at 72 characters, explain motivation and non-obvious caller, migration, or compatibility effects.
 
 ## Conventional Commits
 
-Use `<type>[optional scope]: <description>`, optional body, then optional footers. Allowed types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`, `ci`, `revert`. Scope names the component/module/layer, e.g. `feat(auth):`, `fix(api):`, `docs(readme):`.
+Use `<type>[optional scope]: <description>`, optional body, then optional footers, with a type from the table below. Scope names the component, e.g. `feat(auth):`.
 
 Breaking changes require a `BREAKING CHANGE:` footer or `!` in `feat!:` / `feat(api)!:`.
 
@@ -29,9 +29,7 @@ Breaking changes require a `BREAKING CHANGE:` footer or `!` in `feat!:` / `feat(
 
 ## Atomic Commits
 
-- One logical change per commit; “and” in the subject often signals two commits.
-- Every commit leaves tests passing; never rely on a later commit to repair it.
-- Stage selectively with `git add -p` when one file contains unrelated hunks.
+One logical change per commit, each leaving tests passing; stage with `git add -p` to split unrelated hunks.
 
 ## Ship-phase commit
 
@@ -41,18 +39,3 @@ Breaking changes require a `BREAKING CHANGE:` footer or `!` in `feat!:` / `feat(
 4. Omit attempts, WIP notes, and details evident from the diff.
 
 Complex changes need a body. Squash every `WIP: still debugging` commit before shipping.
-
-Ship example:
-
-```text
-feat(auth): add OAuth2 login with GitHub provider
-
-Implements GitHub OAuth2 flow: redirect to GitHub, exchange code for token,
-create or update user record, issue session cookie.
-
-New files:
-- handlers/oauth_callback.go — token exchange and session creation
-- middleware/session.go — cookie validation for protected routes
-
-Closes #127
-```
