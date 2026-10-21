@@ -104,14 +104,28 @@ the record states (malformed, current, stale) in the
 8. **Fix loop.** On FAIL:
    - Record the typed failure class(es) (security, lint, typecheck, build,
      test, review, suggestion, ux).
+   - Count the FAIL streak: the number of consecutive FAIL records, newest
+     first, up to the first PASS. Read the records in number order and
+     ignore gaps. A malformed record counts as FAIL. A PASS ends the streak.
+   - When the three newest records all carry FAIL, the fix dispatch carries
+     the line `Reconsider approach: rounds <a>-<n> failed`. `<a>` is the
+     oldest record in the current streak, and `<n>` is the newest.
    - Append `Review round <n+1> (<b> Blocking, <m> Major open)` to the
      TodoWrite ledger, where `<b>` and `<m>` are the counts this tier sort
-     produced.
+     produced. When the dispatch carries the reconsider line, append
+     `Review round <n+1> (<b> Blocking, <m> Major open, reconsider approach)`
+     instead.
    - Dispatch `implementer` in review-fix mode (the Review-fix dispatch
      section of the [implement playbook](../../team/playbooks/implement.md)).
-     Pass the canonical artifact directory, the typed class(es), and this
-     round's `### Blocking` and `### Major` lines. When the dispatch crashes,
-     retry once with the error, then halt loudly.
+     Pass the canonical artifact directory, the typed class(es), this
+     round's `### Blocking` and `### Major` lines, and the reconsider line
+     when the streak requires it. When the dispatch crashes, retry once with
+     the error, then halt loudly.
+   - The reconsider line changes the implementer's instruction only. It
+     never halts the loop.
+   - When the implementer reports a blocker against an open Blocking or
+     Major finding, halt loudly. Name the absolute `docs/plans/<id>/` path,
+     the newest `review-<n>.md` path, and the blocker line. Ask no question.
    - Return to step 2 for a fresh round. Reviewers carry no memory of
      earlier rounds.
    - **Never** stop to ask the user which Blocking or Major items to address

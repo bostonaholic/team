@@ -64,6 +64,7 @@ Before changing production code, audit every immutable acceptance test against t
 - Security: fix the vulnerability directly—parameterize queries, remove secrets, add auth, escape output; never weaken the fix.
 - Tests: change code, never the immutable tests. Code review: fix every `issue:`. Lint/format/typecheck/build: rerun until passing; use `--fix` first where available.
 - For a non-obvious failure whose first fix is a guess, read [diagnosis reference](../team-fix/references/diagnosis.md) and complete **Root Cause Analysis (5 Whys)** ([bug fix rules](../team-fix/playbooks/bug-fix.md)). Skip it for an obvious typo, named assertion, or one-line correction.
+- Under a `Reconsider approach:` line, complete **Root Cause Analysis (5 Whys)** ([diagnosis reference](../team-fix/references/diagnosis.md)) for each open finding class. Replace the approach that produces the class, inside scope, instead of a patch to the cited lines. The scope is the plan's named changes. When `8-plan.md` is absent, the scope is the `1-task.md` acceptance criteria.
 
 Then run the full suite, resolve every failure type from the round, and report each fix. `team-review` then runs a fresh five-reviewer round.
 
@@ -87,3 +88,5 @@ Then run the full suite, resolve every failure type from the round, and report e
 1. Record what is blocked, why, and the required unblocker.
 2. Continue only with dependency-safe unblocked slices.
 3. Revisit blocked slices after unblocked work completes.
+
+In a review-fix dispatch, a blocker names the finding and the plan step. When `8-plan.md` is absent, it names the `1-task.md` criterion instead of a plan step.

@@ -331,7 +331,13 @@ The orchestrator delegates this phase to the `team-review` skill
 `Review round <n+1> (<b> Blocking, <m> Major open)` items to the
 TodoWrite ledger. The count is that round's open Blocking and Major
 total, so an operator watching the ledger can tell a converging loop
-from a stuck one. The loop has no count cap.
+from a stuck one. The loop has no count cap. When the three newest records
+all carry FAIL, each later implementer fix dispatch carries
+`Reconsider approach: rounds <a>-<n> failed`, and the ledger item ends
+`reconsider approach`. The implementer then runs a root-cause analysis for
+each open finding class and replaces the approach inside its scope. The
+directive never halts the loop. An implementer blocker against an open
+Blocking or Major finding halts it loudly.
 
 **Recovery after an operator stop, a context-exhausted session, or a
 fail-closed halt**: a human re-invokes the same `/team-*` command bare.
