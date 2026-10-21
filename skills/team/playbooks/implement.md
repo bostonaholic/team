@@ -75,7 +75,7 @@ Then run the full suite and resolve every failure type from the round. Commit th
 - A slice finishes only when its acceptance tests and all prior-slice tests pass.
 - Read [commit discipline](../team-pr/references/commit.md): Conventional Commits, 50/72, one logical change. Single repo: one commit using the slice `Commit:` subject and citing design/structure paths. Multi-repo slice: one commit per named repo using its `Commit:` subject; each body cites the same paths and says `part of slice <N>: <name>`.
 - Report `{slice: <name>, testsPassing: [list], commits: [{repo: <slug>, sha: <sha>}, ...]}`; single-repo has one commit entry.
-- After the last slice, run the full suite and every static check the project defines (typecheck, lint, format, build), detected the way the [verify playbook](playbooks/verify.md) detects them. Fix each failure inside the plan scope. Report each check's result, then return paths, the slice list, and final test status.
+- After the last slice, run the full suite and every static check the project defines (typecheck, lint, format, build), detected the way the [verify playbook](playbooks/verify.md) detects them. Fix each failure inside the plan scope, and commit those fixes per [commit discipline](../team-pr/references/commit.md): a Conventional Commits subject, one logical change per commit, signing never bypassed, `docs/plans/` never committed. Hand off with every worktree clean outside `docs/plans/`, so `git status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'` prints nothing; REVIEW refuses a dirty tree. Report each check's result, then return paths, the slice list, and final test status.
 
 ### TDD and scope invariants
 

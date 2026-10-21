@@ -87,7 +87,8 @@ After each slice, return concisely to the orchestrator:
 ## Completion
 
 When all slices are done, all acceptance tests pass, and the final run of
-the full suite and every project static check is complete, return:
+the full suite and every project static check is complete, with its fixes
+committed and every worktree clean outside `docs/plans/`, return:
 
 ```
 ## Implementation Complete

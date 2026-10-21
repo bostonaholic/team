@@ -295,7 +295,8 @@ No gate. The plan is mechanically derived from the structure.
 3. **Slice execution.** `implementer` works through the plan one slice
    at a time, committing each atomically. After its last slice, it runs the
    full suite and every project static check, fixes each failure inside the
-   plan scope, and reports each check's result.
+   plan scope, commits those fixes, and reports each check's result. It
+   hands REVIEW a tree clean outside `docs/plans/`.
 
 IMPLEMENT ends when the implementer returns its completion report. It
 dispatches no reviewer.
