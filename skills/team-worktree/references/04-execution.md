@@ -38,26 +38,28 @@ did **not** skip:
 
 Use the slash-sanitized name (`<branch>`, derived above) for both the
 worktree directory and the `-b` flag in every repo. In the common case
-`<branch>` equals `<id>`.
+`<branch>` equals `<id>`. `<team-worktree-skill-dir>` is defined in
+[Detect existing worktree](03-detect-existing-worktree.md).
 
 - **Single-repo:** create the home worktree on branch `<id>` off
   `origin/HEAD`, using the host's native worktree support when it offers
-  one and `git worktree add` otherwise.
-- **Multi-repo:** for each listed repo, first assert **containment**:
-  the repo path's real path must be a direct child of the home repo's
-  parent directory —
+  one. Otherwise run the command below with `<home-root>` as both paths.
+- **Multi-repo:** for each listed repo, run:
+
+  ```sh
+  "<team-worktree-skill-dir>/scripts/add-worktree.sh" '<home-root>' '<repo-path>' '<branch>'
   ```
-  [ "$(dirname "$(realpath "<repo-path>")")" = "$(dirname "$(realpath "<home-root>")")" ]
-  ```
-  If the check fails, **refuse that repo and report it**. Never create a
-  worktree outside the home repo's sibling set; do not trust `4-repos.md`
-  content blindly. For each repo that passes:
-  ```
-  git -C <repo-path> fetch origin --quiet
-  git -C <repo-path> worktree add .claude/worktrees/<branch> -b <branch> origin/HEAD
-  ```
-  If a repo lacks an `origin` remote or `origin/HEAD`, fall back to its
-  current default branch and warn the user once for that repo.
+
+  Paste each value single-quoted; refuse a value that contains a single
+  quote. Never create a worktree outside the home repo's sibling set; do not
+  trust `4-repos.md` content blindly. The script header lists each output
+  line and exit code.
+
+  - **`created`** or **`exists`** → record the path it printed.
+  - **`warn`** → warn the user once for that repo, then read the next line.
+  - **Exit 3** (`refused (containment)`) → **refuse that repo and report it**.
+  - **Exit 1** → report its stderr and apply the
+    [fallback](../playbooks/worktree.md#fallback) for that repo.
 
 ### Record the worktree paths (multi-repo only)
 

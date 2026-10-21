@@ -69,8 +69,8 @@ When teardown is warranted (post-merge or on explicit request):
 Before step 1, record for each repo `BRANCH`, the branch its worktree used
 (`<id>`, or the existing branch when WORKTREE reused a linked worktree), and
 `WORKTREE`, that worktree's absolute path (empty when the run fell back to
-in-place work). Step 8 pastes both, as single-quoted literals, into the
-teardown fence's `BRANCH` and `WORKTREE` lines.
+in-place work). Step 8 passes both, as single-quoted literals, to the
+teardown script.
 
 1. For each worktree with commits ahead of its base branch, cherry-pick
    or rebase those commits onto the target branch in that repo. Then let
@@ -136,40 +136,21 @@ teardown fence's `BRANCH` and `WORKTREE` lines.
 
    Then sweep residue. Recreation can land seconds to hours after the
    removal command returns, so the residue sweep is not redundant with
-   step 4. Re-check the removed path plus every sibling under
-   `.claude/worktrees/` that `git worktree list` no longer knows about.
-   Delete a directory only when it is pure regenerable residue: no `.git`
-   entry, and no files outside `tmp/`, `.omc/`, and `docs/plans/`.
+   step 4. For each repo, run:
 
    ```sh
-   root="$(git -C <repo-path> rev-parse --show-toplevel)"
-   live="$(git -C "$root" worktree list --porcelain | sed -n 's/^worktree //p')"
-   for dir in "$root"/.claude/worktrees/*; do
-     [ -d "$dir" ] || continue
-     printf '%s\n' "$live" | grep -qxF "$dir" && continue
-     if [ -e "$dir/.git" ]; then
-       echo "kept (still a checkout): $dir"; continue
-     fi
-     extra="$(find "$dir" -type f \
-       -not -path "$dir/tmp/*" -not -path "$dir/.omc/*" -not -path "$dir/docs/plans/*")"
-     if [ -n "$extra" ]; then
-       printf 'kept (holds unexpected files): %s\n%s\n' "$dir" "$extra"
-     else
-       rm -rf "$dir" && echo "swept: $dir"
-     fi
-   done
+   "<team-worktree-skill-dir>/scripts/sweep-residue.sh" '<repo-path>'
    ```
 
-   Report the worktree sweep's lines. Report each swept directory, or that
-   no residue was found. A kept
+   Report the worktree sweep's lines and the residue sweep's lines. A kept
    directory is surfaced to the user with the files it holds — never
-   deleted silently, never left unreported.
+   deleted silently, never left unreported. If the residue sweep exits
+   non-zero, report its stderr verbatim and continue the teardown.
 
 8. **Tear down what the worktree provisioned**, not only the worktree.
    For each repo, follow
    `<team-worktree-skill-dir>/playbooks/provisioned-teardown.md`, all
-   sections, filling its Step 1 fence's `REPO_PATH`, `BRANCH`, and
-   `WORKTREE` lines with that repo's `<repo-path>` and the `BRANCH` and
+   sections, passing that repo's `<repo-path>` and the `BRANCH` and
    `WORKTREE` recorded before step 1. Step 7 defines
    `<team-worktree-skill-dir>`. The file runs the teardown commands
    the repo declares in `.teamteardown`, and runs nothing when the repo
