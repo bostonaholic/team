@@ -11,8 +11,8 @@ the record states (malformed, current, stale) in the
    - Otherwise, the round number `<n>` is the highest numeric suffix plus 1,
      or 1 when no record exists. Gaps in the numbering do not matter.
    - Seed TodoWrite with `Review round <n>`.
-2. **Pin the range.** For each worktree in scope that has commits beyond its
-   merge-base, record the full merge-base SHA and
+2. **Pin the range.** For each worktree in scope that has branch commits,
+   record the full merge-base SHA that entry guard 2 resolved and
    `git -C <worktree-path> rev-parse HEAD`.
    - Single-repo mode: one line,
      `Review range: <merge-base-sha>..<head-sha>`.

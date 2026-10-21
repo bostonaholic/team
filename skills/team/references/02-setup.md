@@ -60,14 +60,13 @@
    `<team-skill-dir>/scripts/design-review-status.sh <artifact-dir>` exits 0
    (`passed`). A `6-design.md` with no passing review
    resumes **at the review step**, never a re-draft (any `approved` fields
-   left by older runs are ignored). IMPLEMENT is complete when any worktree
-   in scope has commits beyond its merge-base. Resolve the worktrees by the
-   home-worktree order in
-   [the team-review input](../team-review/references/01-input.md), with
-   companions from `4-repos.md`. REVIEW is complete only when the newest
-   `review-<n>.md` is PASS and current, per the record states in the
-   [artifact schema](references/artifacts.md). A run with commits and no current PASS
-   record resumes at REVIEW. It never re-dispatches `test-architect` or
+   left by older runs are ignored). IMPLEMENT is complete only by the
+   "IMPLEMENT complete" rule in the "Branch state" section of the
+   [artifact schema](references/artifacts.md). A run interrupted before its
+   last slice commit resumes at IMPLEMENT. REVIEW is complete only when the
+   newest `review-<n>.md` is PASS and current, per the record states in the
+   same schema. A run whose IMPLEMENT is complete and that has no current
+   PASS record resumes at REVIEW. It never re-dispatches `test-architect` or
    `implementer`. Then mark the first incomplete phase `in_progress`.
    **Never re-dispatch a phase whose artifact already exists** — re-running
    QUESTION over an existing `1-task.md`, for example, would overwrite

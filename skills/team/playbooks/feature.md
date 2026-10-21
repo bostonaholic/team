@@ -45,13 +45,15 @@ Non-blocking; no acknowledgment, e.g. documentation-gap analysis or style sugges
 
 ## State and transitions
 
-These rows add to Setup step 7 resume detection:
+These rows add to Setup step 7 resume detection. "IMPLEMENT complete" is the
+rule in the "Branch state" section of the
+[artifact schema](references/artifacts.md).
 
 | Latest durable state | Next/current phase |
 |---|---|
 | worktree exists; no `1-task.md` | WORKTREE |
-| `8-plan.md`; no commits beyond the merge-base | IMPLEMENT |
-| commits beyond the merge-base; no PASS record that is current | REVIEW |
+| `8-plan.md`; IMPLEMENT not complete | IMPLEMENT |
+| IMPLEMENT complete; no PASS record that is current | REVIEW |
 | newest `review-<n>.md` PASS and current | PR |
 | PR(s) open or commits shipped | SHIPPED |
 

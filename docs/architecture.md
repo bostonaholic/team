@@ -148,16 +148,21 @@ states.
 | `6-design.md` alone (no passing design review)           | DESIGN (review next)|
 | `6-design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
 | `7-structure.md`                                         | PLAN (next up)      |
-| `8-plan.md`, no commit on `<id>` since merge-base        | IMPLEMENT           |
-| ≥1 commit since merge-base, no current PASS `review-<n>.md` | REVIEW           |
+| `8-plan.md`, IMPLEMENT not complete                      | IMPLEMENT           |
+| IMPLEMENT complete, no current PASS `review-<n>.md`      | REVIEW              |
 | newest `review-<n>.md` PASS and current                | PR (next up)        |
 | PR opened or commit shipped                            | SHIPPED             |
 
 Worktree presence: `git worktree list --porcelain | grep -q <id>`.
-IMPLEMENT is complete once there is
-**≥1 commit on `<id>` since merge-base** with the default branch, so
-`git log <merge-base>..<id>` is non-empty. REVIEW is complete only when the
-newest `review-<n>.md` is PASS and current.
+The merge-base is taken against `origin/<default>`, the ref each worktree
+is cut from, and against the local default branch only when the repo has no
+`origin` remote. IMPLEMENT is complete once every `**Commit:**` subject in
+`8-plan.md` names a commit in `<merge-base>..HEAD`. Without an `8-plan.md`,
+any such commit completes it. A run interrupted before its last slice
+commit thus resumes at IMPLEMENT. REVIEW is complete only when the newest
+`review-<n>.md` is PASS and current. The "Branch state" section of the
+[artifact schema](https://github.com/bostonaholic/team/blob/main/skills/team/references/artifacts.md)
+owns these definitions.
 
 Discovery keys only on the six `PHASE_FILES` names, so `review-<n>.md` and
 the two non-phase sibling outputs below are invisible to discovery.
@@ -305,7 +310,7 @@ dispatches no reviewer.
 
 **Agents:** `code-reviewer`, `security-reviewer`, `technical-writer`,
 `ux-reviewer`, `verifier` (parallel), plus `implementer` for fix rounds
-**Predecessor:** `8-plan.md` + commits beyond the merge-base
+**Predecessor:** `8-plan.md` + IMPLEMENT complete
 **Artifact:** `docs/plans/<id>/review-<n>.md`, one per round
 
 The orchestrator delegates this phase to the `team-review` skill

@@ -56,21 +56,21 @@ changes directory.
 
 ## Entry guards
 
-Run these guards in each worktree in scope, before any dispatch:
+Run these guards in each worktree in scope, before any dispatch. The
+"Branch state" section of the
+[artifact schema](../team/references/artifacts.md) defines the default
+branch, the base ref, the merge-base, and branch commits.
 
-1. **Default branch.** Resolve the default branch with
-   `git -C <worktree-path> symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`,
-   and fall back to `main`/`master` if it is unset. Compare it with
+1. **Default branch.** Resolve the default branch. Compare it with
    `git -C <worktree-path> rev-parse --abbrev-ref HEAD`. On the default
    branch, refuse and stop. The fix loop commits, and the default branch is
    never a fix target. Write no record.
-2. **Merge-base.** Resolve `<base-branch>` with
-   `git -C <worktree-path> symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'`,
-   and fall back to `main`. Then run
-   `git -C <worktree-path> merge-base <base-branch> HEAD`.
-3. **Commits.** When no worktree in scope has a commit beyond its
-   merge-base, stop with "Nothing to review". Name
-   `/team-implement docs/plans/<id>/` as the next command. Write no record.
+2. **Merge-base.** Resolve the base ref from the default branch that guard 1
+   resolved. Then resolve the merge-base. When either step halts, write no
+   record.
+3. **Commits.** When no worktree in scope has branch commits, stop with
+   "Nothing to review". Name `/team-implement docs/plans/<id>/` as the next
+   command. Write no record.
 4. **Clean tree.** Run
    `git -C <worktree-path> status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'`.
    When it prints anything, refuse and stop. Name each path, and tell the

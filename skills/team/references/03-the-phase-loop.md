@@ -10,10 +10,12 @@ loop:
      get the expected agent(s) and predecessor artifact path(s).
   3. Verify predecessor artifacts exist on disk (for STRUCTURE,
      `<team-skill-dir>/scripts/design-review-status.sh <artifact-dir>`
-     must also exit 0). For REVIEW, the predecessor includes commits beyond
-     the merge-base. When none exist, report that IMPLEMENT produced no
-     commit and suggest `/team-implement docs/plans/<id>/`. If missing,
-     report a desync and suggest re-invoking the same /team-* command.
+     must also exit 0). For REVIEW, the predecessor also requires the
+     "IMPLEMENT complete" rule in the "Branch state" section of the
+     [artifact schema](references/artifacts.md). When it fails, report
+     that IMPLEMENT is incomplete and suggest
+     `/team-implement docs/plans/<id>/`. If missing, report a desync and
+     suggest re-invoking the same /team-* command.
   4. Dispatch the agent(s) (parallel where the phase table marks them),
      reading and applying the dispatch contract before each initial call or retry
      (`references/15-host-dispatch.md`).
@@ -55,7 +57,7 @@ loop:
 | STRUCTURE  | `structure-planner`                                     | `docs/plans/<id>/6-design.md` + passing `design-review-<n>.md`    | PLAN               |
 | PLAN       | `planner`                                               | `docs/plans/<id>/7-structure.md`                                  | IMPLEMENT          |
 | IMPLEMENT  | `test-architect`, `implementer`                         | `docs/plans/<id>/8-plan.md`                                       | REVIEW             |
-| REVIEW     | (orchestrator-emit)                                     | `docs/plans/<id>/8-plan.md` + commits beyond the merge-base       | PR                 |
+| REVIEW     | (orchestrator-emit)                                     | `docs/plans/<id>/8-plan.md` + IMPLEMENT complete                  | PR                 |
 | PR         | (orchestrator-emit)                                     | newest `review-<n>.md` PASS and current                         | SHIPPED            |
 
 For QUESTION, pass the questioner the full description. When it returns, make

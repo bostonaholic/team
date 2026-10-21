@@ -36,6 +36,17 @@ appears on `2-questions.md`. Limited-scope routes write their deliverable under
 the home `docs/plans/<id>/` (`5-research.md` for investigate, `8-plan.md` for
 plan, `prototype-report.md` for prototype); they create no production worktree.
 
+## Branch state
+
+This section is the one definition of branch progress. Its readers are Setup resume detection, the phase loop's REVIEW predecessor check, the feature playbook's state table, the `review-<n>.md` record states, and the `team-review` entry guards and review range. Resolve each term below per worktree in scope.
+
+- **Worktrees in scope.** The home worktree, resolved by the order in the [team-review input](../team-review/references/01-input.md#worktrees), plus the companions that `4-repos.md` lists in multi-repo mode.
+- **Default branch.** Run `git -C <worktree> symbolic-ref --short refs/remotes/origin/HEAD` and drop the `origin/` prefix. When that fails, use the first of `main` and `master` that exists. With an `origin` remote, test `refs/remotes/origin/<name>`. Without one, test `refs/heads/<name>`. When no name resolves, halt and name the worktree path.
+- **Base ref.** When `git -C <worktree> remote get-url origin` succeeds, the base ref is `origin/<default>`. Otherwise, it is the local `<default>`. Team cuts each worktree from `origin/HEAD` and never moves the local default branch, so a lagging local ref would count upstream commits as branch work.
+- **Merge-base.** Run `git -C <worktree> merge-base <base-ref> HEAD`. When it exits non-zero, halt and name the worktree path and the base ref. Never substitute another ref.
+- **Branch commits.** The commits in `<merge-base>..HEAD`. "Commits beyond the merge-base" means this set is not empty.
+- **IMPLEMENT complete.** When `8-plan.md` exists, every `**Commit:**` subject in it equals the subject of a branch commit in a worktree in scope. List the subjects with `git -C <worktree> log --format=%s <merge-base>..HEAD`. When `8-plan.md` is absent, any worktree in scope with branch commits completes IMPLEMENT. A run interrupted before its last slice commit therefore stays at IMPLEMENT.
+
 ## Review records
 
 - Never restore the retired `^approved:` frontmatter gate; review records alone determine passage.
