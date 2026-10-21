@@ -323,7 +323,9 @@ The orchestrator delegates this phase to the `team-review` skill
    `docs/plans/<id>/cross-model-notes.md` (see section 2). It then writes
    the round's `review-<n>.md`. While any
    Blocking or Major finding remains, it dispatches the implementer to
-   fix the typed failure class. It then re-runs all 5 reviewers
+   fix the typed failure class. The implementer commits each fix round
+   and leaves the tree clean, because a record is current only over a
+   clean tree. It then re-runs all 5 reviewers
    automatically. It never consults the user. This is the *no-consult
    rule*. Once Blocking and Major are clean, any remaining Minor-and-below
    findings stay in the record for the PR's `review-notes` comment and the

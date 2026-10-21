@@ -55,7 +55,7 @@ plan, `prototype-report.md` for prototype); they create no production worktree.
     - `## Scope` holds no line in the form above.
     - Its `verdict` disagrees with its tier sort. PASS needs `None.` under both `### Blocking` and `### Major`. FAIL needs at least one finding line under one of them.
     - The `### verifier` report ends `### Verdict: FAIL`, and `### Blocking` holds no `[verifier]` line.
-  - Current: well-formed, and each `## Scope` line's `<head-sha>` equals `git -C <worktree> rev-parse HEAD` for that repo. Also, no worktree in scope has commits beyond its merge-base without a `## Scope` line.
+  - Current: well-formed, and each `## Scope` line's `<head-sha>` equals `git -C <worktree> rev-parse HEAD` for that repo. Also, no worktree in scope has commits beyond its merge-base without a `## Scope` line, and every worktree in scope is clean outside `docs/plans/`: `git -C <worktree> status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'` prints nothing.
   - Stale: well-formed and not current.
 
   A malformed record counts as not passing. The readers are `team-review`, Setup resume detection, the phase loop's PR predecessor check, and `/team-pr`. Reviewers and the implementer never read a record.

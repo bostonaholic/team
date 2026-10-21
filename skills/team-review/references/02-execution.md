@@ -126,6 +126,9 @@ the record states (malformed, current, stale) in the
      round's `### Blocking` and `### Major` lines, and the reconsider line
      when the streak requires it. When the dispatch crashes, retry once with
      the error, then halt loudly.
+   - The implementer commits each fix round and leaves every worktree in
+     scope clean outside `docs/plans/`. An uncommitted fix falls outside the
+     next round's range and leaves the record stale.
    - The reconsider line changes the implementer's instruction only. It
      never halts the loop.
    - When the implementer reports a blocker against an open Blocking or
