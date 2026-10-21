@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.158.0] - 2026-10-21
+
 ### Changed
 
 - **`/team-fix` runs its branch gate as a bundled script.** The Worktree phase and the Ship re-check both run `skills/team-fix/scripts/branch-gate.sh` in place of a shell block the agent retyped. It prints `ok <branch>` or `on-default` exactly as before, now exits non-zero on `on-default`, and fails loud outside a git checkout instead of printing a bare `ok`. Ship's re-check now applies the same `origin/HEAD`, then `main`, then `master` rule as Worktree. **What this asks of you:** nothing.
@@ -1464,7 +1466,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.157.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.158.0...HEAD
+[0.158.0]: https://github.com/bostonaholic/team/compare/v0.157.0...v0.158.0
 [0.157.0]: https://github.com/bostonaholic/team/compare/v0.156.0...v0.157.0
 [0.156.0]: https://github.com/bostonaholic/team/compare/v0.155.0...v0.156.0
 [0.155.0]: https://github.com/bostonaholic/team/compare/v0.154.0...v0.155.0
