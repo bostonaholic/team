@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.164.0] - 2026-10-21
+
 ### Changed
 
 - **`/team-pr` now runs scripts for its fixed checks instead of retyping commands.** Three scripts handle steps that always give the same result: one finds each repo's base branch and its unshipped commits, one lists the commits the changelog must cover since the last release, and one reads the screenshot manifest and writes the upload's entries file. The changelog wording, the screenshot captions, and the PR body still come from the agent. **What this asks of you:** nothing.
@@ -1500,7 +1502,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.163.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.164.0...HEAD
+[0.164.0]: https://github.com/bostonaholic/team/compare/v0.163.0...v0.164.0
 [0.163.0]: https://github.com/bostonaholic/team/compare/v0.162.0...v0.163.0
 [0.162.0]: https://github.com/bostonaholic/team/compare/v0.161.0...v0.162.0
 [0.161.0]: https://github.com/bostonaholic/team/compare/v0.160.0...v0.161.0
