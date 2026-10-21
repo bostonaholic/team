@@ -35,7 +35,7 @@
    a ticket, `2026-05-01-add-auth` without). Exit 2: fix the topic or
    ticket its stderr names and rerun.
 5. **Seed the TodoWrite ledger** with one item per phase, in order:
-   `Worktree → Question → Research → Design → Structure → Plan → Implement → Code review → PR`.
+   `Worktree → Question → Research → Design → Structure → Plan → Implement → Review → Security → PR`.
    Mark `Worktree` as `in_progress`.
    See [execution rules](references/execution.md) for the per-step tracking convention agents follow within each phase.
    With no TodoWrite on the host, seed the substitute file ledger the
@@ -66,8 +66,13 @@
    last slice commit resumes at IMPLEMENT. CODE REVIEW is complete only when the
    newest `review-<n>.md` is PASS and current, per the record states in the
    same schema. A run whose IMPLEMENT is complete and that has no current
-   PASS record resumes at CODE REVIEW. It never re-dispatches `test-architect` or
-   `implementer`. Then mark the first incomplete phase `in_progress`.
+   PASS record resumes at REVIEW. SECURITY is complete only when REVIEW is
+   complete and the newest `security-review-<n>.md` is PASS and current. A
+   run whose REVIEW is complete and that has no current PASS security record
+   resumes at SECURITY. A SECURITY fix commit leaves the `review-<n>.md`
+   record stale, so that run resumes at REVIEW. Resume never re-dispatches
+   `test-architect` or `implementer`. Then mark the first incomplete phase
+   `in_progress`.
    **Never re-dispatch a phase whose artifact already exists** — re-running
    QUESTION over an existing `1-task.md`, for example, would overwrite
    in-progress work (data loss).

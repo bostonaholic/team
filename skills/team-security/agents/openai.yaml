@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Security"
+  short_description: "Review branch security and fix findings"
+  default_prompt: "Use $team-security to review branch security and fix findings."

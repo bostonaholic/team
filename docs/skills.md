@@ -31,7 +31,7 @@ that only locates a skill's install directory — "the directory containing
 `skills/<name>/SKILL.md`" names a location, not the skill.
 
 The edges are therefore **directed**, and reading them transitively gives the
-graph. `team` loads `team-code-review` and `team-pr`. Neither loads back.
+graph. `team` loads `team-pr`, `team-review`, and `team-security`. None loads back.
 `**Uses:** None` marks a
 leaf with no further consumption.
 
@@ -41,7 +41,7 @@ This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 12 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 13 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 Skills outside the pipeline moved out of Team; see [Skills that moved](index.md#skills-that-moved).
@@ -53,11 +53,11 @@ full run or drives one phase of the QRSPI pipeline.
 
 ### [team](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
 
-Runs the 9-phase QRSPI feature pipeline, or a leading-argument route.
+Runs the 10-phase QRSPI feature pipeline, or a leading-argument route.
 
 **Used by:** None
 
-**Uses:** `team-code-review`, `team-pr`, `team-worktree`
+**Uses:** `team-pr`, `team-review`, `team-security`, `team-worktree`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -118,6 +118,14 @@ Executes implementation slices.
 ### [team-code-review](https://github.com/bostonaholic/team/blob/main/skills/team-code-review/SKILL.md)
 
 Reviews the built branch and fixes Blocking and Major findings.
+
+**Used by:** `team`
+
+**Uses:** None
+
+### [team-security](https://github.com/bostonaholic/team/blob/main/skills/team-security/SKILL.md)
+
+Reviews the branch for security defects after REVIEW passes, and fixes CRITICAL and HIGH findings.
 
 **Used by:** `team`
 

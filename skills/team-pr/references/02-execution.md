@@ -17,13 +17,15 @@
    its frontmatter. Read `$ARGUMENTS/6-design.md` for the "why" behind the
    changes.
    Before step 6 edits the changelog and step 7 makes the ship commit, read
-   the newest `$ARGUMENTS/review-<n>.md` once. Bind before any edit outside
+   the newest `$ARGUMENTS/review-<n>.md` and the newest
+   `$ARGUMENTS/security-review-<n>.md` once each. Bind before any edit outside
    `docs/plans/`, this run's or a caller's: the `/team` PR gate leaves the
    changelog to step 6 for this reason. Read the
    [artifact schema](../team/references/artifacts.md) for the record
    states. Resolve the worktrees by the home-worktree order in
-   [the team-code-review input](../team-code-review/references/01-input.md). Bind the
-   record path and one review status for the whole run:
+   [the team-review input](../team-review/references/01-input.md). For the
+   whole run, bind the review record path with one review status, and the
+   security record path with one security status. Each status is one of:
    - `current`: the newest record is PASS and current.
    - `stale`: the newest record is PASS and stale.
    - `missing`: no record exists, or the newest record is FAIL or
@@ -135,12 +137,12 @@ worktree path, the base branch, and the scratch directory.
 
 | Subagent | Brief adds | Edits | Returns |
 | --- | --- | --- | --- |
-| Inputs | [Input](01-input.md); `1-task.md`, `6-design.md`, and the bound review record path and status in resume mode; skip `CHANGELOG.md`, which Changelog owns | writes only `<scratch>/pr-inputs.md` | the `pr-inputs.md` path: project terms, the why, available check results, evidence gaps |
+| Inputs | [Input](01-input.md); `1-task.md`, `6-design.md`, and the bound review and security record paths and statuses in resume mode; skip `CHANGELOG.md`, which Changelog owns | writes only `<scratch>/pr-inputs.md` | the `pr-inputs.md` path: project terms, the why, available check results, evidence gaps |
 | Screenshots | step 4 above; the [ux reviewer brief](../team/references/ux-reviewer.md) | the capture directory, its manifest, and `entries.json` | UI-impact decision, then the script's printed JSON, or the skip reason |
 | Changelog | [Changelog Update](05-changelog-update.md) | `CHANGELOG.md` only; no commit | the added bullets, or the absent-file skip |
 | Body | `pr-inputs.md`; the manifest; the Changelog return; the [PR Body Template](03-pr-body-template.md); the [writing standards](../team/references/writing.md) | writes only `<scratch>/pr-body.md` | the `pr-body.md` path and the title |
 | Upload | the PR URL; the manifest; [Screenshot Upload](04-screenshot-upload.md) | the PR body's `## Screenshots` section | uploaded asset count, or the degraded-note reason |
-| Review comments | the PR URL; the bound review record path and status; [Review Comments](07-review-comments.md) | PR comments only | posted, skipped, and failed comment counts |
+| Review comments | the PR URL; the bound review and security record paths and statuses; [Review Comments](07-review-comments.md) | PR comments only | posted, skipped, and failed comment counts |
 
 Dispatch Inputs, Screenshots, and Changelog together. Body starts after
 all three return. Open the PR inline from `pr-body.md`. Then

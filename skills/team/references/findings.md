@@ -71,7 +71,7 @@ Every finding has one tier.
 | **Minor and below** | `issue (pre-existing)`, `suggestion (non-blocking)`, `nitpick (non-blocking)`, security MEDIUM, security LOW, technical-writer GAPS (REQUIRED and RECOMMENDED alike), any COMMENT-level note | Recorded in the home PR's `review-notes` comment — never presented mid-run. |
 
 **A non-blocking finding never costs a round.** Each auto-fix reruns the
-implementer and all five reviewers. Minor reaches the human in PR review,
+implementer and the phase's reviewers. Minor reaches the human in PR review,
 regardless of importance. The human decides what to build and what to ship;
 the middle runs autonomously
 ([human control rules](principles/human-control.md)).

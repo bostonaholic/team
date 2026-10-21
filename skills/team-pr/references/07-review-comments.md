@@ -14,12 +14,12 @@ finding goes. When `docs/plans/<id>/cross-model-notes.md` exists, the notes
 file is the single carrier of those findings. Sources (a) and (b) each exclude
 any finding under the `### Cross-model disposition` heading.
 
-- (a) Every line under `### Minor and below` in the review record bound at
-  execution step 3, when its status is `current` or `stale`. Each line
-  already carries its source reviewer tag, such as `[code-reviewer]` or
-  `[security-reviewer]`. The record's tier sort already excludes
-  `### Cross-model disposition` findings. A tier that reads `None.` gives
-  an empty (a).
+- (a) Every line under `### Minor and below` in the review record, then in
+  the security record, that execution step 3 bound, each when its status is
+  `current` or `stale`. Each line already carries its source reviewer tag,
+  such as `[code-reviewer]` or `[security-reviewer]`. A record's tier sort
+  already excludes `### Cross-model disposition` findings. A tier that reads
+  `None.` adds nothing to (a).
 - (b) COMMENT findings from the latest `design-review-<n>.md`, tagged
   `design-review-<n>`. Apply the exclusion the same way.
 - (c) The loud unresolved-repo omission note from `6-design.md` `## Risks`, or
@@ -57,7 +57,7 @@ steps in order:
    ```
 
 2. Write (a)-(c) to `$RUN_DIR/findings.md` with the Write tool, one tagged
-   finding per line. Copy (a) from the bound record. Never write it with a
+   finding per line. Copy (a) from the bound records. Never write it with a
    heredoc or a shell argument. The findings are reviewer text, so pass them
    by file only, per the
    [external data rules](../../team/references/external-data.md). When (a)-(c)
@@ -133,8 +133,8 @@ count, so Team still posts its own.
 
 - Team never edits or deletes a posted comment. Findings or CODE REVIEW blocks
   added after the PR opens do not reach the PR.
-- Source (a) comes from the review record bound at execution step 3, so a
-  new session reads the same lines.
+- Source (a) comes from the review and security records bound at
+  execution step 3, so a new session reads the same lines.
 - A different `gh` login between open and refresh sees no viewer markers, so
   it posts duplicates.
 - Two sessions that post to one PR at the same time can both post.
@@ -151,8 +151,8 @@ and a report, per [focused work rules](../../team/principles/focused-work.md).
   unreadable file, or a malformed existing-comments file.
 - When a `gh pr comment` fails, stop posting. Report the key, the `gh` error,
   and each key not attempted.
-- When the bound review status is `missing`, post (b)-(d) and report that
-  no passing review record exists.
+- When a bound status is `missing`, post what remains and report that no
+  passing review record, or no passing security review record, exists.
 
 ### Completion report
 

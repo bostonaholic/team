@@ -44,8 +44,8 @@ Resolve the home worktree to the first hit in this order:
    `.claude/worktrees/<id>` convention.
 4. The main checkout that holds `docs/plans/<id>/`.
 
-Every reader of a `review-<n>.md` record resolves the home worktree by this
-same order.
+Every reader of a `review-<n>.md` or `security-review-<n>.md` record
+resolves the home worktree by this same order.
 
 In multi-repo mode, the companion worktree paths come from the `## Worktrees`
 section of `4-repos.md`. If any listed worktree is missing, tell the user to

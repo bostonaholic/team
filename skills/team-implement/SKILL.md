@@ -1,6 +1,6 @@
 ---
 name: team-implement
-description: 'Use for executing implementation plans only on explicit request. Never infer from a ready plan. Implements slices.'
+description: 'Use for executing implementation plans only on explicit request. Never infer from a ready plan.'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---

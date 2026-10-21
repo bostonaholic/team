@@ -1,6 +1,6 @@
 ---
 name: team-question
-description: 'Use for decomposing features into tasks and research questions. Produces task and question artifacts.'
+description: 'Use for decomposing features into tasks and research questions.'
 effort: medium
 argument-hint: "<ticket id, issue URL, or task description>"
 ---

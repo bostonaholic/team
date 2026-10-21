@@ -15,8 +15,9 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
   order, rewritten in place as their states change, seeded once the
   leading WORKTREE phase creates the directory; frontmatter per
   [artifact schema](references/artifacts.md). On disk it is durable rather
-  than session-scoped. It carries no round state: CODE REVIEW's round results
-  live in `review-<n>.md` on every host, so a restart loses none. Report
+  than session-scoped. It carries no round state: REVIEW's round results
+  live in `review-<n>.md`, and SECURITY's in `security-review-<n>.md`, on
+  every host, so a restart loses none. Report
   which of the two the run used
   ([verified results rules](principles/verified-results.md)).
 - **Subagents never pause for user input.** Each one resolves its own open
@@ -30,8 +31,9 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
   The structure artifact carries no `approved`/`approved_at`/ `revision`
   frontmatter.
 - The phase loop never pauses mid-run. Advance phases within the same turn.
-  IMPLEMENT → CODE REVIEW and CODE REVIEW → PR are not stopping points. A turn that
-  ends with review verdicts but no draft PR URL is a defect.
+  IMPLEMENT → REVIEW, REVIEW → SECURITY, SECURITY → PR, and the SECURITY →
+  REVIEW move back are not stopping points. A turn that ends with review
+  verdicts but no draft PR URL is a defect.
 - The research-isolation invariant is non-negotiable. If a researcher's
   context contains the user's original description, the pipeline has a
   defect. Stop and report.

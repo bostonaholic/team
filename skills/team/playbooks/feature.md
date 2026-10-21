@@ -4,7 +4,7 @@ Before this operation, read [artifact schema](references/artifacts.md).
 Before each consuming step, read its linked shared rules. Resolve links from the installed `skills/team/` directory.
 If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
-Nine sequential phases; none are skippable.
+Ten sequential phases; none are skippable.
 
 ## Phase Sequence
 
@@ -17,10 +17,11 @@ Nine sequential phases; none are skippable.
 | **STRUCTURE** | `7-structure.md` (vertical slices) | NONE: autonomous |
 | **PLAN** | `8-plan.md` | SOFT: no approval; reviewed design is contract |
 | **IMPLEMENT** | code, passing tests, per-slice commits | MECHANICAL: assertion-only failures and passing static checks before slices |
-| **CODE REVIEW** | `review-<n>.md` each round; fix commits | AGGREGATE: security, verifier, code-review hard gates |
+| **REVIEW** | `review-<n>.md` each round; fix commits | AGGREGATE: verifier and code-review hard gates |
+| **SECURITY** | `security-review-<n>.md` each round; fix commits | AGGREGATE: security hard gate |
 | **PR** | GitHub draft PR | terminal: record URL; close ledger |
 
-WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`. IMPLEMENT has three sub-phases: test-architect writes failing acceptance tests; a mechanical gate requires assertion failures rather than crashes plus passing static checks, inverting to a reproduced green pre-change baseline for a zero-behavior-change refactor, whose test-architect dispatch is skipped with a recorded reason; implementer commits green slices. CODE REVIEW runs `skills/team-code-review/`: 5 parallel code/security/docs/ux/verifier reviews return typed failures until no Blocking/Major remains, and each round writes `review-<n>.md`.
+WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`. IMPLEMENT has three sub-phases: test-architect writes failing acceptance tests; a mechanical gate requires assertion failures rather than crashes plus passing static checks, inverting to a reproduced green pre-change baseline for a zero-behavior-change refactor, whose test-architect dispatch is skipped with a recorded reason; implementer commits green slices. REVIEW runs `skills/team-review/`: 4 parallel code/docs/ux/verifier reviews return typed failures until no Blocking/Major remains, and each round writes `review-<n>.md`. SECURITY runs `skills/team-security/`: `security-reviewer` alone runs the same loop and writes `security-review-<n>.md` each round. When its fix commits leave the review record stale, the run moves back to REVIEW.
 
 ## Artifact and isolation invariants
 
@@ -53,8 +54,9 @@ rule in the "Branch state" section of the
 |---|---|
 | worktree exists; no `1-task.md` | WORKTREE |
 | `8-plan.md`; IMPLEMENT not complete | IMPLEMENT |
-| IMPLEMENT complete; no PASS record that is current | CODE REVIEW |
-| newest `review-<n>.md` PASS and current | PR |
+| IMPLEMENT complete; no PASS record that is current | REVIEW |
+| newest `review-<n>.md` PASS and current; no current PASS `security-review-<n>.md` | SECURITY |
+| newest `review-<n>.md` and newest `security-review-<n>.md` both PASS and current | PR |
 | PR(s) open or commits shipped | SHIPPED |
 
 Worktree check: `git worktree list --porcelain | grep -q <id>`; multi-repo paths come from `4-repos.md`.
