@@ -3,8 +3,10 @@
 1. Commit in two commits: `test:` with the failing test, then `fix:` with the
    minimal fix.
 2. **Open a draft PR automatically — do not stop to ask.** Re-assert the
-   branch gate first — `git rev-parse --abbrev-ref HEAD` must not name the
-   default branch. If it does, push nothing and report. Otherwise push that
+   branch gate first — run `'<team-fix-skill-dir>/scripts/branch-gate.sh'`
+   from the worktree, where `<team-fix-skill-dir>` is the absolute directory
+   that holds the installed `skills/team-fix/SKILL.md`. Any exit other than
+   0 → push nothing and report its output. On `ok <branch>`, push that
    branch and open the PR as a **draft** (`gh pr create --draft`).
 3. **Screenshots for a UI-impacting fix.** Read the
    [ux reviewer brief](../team/references/ux-reviewer.md) and apply its

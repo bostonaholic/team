@@ -6,33 +6,19 @@ checkout this phase resolves.
 
 ### Branch gate
 
-Run this block first. It prints `on-default` when HEAD is the repository's
-default branch, and `ok <branch>` otherwise:
+`<team-fix-skill-dir>` is the absolute directory that holds the installed
+`skills/team-fix/SKILL.md`. Run this first:
 
 ```sh
-# Branch gate — a fix never commits to the default branch.
-default="$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)"
-default="${default#origin/}"
-if [ -z "$default" ]; then
-  # No origin/HEAD (no remote, or an unset remote head): fall back to whichever
-  # conventional default-branch name actually exists locally.
-  for candidate in main master; do
-    if git show-ref --verify --quiet "refs/heads/$candidate"; then
-      default="$candidate"; break
-    fi
-  done
-fi
-head="$(git rev-parse --abbrev-ref HEAD)"
-if [ -n "$default" ] && [ "$head" = "$default" ]; then
-  echo "on-default"
-else
-  echo "ok $head"
-fi
+'<team-fix-skill-dir>/scripts/branch-gate.sh'
 ```
 
+- **Exit 3** — no git checkout to gate. Stop and report its stderr before
+  any work.
 - **`ok <branch>`** — HEAD is already on a non-default branch. Check
   whether it is the head of an open pull request:
   `gh pr view --json number,title --jq '"#\(.number) \(.title)"' 2>/dev/null`.
+  Whether a title names this bug is judgment, so this check stays inline.
   No open PR, or one whose title names this bug → reuse the branch in
   place: create no worktree and no new branch, and announce the reuse
   once: "Continuing on branch `<branch>`." An open PR for other work → treat
@@ -63,5 +49,5 @@ not.** Report the failure loudly, then branch in place and keep going:
 git switch -c <id>
 ```
 
-Re-run the branch gate afterward. It must print `ok <id>`. If the run cannot
+Re-run `branch-gate.sh` afterward. It must print `ok <id>`. If the run cannot
 get off the default branch at all, stop and report before any work.
