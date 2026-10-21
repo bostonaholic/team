@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team-fix` runs its branch gate as a bundled script.** The Worktree phase and the Ship re-check both run `skills/team-fix/scripts/branch-gate.sh` in place of a shell block the agent retyped. It prints `ok <branch>` or `on-default` exactly as before, now exits non-zero on `on-default`, and fails loud outside a git checkout instead of printing a bare `ok`. Ship's re-check now applies the same `origin/HEAD`, then `main`, then `master` rule as Worktree. **What this asks of you:** nothing.
+
 ## [0.157.0] - 2026-10-21
 
 ### Changed
