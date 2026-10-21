@@ -326,7 +326,8 @@ The orchestrator delegates this phase to the `team-review` skill
    Blocking or Major finding remains, it dispatches the implementer to
    fix the typed failure class. The implementer commits each fix round
    and leaves the tree clean, because a record is current only over a
-   clean tree. It then re-runs all 5 reviewers
+   clean tree. `team-review` refuses to start over a tree dirty outside
+   `docs/plans/`, and checks again after each fix round. It then re-runs all 5 reviewers
    automatically. It never consults the user. This is the *no-consult
    rule*. Once Blocking and Major are clean, any remaining Minor-and-below
    findings stay in the record for the PR's `review-notes` comment and the

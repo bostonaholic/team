@@ -16,7 +16,7 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 
 ## Core contracts
 
-- Require `1-task.md`, a non-default branch, and at least one commit beyond the merge-base. In multi-repo mode, require every worktree that `4-repos.md` lists.
+- Require `1-task.md`, a non-default branch, at least one commit beyond the merge-base, and a tree clean outside `docs/plans/`. In multi-repo mode, require every worktree that `4-repos.md` lists.
 - Write one `review-<n>.md` per completed round. Never overwrite a record.
 - Seed TodoWrite with `Review round <n>`. Retry as `Review round <n+1> (<b> Blocking, <m> Major open)`.
 - **Never** stop to ask the user which Blocking or Major items to address (the no-consult rule).

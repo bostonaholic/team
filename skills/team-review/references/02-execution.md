@@ -128,7 +128,10 @@ the record states (malformed, current, stale) in the
      the error, then halt loudly.
    - The implementer commits each fix round and leaves every worktree in
      scope clean outside `docs/plans/`. An uncommitted fix falls outside the
-     next round's range and leaves the record stale.
+     next round's range and leaves the record stale. When the implementer
+     returns, rerun the clean-tree entry guard
+     ([input](references/01-input.md), Entry guards, 4). A dirty path retries the
+     dispatch once with each path named, then halts loudly.
    - The reconsider line changes the implementer's instruction only. It
      never halts the loop.
    - When the implementer reports a blocker against an open Blocking or

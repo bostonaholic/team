@@ -71,3 +71,9 @@ Run these guards in each worktree in scope, before any dispatch:
 3. **Commits.** When no worktree in scope has a commit beyond its
    merge-base, stop with "Nothing to review". Name
    `/team-implement docs/plans/<id>/` as the next command. Write no record.
+4. **Clean tree.** Run
+   `git -C <worktree-path> status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'`.
+   When it prints anything, refuse and stop. Name each path, and tell the
+   user to commit or remove those changes, then re-run
+   `/team-review docs/plans/<id>/`. Reviewers judge only commits, and a
+   record over a dirty tree is stale on arrival. Write no record.
