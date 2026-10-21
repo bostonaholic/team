@@ -42,20 +42,27 @@ Run the QUESTION phase only, then stop. The phase writes, in `docs/plans/<id>/`:
    A ticket identifier (e.g. `ENG-1234`) is recorded as `ticketId` on
    `1-task.md`'s frontmatter. The orchestrator does not call any ticketing
    system.
-2. **Derive `<id>`**: `<TICKET>-<kebab-topic>` if a ticket identifier is
-   present, otherwise `<YYYY-MM-DD>-<kebab-topic>`. The `<kebab-topic>` is a
-   2–4 word kebab-case slug derived from the description.
-3. **Create `docs/plans/<id>/`** if it does not exist.
-4. **Resume detection.** If `docs/plans/<id>/1-task.md` already exists,
-   re-read it instead of overwriting. If `2-questions.md` is missing, the
-   questioner only writes `2-questions.md`.
+2. **Choose `<kebab-topic>`**: a 2–4 word kebab-case slug derived from the
+   description. Resolve `<team-question-skill-dir>` to the absolute directory
+   containing this `SKILL.md`. From the repository root, run
+   `"<team-question-skill-dir>/scripts/prepare-plan-dir.sh" [--ticket <TICKET>] <kebab-topic>`,
+   passing `--ticket` only when a ticket identifier is present. Its `dir=`
+   line is `docs/plans/<id>/`.
+3. **Handle its exit code.** Exit 2: fix the topic or ticket its stderr
+   names and rerun. Exit 1 or 3: stop and report its stderr.
+4. **Resume detection** from its `state=` line:
+   - `new`: the questioner writes every artifact.
+   - `questions-only`: re-read `1-task.md` instead of overwriting it; the
+     questioner only writes `2-questions.md`.
+   - `complete`: skip dispatch and go to the report.
 5. Dispatch the `questioner` agent with the full description and the
    target directory `docs/plans/<id>/`. It writes the artifacts above. It
    writes `4-repos.md` when it makes sure with the user that the topic
    spans multiple repos.
-6. **Stop once `1-task.md` and `2-questions.md` exist on disk** — do not
-   continue to RESEARCH. (`3-prd.md` or `4-repos.md` can also exist, neither
-   changes the stop condition.)
+6. **Stop once the rerun reports `state=complete`**: rerun the step 2 command
+   with `--date <date>` from its first `date=` line. Do not continue to
+   RESEARCH. Any other state means the questioner did not write
+   `1-task.md` and `2-questions.md`; report that and stop.
 
 Report:
 

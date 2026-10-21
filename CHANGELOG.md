@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.160.0] - 2026-10-21
+
+### Changed
+
+- **`/team-question` derives the artifact directory with a script.** `skills/team-question/scripts/prepare-plan-dir.sh` builds `<id>` from the chosen topic and an optional ticket, stamps today's date, creates `docs/plans/<id>/`, and reports whether the run is new, resumes at `2-questions.md`, or is already complete. It rejects a topic or ticket that downstream phases' discovery would skip, and refuses to dispatch over an orphaned `2-questions.md`. The same script confirms the stop condition after the questioner returns. **What this asks of you:** nothing.
+
 ## [0.159.0] - 2026-10-21
 
 ### Changed
@@ -1472,7 +1478,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.159.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.160.0...HEAD
+[0.160.0]: https://github.com/bostonaholic/team/compare/v0.159.0...v0.160.0
 [0.159.0]: https://github.com/bostonaholic/team/compare/v0.158.0...v0.159.0
 [0.158.0]: https://github.com/bostonaholic/team/compare/v0.157.0...v0.158.0
 [0.157.0]: https://github.com/bostonaholic/team/compare/v0.156.0...v0.157.0
