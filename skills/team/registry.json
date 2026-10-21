@@ -1,5 +1,5 @@
 {
-  "$comment": "Agent inventory for the Team pipeline. Dispatch is driven by the phase table in skills/team/SKILL.md, not by this file. The phases array documents which artifacts each phase produces under docs/plans/. WORKTREE is the leading orchestrator-emit phase: it runs before QUESTION, creating the home worktree on branch <id> and authoring docs/plans/<id>/ inside it. The agents array lists every specialist agent and the phase it serves (no agent serves WORKTREE — it is orchestrator-emit). The gates array documents the gate kind that follows each phase that has one (no mid-run human gates; DESIGN is gated by an adversarial design review; STRUCTURE advances autonomously). Kept in sync with agents/*.md frontmatter (each agent's `phase` field) by .claude/hooks/check-registry-sync.mjs. REVIEW and SECURITY are orchestrator-emit in the phase table. The team-review skill dispatches the agents tagged REVIEW plus the implementer, and the team-security skill dispatches the agent tagged SECURITY plus the implementer.",
+  "$comment": "Agent inventory for the Team pipeline. Dispatch is driven by the phase table in skills/team/SKILL.md, not by this file. The phases array documents which artifacts each phase produces under docs/plans/. WORKTREE is the leading orchestrator-emit phase: it runs before QUESTION, creating the home worktree on branch <id> and authoring docs/plans/<id>/ inside it. The agents array lists every specialist agent and the phase it serves (no agent serves WORKTREE — it is orchestrator-emit). The gates array documents the gate kind that follows each phase that has one (no mid-run human gates; DESIGN is gated by an adversarial design review; STRUCTURE advances autonomously). Kept in sync with agents/*.md frontmatter (each agent's `phase` field) by .claude/hooks/check-registry-sync.mjs. CODE REVIEW and SECURITY REVIEW are orchestrator-emit in the phase table. The team-code-review skill dispatches the agents tagged CODE REVIEW plus the implementer, and the team-security-review skill dispatches the agent tagged SECURITY REVIEW plus the implementer.",
   "phases": [
     {"name": "WORKTREE", "artifacts": []},
     {"name": "QUESTION", "artifacts": ["1-task.md", "2-questions.md"]},
@@ -8,8 +8,8 @@
     {"name": "STRUCTURE", "artifacts": ["7-structure.md"]},
     {"name": "PLAN", "artifacts": ["8-plan.md"]},
     {"name": "IMPLEMENT", "artifacts": []},
-    {"name": "REVIEW", "artifacts": ["review-<n>.md"]},
-    {"name": "SECURITY", "artifacts": ["security-review-<n>.md"]},
+    {"name": "CODE REVIEW", "artifacts": ["review-<n>.md"]},
+    {"name": "SECURITY REVIEW", "artifacts": ["security-review-<n>.md"]},
     {"name": "PR", "artifacts": []}
   ],
   "agents": [
@@ -21,11 +21,11 @@
     {"name": "planner", "phase": "PLAN"},
     {"name": "test-architect", "phase": "IMPLEMENT"},
     {"name": "implementer", "phase": "IMPLEMENT"},
-    {"name": "code-reviewer", "phase": "REVIEW", "parallel": true},
-    {"name": "security-reviewer", "phase": "SECURITY"},
-    {"name": "technical-writer", "phase": "REVIEW", "parallel": true},
-    {"name": "ux-reviewer", "phase": "REVIEW", "parallel": true},
-    {"name": "verifier", "phase": "REVIEW", "parallel": true}
+    {"name": "code-reviewer", "phase": "CODE REVIEW", "parallel": true},
+    {"name": "security-reviewer", "phase": "SECURITY REVIEW"},
+    {"name": "technical-writer", "phase": "CODE REVIEW", "parallel": true},
+    {"name": "ux-reviewer", "phase": "CODE REVIEW", "parallel": true},
+    {"name": "verifier", "phase": "CODE REVIEW", "parallel": true}
   ],
   "gates": [
     {"before": "QUESTION", "type": "orchestrator-emit", "action": "prepare home worktree on branch <id> and author docs/plans/<id>/ inside it"},

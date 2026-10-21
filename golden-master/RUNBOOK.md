@@ -176,7 +176,7 @@ autonomous runs.
   "backend": "claude-code",
   "pipeline_version": "team vX.Y.Z (commit …)",
   "interaction_protocol": "autonomous-design-review-v1",
-  "time_s": { "total": 0, "question": 0, "research": 0, "design": 0, "structure": 0, "plan": 0, "implement": 0, "review": 0, "security": 0, "pr": 0 },
+  "time_s": { "total": 0, "question": 0, "research": 0, "design": 0, "structure": 0, "plan": 0, "implement": 0, "code_review": 0, "security_review": 0, "pr": 0 },
   "tokens": { "input": 0, "output": 0, "cache_read": 0, "cache_creation": 0, "per_phase": {} },
   "cost_usd": 0,
   "shape": {

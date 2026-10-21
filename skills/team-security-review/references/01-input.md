@@ -21,7 +21,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
   silent.
 - **If the command printed nothing** (tier 3), do not hard-error. Fire one
   `AskUserQuestion` with a `Setup` header and two labeled options:
-  - **Run the producer** — run `/team-review docs/plans/<id>/` to pass the
+  - **Run the producer** — run `/team-code-review docs/plans/<id>/` to pass the
     review that this phase follows.
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     (`ls docs/plans/` lists them).
@@ -35,17 +35,17 @@ path.
 ## Worktrees and entry guards
 
 Resolve the home worktree and the companion worktrees by the `## Worktrees`
-section of the [team-review input](../team-review/references/01-input.md).
+section of the [team-code-review input](../team-code-review/references/01-input.md).
 Then run entry guards 1 to 4 from its `## Entry guards` section, as written,
 in each worktree in scope. In guard 4, the re-run command is
-`/team-security docs/plans/<id>/`. Then run guard 5:
+`/team-security-review docs/plans/<id>/`. Then run guard 5:
 
-5. **REVIEW passed.** Classify the newest `$ARGUMENTS/review-<n>.md` per the
+5. **CODE REVIEW passed.** Classify the newest `$ARGUMENTS/review-<n>.md` per the
    record states in the [artifact schema](../team/references/artifacts.md).
    When it is missing, FAIL, malformed, or stale, stop before any dispatch.
-   Tell the user **"Next: run `/team-review docs/plans/<id>/`"**. Write no
+   Tell the user **"Next: run `/team-code-review docs/plans/<id>/`"**. Write no
    record.
 
 Guard 5 runs at entry only. Inside one session, the loop keeps running after
 its own fix commits make the `review-<n>.md` record stale. The hand-off in
-[execution](references/02-execution.md) step 9 then routes the run back through REVIEW.
+[execution](references/02-execution.md) step 9 then routes the run back through CODE REVIEW.

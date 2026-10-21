@@ -29,7 +29,7 @@ For missing imports, fixtures, types, or runner config, add only the minimum pla
 
 ### 4. Lock the test list
 
-After correct Red state, acceptance tests are immutable during IMPLEMENT, REVIEW, and SECURITY:
+After correct Red state, acceptance tests are immutable during IMPLEMENT, CODE REVIEW, and SECURITY REVIEW:
 
 - add none;
 - remove none;
@@ -59,7 +59,7 @@ Before changing production code, audit every immutable acceptance test against t
 
 ### Review-fix dispatch (after a hard-gate failure)
 
-`team-review` or `team-security` supplies the typed failure classes and this round's Blocking and Major lines. Fix every named item:
+`team-code-review` or `team-security-review` supplies the typed failure classes and this round's Blocking and Major lines. Fix every named item:
 
 - Security: fix the vulnerability directly—parameterize queries, remove secrets, add auth, escape output; never weaken the fix.
 - Tests: change code, never the immutable tests. Code review: fix every finding the dispatch names. Lint/format/typecheck/build: rerun until passing; use `--fix` first where available.

@@ -95,8 +95,8 @@ Or run individual phases:
 /team-structure docs/plans/<id>/
 /team-plan docs/plans/<id>/
 /team-implement docs/plans/<id>/
-/team-review docs/plans/<id>/
-/team-security docs/plans/<id>/
+/team-code-review docs/plans/<id>/
+/team-security-review docs/plans/<id>/
 /team-pr docs/plans/<id>/
 ```
 
@@ -157,7 +157,7 @@ Each agent does work and returns an artifact. The orchestrator dispatches the ne
 ## Pipeline (QRSPI)
 
 ```
-WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → REVIEW → SECURITY → PR
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → CODE REVIEW → SECURITY REVIEW → PR
 ```
 
 - **Worktree.** Orchestrator prepares an isolated git worktree first and authors `docs/plans/<id>/` inside it, keeping the home checkout's `git status` clean for the whole run.
@@ -167,8 +167,8 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 - **Structure.** Break the design into vertical slices with verification checkpoints. Produced autonomously. Advances to Plan with no gate.
 - **Plan.** Tactical implementation plan derived from the structure. Read by the implementer. Not gated.
 - **Implement.** Test-first, where test-architect writes failing tests and a mechanical gate checks them and the project's static checks. Then slice execution, where implementer commits each vertical slice atomically.
-- **Review.** Adversarial verification, with 4 parallel reviewers and a typed failure-class fix loop that runs until no Blocking or Major finding remains. Each round writes one `review-<n>.md`.
-- **Security.** The security reviewer runs alone after Review passes, in the same fix loop, until no CRITICAL or HIGH finding remains. Each round writes one `security-review-<n>.md`. A security fix sends the run back through Review before PR.
+- **Code review.** Adversarial verification, with 4 parallel reviewers and a typed failure-class fix loop that runs until no Blocking or Major finding remains. Each round writes one `review-<n>.md`.
+- **Security review.** The security reviewer runs alone after Code review passes, in the same fix loop, until no CRITICAL or HIGH finding remains. Each round writes one `security-review-<n>.md`. A security fix sends the run back through Code review before PR.
 - **PR.** Update an existing changelog, commit, open pull request with inline UI screenshots when applicable, surface the tracking item. Repositories without a root changelog remain unchanged unless the user explicitly requests one.
 
 ## Architecture

@@ -138,8 +138,8 @@ it. The
 owns its frontmatter, its sections, and its malformed, current, and stale
 states.
 
-**Security-review record** (`security-review-<n>.md`): each SECURITY round,
-the session that runs `team-security` writes
+**Security-review record** (`security-review-<n>.md`): each SECURITY REVIEW round,
+the session that runs `team-security-review` writes
 `docs/plans/<id>/security-review-<n>.md` with `phase: security-review`. It
 has the same schema and record states as the code-review record, and its
 `## Reports` holds the one `security-reviewer` report. Resume detection, the
@@ -147,19 +147,19 @@ phase loop's PR predecessor check, and `/team-pr` read it.
 
 **Phase inference** (orchestrator):
 
-| Latest artifact present                                | Current phase       |
-|--------------------------------------------------------|---------------------|
-| worktree exists for `<id>`, no `1-task.md` yet           | WORKTREE (next up)  |
-| `1-task.md` + `2-questions.md` only                        | RESEARCH (next up)  |
-| `5-research.md`                                          | DESIGN (next up)    |
-| `6-design.md` alone (no passing design review)           | DESIGN (review next)|
-| `6-design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
-| `7-structure.md`                                         | PLAN (next up)      |
-| `8-plan.md`, IMPLEMENT not complete                      | IMPLEMENT           |
-| IMPLEMENT complete, no current PASS `review-<n>.md`      | REVIEW              |
-| newest `review-<n>.md` PASS and current, no current PASS `security-review-<n>.md` | SECURITY |
-| newest `review-<n>.md` and newest `security-review-<n>.md` both PASS and current | PR (next up) |
-| PR opened or commit shipped                            | SHIPPED             |
+| Latest artifact present                                                           | Current phase        |
+|-----------------------------------------------------------------------------------|----------------------|
+| worktree exists for `<id>`, no `1-task.md` yet                                    | WORKTREE (next up)   |
+| `1-task.md` + `2-questions.md` only                                               | RESEARCH (next up)   |
+| `5-research.md`                                                                   | DESIGN (next up)     |
+| `6-design.md` alone (no passing design review)                                    | DESIGN (review next) |
+| `6-design.md` + passing `design-review-<n>.md`                                    | STRUCTURE (next up)  |
+| `7-structure.md`                                                                  | PLAN (next up)       |
+| `8-plan.md`, IMPLEMENT not complete                                               | IMPLEMENT            |
+| IMPLEMENT complete, no current PASS `review-<n>.md`                               | CODE REVIEW          |
+| newest `review-<n>.md` PASS and current, no current PASS `security-review-<n>.md` | SECURITY REVIEW      |
+| newest `review-<n>.md` and newest `security-review-<n>.md` both PASS and current  | PR (next up)         |
+| PR opened or commit shipped                                                       | SHIPPED              |
 
 Worktree presence: `git worktree list --porcelain | grep -q <id>`.
 The merge-base is taken against `origin/<default>`, the ref each worktree
@@ -168,18 +168,18 @@ is cut from, and against the local default branch only when the repo has no
 `8-plan.md` names a commit in `<merge-base>..HEAD`. In multi-repo mode, that
 commit must be in the worktree of each repo the slice names. Without an
 `8-plan.md`, any such commit completes it. A run interrupted before its last slice
-commit thus resumes at IMPLEMENT. REVIEW is complete only when the newest
-`review-<n>.md` is PASS and current. SECURITY is complete only when REVIEW
+commit thus resumes at IMPLEMENT. CODE REVIEW is complete only when the newest
+`review-<n>.md` is PASS and current. SECURITY REVIEW is complete only when CODE REVIEW
 is complete and the newest `security-review-<n>.md` is PASS and current. A
-SECURITY fix commit leaves the `review-<n>.md` record stale, so that run
-resumes at REVIEW. The "Branch state" section of the
+SECURITY REVIEW fix commit leaves the `review-<n>.md` record stale, so that run
+resumes at CODE REVIEW. The "Branch state" section of the
 [artifact schema](https://github.com/bostonaholic/team/blob/main/skills/team/references/artifacts.md)
 owns these definitions.
 
 Discovery keys only on the six `PHASE_FILES` names, so `review-<n>.md`,
 `security-review-<n>.md`, and the two non-phase sibling outputs below are
-invisible to discovery. IMPLEMENT declares no phase artifact. REVIEW
-declares `review-<n>.md`. SECURITY declares `security-review-<n>.md`.
+invisible to discovery. IMPLEMENT declares no phase artifact. CODE REVIEW
+declares `review-<n>.md`. SECURITY REVIEW declares `security-review-<n>.md`.
 
 `docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
 ux-reviewer during CODE REVIEW for UI-touching changes and consumed by team-pr.
@@ -206,7 +206,7 @@ The pipeline has ten phases. The orchestrator walks them in order. Each
 phase needs the prior phase's artifact on disk.
 
 ```
-WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → REVIEW → SECURITY → PR → SHIPPED
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → CODE REVIEW → SECURITY REVIEW → PR → SHIPPED
 ```
 
 ### Phase 1: Worktree
@@ -344,7 +344,7 @@ The orchestrator delegates this phase to the `team-code-review` skill
    Blocking or Major finding remains, it dispatches the implementer to
    fix the typed failure class. The implementer commits each fix round
    and leaves the tree clean, because a record is current only over a
-   clean tree. `team-review` refuses to start over a tree dirty outside
+   clean tree. `team-code-review` refuses to start over a tree dirty outside
    `docs/plans/`, and checks again after each fix round. It then re-runs all 4 reviewers
    automatically. It never consults the user. This is the *no-consult
    rule*. Once Blocking and Major are clean, any remaining Minor-and-below
@@ -376,30 +376,30 @@ resumes from the newest `review-<n>.md` and the round number continues. A
 stale newest record runs a fresh round, whose reviewers re-derive the open
 set.
 
-### Phase 9: Security
+### Phase 9: Security review
 
 **Agents:** `security-reviewer`, plus `implementer` for fix rounds
 **Predecessor:** newest `review-<n>.md` PASS and current
 **Artifact:** `docs/plans/<id>/security-review-<n>.md`, one per round
 
-The orchestrator delegates this phase to the `team-security` skill
-(`skills/team-security/references/02-execution.md`). That skill runs the
-`team-review` loop by citation and owns only a per-step delta table. It
+The orchestrator delegates this phase to the `team-security-review` skill
+(`skills/team-security-review/references/02-execution.md`). That skill runs the
+`team-code-review` loop by citation and owns only a per-step delta table. It
 dispatches `security-reviewer` alone over the same pinned range. CRITICAL
 and HIGH findings are Blocking. MEDIUM and LOW findings are Minor and stay
 in the record for the PR's `review-notes` comment. The loop has no count
 cap, never consults the user, and appends
-`Security round <n+1> (<b> Blocking, <m> Major open)` items to the ledger.
+`Security review round <n+1> (<b> Blocking, <m> Major open)` items to the ledger.
 A CRITICAL or HIGH finding that only a locked acceptance test edit can fix
 ends in the implementer's blocker halt.
 
-A SECURITY fix commit moves HEAD, so it leaves the `review-<n>.md` record
-stale. When SECURITY passes with a stale review record, the phase loop
-moves the run back one phase to REVIEW, which runs a fresh round over the
-whole range. Every shipped commit thus passes both phases. When REVIEW
+A SECURITY REVIEW fix commit moves HEAD, so it leaves the `review-<n>.md` record
+stale. When SECURITY REVIEW passes with a stale review record, the phase loop
+moves the run back one phase to CODE REVIEW, which runs a fresh round over the
+whole range. Every shipped commit thus passes both phases. When CODE REVIEW
 then passes with no new commit, the security record stays current, and
-SECURITY dispatches nothing on its way to PR. Standalone, `/team-security`
-names `/team-review` as the next command after a fix, and `/team-pr`
+SECURITY REVIEW dispatches nothing on its way to PR. Standalone, `/team-security-review`
+names `/team-code-review` as the next command after a fix, and `/team-pr`
 otherwise.
 
 ### Phase 10: PR
@@ -437,16 +437,16 @@ asks, so the branch remains available for iteration. The final report tells the 
 
 13 specialist agents, organized by phase:
 
-| Phase     | Agents                                                                            |
-|-----------|-----------------------------------------------------------------------------------|
-| QUESTION  | `questioner`                                                                      |
-| RESEARCH  | `file-finder`, `researcher` (parallel)                                            |
-| DESIGN    | `design-author`                                                                   |
-| STRUCTURE | `structure-planner`                                                               |
-| PLAN      | `planner`                                                                         |
-| IMPLEMENT | `test-architect`, `implementer`                                                   |
-| REVIEW    | `code-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` (parallel)         |
-| SECURITY  | `security-reviewer`                                                               |
+| Phase           | Agents                                                                    |
+|-----------------|---------------------------------------------------------------------------|
+| QUESTION        | `questioner`                                                              |
+| RESEARCH        | `file-finder`, `researcher` (parallel)                                    |
+| DESIGN          | `design-author`                                                           |
+| STRUCTURE       | `structure-planner`                                                       |
+| PLAN            | `planner`                                                                 |
+| IMPLEMENT       | `test-architect`, `implementer`                                           |
+| CODE REVIEW     | `code-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` (parallel) |
+| SECURITY REVIEW | `security-reviewer`                                                       |
 
 Each agent's QRSPI phase is recorded in `skills/team/registry.json`.
 Agent frontmatter uses only Claude Code's [supported fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields).
@@ -476,10 +476,10 @@ and it ignores any subagent's `permissionMode` when the main session runs in
 auto, `acceptEdits`, or `bypassPermissions` mode. Plan mode would not close the
 gap anyway: it blocks edits but only prompts for shell commands, and an allow
 rule runs them. Every reviewer holds `Bash`, so nothing prevents a reviewer's
-shell mutation. The REVIEW and SECURITY phases detect one instead: `team-review`
-and `team-security` compare `HEAD` and `git status` before and after each
+shell mutation. The CODE REVIEW and SECURITY REVIEW phases detect one instead: `team-code-review`
+and `team-security-review` compare `HEAD` and `git status` before and after each
 reviewer dispatch and turn any change into a Blocking finding
-(`skills/team-review/references/02-execution.md`, step 3).
+(`skills/team-code-review/references/02-execution.md`, step 3).
 
 One path steps outside that enforcement: the cross-model pass
 (`skills/team/references/cross-model-review.md`) shells out to external vendor CLIs
@@ -627,7 +627,7 @@ Notes:
       own task, and only three agents produce one: `design-author` (the
       adversarial design-review verdict), `test-architect` (the
       mechanical test gate), and `implementer` (acceptance tests plus
-      the REVIEW and SECURITY verify). It does not reach `researcher`,
+      the CODE REVIEW and SECURITY REVIEW verify). It does not reach `researcher`,
       `structure-planner`, `planner`, or `code-reviewer`, because
       nothing evaluates the artifact or verdict they produce.
       `code-reviewer`'s one live route is the coupled reviewer set
@@ -731,8 +731,8 @@ loop:
   5. Write returned artifacts to docs/plans/<id>/<name>.md with the
      YAML frontmatter the agent specifies.
   6. Run the gate for this phase (HUMAN | MECHANICAL | ORCHESTRATOR-EMIT
-     | AGGREGATE). AGGREGATE delegates to the `team-review` and
-     `team-security` skills.
+     | AGGREGATE). AGGREGATE delegates to the `team-code-review` and
+     `team-security-review` skills.
   7. Mark current TodoWrite item complete and the next one in_progress.
   8. Goto loop.
 ```
@@ -751,7 +751,7 @@ Each downstream skill (`team-research` and beyond) treats `$ARGUMENTS` as
 an artifact directory, typically the path printed by the previous phase's
 completion message. For the 9 directory-consuming skills
 (`team-research`, `team-design`, `team-structure`, `team-plan`,
-`team-worktree`, `team-implement`, `team-review`, `team-security`, `team-pr`)
+`team-worktree`, `team-implement`, `team-code-review`, `team-security-review`, `team-pr`)
 the `docs/plans/<id>/` argument is **optional**. Each skill resolves the
 directory through a three-tier chain: explicit `$ARGUMENTS` →
 newest-mtime convention discovery → `AskUserQuestion`. The middle tier
@@ -1114,8 +1114,8 @@ review round durably. The artifacts are self-describing.
 
 **Review records:** `docs/plans/<id>/review-<n>.md` and
 `docs/plans/<id>/security-review-<n>.md` (frontmatter
-`verdict: <PASS|FAIL>`) record each REVIEW and SECURITY round durably, on
-every host. Resume detection, the `team-review` and `team-security` round
+`verdict: <PASS|FAIL>`) record each CODE REVIEW and SECURITY REVIEW round durably, on
+every host. Resume detection, the `team-code-review` and `team-security-review` round
 numbers, and `/team-pr` read them, so a restart loses no round result.
 
 **Compaction defense:** when context is compacted or a fresh session begins,
@@ -1231,7 +1231,7 @@ Prerequisite for all items: nesting survives 2-3 Claude Code releases
 without breaking changes, parallel dispatch semantics for nested
 children are confirmed, and the depth cap is stable.
 
-- **Verify-coordinator** (strongest candidate): a REVIEW-phase
+- **Verify-coordinator** (strongest candidate): a CODE REVIEW-phase
   coordinator that owns the 4-reviewer fan-out, the aggregate gate, and
   the typed failure retry loop. It returns a compact terminal verdict for
   the orchestrator to render:

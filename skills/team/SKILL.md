@@ -31,7 +31,7 @@ scan issue bodies or quoted text for route words.
 
 ## Core contracts
 
-- Walk this phase table in order: `Worktree → Question → Research → Design → Structure → Plan → Implement → Review → Security → PR`.
+- Walk this phase table in order: `Worktree → Question → Research → Design → Structure → Plan → Implement → Code review → Security review → PR`.
 - There are **no mid-run human gates**. Continue until the draft PR exists.
 - For a picked-up ticket, read [tracking rules](../team-pr/references/tracking.md) and move the ticket to in-progress. At PR creation, use the same reference for the in-review transition and the multi-repo home-only closing rule.
 - Before WORKTREE, run the non-blocking probes in `scripts/preflight.sh`; no result blocks the run.

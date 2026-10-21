@@ -1,7 +1,7 @@
-This file is the only statement of the review loop. REVIEW runs it as
-written, and `team-security` runs it with the per-step deltas in its own
+This file is the only statement of the review loop. CODE REVIEW runs it as
+written, and `team-security-review` runs it with the per-step deltas in its own
 execution reference, so a change to a step number or bold label here changes
-SECURITY too. Read the record schema and the record states (malformed,
+SECURITY REVIEW too. Read the record schema and the record states (malformed,
 current, stale) in the [artifact schema](../team/references/artifacts.md)
 before step 1.
 
@@ -163,8 +163,8 @@ before step 1.
      loop in the same turn. Ending the turn with verdicts but no draft PR is
      a defect.
    - **Standalone**: tell the user
-     **"Next: run `/team-security docs/plans/<id>/`"**.
-   - Never load `team-security` or `team-pr`.
+     **"Next: run `/team-security-review docs/plans/<id>/`"**.
+   - Never load `team-security-review` or `team-pr`.
 
 Every halt names the absolute `docs/plans/<id>/` path and the newest
 `review-<n>.md` path.

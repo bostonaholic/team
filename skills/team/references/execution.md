@@ -5,7 +5,7 @@
 Declare each loop's bound at its owning operation: count, watch duration, poll budget, concurrency, or terminal verdict.
 At a count cap, halt loudly and report unresolved state. Never restart, extend, or soften exit criteria.
 Missing or malformed verdicts retry once with the error, then halt. Valid correctness-review retries have no count cap.
-DESIGN ends on the reviewer's passing verdict. REVIEW and SECURITY each end when no Blocking or Major finding remains. The operator remains the outer bound.
+DESIGN ends on the reviewer's passing verdict. CODE REVIEW and SECURITY REVIEW each end when no Blocking or Major finding remains. The operator remains the outer bound.
 Keep operation-specific watch, CLI, and upload limits beside those operations.
 Preserve declared byte limits. Artifacts and agent returns carry no line cap.
 Restructure excess output by removing whole named units. Never truncate silently.

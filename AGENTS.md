@@ -43,10 +43,10 @@ Agents are **decoupled microservices**. Each consumes a predecessor artifact on 
 ## Pipeline
 
 ```
-WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → REVIEW → SECURITY → PR
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → CODE REVIEW → SECURITY REVIEW → PR
 ```
 
-Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-Review-Security-PR). There are **no mid-run human gates**. An adversarial design review gates the Design (alignment doc), and the orchestrator records the verdicts to `design-review-<n>.md`. The human's checkpoint is the PR review at the end. The Structure (vertical-slice breakdown) is produced autonomously and advances to Plan with no approval wait. Research is **isolated**: the researcher reads only `2-questions.md`, never `1-task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is test-first plus slice execution. Review runs the 4-reviewer adversarial verify with the hard-gate fix loop and writes `review-<n>.md` each round. Security then runs the security reviewer alone in the same loop and writes `security-review-<n>.md` each round. A security fix commit sends the run back through Review before PR. The whole run is autonomous with mechanical gates.
+Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-Code Review-Security Review-PR). There are **no mid-run human gates**. An adversarial design review gates the Design (alignment doc), and the orchestrator records the verdicts to `design-review-<n>.md`. The human's checkpoint is the PR review at the end. The Structure (vertical-slice breakdown) is produced autonomously and advances to Plan with no approval wait. Research is **isolated**: the researcher reads only `2-questions.md`, never `1-task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is test-first plus slice execution. Code review runs the 4-reviewer adversarial verify with the hard-gate fix loop and writes `review-<n>.md` each round. Security review then runs the security reviewer alone in the same loop and writes `security-review-<n>.md` each round. A security fix commit sends the run back through Code review before PR. The whole run is autonomous with mechanical gates.
 
 ## Entry points
 
@@ -61,8 +61,8 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 | `/team-structure` | Break design into vertical slices (autonomous) |
 | `/team-plan` | Tactical plan from the structure |
 | `/team-implement` | Test-first + slice execution, on stated intent or as the IMPLEMENT phase — it commits each slice |
-| `/team-review` | 4-reviewer adversarial review with a Blocking/Major fix loop, on stated intent or as the REVIEW phase — it commits fixes |
-| `/team-security` | Security review with a CRITICAL/HIGH fix loop, on stated intent or as the SECURITY phase — it commits fixes |
+| `/team-code-review` | 4-reviewer adversarial review with a Blocking/Major fix loop, on stated intent or as the CODE REVIEW phase — it commits fixes |
+| `/team-security-review` | Security review with a CRITICAL/HIGH fix loop, on stated intent or as the SECURITY REVIEW phase — it commits fixes |
 | `/team-pr` | Commit + open PR, on stated intent or as the PR phase — it pushes and moves the ticket |
 | `/team-migrate` | Move a machine set up before v0.147.0 onto native Team plus the `bostonaholic/skills` plugin in every harness, on explicit request only — it rewrites plugin registrations and moves old skill copies aside after one confirmation |
 
@@ -74,7 +74,7 @@ Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) 
 
 **Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
-**Invariant (checks and balances):** producers write, reviewers judge, and no agent does both. A reviewer (`code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`) holds no `Write`/`Edit` tool and carries `permissionMode: plan` (Claude Code ignores that field for plugin agents, so the `tools:` grant is the only enforcement, and a post-dispatch tree check in REVIEW and SECURITY detects `Bash` mutation). A reviewer that can edit can fix what it found and then approve its own fix, which collapses the generator and the evaluator into one role. See [docs/architecture.md](docs/architecture.md#checks-and-balances).
+**Invariant (checks and balances):** producers write, reviewers judge, and no agent does both. A reviewer (`code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`) holds no `Write`/`Edit` tool and carries `permissionMode: plan` (Claude Code ignores that field for plugin agents, so the `tools:` grant is the only enforcement, and a post-dispatch tree check in CODE REVIEW and SECURITY REVIEW detects `Bash` mutation). A reviewer that can edit can fix what it found and then approve its own fix, which collapses the generator and the evaluator into one role. See [docs/architecture.md](docs/architecture.md#checks-and-balances).
 
 ## Skills
 

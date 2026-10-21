@@ -31,7 +31,7 @@ that only locates a skill's install directory — "the directory containing
 `skills/<name>/SKILL.md`" names a location, not the skill.
 
 The edges are therefore **directed**, and reading them transitively gives the
-graph. `team` loads `team-pr`, `team-review`, and `team-security`. None loads back.
+graph. `team` loads `team-code-review`, `team-pr`, and `team-security-review`. None loads back.
 `**Uses:** None` marks a
 leaf with no further consumption.
 
@@ -57,7 +57,7 @@ Runs the 10-phase QRSPI feature pipeline, or a leading-argument route.
 
 **Used by:** None
 
-**Uses:** `team-pr`, `team-review`, `team-security`, `team-worktree`
+**Uses:** `team-code-review`, `team-pr`, `team-security-review`, `team-worktree`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -123,9 +123,9 @@ Reviews the built branch and fixes Blocking and Major findings.
 
 **Uses:** None
 
-### [team-security](https://github.com/bostonaholic/team/blob/main/skills/team-security/SKILL.md)
+### [team-security-review](https://github.com/bostonaholic/team/blob/main/skills/team-security-review/SKILL.md)
 
-Reviews the branch for security defects after REVIEW passes, and fixes CRITICAL and HIGH findings.
+Reviews the branch for security defects after CODE REVIEW passes, and fixes CRITICAL and HIGH findings.
 
 **Used by:** `team`
 

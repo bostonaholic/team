@@ -17,11 +17,11 @@ Ten sequential phases; none are skippable.
 | **STRUCTURE** | `7-structure.md` (vertical slices) | NONE: autonomous |
 | **PLAN** | `8-plan.md` | SOFT: no approval; reviewed design is contract |
 | **IMPLEMENT** | code, passing tests, per-slice commits | MECHANICAL: assertion-only failures and passing static checks before slices |
-| **REVIEW** | `review-<n>.md` each round; fix commits | AGGREGATE: verifier and code-review hard gates |
-| **SECURITY** | `security-review-<n>.md` each round; fix commits | AGGREGATE: security hard gate |
+| **CODE REVIEW** | `review-<n>.md` each round; fix commits | AGGREGATE: verifier and code-review hard gates |
+| **SECURITY REVIEW** | `security-review-<n>.md` each round; fix commits | AGGREGATE: security hard gate |
 | **PR** | GitHub draft PR | terminal: record URL; close ledger |
 
-WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`. IMPLEMENT has three sub-phases: test-architect writes failing acceptance tests; a mechanical gate requires assertion failures rather than crashes plus passing static checks, inverting to a reproduced green pre-change baseline for a zero-behavior-change refactor, whose test-architect dispatch is skipped with a recorded reason; implementer commits green slices. REVIEW runs `skills/team-review/`: 4 parallel code/docs/ux/verifier reviews return typed failures until no Blocking/Major remains, and each round writes `review-<n>.md`. SECURITY runs `skills/team-security/`: `security-reviewer` alone runs the same loop and writes `security-review-<n>.md` each round. When its fix commits leave the review record stale, the run moves back to REVIEW.
+WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`. IMPLEMENT has three sub-phases: test-architect writes failing acceptance tests; a mechanical gate requires assertion failures rather than crashes plus passing static checks, inverting to a reproduced green pre-change baseline for a zero-behavior-change refactor, whose test-architect dispatch is skipped with a recorded reason; implementer commits green slices. CODE REVIEW runs `skills/team-code-review/`: 4 parallel code/docs/ux/verifier reviews return typed failures until no Blocking/Major remains, and each round writes `review-<n>.md`. SECURITY REVIEW runs `skills/team-security-review/`: `security-reviewer` alone runs the same loop and writes `security-review-<n>.md` each round. When its fix commits leave the review record stale, the run moves back to CODE REVIEW.
 
 ## Artifact and isolation invariants
 
@@ -54,8 +54,8 @@ rule in the "Branch state" section of the
 |---|---|
 | worktree exists; no `1-task.md` | WORKTREE |
 | `8-plan.md`; IMPLEMENT not complete | IMPLEMENT |
-| IMPLEMENT complete; no PASS record that is current | REVIEW |
-| newest `review-<n>.md` PASS and current; no current PASS `security-review-<n>.md` | SECURITY |
+| IMPLEMENT complete; no PASS record that is current | CODE REVIEW |
+| newest `review-<n>.md` PASS and current; no current PASS `security-review-<n>.md` | SECURITY REVIEW |
 | newest `review-<n>.md` and newest `security-review-<n>.md` both PASS and current | PR |
 | PR(s) open or commits shipped | SHIPPED |
 

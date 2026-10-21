@@ -23,7 +23,7 @@
    changelog to step 6 for this reason. Read the
    [artifact schema](../team/references/artifacts.md) for the record
    states. Resolve the worktrees by the home-worktree order in
-   [the team-review input](../team-review/references/01-input.md). For the
+   [the team-code-review input](../team-code-review/references/01-input.md). For the
    whole run, bind the review record path with one review status, and the
    security record path with one security status. Each status is one of:
    - `current`: the newest record is PASS and current.
