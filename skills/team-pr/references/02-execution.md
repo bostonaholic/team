@@ -17,7 +17,9 @@
    its frontmatter. Read `$ARGUMENTS/6-design.md` for the "why" behind the
    changes.
    Before step 6 edits the changelog and step 7 makes the ship commit, read
-   the newest `$ARGUMENTS/review-<n>.md` once. Read the
+   the newest `$ARGUMENTS/review-<n>.md` once. Bind before any edit outside
+   `docs/plans/`, this run's or a caller's: the `/team` PR gate leaves the
+   changelog to step 6 for this reason. Read the
    [artifact schema](../team/references/artifacts.md) for the record
    states. Resolve the worktrees by the home-worktree order in
    [the team-review input](../team-review/references/01-input.md). Bind the

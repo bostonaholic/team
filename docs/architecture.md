@@ -361,7 +361,9 @@ set.
 **Action:** orchestrator-emit
 **Predecessor:** newest `review-<n>.md` PASS and current
 
-Update an existing CHANGELOG.md (filter for user-facing commits since last
+`team-pr` first binds the review status from the newest `review-<n>.md`,
+before any edit, so its own changelog edit cannot make the record stale.
+Then it updates an existing CHANGELOG.md (filter for user-facing commits since last
 release); if the root file is absent, leave it absent unless the user explicitly
 requested one. Push the branch and open a draft PR automatically with
 `gh pr create --draft`. The PR phase never waits for approval. Then

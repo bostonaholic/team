@@ -23,7 +23,7 @@ Two modes:
 
 ## Core contracts
 
-1. **Update an existing CHANGELOG.md** and commit before opening any PR. If the
+1. **Update an existing CHANGELOG.md** after execution step 3 binds the review status, and commit before opening any PR. If the
    root file is absent, leave it absent and report the skip unless the user
    explicitly requested a new changelog.
 2. **Open a draft PR automatically — do not stop to ask.** Push, then run `gh pr create --draft`.
