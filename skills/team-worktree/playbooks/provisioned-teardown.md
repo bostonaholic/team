@@ -5,7 +5,7 @@ Read [external-data rules](../../team/references/external-data.md) before teardo
 
 The worktree playbook's teardown step 8 follows this file after the worktree is removed.
 
-Shell variables do not persist between calls, so each fence below binds and derives everything it expands, and runs as one call. A value is pasted only inside single quotes. A supplied value is refused, not pasted, when it contains a single quote, a newline, `$`, or a backtick.
+A value is pasted only inside single quotes. A supplied value is refused, not pasted, when it contains a single quote, a newline, `$`, or a backtick.
 
 ## Ownership boundary
 
@@ -24,30 +24,14 @@ Never re-run a step the worktree playbook owns: a second pass at the same target
 
 ## Inputs
 
-| Variable | Meaning | Source |
+| Argument | Meaning | Source |
 |---|---|---|
-| `REPO_PATH` | The repository being torn down | the worktree playbook's teardown step 8, as `<repo-path>` in its steps 3 and 5 |
-| `BRANCH` | The branch the finished work lived on | teardown step 8, recorded before step 1 |
-| `WORKTREE` | Absolute path of the worktree that was removed, or empty when there was none | teardown step 8, recorded before step 1 |
-| `PRIMARY_ROOT` | Absolute path to the primary clone, validated | derived in Step 1's fence |
-| `DEFAULT` | The repo's default branch name | derived in Step 1's fence |
+| `<repo-path>` | The repository being torn down | the worktree playbook's teardown step 8, as `<repo-path>` in its steps 3 and 5 |
+| `<branch>` | The branch the finished work lived on | teardown step 8, recorded before step 1 |
+| `<worktree>` | Absolute path of the worktree that was removed, or empty when there was none | teardown step 8, recorded before step 1 |
 
-Step 1's fence binds the first three as single-quoted literals on its first
-lines, then derives `PRIMARY_ROOT` and validates it with three checks, all of
-which must hold. A failed or unrunnable check refuses, and teardown reports the message and
-stops. Do not accept an unvalidated `PRIMARY_ROOT`.
-
-The same fence derives `DEFAULT` by running, in order, the first that succeeds:
-
-1. `git -C "$PRIMARY_ROOT" symbolic-ref --short refs/remotes/origin/HEAD`
-   (strip the `origin/` prefix).
-2. `git -C "$PRIMARY_ROOT" remote set-head origin --auto`, then retry the
-   `symbolic-ref` above.
-3. Offline fallback: probe which of `main` or `master` exists locally via
-   `git -C "$PRIMARY_ROOT" rev-parse --verify --quiet <name>`.
-4. Neither exists → stop and ask the user.
-
-Every expansion feeding a removal or a command uses the `${VAR:?}` form.
+The script derives and validates the primary clone and the default branch
+itself.
 
 ## The declaration: `.teamteardown`
 
@@ -70,84 +54,35 @@ from them rather than from any substitution this skill performs:
 
 | Variable | Value |
 |---|---|
-| `TEAM_REPO_ROOT` | `$PRIMARY_ROOT` |
-| `TEAM_BRANCH` | `$BRANCH` |
-| `TEAM_WORKTREE` | `$WORKTREE`, empty when no worktree existed |
+| `TEAM_REPO_ROOT` | the primary clone's root |
+| `TEAM_BRANCH` | `<branch>` |
+| `TEAM_WORKTREE` | `<worktree>`, empty when no worktree existed |
 
 ### Read it from the default branch, never from the checkout
 
-Only the copy committed to the default branch runs — `origin/$DEFAULT`, else
-`refs/heads/$DEFAULT` (Step 1's block below). The working-tree copy and the
+Only the copy committed to the default branch runs — `origin/<default>`, else
+`refs/heads/<default>`. The working-tree copy and the
 finished branch's copy are never read: a PR that adds or edits
 `.teamteardown` would otherwise get arbitrary code execution from the act of
 cleaning up after it. On a fork PR against a public repo, that is anyone.
 
-Both `git show` forms failing means the repo declares no teardown — the
-common case, not an error: report that no declaration exists.
+No committed copy means the repo declares no teardown — the common case, not
+an error.
 
 ## Procedure
 
 ### Step 1 — run the declared teardown
 
-Run this whole fence as one call, with the three inputs filled in literally.
-Print each command before running it:
+`<team-worktree-skill-dir>` is defined in the worktree playbook's teardown
+step 7. Run:
 
 ```sh
-REPO_PATH='<repo-path>'
-BRANCH='<branch>'
-WORKTREE='<worktree path, or empty for an in-place run>'
-: "${REPO_PATH:?refusing: repo path unset}"
-: "${BRANCH:?refusing: branch unset}"
-COMMON_DIR="$(git -C "$REPO_PATH" rev-parse --path-format=absolute --git-common-dir)"
-[ -n "$COMMON_DIR" ] || { echo "refusing: cannot resolve the git dir" >&2; exit 1; }
-PRIMARY_ROOT="$(dirname "$COMMON_DIR")"
-[ "$(git -C "$PRIMARY_ROOT" rev-parse --path-format=absolute --git-dir)" = \
-  "$(git -C "$PRIMARY_ROOT" rev-parse --path-format=absolute --git-common-dir)" ] &&
-  [ "$PRIMARY_ROOT" = "$(git -C "$PRIMARY_ROOT" worktree list --porcelain | sed -n '1s/^worktree //p')" ] &&
-  [ "$(git -C "$PRIMARY_ROOT" rev-parse --show-toplevel)" = "$PRIMARY_ROOT" ] ||
-  { echo "refusing: '$PRIMARY_ROOT' failed primary-clone validation — re-run from the primary clone" >&2; exit 1; }
-# DEFAULT: origin/HEAD; else set-head --auto and one retry; else main or master.
-DEFAULT="$(git -C "$PRIMARY_ROOT" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)" ||
-  { git -C "$PRIMARY_ROOT" remote set-head origin --auto >/dev/null 2>&1 &&
-    DEFAULT="$(git -C "$PRIMARY_ROOT" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)"; } ||
-  DEFAULT=''
-DEFAULT="${DEFAULT#origin/}"
-if [ -z "$DEFAULT" ]; then
-  for NAME in main master; do
-    if git -C "$PRIMARY_ROOT" rev-parse --verify --quiet "$NAME" >/dev/null; then
-      DEFAULT="$NAME"
-      break
-    fi
-  done
-fi
-[ -n "$DEFAULT" ] ||
-  { echo "refusing: no default branch found — ask the user which branch is the default" >&2; exit 1; }
-# Guard as standalone statements, ahead of the substitution. A `:?` that fires
-# inside $( ) kills only the subshell: the assignment completes with an empty
-# value, and the run reports "nothing declared" while the teardown never ran.
-: "${PRIMARY_ROOT:?refusing: primary clone unresolved}"
-: "${DEFAULT:?refusing: default branch unresolved}"
-cd "$PRIMARY_ROOT"
-DECL="$(git -C "$PRIMARY_ROOT" show "origin/$DEFAULT:.teamteardown" 2>/dev/null ||
-        git -C "$PRIMARY_ROOT" show "refs/heads/$DEFAULT:.teamteardown" 2>/dev/null)"
-[ -n "$DECL" ] || { echo "No .teamteardown on $DEFAULT — nothing declared."; exit 0; }
-printf '%s\n' "$DECL" |
-  while IFS= read -r line; do
-    case "$line" in ''|'#'*) continue ;; esac
-    printf 'teardown: %s\n' "$line"
-    TEAM_REPO_ROOT="$PRIMARY_ROOT" TEAM_BRANCH="$BRANCH" TEAM_WORKTREE="$WORKTREE" \
-      sh -c "$line" </dev/null ||
-      printf 'teardown FAILED (exit %s): %s\n' "$?" "$line" >&2
-  done
+"<team-worktree-skill-dir>/scripts/run-teardown.sh" '<repo-path>' '<branch>' '<worktree>'
 ```
 
-`</dev/null` keeps a command that reads standard input from swallowing the
-rest of the declaration out of the loop's pipe.
-
-Lines run in file order. A failing line is reported loudly and the loop
-continues: one broken teardown command must not strand the rest, and it must
-never stop the caller's git teardown. If a line has not returned after roughly
-120 seconds, kill it and report `TIMEOUT` rather than waiting it out.
+The script header lists each output line and exit code. Exit 0 means the
+declaration ran, whatever each line's outcome. Exit 1 is a refusal: report
+its stderr verbatim and stop this step.
 
 **Never invent a teardown command.**
 **Never edit, re-quote, or interpolate a declared line**
@@ -161,13 +96,9 @@ Report per [Report](#report) below, then hand back to the caller.
 
 ## Report
 
-One line per thing that happened, and nothing else:
-
-- Each declared command that ran, and its outcome — `ok`, `FAILED (exit N)`,
-  or `TIMEOUT`.
-- Each refusal, with the check that fired.
-- `No .teamteardown on <default> — nothing declared.` when the file is absent,
-  rather than silence that reads as a clean sweep.
+Report the script's stdout lines, one per declared command, plus any
+refusal with the check that fired. The `none` line is reported too, rather
+than silence that reads as a clean sweep.
 
 Anything left on disk is named.
 Never block caller teardown ([verified results rules](../../team/principles/verified-results.md)).

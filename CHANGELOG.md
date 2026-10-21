@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team-worktree` runs its worktree commands as tested scripts.** Detecting an existing worktree, creating each repo's worktree behind the containment check, sweeping leftover directories under `.claude/worktrees/`, and running a repo's `.teamteardown` now each call a script in `skills/team-worktree/scripts/` instead of command blocks the agent retyped. The teardown script enforces the 120-second per-command timeout itself and kills a hung command with its children. **What this asks of you:** nothing.
+
 ## [0.161.0] - 2026-10-21
 
 ### Changed

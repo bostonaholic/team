@@ -214,7 +214,7 @@ reporting, mismatch handling, and unsupported-host limits.
   the bundled skill scripts (`supports-nesting.mjs`, `ste-lint.mjs`,
   `external-review.mjs`, `discover-topic.sh`, `team-pr`'s `scripts/splice.mjs` plus its
   `scripts/*.sh`, `team-design`'s `scripts/review-record.mjs`,
-  `team-worktree`'s `scripts/sweep-worktrees.sh`, and `team-fix`'s
+  `team-worktree`'s `scripts/*.sh`, and `team-fix`'s
   `scripts/branch-gate.sh`),
   `.claude-plugin/`. The entire `.claude/`
   tree, `docs/`, `.github/` never ship and are out of every
