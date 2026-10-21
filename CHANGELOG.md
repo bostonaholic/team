@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.162.0] - 2026-10-21
+
 ### Changed
 
 - **`/team-worktree` runs its worktree commands as tested scripts.** Detecting an existing worktree, creating each repo's worktree behind the containment check, sweeping leftover directories under `.claude/worktrees/`, and running a repo's `.teamteardown` now each call a script in `skills/team-worktree/scripts/` instead of command blocks the agent retyped. The teardown script enforces the 120-second per-command timeout itself and kills a hung command with its children. **What this asks of you:** nothing.
@@ -1488,7 +1490,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.161.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.162.0...HEAD
+[0.162.0]: https://github.com/bostonaholic/team/compare/v0.161.0...v0.162.0
 [0.161.0]: https://github.com/bostonaholic/team/compare/v0.160.0...v0.161.0
 [0.160.0]: https://github.com/bostonaholic/team/compare/v0.159.0...v0.160.0
 [0.159.0]: https://github.com/bostonaholic/team/compare/v0.158.0...v0.159.0
