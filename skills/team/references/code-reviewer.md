@@ -71,8 +71,8 @@ when there are none.>
 
 ### Checks
 
-<Each done criterion, met or not met. Each check you ran, with its
-command and result.>
+<Each done criterion, met or not met. The test-suite command and its
+result. Any other check run, with its result.>
 
 ### Refuted by verification
 
@@ -130,14 +130,17 @@ verdict gates the pipeline.
 
 ### Code Reviewer
 
-- **✅ APPROVE:** All done criteria met, no blocking issues.
+- **✅ APPROVE:** All done criteria met, no blocking issues, tests pass.
 - **❌ REQUEST CHANGES:** Blocking issues found. The pipeline MUST re-dispatch
   the implementer. No override.
 - **💬 COMMENT:** Non-blocking suggestions only. Implementation is correct.
 
 Pre-existing findings alone give COMMENT, or APPROVE when nothing else is
 noted. REQUEST CHANGES needs at least one Blocking-tier finding that the
-branch owns. An unmet done criterion is an `issue (blocking)` finding.
+branch owns. An unmet done criterion or a failing test suite is an
+`issue (blocking)` finding. A test whose outcome depends on a
+nondeterministic input is `issue (blocking)` on first occurrence, locked or
+not ([flaky-test red flags](references/testing.md#flaky-test-red-flags-reviewer-checklist)).
 
 A [value red flag](references/testing.md#value-red-flags-reviewer-checklist)
 on a locked acceptance test is `suggestion (non-blocking)`. No agent may
@@ -165,7 +168,9 @@ how to review. Use your own judgment on the method.
   it names none. Judge the range against the intent artifacts your dispatch
   names and the done criteria in the plan or commits the branch carries. When no
   criteria exist, judge general correctness.
-- **Done criteria.** Report each one under `### Checks`, met or not met.
+- **Done criteria and tests.** Report each done criterion under `### Checks`,
+  met or not met. Run the project's test suite and report the command and
+  its result.
 - **Locked tests.** The lock source is the acceptance list in the `8-plan.md`
   beside the design and structure paths the slice commits cite, or at the
   predecessor artifact path in your dispatch. Standalone `/team-review` uses
