@@ -12,7 +12,7 @@
 // Every section line is prefixed with `>`, so embedded content cannot leave
 // the blockquote. A section whose body begins `Not run:` records no pass and
 // appends nothing. Each run appends a new block; a repeated round appears twice.
-// The CLI writes REVIEW's unlabeled blocks; record-design-review.mjs imports
+// The CLI writes CODE REVIEW's unlabeled blocks; record-design-review.mjs imports
 // quoteSection and appendNotes for its `**Design round <n>**` blocks.
 //
 // Prints one line: `appended <path>` or `skipped (not run)`.

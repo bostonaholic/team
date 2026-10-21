@@ -17,7 +17,7 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 
 - Require `7-structure.md`, `8-plan.md`, and a non-default-branch worktree. Use `AskUserQuestion` only for missing standalone setup.
 - If `4-repos.md` exists, multi-repo work requires worktrees; refuse in-place execution.
-- After the implementer's completion report, print **"Next: run `/team-review docs/plans/<id>/`"** in every mode. Never load `team-review` or `team-pr`.
+- After the implementer's completion report, print **"Next: run `/team-code-review docs/plans/<id>/`"** in every mode. Never load `team-code-review` or `team-pr`.
 
 ## Procedure references
 

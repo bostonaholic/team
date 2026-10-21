@@ -17,10 +17,10 @@ Nine sequential phases; none are skippable.
 | **STRUCTURE** | `7-structure.md` (vertical slices) | NONE: autonomous |
 | **PLAN** | `8-plan.md` | SOFT: no approval; reviewed design is contract |
 | **IMPLEMENT** | code, passing tests, per-slice commits | MECHANICAL: assertion-only failures and passing static checks before slices |
-| **REVIEW** | `review-<n>.md` each round; fix commits | AGGREGATE: security, verifier, code-review hard gates |
+| **CODE REVIEW** | `review-<n>.md` each round; fix commits | AGGREGATE: security, verifier, code-review hard gates |
 | **PR** | GitHub draft PR | terminal: record URL; close ledger |
 
-WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`. IMPLEMENT has three sub-phases: test-architect writes failing acceptance tests; a mechanical gate requires assertion failures rather than crashes plus passing static checks, inverting to a reproduced green pre-change baseline for a zero-behavior-change refactor, whose test-architect dispatch is skipped with a recorded reason; implementer commits green slices. REVIEW runs `skills/team-review/`: 5 parallel code/security/docs/ux/verifier reviews return typed failures until no Blocking/Major remains, and each round writes `review-<n>.md`.
+WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`. IMPLEMENT has three sub-phases: test-architect writes failing acceptance tests; a mechanical gate requires assertion failures rather than crashes plus passing static checks, inverting to a reproduced green pre-change baseline for a zero-behavior-change refactor, whose test-architect dispatch is skipped with a recorded reason; implementer commits green slices. CODE REVIEW runs `skills/team-code-review/`: 5 parallel code/security/docs/ux/verifier reviews return typed failures until no Blocking/Major remains, and each round writes `review-<n>.md`.
 
 ## Artifact and isolation invariants
 
@@ -53,7 +53,7 @@ rule in the "Branch state" section of the
 |---|---|
 | worktree exists; no `1-task.md` | WORKTREE |
 | `8-plan.md`; IMPLEMENT not complete | IMPLEMENT |
-| IMPLEMENT complete; no PASS record that is current | REVIEW |
+| IMPLEMENT complete; no PASS record that is current | CODE REVIEW |
 | newest `review-<n>.md` PASS and current | PR |
 | PR(s) open or commits shipped | SHIPPED |
 

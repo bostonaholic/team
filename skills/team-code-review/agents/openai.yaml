@@ -1,0 +1,4 @@
+interface:
+  display_name: "Team Code Review"
+  short_description: "Review the built branch and fix findings"
+  default_prompt: "Use $team-code-review to review the built branch and fix findings."

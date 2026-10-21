@@ -10,7 +10,7 @@ loop:
      get the expected agent(s) and predecessor artifact path(s).
   3. Verify predecessor artifacts exist on disk (for STRUCTURE,
      `<team-skill-dir>/scripts/design-review-status.sh <artifact-dir>`
-     must also exit 0). For REVIEW, the predecessor also requires the
+     must also exit 0). For CODE REVIEW, the predecessor also requires the
      "IMPLEMENT complete" rule in the "Branch state" section of the
      [artifact schema](references/artifacts.md). When it fails, report
      that IMPLEMENT is incomplete and suggest
@@ -36,8 +36,8 @@ loop:
        zero-behavior-change refactor inverts this gate ("Mechanical Gate
        (test confirmation)" below).
      - ROUTER-EMIT (worktree, PR): perform the action.
-     - AGGREGATE (review): call the Skill tool with `team-review` and the
-       canonical artifact directory. `team-review` dispatches the five
+     - AGGREGATE (code review): call the Skill tool with `team-code-review` and the
+       canonical artifact directory. `team-code-review` dispatches the five
        reviewers, sorts findings, and runs the fix loop with no consult.
        Advance when it returns and the newest `review-<n>.md` carries PASS
        and is current.
@@ -48,17 +48,17 @@ loop:
 
 ### Phase table
 
-| Phase      | Agent(s)                                                | Predecessor artifact                                            | Next phase on pass |
-|------------|---------------------------------------------------------|-----------------------------------------------------------------|--------------------|
-| WORKTREE   | (orchestrator-emit)                                     | (none — description in `$ARGUMENTS`)                            | QUESTION           |
-| QUESTION   | `questioner`                                            | worktree prepared (+ description in `$ARGUMENTS`)               | RESEARCH           |
-| RESEARCH   | `file-finder`, `researcher` (parallel, isolated)        | `docs/plans/<id>/2-questions.md`                                  | DESIGN             |
-| DESIGN     | `design-author` (→ design review)                       | `docs/plans/<id>/5-research.md`                                   | STRUCTURE          |
-| STRUCTURE  | `structure-planner`                                     | `docs/plans/<id>/6-design.md` + passing `design-review-<n>.md`    | PLAN               |
-| PLAN       | `planner`                                               | `docs/plans/<id>/7-structure.md`                                  | IMPLEMENT          |
-| IMPLEMENT  | `test-architect`, `implementer`                         | `docs/plans/<id>/8-plan.md`                                       | REVIEW             |
-| REVIEW     | (orchestrator-emit)                                     | `docs/plans/<id>/8-plan.md` + IMPLEMENT complete                  | PR                 |
-| PR         | (orchestrator-emit)                                     | newest `review-<n>.md` PASS and current                         | SHIPPED            |
+| Phase       | Agent(s)                                                | Predecessor artifact                                            | Next phase on pass |
+|-------------|---------------------------------------------------------|-----------------------------------------------------------------|--------------------|
+| WORKTREE    | (orchestrator-emit)                                     | (none — description in `$ARGUMENTS`)                            | QUESTION           |
+| QUESTION    | `questioner`                                            | worktree prepared (+ description in `$ARGUMENTS`)               | RESEARCH           |
+| RESEARCH    | `file-finder`, `researcher` (parallel, isolated)        | `docs/plans/<id>/2-questions.md`                                  | DESIGN             |
+| DESIGN      | `design-author` (→ design review)                       | `docs/plans/<id>/5-research.md`                                   | STRUCTURE          |
+| STRUCTURE   | `structure-planner`                                     | `docs/plans/<id>/6-design.md` + passing `design-review-<n>.md`    | PLAN               |
+| PLAN        | `planner`                                               | `docs/plans/<id>/7-structure.md`                                  | IMPLEMENT          |
+| IMPLEMENT   | `test-architect`, `implementer`                         | `docs/plans/<id>/8-plan.md`                                       | CODE REVIEW        |
+| CODE REVIEW | (orchestrator-emit)                                     | `docs/plans/<id>/8-plan.md` + IMPLEMENT complete                  | PR                 |
+| PR          | (orchestrator-emit)                                     | newest `review-<n>.md` PASS and current                         | SHIPPED            |
 
 For QUESTION, pass the questioner the full description. When it returns, make
 sure `1-task.md` and `2-questions.md` exist in `docs/plans/<id>/`.
@@ -87,7 +87,7 @@ stated contract is zero behavior change has nothing to write — the current
 suite is the acceptance suite — so that dispatch is skipped with a recorded
 reason and the mechanical gate runs in its inverted form. IMPLEMENT advances
 when the implementer returns its completion report. It dispatches no
-reviewer. A red check in that report still advances: REVIEW round 1's
+reviewer. A red check in that report still advances: CODE REVIEW round 1's
 verifier owns it as a Blocking finding with a lint, typecheck, or build
 class.
 

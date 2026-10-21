@@ -1,11 +1,11 @@
 ---
-name: team-review
-description: 'Use for running the Team review phase only on explicit request. Never infer from a plain review request. Reviews and fixes the branch.'
+name: team-code-review
+description: 'Use for running the Team code review phase only on explicit request. Never infer from a plain review request. Reviews and fixes the branch.'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
 
-# Team Review
+# Team Code Review
 
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 Before artifact work, read [artifact schema](../team/references/artifacts.md).
@@ -18,7 +18,7 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 
 - Require `1-task.md`, a non-default branch, at least one commit beyond the merge-base, and a tree clean outside `docs/plans/`. In multi-repo mode, require every worktree that `4-repos.md` lists.
 - Write one `review-<n>.md` per completed round. Never overwrite a record.
-- Seed TodoWrite with `Review round <n>`. Retry as `Review round <n+1> (<b> Blocking, <m> Major open)`.
+- Seed TodoWrite with `Code review round <n>`. Retry as `Code review round <n+1> (<b> Blocking, <m> Major open)`.
 - **Never** stop to ask the user which Blocking or Major items to address (the no-consult rule).
 - The loop has no count cap. It ends only when no Blocking or Major finding remains.
 - Persist `### Cross-model disposition` to `cross-model-notes.md` only when it does not begin `Not run:`.

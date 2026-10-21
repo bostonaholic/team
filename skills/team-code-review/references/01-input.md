@@ -75,5 +75,5 @@ branch, the base ref, the merge-base, and branch commits.
    `git -C <worktree-path> status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'`.
    When it prints anything, refuse and stop. Name each path, and tell the
    user to commit or remove those changes, then re-run
-   `/team-review docs/plans/<id>/`. Reviewers judge only commits, and a
+   `/team-code-review docs/plans/<id>/`. Reviewers judge only commits, and a
    record over a dirty tree is stale on arrival. Write no record.

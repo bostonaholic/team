@@ -129,8 +129,8 @@ highest-`<n>` file carries APPROVE or COMMENT; every gate reads that through
 reviewer's findings verbatim. The orchestrator increments
 `revision: <n+1>` in the new draft's frontmatter.
 
-**Code-review record** (`review-<n>.md`): each REVIEW round, the session
-that runs `team-review` writes `docs/plans/<id>/review-<n>.md` with
+**Code-review record** (`review-<n>.md`): each CODE REVIEW round, the session
+that runs `team-code-review` writes `docs/plans/<id>/review-<n>.md` with
 `verdict: <PASS|FAIL>`, the round's pinned review range, the tier sort, and
 the five reviewer reports verbatim. Resume detection and `/team-pr` read
 it. The
@@ -149,7 +149,7 @@ states.
 | `6-design.md` + passing `design-review-<n>.md`           | STRUCTURE (next up) |
 | `7-structure.md`                                         | PLAN (next up)      |
 | `8-plan.md`, IMPLEMENT not complete                      | IMPLEMENT           |
-| IMPLEMENT complete, no current PASS `review-<n>.md`      | REVIEW              |
+| IMPLEMENT complete, no current PASS `review-<n>.md`      | CODE REVIEW         |
 | newest `review-<n>.md` PASS and current                | PR (next up)        |
 | PR opened or commit shipped                            | SHIPPED             |
 
@@ -160,21 +160,21 @@ is cut from, and against the local default branch only when the repo has no
 `8-plan.md` names a commit in `<merge-base>..HEAD`. In multi-repo mode, that
 commit must be in the worktree of each repo the slice names. Without an
 `8-plan.md`, any such commit completes it. A run interrupted before its last slice
-commit thus resumes at IMPLEMENT. REVIEW is complete only when the newest
+commit thus resumes at IMPLEMENT. CODE REVIEW is complete only when the newest
 `review-<n>.md` is PASS and current. The "Branch state" section of the
 [artifact schema](https://github.com/bostonaholic/team/blob/main/skills/team/references/artifacts.md)
 owns these definitions.
 
 Discovery keys only on the six `PHASE_FILES` names, so `review-<n>.md` and
 the two non-phase sibling outputs below are invisible to discovery.
-IMPLEMENT declares no phase artifact. REVIEW declares `review-<n>.md`.
+IMPLEMENT declares no phase artifact. CODE REVIEW declares `review-<n>.md`.
 
 `docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
-ux-reviewer during REVIEW for UI-touching changes and consumed by team-pr.
+ux-reviewer during CODE REVIEW for UI-touching changes and consumed by team-pr.
 The upload itself, and every mechanic it needs, lives in `skills/team-pr/` (its `screenshot-*.md` references and `scripts/`).
 
 `docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
-the DESIGN review gate and the REVIEW phase — one
+the DESIGN review gate and the CODE REVIEW phase — one
 `### Cross-model disposition` block appended per review round, at either
 gate, in which the cross-model pass ran — and consumed by team-pr
 for the PR review comments
@@ -194,7 +194,7 @@ The pipeline has nine phases. The orchestrator walks them in order. Each
 phase needs the prior phase's artifact on disk.
 
 ```
-WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → REVIEW → PR → SHIPPED
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → CODE REVIEW → PR → SHIPPED
 ```
 
 ### Phase 1: Worktree
@@ -302,26 +302,26 @@ No gate. The plan is mechanically derived from the structure.
    at a time, committing each atomically. After its last slice, it runs the
    full suite and every project static check, fixes each failure inside the
    plan scope, commits those fixes, and reports each check's result. It
-   hands REVIEW a tree clean outside `docs/plans/`.
+   hands CODE REVIEW a tree clean outside `docs/plans/`.
 
 IMPLEMENT ends when the implementer returns its completion report. It
 dispatches no reviewer.
 
-### Phase 8: Review
+### Phase 8: Code review
 
 **Agents:** `code-reviewer`, `security-reviewer`, `technical-writer`,
 `ux-reviewer`, `verifier` (parallel), plus `implementer` for fix rounds
 **Predecessor:** `8-plan.md` + IMPLEMENT complete
 **Artifact:** `docs/plans/<id>/review-<n>.md`, one per round
 
-The orchestrator delegates this phase to the `team-review` skill
-(`skills/team-review/references/02-execution.md`).
+The orchestrator delegates this phase to the `team-code-review` skill
+(`skills/team-code-review/references/02-execution.md`).
 
 1. **Code review.** 5 reviewers in parallel: `code-reviewer`,
    `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`. Each
    dispatch names the round's pinned review range, from the merge-base to
    HEAD.
-2. **Aggregate gate.** `team-review` sorts every finding into a
+2. **Aggregate gate.** `team-code-review` sorts every finding into a
    severity tier: **Blocking, Major, or Minor-and-below**. See
    `skills/team/references/findings.md`. Each round in which the
    code-reviewer's report carries a `### Cross-model disposition` block,
@@ -332,15 +332,15 @@ The orchestrator delegates this phase to the `team-review` skill
    Blocking or Major finding remains, it dispatches the implementer to
    fix the typed failure class. The implementer commits each fix round
    and leaves the tree clean, because a record is current only over a
-   clean tree. `team-review` refuses to start over a tree dirty outside
+   clean tree. `team-code-review` refuses to start over a tree dirty outside
    `docs/plans/`, and checks again after each fix round. It then re-runs all 5 reviewers
    automatically. It never consults the user. This is the *no-consult
    rule*. Once Blocking and Major are clean, any remaining Minor-and-below
    findings stay in the record for the PR's `review-notes` comment and the
    human's PR review.
 
-`team-review` tracks the round count by appending
-`Review round <n+1> (<b> Blocking, <m> Major open)` items to the
+`team-code-review` tracks the round count by appending
+`Code review round <n+1> (<b> Blocking, <m> Major open)` items to the
 TodoWrite ledger. The count is that round's open Blocking and Major
 total, so an operator watching the ledger can tell a converging loop
 from a stuck one. The loop has no count cap. When the three newest records
@@ -359,7 +359,7 @@ the human can fix first differs by gate.
 The design-review gate writes every round's findings to
 `design-review-<n>.md`, so they are on disk to read before editing
 `6-design.md`. The design `revision` counter persists in `6-design.md`
-frontmatter. The review records persist the same way, so `/team-review`
+frontmatter. The review records persist the same way, so `/team-code-review`
 resumes from the newest `review-<n>.md` and the round number continues. A
 stale newest record runs a fresh round, whose reviewers re-derive the open
 set.
@@ -396,16 +396,16 @@ asks, so the branch remains available for iteration. The final report tells the 
 
 13 specialist agents, organized by phase:
 
-| Phase     | Agents                                                                            |
-|-----------|-----------------------------------------------------------------------------------|
-| QUESTION  | `questioner`                                                                      |
-| RESEARCH  | `file-finder`, `researcher` (parallel)                                            |
-| DESIGN    | `design-author`                                                                   |
-| STRUCTURE | `structure-planner`                                                               |
-| PLAN      | `planner`                                                                         |
-| IMPLEMENT | `test-architect`, `implementer`                                                   |
-| REVIEW    | `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`,          |
-|           | `verifier` (parallel)                                                             |
+| Phase       | Agents                                                                            |
+|-------------|-----------------------------------------------------------------------------------|
+| QUESTION    | `questioner`                                                                      |
+| RESEARCH    | `file-finder`, `researcher` (parallel)                                            |
+| DESIGN      | `design-author`                                                                   |
+| STRUCTURE   | `structure-planner`                                                               |
+| PLAN        | `planner`                                                                         |
+| IMPLEMENT   | `test-architect`, `implementer`                                                   |
+| CODE REVIEW | `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`,          |
+|             | `verifier` (parallel)                                                             |
 
 Each agent's QRSPI phase is recorded in `skills/team/registry.json`.
 Agent frontmatter uses only Claude Code's [supported fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields).
@@ -435,10 +435,10 @@ and it ignores any subagent's `permissionMode` when the main session runs in
 auto, `acceptEdits`, or `bypassPermissions` mode. Plan mode would not close the
 gap anyway: it blocks edits but only prompts for shell commands, and an allow
 rule runs them. All five reviewers hold `Bash`, so nothing prevents a reviewer's
-shell mutation. The REVIEW phase detects one instead: `team-review`
+shell mutation. The CODE REVIEW phase detects one instead: `team-code-review`
 compares `HEAD` and `git status` before and after the five-reviewer dispatch
 and turns any change into a Blocking finding
-(`skills/team-review/references/02-execution.md`, step 3).
+(`skills/team-code-review/references/02-execution.md`, step 3).
 
 One path steps outside that enforcement: the cross-model pass
 (`skills/team/references/cross-model-review.md`) shells out to external vendor CLIs
@@ -586,7 +586,7 @@ Notes:
       own task, and only three agents produce one: `design-author` (the
       adversarial design-review verdict), `test-architect` (the
       mechanical test gate), and `implementer` (acceptance tests plus
-      the REVIEW phase's 5-reviewer verify). It does not reach `researcher`,
+      the CODE REVIEW phase's 5-reviewer verify). It does not reach `researcher`,
       `structure-planner`, `planner`, or `code-reviewer`, because
       nothing evaluates the artifact or verdict they produce.
       `code-reviewer`'s one live route is the coupled reviewer set
@@ -690,7 +690,7 @@ loop:
   5. Write returned artifacts to docs/plans/<id>/<name>.md with the
      YAML frontmatter the agent specifies.
   6. Run the gate for this phase (HUMAN | MECHANICAL | ORCHESTRATOR-EMIT
-     | AGGREGATE). AGGREGATE delegates to the `team-review` skill.
+     | AGGREGATE). AGGREGATE delegates to the `team-code-review` skill.
   7. Mark current TodoWrite item complete and the next one in_progress.
   8. Goto loop.
 ```
@@ -709,7 +709,7 @@ Each downstream skill (`team-research` and beyond) treats `$ARGUMENTS` as
 an artifact directory, typically the path printed by the previous phase's
 completion message. For the 8 directory-consuming skills
 (`team-research`, `team-design`, `team-structure`, `team-plan`,
-`team-worktree`, `team-implement`, `team-review`, `team-pr`)
+`team-worktree`, `team-implement`, `team-code-review`, `team-pr`)
 the `docs/plans/<id>/` argument is **optional**. Each skill resolves the
 directory through a three-tier chain: explicit `$ARGUMENTS` →
 newest-mtime convention discovery → `AskUserQuestion`. The middle tier
@@ -1071,8 +1071,8 @@ session-scoped, so its round items survive a restart.
 review round durably. The artifacts are self-describing.
 
 **Review records:** `docs/plans/<id>/review-<n>.md` (frontmatter
-`verdict: <PASS|FAIL>`) records each REVIEW round durably, on every host.
-Resume detection, the `team-review` round number, and `/team-pr` read
+`verdict: <PASS|FAIL>`) records each CODE REVIEW round durably, on every host.
+Resume detection, the `team-code-review` round number, and `/team-pr` read
 them, so a restart loses no round result.
 
 **Compaction defense:** when context is compacted or a fresh session begins,
@@ -1188,7 +1188,7 @@ Prerequisite for all items: nesting survives 2-3 Claude Code releases
 without breaking changes, parallel dispatch semantics for nested
 children are confirmed, and the depth cap is stable.
 
-- **Verify-coordinator** (strongest candidate): a REVIEW-phase
+- **Verify-coordinator** (strongest candidate): a CODE REVIEW-phase
   coordinator that owns the 5-reviewer fan-out, the aggregate gate, and
   the typed failure retry loop. It returns a compact terminal verdict for
   the orchestrator to render:

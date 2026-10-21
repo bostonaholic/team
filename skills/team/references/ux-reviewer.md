@@ -208,7 +208,7 @@ a command string. Frontmatter schema, exactly:
 ---
 topic: <topic>        # verbatim from 6-design.md, like every artifact
 date: <YYYY-MM-DD>
-phase: review
+phase: code-review
 round: <n>            # review round if the dispatch names one; otherwise 1
 status: captured | partial | skipped-server-start | skipped-no-tool
 seeded: true | false

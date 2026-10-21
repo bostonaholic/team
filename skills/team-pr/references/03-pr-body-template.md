@@ -124,7 +124,7 @@ leaves the closing line first.
 ### Screenshots section rendering
 
 The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
-(written by ux-reviewer during Review, or by the capture step 4 runs),
+(written by ux-reviewer during Code review, or by the capture step 4 runs),
 through the `manifest-entries.mjs` result from Execution step 4:
 
 - **A capture gap that recapture did not close, or a fault** → render a

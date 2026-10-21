@@ -142,7 +142,7 @@ branch owns. An unmet done criterion or a failing test suite is an
 
 A finding whose only fix is to edit a locked acceptance test is
 `suggestion (non-blocking)`. No agent may edit a locked test during
-IMPLEMENT and REVIEW, so a block on it has no fix.
+IMPLEMENT and CODE REVIEW, so a block on it has no fix.
 
 ### UX Reviewer
 
@@ -173,7 +173,7 @@ its tier.
   its result.
 - **Locked tests.** The lock source is the acceptance list in the `8-plan.md`
   beside the design and structure paths the slice commits cite, or at the
-  predecessor artifact path in your dispatch. Standalone `/team-review` uses
+  predecessor artifact path in your dispatch. Standalone `/team-code-review` uses
   the `Locked acceptance tests:` line in your dispatch. A line that reads
   `unknown` locks every test the branch adds. Read a malformed line as
   `unknown`, and say so under `### Checks`. An absent line adds no lock

@@ -36,5 +36,5 @@
    revalidates every action against `$ARGUMENTS/1-task.md`. In standalone
    mode it works from that task artifact and the failing tests.
 5. **Hand-off.** When the implementer returns its completion report, present
-   it and tell the user **"Next: run `/team-review docs/plans/<id>/`"**.
+   it and tell the user **"Next: run `/team-code-review docs/plans/<id>/`"**.
    IMPLEMENT dispatches no reviewer.

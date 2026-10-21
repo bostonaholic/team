@@ -17,8 +17,8 @@
   ],
   "interface": {
     "displayName": "Team",
-    "shortDescription": "Autonomous feature pipeline: question, research, design, plan, implement, review, PR.",
-    "longDescription": "Team turns a feature description into a reviewed pull request. It walks a nine-phase pipeline — worktree, question, research, design, structure, plan, implement, review, PR — dispatching a specialist agent at each phase and persisting every artifact to disk. An adversarial design review gates the design and five reviewers gate the implementation in the review phase, so the only human checkpoint is the pull request at the end.",
+    "shortDescription": "Autonomous feature pipeline: question, research, design, plan, implement, code review, PR.",
+    "longDescription": "Team turns a feature description into a reviewed pull request. It walks a nine-phase pipeline — worktree, question, research, design, structure, plan, implement, code review, PR — dispatching a specialist agent at each phase and persisting every artifact to disk. An adversarial design review gates the design and five reviewers gate the implementation in the code review phase, so the only human checkpoint is the pull request at the end.",
     "developerName": "Matthew Boston",
     "category": "engineering",
     "capabilities": [
