@@ -5,8 +5,10 @@
    support returns to PLAN and never enters the Red suite. In standalone
    mode it derives acceptance criteria from `$ARGUMENTS/1-task.md` instead
    of `7-structure.md`. If those tests already exist, skip this dispatch:
-   resume at step 5, the hand-off, when the slice commits are on the branch
-   too, otherwise at step 4. For a change whose stated contract is zero behavior change,
+   resume at step 5, the hand-off, when the "IMPLEMENT complete" rule in
+   the "Branch state" section of the
+   [artifact schema](../team/references/artifacts.md) holds, otherwise at
+   step 4. For a change whose stated contract is zero behavior change,
    skip this dispatch, record the reason on a named line, and run step 3 in
    its inverted form.
 3. **Mechanical gate** — confirm all tests fail with assertion errors

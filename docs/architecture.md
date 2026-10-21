@@ -157,8 +157,9 @@ Worktree presence: `git worktree list --porcelain | grep -q <id>`.
 The merge-base is taken against `origin/<default>`, the ref each worktree
 is cut from, and against the local default branch only when the repo has no
 `origin` remote. IMPLEMENT is complete once every `**Commit:**` subject in
-`8-plan.md` names a commit in `<merge-base>..HEAD`. Without an `8-plan.md`,
-any such commit completes it. A run interrupted before its last slice
+`8-plan.md` names a commit in `<merge-base>..HEAD`. In multi-repo mode, that
+commit must be in the worktree of each repo the slice names. Without an
+`8-plan.md`, any such commit completes it. A run interrupted before its last slice
 commit thus resumes at IMPLEMENT. REVIEW is complete only when the newest
 `review-<n>.md` is PASS and current. The "Branch state" section of the
 [artifact schema](https://github.com/bostonaholic/team/blob/main/skills/team/references/artifacts.md)
@@ -1081,12 +1082,13 @@ rebuilds the ledger from artifact presence and frontmatter.
 
 **Artifact persistence:** during a run, files in `docs/plans/<id>/` live
 on disk in the worktree's working tree and
-**the pipeline never commits them**. That discipline is what lets the
-commit-based IMPLEMENT signal (≥1 commit on `<id>` since the
-default-branch merge-base) distinguish "implementation has begun" from
-"artifacts merely exist". Any commit on `<id>` is thus a code or slice
-commit, never an artifact commit. A finished plan directory can land
-later in its feature PR, which is outside the run. Persistence across
+**the pipeline never commits them**. That discipline keeps artifacts out
+of the commit-based IMPLEMENT signal. The signal matches each `8-plan.md`
+`**Commit:**` subject against the commits past the merge-base with
+`origin/<default>`, and without a plan any such commit counts. Any commit
+on `<id>` is thus a code or slice commit, never an artifact commit. A
+finished plan directory can land later in its feature PR, which is
+outside the run. Persistence across
 sessions, compaction events, and context resets comes from the survival
 of the worktree's files, not from git history. They remain the durable
 communication protocol between agents and the source of truth for "did

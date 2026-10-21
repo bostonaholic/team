@@ -33,8 +33,8 @@ Write `8-plan.md` as:
 **Verification:** Run `<command>`. Done means this slice and all prior acceptance tests pass.
 <Multi-repo: one command per repo, scoped to its worktree.>
 
-**Commit:** `<conventional-commit subject for this slice>`
-<Multi-repo slice: one Commit per repo; the implementer creates one per repo with shared slice context in each body.>
+**Commit:** `<conventional-commit subject for this slice, under 50 characters>`
+<Multi-repo slice: one Commit subject; the implementer commits it in each repo the slice names, with shared slice context in each body.>
 
 ### Slice 2: <name>
 ...
