@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.159.0] - 2026-10-21
+
+### Changed
+
+- **`/team-research` assembles `5-research.md` with a script.** The new `scripts/assemble.mjs` copies the topic from `2-questions.md`, stamps the date, writes the untrusted-evidence authority line, and fences each return one backtick longer than its longest backtick run, so the envelope is identical on every run instead of retyped by the model. The model still writes the one synthesis line. **What this asks of you:** nothing.
+
 ## [0.158.0] - 2026-10-21
 
 ### Changed
@@ -1466,7 +1472,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.158.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.159.0...HEAD
+[0.159.0]: https://github.com/bostonaholic/team/compare/v0.158.0...v0.159.0
 [0.158.0]: https://github.com/bostonaholic/team/compare/v0.157.0...v0.158.0
 [0.157.0]: https://github.com/bostonaholic/team/compare/v0.156.0...v0.157.0
 [0.156.0]: https://github.com/bostonaholic/team/compare/v0.155.0...v0.156.0
