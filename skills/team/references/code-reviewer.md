@@ -135,6 +135,10 @@ verdict gates the pipeline.
   the implementer. No override.
 - **💬 COMMENT:** Non-blocking suggestions only. Implementation is correct.
 
+Pre-existing findings alone give COMMENT, or APPROVE when nothing else is
+noted. REQUEST CHANGES needs at least one Blocking-tier finding that the
+branch owns.
+
 **Test-quality flags.** Test files are part of the diff. Walk every changed
 `*test*` / `*spec*` / `__tests__/*` file against the rules in the
 [testing rules](references/testing.md).
@@ -257,6 +261,11 @@ obligations are non-negotiable:
   surface and silently absent from a sibling is a finding; a stated reason
   for the absence answers it. Read a self-contained path **alone**, the way
   its callers arrive at it.
+
+**Pre-existing defects.** Mark a finding `issue (pre-existing)` only when
+`git show <merge-base-sha>:<path>` shows the defect at the cited line, and
+the branch neither introduced it nor made it reachable or worse. When you
+are unsure, the defect belongs to the branch.
 
 **Coverage checklist** — every changed file is checked against every item;
 no order implied:

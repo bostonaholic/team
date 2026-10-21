@@ -62,7 +62,7 @@ Before changing production code, audit every immutable acceptance test against t
 `team-review` supplies the typed failure classes and this round's Blocking and Major lines. Fix every named item:
 
 - Security: fix the vulnerability directly—parameterize queries, remove secrets, add auth, escape output; never weaken the fix.
-- Tests: change code, never the immutable tests. Code review: fix every `issue:`. Lint/format/typecheck/build: rerun until passing; use `--fix` first where available.
+- Tests: change code, never the immutable tests. Code review: fix every finding the dispatch names. Lint/format/typecheck/build: rerun until passing; use `--fix` first where available.
 - For a non-obvious failure whose first fix is a guess, read [diagnosis reference](../team-fix/references/diagnosis.md) and complete **Root Cause Analysis (5 Whys)** ([bug fix rules](../team-fix/playbooks/bug-fix.md)). Skip it for an obvious typo, named assertion, or one-line correction.
 - Under a `Reconsider approach:` line, complete **Root Cause Analysis (5 Whys)** ([diagnosis reference](../team-fix/references/diagnosis.md)) for each open finding class. Replace the approach that produces the class, inside scope, instead of a patch to the cited lines. The scope is the plan's named changes. When `8-plan.md` is absent, the scope is the `1-task.md` acceptance criteria.
 

@@ -53,8 +53,13 @@ the record states (malformed, current, stale) in the
    with the error, inside a fresh tree check. A second failure halts loudly,
    and the round writes no record.
    - A report with no parseable verdict.
-   - A `code-reviewer` REQUEST CHANGES with no Blocking-tier finding. A bare
-     `issue:` counts as Blocking-tier.
+   - A `code-reviewer` REQUEST CHANGES with no Blocking-tier finding that
+     the branch owns. A bare `issue:` counts as Blocking-tier. An
+     `issue (pre-existing)` finding does not count.
+   - A `code-reviewer` `issue (pre-existing)` finding that lacks the
+     `file: <merge-base-sha>:<path>:<line>` line.
+   - A `code-reviewer` `issue (pre-existing)` finding whose SHA is not one of
+     this round's merge-bases.
 5. **Tier sort.** Sort every finding into `### Blocking`, `### Major`, and
    `### Minor and below` per the table under "Severity Tiers and the Auto-Fix
    Boundary" in the [finding format](../../team/references/findings.md).
