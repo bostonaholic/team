@@ -61,14 +61,20 @@ unreviewed or REQUEST-CHANGES candidates are skipped:
 
 ## Execution
 
-1. Use the directory resolved in `## Input`, then **verify the review gate**:
-   the highest-`<n>` `$ARGUMENTS/design-review-<n>.md` must carry
-   `verdict: APPROVE` or `verdict: COMMENT` **in its YAML frontmatter** (the
-   tier-2 filter already enforced this. Re-check a tier-1 explicit path). If
-   no review artifact exists, or the latest verdict is REQUEST CHANGES,
-   **refuse**: report that the design has not passed review and suggest
-   `/team-design $ARGUMENTS` — never slice an unreviewed design.
-   No recorded verdict counts as not passed ([verified results rules](../team/principles/verified-results.md)).
+1. Use the directory resolved in `## Input`, then **verify the review gate**.
+   `<team-structure-skill-dir>` is the absolute directory that holds the
+   installed `skills/team-structure/SKILL.md`. Run:
+
+   ```sh
+   "<team-structure-skill-dir>/scripts/check-design-review.sh" "$ARGUMENTS"
+   ```
+
+   - **Exit 0:** the design passed review. Continue.
+   - **Exit 1:** **refuse**. Report the printed review file and verdict, state
+     that the design has not passed review, and suggest
+     `/team-design $ARGUMENTS` — never slice an unreviewed design.
+     No recorded verdict counts as not passed ([verified results rules](../team/principles/verified-results.md)).
+   - **Exit 2:** stop and report the stderr line.
 2. Dispatch `structure-planner`, which writes `$ARGUMENTS/7-structure.md`
    with vertical slices. The artifact carries plain frontmatter
    (`topic`, `date`, `phase: structure`) — no approval fields, because

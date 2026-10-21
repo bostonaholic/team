@@ -681,6 +681,9 @@ precedence, and empty-success output when no candidate matches. The optional
 review filter accepts only APPROVE or COMMENT from the highest-numbered
 `design-review-<n>.md` YAML frontmatter. Line 1 and a closing marker within
 60 lines must both be `---`; malformed or over-cap input fails closed.
+An explicit path skips that filter, so `team-structure` then runs its own
+`scripts/check-design-review.sh`, which applies the same rule to the
+resolved directory before any slicing.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
