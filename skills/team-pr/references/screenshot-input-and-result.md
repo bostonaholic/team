@@ -16,7 +16,7 @@ into the run's own directory. Bind the values the inline `gh` commands below
 and in [screenshot verify](screenshot-verify.md) expand:
 
 ```bash
-UPLOAD_ARGS='<PR URL> --entries <printed ENTRIES_FILE>'   # filled in literally, this call
+UPLOAD_ARGS='<PR URL> --entries <printed entries_file>'   # filled in literally, this call
 RUN_DIR="$(mktemp -d)"                     # every temporary this run writes
 '<team-pr-skill-dir>/scripts/resolve-pr.sh' "$UPLOAD_ARGS" "$RUN_DIR" || exit 1
 PR_URL="$(cat "$RUN_DIR/pr-url")"          # the canonical URL, on the base repo
@@ -56,9 +56,10 @@ edited.
 
 ### The entries file
 
-One input, one file, JSON. Screenshot Upload writes it from the capture
-manifest under `$(mktemp -d)`, with `root` set to the directory those images
-already live in, never to the directory the JSON was just written to.
+One input, one file, JSON. `<team-pr-skill-dir>/scripts/manifest-entries.mjs`
+writes it from the capture manifest ([Screenshot Upload](04-screenshot-upload.md)), with `root` set to the
+directory those images already live in, never to the directory the JSON was
+just written to.
 
 ```json
 {
@@ -75,33 +76,10 @@ Per entry: `path` and `caption` are required, `state` and `note` are optional.
 One top-level `notes` list carries caller-supplied discrepancy lines. Captions
 need not be unique.
 
-**When the request names no caption for a path, the caption is that file's
-basename with its extension removed.** Never describe the image instead: a
-guessed description is a claim in a public body. Ask only when the basename is
-empty after normalization.
-
-Write the file with `jq`, never by pasting the paths into a JSON string: a path
-is caller text, and a quote or a backslash in one rewrites the document rather
-than filling a slot in it ([external-data rules](../../team/references/external-data.md)). This is the whole
-step; each entry's caption is that entry's own path, basename-only and
-extension-stripped:
-
-```bash
-ENTRIES_FILE='<printed ENTRIES_FILE>'          # from the build call
-CAPTURE_ROOT='<printed CAPTURE_ROOT>'          # where the images ALREADY live
-jq -n --arg root "$CAPTURE_ROOT" '{
-  root: $root,
-  entries: ($ARGS.positional | map({
-    path: .,
-    caption: (split("/") | last | sub("\\.[^.]+$"; ""))
-  })),
-  notes: []
-}' --args "$CAPTURE_ROOT"/'login.png' "$CAPTURE_ROOT"/'login-error.png' >"$ENTRIES_FILE"
-```
-
-`--args` binds each path as a positional value, so `jq` never parses one. Add a
-`caption`, a `state`, or a `note` the request supplied by binding each with its
-own `--arg`; add each discrepancy line to `notes` the same way.
+The script takes each caption from the manifest's `caption:` bullet, never a
+description of the image: a guessed description is a claim in a public body. It
+serializes every path and caption as JSON data, never by pasting caller text
+into a JSON string ([external-data rules](../../team/references/external-data.md)).
 
 What `root` bounds is scope, not trust — the check that survives a hostile
 entries file is in [screenshot upload and body edit](screenshot-upload-and-body-edit.md), step B.
