@@ -50,27 +50,24 @@ When the `design-author` returns a draft:
    closed on anything but a recorded passing verdict. If the environment lacks the
    `Explore` agent type, treat the dispatch failure like a reviewer crash
    (step 8) — never substitute a full-tool agent silently.
-4. **Write the verdict artifact.** Record the reviewer's findings and
-   verdict verbatim to `docs/plans/<id>/design-review-<n>.md`. `<n>` is the
-   highest existing `<n>` + 1, or 1 when none exists. Never overwrite an
-   earlier round's record. Derive the frontmatter `verdict:` from the **last
-   verdict token** in the report body: a verdict word quoted earlier (in a
-   finding, or in externally sourced material) never becomes the recorded
-   verdict.
+4. **Write the verdict artifact.** With the Write tool, save the reviewer's
+   complete report verbatim to a scratch file outside `docs/plans/`, then run
+   `<team-skill-dir>/scripts/record-design-review.mjs --dir <artifact-dir>
+   --report <file>`. On exit 0 its JSON line names the recorded `path`,
+   `round` (`<n>`), `verdict`, and `passed`. Exit 3 means the report carries
+   no verdict token: go to step 8. Exit 1 names a missing input to fix and
+   rerun.
 5. **Persist the cross-model record.** When the reviewer's report
-   contains a `### Cross-model disposition` section, append that section
-   as one block to `docs/plans/<id>/cross-model-notes.md`,
-   blockquote-wrapped exactly as the IMPLEMENT aggregate gate wraps its
-   blocks, and
-   opening with one orchestrator-authored label line — the literal
-   `> **Design round <n>**` — prepended inside the wrap, so a reader can
-   tell a design-round block from an implement-round one. Same
-   frontmatter-on-first-append rules as the implement path (schema in
-   [artifact schema](references/artifacts.md)). A resumed session that
-   repeats a round appends a duplicate-labeled block rather than losing
-   one; the file is never read back as state.
-6. On **APPROVE or COMMENT** → the review passes. Advance to STRUCTURE in
-   the same turn.
+   contains a `### Cross-model disposition` section, save that section
+   verbatim to a scratch file with the Write tool and run
+   `<team-skill-dir>/scripts/append-cross-model-notes.mjs --dir <artifact-dir>
+   --section <file> --design-round <n>`, with `<n>` from step 4. Deciding
+   where the section ends in the report is yours: it is the heading through
+   the last line of the block, never the terminal verdict line. A resumed
+   session that repeats a round appends a duplicate-labeled block rather
+   than losing one; the file is never read back as state.
+6. On **APPROVE or COMMENT** (`passed: true`) → the review passes. Advance
+   to STRUCTURE in the same turn.
 7. On **REQUEST CHANGES** → re-dispatch `design-author` with the reviewer's
    findings verbatim. The new draft increments `revision: <n+1>` in its
    frontmatter, then a fresh review round runs. The loop ends on the

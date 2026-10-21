@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.163.0] - 2026-10-21
+
+### Changed
+
+- **`/team` writes its own gate artifacts with scripts.** The environment preflight, the `5-research.md` envelope around the two research returns, each `design-review-<n>.md` record with its round number and verdict, and each `cross-model-notes.md` block now come from scripts under `skills/team/scripts/` rather than the orchestrator retyping commands and formats each run. The preflight's signing probe also no longer depends on a `timeout` command, which macOS lacks, so it stops reporting a false `FAILED OR HUNG` there. **What this asks of you:** nothing.
+
 ## [0.162.0] - 2026-10-21
 
 ### Changed
@@ -1490,7 +1496,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.162.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.163.0...HEAD
+[0.163.0]: https://github.com/bostonaholic/team/compare/v0.162.0...v0.163.0
 [0.162.0]: https://github.com/bostonaholic/team/compare/v0.161.0...v0.162.0
 [0.161.0]: https://github.com/bostonaholic/team/compare/v0.160.0...v0.161.0
 [0.160.0]: https://github.com/bostonaholic/team/compare/v0.159.0...v0.160.0
