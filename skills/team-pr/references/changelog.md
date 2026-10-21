@@ -42,36 +42,21 @@ Section meanings:
 
 ## Candidate selection
 
-### Find the baseline
+### List candidates
 
-1. In `CHANGELOG.md`, find the first versioned `## [X.Y.Z] - YYYY-MM-DD` below `## [Unreleased]`.
-2. Resolve its commit. Try tags first:
+`<team-pr-skill-dir>` is the absolute directory that holds the installed `skills/team-pr/SKILL.md`. Run `node "<team-pr-skill-dir>/scripts/changelog-candidates.mjs" <repo-dir>`:
 
-```bash
-git rev-parse -q --verify "v<X.Y.Z>^{commit}" \
-  || git rev-parse -q --verify "<X.Y.Z>^{commit}"
-```
-
-If neither tag exists, search release subjects without assuming a prefix; match the version string, not a fixed prefix:
-
-```bash
-git log --oneline --grep="<X.Y.Z>" -1
-```
-
-3. List candidates:
-
-```bash
-git log --oneline <baseline>..HEAD
-```
-
-4. For unclear subjects, inspect `git show --stat <hash>` and then `git show <hash>`; classify the diff, never guess.
-
-If no versioned heading exists, use the root commit and consider every commit.
+- Exit 0: the printed `commits` are the candidates since the baseline release, each with the filter's default `rule`. An empty list means nothing to add.
+- Exit 1: `CHANGELOG.md` is absent; apply ship-phase step 1.
+- Exit 2: leave `CHANGELOG.md` untouched and report the stderr line as the skip reason.
 
 ### Filter
 
-- Include `feat:`, `fix:`, `perf:`, every `BREAKING CHANGE:`, `security:`, and security-related `fix:`.
-- Exclude `chore:`, `test:`, `refactor:`, `docs:`, `ci:`, `revert:`, WIP, fixup, and merge commits unless user-visible behavior requires an entry. For dependency bumps, describe behavior, not the dependency. A `docs:` change earns an entry only when docs are the user-facing product and it is the release’s only change. If a feature was added and reverted in the same release, include neither.
+Each candidate's `rule` is the conventional-type default: `include`, `exclude`, or `review`. Then judge each candidate, because these exceptions need the diff:
+
+- For a `review` commit or an unclear subject, inspect `git show --stat <hash>` and then `git show <hash>`; classify the diff, never guess.
+- An `exclude` commit still earns an entry when user-visible behavior requires one. For dependency bumps, describe behavior, not the dependency. A `docs:` change earns an entry only when docs are the user-facing product and it is the release’s only change.
+- If a feature was added and reverted in the same release, include neither.
 
 ## Ship-phase procedure
 

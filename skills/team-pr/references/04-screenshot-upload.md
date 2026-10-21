@@ -3,68 +3,36 @@ Resolve links in this file from this file's own directory. `<team-pr-skill-dir>`
 
 ## Screenshot Upload
 
-Caller policy only. The upload mechanics, the section's markdown shape, and the body write live in [screenshot rules](screenshot-rules.md), its procedure references, and `<team-pr-skill-dir>/scripts/`. This file decides whether to run, when, and which manifest entries qualify.
+Caller policy only. The upload mechanics, the section's markdown shape, and the body write live in [screenshot rules](screenshot-rules.md), its procedure references, and `<team-pr-skill-dir>/scripts/`. This file decides whether to run and when.
 
 ### When to call
 
-Call when the manifest carries `## Captured` entries whose PNGs exist on disk.
-Do **not** call when the branch is non-UI (the section is omitted), when
-capture could not run (`status` any `skipped-*` value or a malformed manifest),
-or when every listed PNG is missing from disk.
+Do **not** call when the branch is non-UI (the section is omitted). Otherwise
+run `node "<team-pr-skill-dir>/scripts/manifest-entries.mjs" "$ARGUMENTS" "$ARGUMENTS/entries.json"`.
+A rerun after Execution step 4 rewrites the same file.
+
+- Exit 0: continue. The printed `entries_file` is the absolute path of the
+  entries file, whose schema is in
+  [screenshot input and result](screenshot-input-and-result.md).
+  `result.json` comes back beside it, so bind `ENTRIES_DIR` to its directory
+  wherever a fence below names it.
+- Exit 1 or 2: do not upload. The body's capture-failure or degraded note
+  stands.
 
 The draft PR already exists, opened in Execution step 7, and its body already
 carries the section in its pre-upload degraded form: open first, then attach
 and rewrite.
 
-### Build the entries file
-
-Write a JSON entries file under `$(mktemp -d)`, bound once as below because
-`result.json` comes back beside the entries file. The fence's first line binds
-`ARTIFACT_DIR` to the `$ARGUMENTS` directory, written out literally, and the
-fence prints each value a later call needs, per the carrying rule in
-[screenshot rules](screenshot-rules.md):
-
-```bash
-ARTIFACT_DIR='<the $ARGUMENTS directory>'          # filled in literally, this call
-ENTRIES_DIR="$(mktemp -d)"
-ENTRIES_FILE="$ENTRIES_DIR/entries.json"
-# `$ARTIFACT_DIR` may be relative and the callee refuses a relative `root`: write the resolved value.
-CAPTURE_ROOT="$(cd -- "$ARTIFACT_DIR/screenshots" && pwd -P)" || exit 2
-printf 'ENTRIES_DIR=%s\n' "$ENTRIES_DIR"
-printf 'ENTRIES_FILE=%s\n' "$ENTRIES_FILE"
-printf 'CAPTURE_ROOT=%s\n' "$CAPTURE_ROOT"
-```
-
-The file itself carries:
-
-- a top-level `root` of `$CAPTURE_ROOT` — the **absolute** path of
-  `$ARGUMENTS/screenshots/`, the directory the PNGs live in and every entry's
-  path must resolve inside, never the `$(mktemp -d)` directory holding the
-  entries file. Each entry's `path` is absolute, built by prefixing
-  `$CAPTURE_ROOT`;
-- one entry per `## Captured` entry whose PNG exists on disk, in manifest
-  order, carrying `path`, `caption`, and the entry's `state`;
-- a `## Captured` entry whose PNG is missing from disk is dropped, and the
-  discrepancy adds one line to the top-level `notes` list;
-- a manifest with `status: partial` adds one `notes` line naming how many
-  states were skipped and pointing at the manifest.
-
-The file's schema, and the worked `jq -n --args` construction that writes it,
-are in [screenshot input and result](screenshot-input-and-result.md). Use that
-construction: a path and a caption are caller text, so each is bound as a `jq`
-argument and never pasted into a JSON string
-([external-data rules](../../team/references/external-data.md)).
-
 ### Run the upload
 
-Bind `UPLOAD_ARGS` to the PR's URL followed by `--entries` and the printed `ENTRIES_FILE`, both written out as literal text. Assign it in the same shell call that runs `resolve-pr.sh` ([screenshot input and result](screenshot-input-and-result.md)): shell variables do not persist between calls, so a value bound in an earlier call reaches the script empty and the script refuses. Then follow [screenshot rules](screenshot-rules.md) and its procedure references in order. One run per PR phase, on the home repository's PR.
+Bind `UPLOAD_ARGS` to the PR's URL followed by `--entries` and the printed `entries_file`, both written out as literal text. Assign it in the same shell call that runs `resolve-pr.sh` ([screenshot input and result](screenshot-input-and-result.md)): shell variables do not persist between calls, so a value bound in an earlier call reaches the script empty and the script refuses. Then follow [screenshot rules](screenshot-rules.md) and its procedure references in order. One run per PR phase, on the home repository's PR.
 
 ### Read the result
 
 `result.json` is the contract:
 
 ```bash
-ENTRIES_DIR='<printed ENTRIES_DIR>'      # from the build call
+ENTRIES_DIR='<directory of the printed entries_file>'
 RESULT_FILE="$ENTRIES_DIR/result.json"   # the upload writes it beside the entries file
 [ -r "$RESULT_FILE" ] || exit 2
 ```
@@ -98,7 +66,7 @@ Run steps 1 to 3 for one companion as **one shell call**, the fence below, so
 every value the write and the read-back expand is bound in that same call:
 
 ```bash
-ENTRIES_DIR='<printed ENTRIES_DIR>'                # from the build call
+ENTRIES_DIR='<directory of the printed entries_file>'
 RESULT_FILE="$ENTRIES_DIR/result.json"
 COMPANION_URL='https://github.com/owner/other-repo/pull/17'   # this companion's PR, filled in literally
 # Step 1: bind this companion's own values.

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team-pr` now runs scripts for its fixed checks instead of retyping commands.** Three scripts handle steps that always give the same result: one finds each repo's base branch and its unshipped commits, one lists the commits the changelog must cover since the last release, and one reads the screenshot manifest and writes the upload's entries file. The changelog wording, the screenshot captions, and the PR body still come from the agent. **What this asks of you:** nothing.
+
 ## [0.163.0] - 2026-10-21
 
 ### Changed

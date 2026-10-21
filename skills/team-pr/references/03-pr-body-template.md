@@ -124,17 +124,15 @@ leaves the closing line first.
 ### Screenshots section rendering
 
 The `## Screenshots` section is built from `$ARGUMENTS/screenshots/manifest.md`
-(written by ux-reviewer during Implement, or by the capture step 4 runs):
+(written by ux-reviewer during Implement, or by the capture step 4 runs),
+through the `manifest-entries.mjs` result from Execution step 4:
 
-- **Manifest `status` is any `skipped-*` value, or the manifest is
-  malformed**, with unparseable frontmatter or body → render a one-line
-  capture-failure note naming the reason, nothing more. Never block or
-  delay the PR over screenshots.
-- **Each `## Captured` entry whose PNG exists on disk** contributes one entry.
-  Entries whose PNG is missing from disk are skipped and the discrepancy noted
-  in the section.
-- **Manifest `status: partial`** → also append a one-line
-  "N states skipped — see manifest" note to the section.
+- **A capture gap that recapture did not close, or a fault** → render a
+  one-line capture-failure note naming the `reason` (or the stderr line),
+  nothing more. Never block or delay the PR over screenshots.
+- **`render`** → each entry in the entries file contributes one entry, and
+  each `notes` line is noted in the section. The notes already cover a
+  missing PNG and a `partial` manifest's skipped states.
 - **The section's wording is defined once, and not here.** Its success form,
   its failure list, and its pre-upload degraded form all live in
   `skills/team-pr/references/screenshot-upload-and-body-edit.md`. Render the

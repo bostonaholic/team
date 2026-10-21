@@ -1,18 +1,18 @@
 ## Execution
 
+`<team-pr-skill-dir>` is the absolute directory that holds the installed
+`skills/team-pr/SKILL.md`.
+
 1. **Detect mode and inventory worktrees with commits.**
    - Read `$ARGUMENTS/4-repos.md` if present. When present, you are in
      **multi-repo mode** — read the `## Worktrees` section to get each
      repo's worktree path.
    - For each involved worktree (single-repo: the current one; multi-repo:
-     each from `4-repos.md`), check whether it has commits ahead of its base
-     branch. Skip any with no commits.
-2. **Detect the base branch (per repo):**
-   ```
-   git -C <worktree-path> symbolic-ref refs/remotes/origin/HEAD \
-     | sed 's@^refs/remotes/origin/@@'
-   ```
-   Falls back to `main` per repo.
+     each from `4-repos.md`), run step 2's script. Skip any with `ahead=0`.
+2. **Detect the base branch (per repo).** Run
+   `"<team-pr-skill-dir>/scripts/ship-state.sh" <worktree-path>`. Exit 0
+   prints `base=`, `ahead=`, and `dirty=` lines; bind `base` as that repo's
+   base branch. Exit 2 is a fault: report its stderr line and stop.
 3. **Resume path** — `$ARGUMENTS/1-task.md` exists: read `ticketId` from
    its frontmatter. Read `$ARGUMENTS/6-design.md` for the "why" behind the
    changes.
@@ -24,22 +24,25 @@
    counts. When UI impact is uncertain, capture. Only a branch that does not
    change the interface omits the section — non-UI changes are never forced to
    include one. A branch that does change it must carry the section, so
-   capture when needed:
-   - `$ARGUMENTS/screenshots/manifest.md` holding `## Captured` entries whose
-     PNGs exist on disk is the manifest to render. Parse its frontmatter and
-     `## Captured` / `## Skipped` body for the Screenshots section (see PR
-     Body Template below).
-   - Any other manifest state — absent, malformed, `status` any `skipped-*`
-     value, or every listed PNG missing — is a capture gap, not a non-UI
-     change. Run the brief's capture procedure now and render the manifest
-     it writes.
+   capture when needed. Run
+   `node "<team-pr-skill-dir>/scripts/manifest-entries.mjs" "$ARGUMENTS" "$ARGUMENTS/entries.json"`:
+   - Exit 0 (`render`): the manifest renders. The entries file and the
+     printed `notes` feed the Screenshots section (see PR Body Template
+     below) and the upload.
+   - Exit 1 (`capture-gap`) is a capture gap, not a non-UI change. Run the
+     brief's capture procedure now, then run the script again. A second
+     exit 1 renders the capture-failure note with its `reason`.
+   - Exit 2 is a fault: render the capture-failure note with its stderr
+     line. A screenshot problem never blocks the PR.
    In standalone mode no artifact directory exists, so capture into a
    run-scoped `$(mktemp -d)` directory and bind that directory as `$ARGUMENTS`
    for the capture and upload steps.
 5. **Standalone path** — no matching artifact directory:
-   - Verify the branch has commits ahead of the base, or uncommitted
-     changes worth shipping. If neither, report "Nothing to ship." and
-     stop. (Standalone mode is single-repo only.)
+   - From step 2's output: `ahead=0` with `dirty=0` means "Nothing to
+     ship." Report it and stop. With `ahead=0` and `dirty` above 0, read
+     `git status` and judge whether the uncommitted changes are worth
+     shipping; if not, report "Nothing to ship." and stop. (Standalone mode
+     is single-repo only.)
    - Skip aggregate-gate enforcement. Warn the user once that they are
      taking responsibility for correctness.
 6. **Update an existing CHANGELOG.md** before committing (see Changelog Update
@@ -121,7 +124,7 @@ worktree path, the base branch, and the scratch directory.
 | Subagent | Brief adds | Edits | Returns |
 | --- | --- | --- | --- |
 | Inputs | [Input](01-input.md); `1-task.md` and `6-design.md` in resume mode; skip `CHANGELOG.md`, which Changelog owns | writes only `<scratch>/pr-inputs.md` | the `pr-inputs.md` path: project terms, the why, available check results, evidence gaps |
-| Screenshots | step 4 above; the [ux reviewer brief](../team/references/ux-reviewer.md) | the capture directory and its manifest | UI-impact decision, the manifest path or the skip reason |
+| Screenshots | step 4 above; the [ux reviewer brief](../team/references/ux-reviewer.md) | the capture directory, its manifest, and `entries.json` | UI-impact decision, then the script's printed JSON, or the skip reason |
 | Changelog | [Changelog Update](05-changelog-update.md) | `CHANGELOG.md` only; no commit | the added bullets, or the absent-file skip |
 | Body | `pr-inputs.md`; the manifest; the Changelog return; the [PR Body Template](03-pr-body-template.md); the [writing standards](../team/references/writing.md) | writes only `<scratch>/pr-body.md` | the `pr-body.md` path and the title |
 | Upload | the PR URL; the manifest; [Screenshot Upload](04-screenshot-upload.md) | the PR body's `## Screenshots` section | uploaded asset count, or the degraded-note reason |
