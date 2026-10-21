@@ -28,8 +28,7 @@ discovery command below resolves it. The `design-author` reads
 `$ARGUMENTS/5-research.md`.
 
 Resolve `<team-skill-dir>` to the absolute directory containing
-`skills/team/SKILL.md`, and `<team-design-skill-dir>` to the absolute
-directory containing this installed `SKILL.md`. From the repository root, run:
+`skills/team/SKILL.md`. From the repository root, run:
 
 ```sh
 "<team-skill-dir>/discover-topic.sh" "${ARGUMENTS:-}" "5-research.md"
@@ -56,9 +55,10 @@ directory containing this installed `SKILL.md`. From the repository root, run:
    If `$ARGUMENTS/6-design.md` already exists, skip this dispatch and
    resume at step 3 — never re-draft an existing design ([durable state rules](../team/principles/durable-state.md)).
 3. **Design review gate.** Run
-   `node "<team-design-skill-dir>/scripts/review-record.mjs" status "$ARGUMENTS"`.
-   On `passed <n>`, skip straight to step 4 — never re-review a passed
-   design. On `pending <n>`, `<n>` is this round's number. Before each
+   `"<team-skill-dir>/scripts/design-review-status.sh" "$ARGUMENTS"`.
+   On exit 0 (`passed`), skip straight to step 4 — never re-review a passed
+   design. On exit 1 (`pending`), its second field `<n>` is this round's
+   number. On exit 2, stop and report its stderr. Before each
    review dispatch, run the
    external cross-model pass: read the
    [cross-model review](../team/references/cross-model-review.md) and follow
@@ -82,11 +82,11 @@ directory containing this installed `SKILL.md`. From the repository root, run:
    substitute the artifact directory, attach the paths named at the top of this file, and give it to a fresh-context
    read-only `Explore` subagent each round. Write the reviewer's report
    verbatim to a scratch file outside `$ARGUMENTS` with the Write tool, then
-   run `node "<team-design-skill-dir>/scripts/review-record.mjs" record "$ARGUMENTS" <report-file>`.
+   run `node "<team-skill-dir>/scripts/record-design-review.mjs" --dir "$ARGUMENTS" --report <report-file>`.
    It records `design-review-<n>.md` and any cross-model disposition, and
-   prints `round <n>` and `verdict <verdict>`. Exit 3 is an unparseable
-   verdict; any other non-zero exit halts loudly with its stderr. Then act
-   on the printed verdict:
+   prints one JSON line naming its `round` and `verdict`. Exit 3 is an
+   unparseable verdict; any other non-zero exit halts loudly with its
+   stderr. Then act on the printed verdict:
    - **APPROVE or COMMENT** — the review passes. Advance.
    - **REQUEST CHANGES** — re-dispatch `design-author` with the
      reviewer's findings verbatim. The agent re-drafts and increments
@@ -95,8 +95,8 @@ directory containing this installed `SKILL.md`. From the repository root, run:
    - **Unparseable verdict or reviewer crash** — retry the review once
      with the error; on second failure, halt loudly. Fail closed —
      never advance on a missing verdict ([verified results rules](../team/principles/verified-results.md)).
-4. **Stop once `$ARGUMENTS/6-design.md` exists and `status` prints
-   `passed <n>`.**
+4. **Stop once `$ARGUMENTS/6-design.md` exists and
+   `design-review-status.sh` exits 0.**
 
 Report design path and tell the user:
 **"Next: run `/team-structure docs/plans/<id>/`"**

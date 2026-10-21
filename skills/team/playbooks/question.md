@@ -8,7 +8,7 @@ The questioner decomposes intent into `1-task.md`, neutral codebase questions in
 
 ## Artifact invariants
 
-`topic` is identical across artifacts: the kebab portion of `<id>` after removing `<TICKET>-` or `<YYYY-MM-DD>-`. The questioner chooses it once; downstream phases copy it verbatim. Never use the ticket, date, or a rewording. `ticketId` appears only in `1-task.md`. Full schema: [artifact schema](references/artifacts.md).
+`topic` is identical across artifacts: the `topic=` line `scripts/plan-id.sh --parse <id>` prints. The questioner chooses it once; downstream phases copy it verbatim. Never use the ticket, date, or a rewording. `ticketId` appears only in `1-task.md`. Full schema: [artifact schema](references/artifacts.md).
 
 Read [question templates](references/question-templates.md) before writing the artifacts. Write 8–15 questions answerable from code. `Codebase context` may name files, modules, and vocabulary, but MUST NOT state the goal or desired outcome; it replaces the legacy `brief.md`.
 
@@ -36,7 +36,7 @@ For the inferred goal and acceptance signals in `1-task.md`, ask: Who specifical
 
 1. Read the description. Verify named files, modules, and error messages with grep/glob.
 2. Resolve repo scope through the multi-repo rules above.
-3. Choose an approximately 3-word kebab-case topic.
+3. Choose a 2–4 word kebab-case topic; `scripts/plan-id.sh` rejects any other shape.
 4. List the directories/modules — and repos — that research will inspect.
 5. Draft neutral questions; in multi-repo mode prefix each with `in repo <name>`.
 6. Confirm `Codebase context` describes existing code without desired behavior.

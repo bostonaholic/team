@@ -55,17 +55,17 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    Trace every substantive claim only to the completed returns. Add no claim
    from the task description or `1-task.md`. In multi-repo mode, preserve the
    repo-slug prefix on every file reference.
-5. Resolve `<team-research-skill-dir>` to this skill's absolute directory,
-   then run:
+5. Run:
 
    ```sh
-   node "<team-research-skill-dir>/scripts/assemble.mjs" \
-     --questions "$ARGUMENTS/2-questions.md" \
+   node "<team-skill-dir>/scripts/render-research.mjs" --dir "$ARGUMENTS" \
      --file-finder <file-finder-return> --researcher <researcher-return> \
-     --synthesis <synthesis-file> --out "$ARGUMENTS/5-research.md"
+     --synthesis <synthesis-file>
    ```
 
-   Exit 0 wrote the artifact. On exit 2, stop and report its stderr. Never
+   Exit 0 wrote the artifact, or found an identical one. Exit 1 names a
+   missing or malformed input: fix it and rerun. On exit 2 or 3 (a different
+   `5-research.md` already exists), stop and report its stderr. Never
    hand-edit the written envelope or either fenced return.
 6. **Stop once `$ARGUMENTS/5-research.md` exists** — do not continue to
    DESIGN.

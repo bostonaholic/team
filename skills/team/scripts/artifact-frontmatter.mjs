@@ -11,22 +11,22 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 export class UsageError extends Error {}
 
 export function frontmatterLines(text) {
-  const lines = text.split("\n");
+  const lines = text.replace(/\r\n?/g, "\n").split("\n");
   const closing = lines.indexOf("---", 1);
   if (lines[0] !== "---" || closing < 0) return null;
   return lines.slice(1, closing);
 }
 
-export function readTopic(dir) {
+export function readTopic(dir, sources = TOPIC_SOURCES) {
   if (!existsSync(dir)) throw new Error(`artifact directory not found: ${dir}`);
-  for (const name of TOPIC_SOURCES) {
+  for (const name of sources) {
     const path = join(dir, name);
     if (!existsSync(path)) continue;
     const lines = frontmatterLines(readFileSync(path, "utf8"));
     const match = lines?.map((line) => line.match(/^topic:[ \t]*(\S.*?)[ \t]*$/)).find(Boolean);
     if (match) return match[1];
   }
-  throw new Error(`no topic in the frontmatter of any of ${TOPIC_SOURCES.join(", ")} under ${dir}`);
+  throw new Error(`no topic in the frontmatter of any of ${sources.join(", ")} under ${dir}`);
 }
 
 export function resolveDate(override, now = new Date()) {

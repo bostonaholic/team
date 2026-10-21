@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.166.0] - 2026-10-21
+
+### Changed
+
+- **Each gate script now exists once, under `skills/team/scripts/`, and every entry point calls that copy.** `/team-research` writes `5-research.md` with the orchestrator's `render-research.mjs`, `/team-design` records each round with `record-design-review.mjs`, and one `design-review-status.sh` answers "has this design passed review?" for `/team-design`, `/team-structure`, resume detection, and `discover-topic.sh`. A new `plan-id.sh` builds every `docs/plans/<id>` and is the only definition of the id pattern discovery uses; `/team`, `/team-fix`, `/team-implement`, and `/team-question` all call it rather than spelling the rule out. Where two copies disagreed, the stricter one won: a rerun of `/team-research` stops rather than overwriting a different `5-research.md`, a design-review round is never recorded without a `6-design.md`, and a new topic must be two to four kebab-case words in every entry point. **What this asks of you:** nothing.
+
 ## [0.165.0] - 2026-10-21
 
 ### Changed
@@ -1508,7 +1514,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.165.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.166.0...HEAD
+[0.166.0]: https://github.com/bostonaholic/team/compare/v0.165.0...v0.166.0
 [0.165.0]: https://github.com/bostonaholic/team/compare/v0.164.0...v0.165.0
 [0.164.0]: https://github.com/bostonaholic/team/compare/v0.163.0...v0.164.0
 [0.163.0]: https://github.com/bostonaholic/team/compare/v0.162.0...v0.163.0

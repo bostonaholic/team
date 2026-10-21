@@ -11,9 +11,11 @@ Resolve these links from the installed `SKILL.md` directory.
 
 When the `design-author` returns a draft:
 
-1. Make sure that `docs/plans/<id>/6-design.md` exists. If the latest
-   `design-review-<n>.md` already carries a passing verdict (APPROVE or
-   COMMENT), skip the review and advance to STRUCTURE.
+1. Make sure that `docs/plans/<id>/6-design.md` exists. Run
+   `<team-skill-dir>/scripts/design-review-status.sh <artifact-dir>`. Exit 0
+   (`passed`) means the design already passed review: skip the review and
+   advance to STRUCTURE. Exit 1 (`pending`) runs this round; exit 2 halts
+   with its stderr.
 2. **Run the external cross-model pass** (every round, before the
    dispatch). Read [cross-model review](cross-model-review.md) and follow its
    `## Design-review pass` — reference that procedure, never
@@ -54,18 +56,16 @@ When the `design-author` returns a draft:
    complete report verbatim to a scratch file outside `docs/plans/`, then run
    `<team-skill-dir>/scripts/record-design-review.mjs --dir <artifact-dir>
    --report <file>`. On exit 0 its JSON line names the recorded `path`,
-   `round` (`<n>`), `verdict`, and `passed`. Exit 3 means the report carries
-   no verdict token: go to step 8. Exit 1 names a missing input to fix and
-   rerun.
-5. **Persist the cross-model record.** When the reviewer's report
-   contains a `### Cross-model disposition` section, save that section
-   verbatim to a scratch file with the Write tool and run
-   `<team-skill-dir>/scripts/append-cross-model-notes.mjs --dir <artifact-dir>
-   --section <file> --design-round <n>`, with `<n>` from step 4. Deciding
-   where the section ends in the report is yours: it is the heading through
-   the last line of the block, never the terminal verdict line. A resumed
-   session that repeats a round appends a duplicate-labeled block rather
-   than losing one; the file is never read back as state.
+   `round` (`<n>`), `verdict`, `passed`, and `crossModelNotes`. Exit 3 means
+   the report carries no verdict token: go to step 8. Exit 1 names a missing
+   input to fix and rerun.
+5. **The cross-model record is already persisted.** Step 4's run appended
+   the report's `### Cross-model disposition` section to
+   `cross-model-notes.md` as its `**Design round <n>**` block
+   (`crossModelNotes: "appended"`), or appended nothing for a section that
+   reads `Not run:` or a report with none. Never append it again by hand. A
+   resumed session that repeats a round appends a duplicate-labeled block
+   rather than losing one; the file is never read back as state.
 6. On **APPROVE or COMMENT** (`passed: true`) → the review passes. Advance
    to STRUCTURE in the same turn.
 7. On **REQUEST CHANGES** → re-dispatch `design-author` with the reviewer's

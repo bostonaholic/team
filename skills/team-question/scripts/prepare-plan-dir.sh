@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Derive a QUESTION artifact id, create docs/plans/<id>/, and report which
-# QUESTION artifacts it already holds.
+# Build a QUESTION artifact id with skills/team/scripts/plan-id.sh, create
+# docs/plans/<id>/, and report which QUESTION artifacts it already holds.
 #
 #   usage: prepare-plan-dir.sh [--ticket <ID>] [--date <YYYY-MM-DD>] <topic>
 #
@@ -30,52 +30,29 @@
 # Exit codes:
 #
 #   0  printed the state
-#   1  could not create the directory
-#   2  usage fault or an invalid topic, ticket, or date
+#   1  could not create the directory, or skills/team/scripts/plan-id.sh is missing
+#   2  usage fault or an invalid topic, ticket, or date, as plan-id.sh reports it
 #   3  2-questions.md exists without 1-task.md; a new dispatch would overwrite it
 
 set -euo pipefail
 export LC_ALL=C
-
-# 2-4 words: the topic-slug rule in SKILL.md. A subset of ID_RE's topic part
-# in skills/team/discover-topic.sh, so every id built here is discoverable.
-TOPIC_RE='^[a-z0-9]+(-[a-z0-9]+){1,3}$'
-# The ticket part of ID_RE in skills/team/discover-topic.sh.
-TICKET_RE='^[A-Za-z][A-Za-z0-9_]*-[0-9]+$'
-DATE_RE='^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
 
 die() {
   printf 'prepare-plan-dir: %s\n' "$2" >&2
   exit "$1"
 }
 
-ticket=""
-date=""
-topic=""
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --ticket) [ "$#" -ge 2 ] || die 2 "--ticket needs a value"; ticket="$2"; shift 2 ;;
-    --date) [ "$#" -ge 2 ] || die 2 "--date needs a value"; date="$2"; shift 2 ;;
-    -*) die 2 "unknown option: $1" ;;
-    *) [ -z "$topic" ] || die 2 "unexpected argument: $1"; topic="$1"; shift ;;
-  esac
-done
+# The shared id builder in the team skill, a sibling of this skill.
+plan_id="$(dirname "${BASH_SOURCE[0]}")/../../team/scripts/plan-id.sh"
+[ -x "$plan_id" ] || die 1 "missing helper: $plan_id"
 
-[ -n "$topic" ] || die 2 "usage: prepare-plan-dir.sh [--ticket <ID>] [--date <YYYY-MM-DD>] <topic>"
-printf '%s' "$topic" | grep -qE "$TOPIC_RE" \
-  || die 2 "topic must be 2-4 lowercase kebab-case words: $topic"
-if [ -n "$ticket" ]; then
-  printf '%s' "$ticket" | grep -qE "$TICKET_RE" \
-    || die 2 "ticket must look like ENG-1234: $ticket"
-fi
-[ -n "$date" ] || date="$(date +%Y-%m-%d)"
-printf '%s' "$date" | grep -qE "$DATE_RE" || die 2 "date must be YYYY-MM-DD: $date"
-
-if [ -n "$ticket" ]; then
-  id="$ticket-$topic"
-else
-  id="$date-$topic"
-fi
+[ "${1:-}" != "--parse" ] || die 2 "unknown option: --parse"
+# plan-id.sh validates the topic, ticket, and date; its exit 2 passes through.
+built="$("$plan_id" "$@")" || exit "$?"
+field() { printf '%s\n' "$built" | sed -n "s/^$1=//p"; }
+id="$(field id)"
+date="$(field date)"
+ticket="$(field ticketId)"
 dir="docs/plans/$id/"
 
 mkdir -p "$dir" || die 1 "cannot create $dir"
@@ -91,7 +68,7 @@ fi
 printf 'id=%s\n' "$id"
 printf 'dir=%s\n' "$dir"
 printf 'date=%s\n' "$date"
-printf 'ticketId=%s\n' "${ticket:-null}"
+printf 'ticketId=%s\n' "$ticket"
 printf 'state=%s\n' "$state"
 for file in 1-task.md 2-questions.md 3-prd.md 4-repos.md; do
   if [ -f "$dir$file" ]; then printf 'artifact=%s\n' "$dir$file"; fi

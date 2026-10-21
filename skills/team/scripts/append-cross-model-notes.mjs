@@ -3,31 +3,31 @@
 // docs/plans/<id>/cross-model-notes.md as a blockquoted block, creating the
 // file with its frontmatter on first use.
 //
-// Usage: append-cross-model-notes.mjs --dir <docs/plans/id> --section <file>
-//          [--design-round <n>] [--date YYYY-MM-DD]
+// Usage: append-cross-model-notes.mjs --dir <docs/plans/id> --section <file> [--date YYYY-MM-DD]
 //
-//   --dir           the artifact directory; topic is read from its artifacts
-//   --section       the section, saved verbatim, starting at its heading line
-//   --design-round  labels the block `**Design round <n>**`; omit for IMPLEMENT
-//   --date          the frontmatter date on creation; defaults to today (local time)
+//   --dir      the artifact directory; topic is read from its artifacts
+//   --section  the section, saved verbatim, starting at its heading line
+//   --date     the frontmatter date on creation; defaults to today (local time)
 //
 // Every section line is prefixed with `>`, so embedded content cannot leave
 // the blockquote. A section whose body begins `Not run:` records no pass and
 // appends nothing. Each run appends a new block; a repeated round appears twice.
+// The CLI writes IMPLEMENT's unlabeled blocks; record-design-review.mjs imports
+// quoteSection and appendNotes for its `**Design round <n>**` blocks.
 //
 // Prints one line: `appended <path>` or `skipped (not run)`.
 // Exit codes:
 //   0  appended, or skipped because the pass did not run
 //   1  a missing directory, section, or topic; or a section without its heading
 //   2  usage error
-import { appendFileSync, existsSync, realpathSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, realpathSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { UsageError, parseFlags, readInput, readTopic, requireFlags, resolveDate, runCli } from "./artifact-frontmatter.mjs";
+import { parseFlags, readInput, readTopic, requireFlags, resolveDate, runCli } from "./artifact-frontmatter.mjs";
 
 const SCRIPT = "append-cross-model-notes.mjs";
 const USAGE =
-  "usage: append-cross-model-notes.mjs --dir <docs/plans/id> --section <file> [--design-round <n>] [--date YYYY-MM-DD]";
+  "usage: append-cross-model-notes.mjs --dir <docs/plans/id> --section <file> [--date YYYY-MM-DD]";
 const HEADING = /^### Cross-model disposition[ \t]*$/;
 const NOT_RUN = "Not run:";
 
@@ -55,22 +55,30 @@ export function notesFrontmatter(topic, date) {
   return `---\ntopic: ${topic}\ndate: ${date}\nphase: cross-model-review\n---\n`;
 }
 
+// Creates the file with its frontmatter, or separates the block from the last one by a blank line.
+export function appendNotes(dir, block, topic, date) {
+  const path = join(dir, "cross-model-notes.md");
+  if (!existsSync(path)) {
+    appendFileSync(path, `${notesFrontmatter(topic, date)}${block}\n`);
+    return path;
+  }
+  const prefix = readFileSync(path, "utf8").endsWith("\n") ? "\n" : "\n\n";
+  appendFileSync(path, `${prefix}${block}\n`);
+  return path;
+}
+
 function main(argv) {
-  const flags = parseFlags(argv, ["--dir", "--section", "--design-round", "--date"]);
+  const flags = parseFlags(argv, ["--dir", "--section", "--date"]);
   requireFlags(flags, ["--dir", "--section"]);
-  const round = flags["--design-round"];
-  if (round !== undefined && !/^[1-9]\d*$/.test(round)) throw new UsageError(`--design-round must be a positive integer, got ${round}`);
   const date = resolveDate(flags["--date"]);
   const dir = flags["--dir"];
   const topic = readTopic(dir);
-  const block = quoteSection(readInput(flags["--section"], "section"), round);
+  const block = quoteSection(readInput(flags["--section"], "section"));
   if (block === null) {
     process.stdout.write("skipped (not run)\n");
     return;
   }
-  const path = join(dir, "cross-model-notes.md");
-  const prefix = existsSync(path) ? "\n" : notesFrontmatter(topic, date);
-  appendFileSync(path, `${prefix}${block}\n`);
+  const path = appendNotes(dir, block, topic, date);
   process.stdout.write(`appended ${path}\n`);
 }
 

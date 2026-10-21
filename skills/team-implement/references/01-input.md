@@ -27,8 +27,9 @@ Resolve `<team-skill-dir>` to the absolute directory containing
   - **Give a path** — the user supplies the `docs/plans/<id>/` directory
     (`ls docs/plans/` lists them).
   - **Describe the task** — the user types a 1–2 sentence description of what
-    to implement. Derive a fresh `<id>` (date-prefixed kebab slug, the same way
-    the questioner does), create `docs/plans/<id>/1-task.md` from that
+    to implement. Choose a 2–4 word kebab-case topic and run
+    `"<team-skill-dir>/scripts/plan-id.sh" <topic>`; its `id=` line is a fresh
+    date-prefixed `<id>`. Create `docs/plans/<id>/1-task.md` from that
     description, then proceed from the new directory in **standalone mode**.
 
 **Standalone mode** — whenever the directory (explicit, user-given, or freshly

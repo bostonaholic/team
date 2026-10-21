@@ -87,27 +87,18 @@ test("importing review-comments.mjs through a symlinked directory has no side ef
   assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
 });
 
-test("assemble.mjs run through a symlinked directory reaches its usage error", (t) => {
-  const run = runScript(join(symlinkedDir(t, "skills/team-research/scripts"), "assemble.mjs"));
-  assert.equal(run.status, 2);
-  assert.match(run.stderr, /^assemble\.mjs: usage: assemble\.mjs /);
-});
+for (const script of ["render-research.mjs", "record-design-review.mjs", "append-cross-model-notes.mjs"]) {
+  test(`${script} run through a symlinked directory reaches its usage error`, (t) => {
+    const run = runScript(join(symlinkedDir(t, "skills/team/scripts"), script));
+    assert.equal(run.status, 2);
+    assert.match(run.stderr, new RegExp(`^${script.replace(".", "\\.")}: missing --dir`));
+  });
 
-test("importing assemble.mjs through a symlinked directory has no side effects", (t) => {
-  const run = importModule(t, join(symlinkedDir(t, "skills/team-research/scripts"), "assemble.mjs"));
-  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
-});
-
-test("review-record.mjs run through a symlinked directory reaches its usage error", (t) => {
-  const run = runScript(join(symlinkedDir(t, "skills/team-design/scripts"), "review-record.mjs"));
-  assert.equal(run.status, 2);
-  assert.match(run.stderr, /^review-record\.mjs: usage: review-record\.mjs /);
-});
-
-test("importing review-record.mjs through a symlinked directory has no side effects", (t) => {
-  const run = importModule(t, join(symlinkedDir(t, "skills/team-design/scripts"), "review-record.mjs"));
-  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
-});
+  test(`importing ${script} through a symlinked directory has no side effects`, (t) => {
+    const run = importModule(t, join(symlinkedDir(t, "skills/team/scripts"), script));
+    assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
+  });
+}
 
 test("changelog-candidates.mjs run through a symlinked directory reaches its usage error", (t) => {
   const run = runScript(join(symlinkedDir(t, "skills/team-pr/scripts"), "changelog-candidates.mjs"));

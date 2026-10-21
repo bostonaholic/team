@@ -82,8 +82,9 @@ ready for review or merges it.
 
 > **Runtime canon:** the schema below is carried for agents by
 > [artifact schema](https://github.com/bostonaholic/team/blob/main/skills/team/references/artifacts.md). This section is the
-> doc-surface copy. The executable `ID_RE` / `PHASE_FILES` definitions
-> live in `skills/team/discover-topic.sh`.
+> doc-surface copy. The executable `ID_RE` lives in
+> `skills/team/scripts/plan-id.sh`, which also builds every new `<id>`;
+> `PHASE_FILES` lives in `skills/team/discover-topic.sh`.
 
 All phase artifacts live in `docs/plans/<id>/`, where `<id>` is one of:
 
@@ -121,7 +122,8 @@ per round) with frontmatter `topic`, `date`, `phase: design-review`, and
 `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`. The body carries the
 reviewer's findings verbatim. The `verdict` field is the deterministic
 read for resume detection. A design has passed review when the
-highest-`<n>` file carries APPROVE or COMMENT.
+highest-`<n>` file carries APPROVE or COMMENT; every gate reads that through
+`skills/team/scripts/design-review-status.sh`.
 
 **Review loop** (REQUEST CHANGES): the design-author re-drafts with the
 reviewer's findings verbatim. The orchestrator increments
@@ -662,7 +664,7 @@ completion message. For the 7 directory-consuming skills
 the `docs/plans/<id>/` argument is **optional**. Each skill resolves the
 directory through a three-tier chain: explicit `$ARGUMENTS` →
 newest-mtime convention discovery → `AskUserQuestion`. The middle tier
-filters by `ID_RE` and `PHASE_FILES`, owned by the bundled discovery
+filters by `ID_RE` and `PHASE_FILES`, applied by the bundled discovery
 helper below, and by the skill's necessary predecessor artifact. The
 orchestrator or entry-point skill calls `AskUserQuestion` itself, never a
 subagent. Subagents never
@@ -675,15 +677,17 @@ bundled `skills/team/discover-topic.sh` helper with their predecessor
 filename. `team-structure` also passes `--require-passing-review`. Each
 skill resolves `<team-skill-dir>` to the absolute directory containing
 `skills/team/SKILL.md`, then runs the helper from the repository root.
-The helper reads no host-specific environment variable or relative import.
-It owns `ID_RE`, `PHASE_FILES`, macOS/Linux mtime lookup, explicit-path
-precedence, and empty-success output when no candidate matches. The optional
-review filter accepts only APPROVE or COMMENT from the highest-numbered
-`design-review-<n>.md` YAML frontmatter. Line 1 and a closing marker within
-60 lines must both be `---`; malformed or over-cap input fails closed.
-An explicit path skips that filter, so `team-structure` then runs its own
-`scripts/check-design-review.sh`, which applies the same rule to the
-resolved directory before any slicing.
+The helper reads no host-specific environment variable. It owns
+`PHASE_FILES`, macOS/Linux mtime lookup, explicit-path precedence, and
+empty-success output when no candidate matches. It calls two siblings under
+`skills/team/scripts/`: `plan-id.sh --parse`, the one owner of `ID_RE`, and,
+for the optional review filter, `design-review-status.sh`. That script
+accepts only APPROVE or COMMENT from the first `verdict:` line of the
+highest-numbered `design-review-<n>.md` YAML frontmatter. Line 1 and a
+closing marker within 60 lines must both be `---`; malformed or over-cap
+input fails closed. An explicit path skips that filter, so `team-structure`
+then runs `design-review-status.sh` itself on the resolved directory before
+any slicing; the DESIGN gate and resume detection run the same script.
 
 ### Methodology skills (loaded by agents, not directly invoked)
 
