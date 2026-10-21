@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team-research` assembles `5-research.md` with a script.** The new `scripts/assemble.mjs` copies the topic from `2-questions.md`, stamps the date, writes the untrusted-evidence authority line, and fences each return one backtick longer than its longest backtick run, so the envelope is identical on every run instead of retyped by the model. The model still writes the one synthesis line. **What this asks of you:** nothing.
+
 ## [0.158.0] - 2026-10-21
 
 ### Changed
