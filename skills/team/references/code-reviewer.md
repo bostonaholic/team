@@ -139,10 +139,9 @@ Pre-existing findings alone give COMMENT, or APPROVE when nothing else is
 noted. REQUEST CHANGES needs at least one Blocking-tier finding that the
 branch owns. An unmet done criterion is an `issue (blocking)` finding.
 
-A finding whose only fix is to edit a locked acceptance test is
-`suggestion (non-blocking)`. No agent may edit a locked test during
-IMPLEMENT and REVIEW, so a block on it has no fix. A branch change that
-edits, weakens, or deletes a locked test is branch-owned and blocking.
+A [value red flag](references/testing.md#value-red-flags-reviewer-checklist)
+on a locked acceptance test is `suggestion (non-blocking)`. No agent may
+edit a locked test during IMPLEMENT and REVIEW, so a block on it has no fix.
 
 ### UX Reviewer
 
@@ -164,7 +163,7 @@ how to review. Use your own judgment on the method.
 
 - **Input.** Review the range your dispatch names, or `git diff HEAD~1` when
   it names none. Judge the range against the intent artifacts your dispatch
-  names and the done criteria in the plan the branch carries. When no
+  names and the done criteria in the plan or commits the branch carries. When no
   criteria exist, judge general correctness.
 - **Done criteria.** Report each one under `### Checks`, met or not met.
 - **Locked tests.** The lock source is the acceptance list in the `8-plan.md`

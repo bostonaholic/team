@@ -82,9 +82,8 @@ report. The orchestrator parses it as one of:
   they never go to the user to triage.
 - **💬 COMMENT** — non-blocking suggestions only.
 
-Pre-existing findings alone give COMMENT, or APPROVE when nothing else is
-noted. REQUEST CHANGES needs at least one Blocking-tier finding that the
-branch owns.
+The brief's `### Code Reviewer` verdict criteria set which findings each
+verdict needs.
 
 Every finding uses Conventional Comments (issue, suggestion, nitpick) with a
 `file:line` reference. List skeptic-refuted findings under a
