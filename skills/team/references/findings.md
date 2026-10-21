@@ -19,6 +19,10 @@ for correctness, security, or maintainability defects; use `suggestion:`/
 indicates a design problem: propose splitting the change or continuing design
 discussion outside review.
 
+A finding whose mistake can recur names its class and lists the other
+instances found in the review range. A finding with no recurring class names
+no class.
+
 ### Comment Types
 
 Every body begins with its label and decoration inside literal `**...**`.
