@@ -138,13 +138,12 @@ verdict gates the pipeline.
 Pre-existing findings alone give COMMENT, or APPROVE when nothing else is
 noted. REQUEST CHANGES needs at least one Blocking-tier finding that the
 branch owns. An unmet done criterion or a failing test suite is an
-`issue (blocking)` finding. A test whose outcome depends on a
-nondeterministic input is `issue (blocking)` on first occurrence, locked or
-not ([flaky-test red flags](references/testing.md#flaky-test-red-flags-reviewer-checklist)).
+`issue (blocking)` finding.
 
-A [value red flag](references/testing.md#value-red-flags-reviewer-checklist)
-on a locked acceptance test is `suggestion (non-blocking)`. No agent may
-edit a locked test during IMPLEMENT and REVIEW, so a block on it has no fix.
+A finding whose only fix is to edit a locked acceptance test is
+`suggestion (non-blocking)`. No agent may edit a locked test during
+IMPLEMENT and REVIEW, so a block on it has no fix. This does not cover a
+branch change to a locked test, because reverting that change is a fix.
 
 ### UX Reviewer
 
@@ -162,7 +161,9 @@ edit a locked test during IMPLEMENT and REVIEW, so a block on it has no fix.
 ## Code Reviewer Contract
 
 This section sets what the pipeline needs from a code review. It does not set
-how to review. Use your own judgment on the method.
+how to review. Use your own judgment on the method and on the severity of
+each finding. The [finding format](references/findings.md) maps each label to
+its tier.
 
 - **Input.** Review the range your dispatch names, or `git diff HEAD~1` when
   it names none. Judge the range against the intent artifacts your dispatch
