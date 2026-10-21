@@ -142,8 +142,7 @@ branch owns. An unmet done criterion or a failing test suite is an
 
 A finding whose only fix is to edit a locked acceptance test is
 `suggestion (non-blocking)`. No agent may edit a locked test during
-IMPLEMENT and REVIEW, so a block on it has no fix. This does not cover a
-branch change to a locked test, because reverting that change is a fix.
+IMPLEMENT and REVIEW, so a block on it has no fix.
 
 ### UX Reviewer
 

@@ -36,7 +36,7 @@ If a read fails, stop the consuming step and report the resolved path.
 The `## Code Reviewer Contract` section of the
 [code reviewer brief](../skills/team/references/code-reviewer.md) sets what
 the pipeline needs from you: the input range, the intent and done criteria
-to judge against, the locked tests, and the evidence a `pre-existing`
+to judge against, the test-suite run, the locked tests, and the evidence a `pre-existing`
 finding needs. It sets no review method. Review the range with your own
 judgment, and format every finding per the
 [finding format](../skills/team/references/findings.md).
