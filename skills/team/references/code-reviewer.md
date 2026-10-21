@@ -130,7 +130,7 @@ verdict gates the pipeline.
 
 ### Code Reviewer
 
-- **✅ APPROVE:** All done criteria met, no blocking issues, tests pass.
+- **✅ APPROVE:** All done criteria met, no blocking issues.
 - **❌ REQUEST CHANGES:** Blocking issues found. The pipeline MUST re-dispatch
   the implementer. No override.
 - **💬 COMMENT:** Non-blocking suggestions only. Implementation is correct.
@@ -139,9 +139,10 @@ Pre-existing findings alone give COMMENT, or APPROVE when nothing else is
 noted. REQUEST CHANGES needs at least one Blocking-tier finding that the
 branch owns. An unmet done criterion is an `issue (blocking)` finding.
 
-A finding on a locked acceptance test is `suggestion (non-blocking)`. No
-agent may edit a locked test during IMPLEMENT and REVIEW, so a block on it
-has no fix.
+A finding whose only fix is to edit a locked acceptance test is
+`suggestion (non-blocking)`. No agent may edit a locked test during
+IMPLEMENT and REVIEW, so a block on it has no fix. A branch change that
+edits, weakens, or deletes a locked test is branch-owned and blocking.
 
 ### UX Reviewer
 

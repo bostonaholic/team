@@ -77,7 +77,7 @@ Structure the whole report per the `## Report Format` section of
 the [code reviewer brief](../skills/team/references/code-reviewer.md): the verdict line leads the
 report. The orchestrator parses it as one of:
 
-- **✅ APPROVE** — all done criteria met, no blocking issues, tests pass.
+- **✅ APPROVE** — all done criteria met, no blocking issues.
 - **❌ REQUEST CHANGES** — blocking issues found. The loop auto-fixes them, and
   they never go to the user to triage.
 - **💬 COMMENT** — non-blocking suggestions only.
