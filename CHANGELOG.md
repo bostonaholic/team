@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.168.1] - 2026-10-21
+
 ### Changed
 
 - **Team's skills and agents load about 25% fewer tokens.** The runtime Markdown under `skills/` and `agents/` drops from 485,020 to 361,262 bytes, about 121k to 90k tokens. Filler, rationale, and repeated rules are gone, and prose that described what a script already checks now gives only the command and what to do with each outcome. Every command, threshold, gate, template field, and authorization rule is kept. **What this asks of you:** nothing.
@@ -1532,7 +1534,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.168.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.168.1...HEAD
+[0.168.1]: https://github.com/bostonaholic/team/compare/v0.168.0...v0.168.1
 [0.168.0]: https://github.com/bostonaholic/team/compare/v0.167.0...v0.168.0
 [0.167.0]: https://github.com/bostonaholic/team/compare/v0.166.0...v0.167.0
 [0.166.0]: https://github.com/bostonaholic/team/compare/v0.165.0...v0.166.0
