@@ -62,11 +62,10 @@ unreviewed or REQUEST-CHANGES candidates are skipped:
 ## Execution
 
 1. Use the directory resolved in `## Input`, then **verify the review gate**.
-   `<team-structure-skill-dir>` is the absolute directory that holds the
-   installed `skills/team-structure/SKILL.md`. Run:
+   Run:
 
    ```sh
-   "<team-structure-skill-dir>/scripts/check-design-review.sh" "$ARGUMENTS"
+   "<team-skill-dir>/scripts/design-review-status.sh" "$ARGUMENTS"
    ```
 
    - **Exit 0:** the design passed review. Continue.

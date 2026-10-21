@@ -1,6 +1,6 @@
 // Runs skills/team-question/scripts/prepare-plan-dir.sh in scratch directories.
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -108,6 +108,7 @@ for (const [name, args, pattern] of [
   ["topic with a trailing dash", ["add-auth-"], /topic must be 2-4/],
   ["malformed ticket", ["--ticket", "ENG1234", "add-auth"], /ticket must look like ENG-1234: ENG1234/],
   ["malformed date", ["--date", "2026-5-1", "add-auth"], /date must be YYYY-MM-DD: 2026-5-1/],
+  ["plan-id.sh's --parse mode", ["--parse", "2026-05-01-add-auth"], /unknown option: --parse/],
 ]) {
   test(`exits 2 on ${name} and creates nothing`, (t) => {
     const cwd = scratch(t);
@@ -118,6 +119,17 @@ for (const [name, args, pattern] of [
     assert.ok(!existsSync(join(cwd, "docs")));
   });
 }
+
+test("exits 1 and creates nothing when the shared plan-id.sh is missing", (t) => {
+  const cwd = scratch(t);
+  const copy = join(cwd, "skills/team-question/scripts/prepare-plan-dir.sh");
+  mkdirSync(join(copy, ".."), { recursive: true });
+  writeFileSync(copy, readFileSync(SCRIPT, "utf8"), { mode: 0o755 });
+  const out = spawnSync(copy, ["add-auth"], { cwd, encoding: "utf8" });
+  assert.equal(out.status, 1);
+  assert.match(out.stderr, /missing helper: .*team\/scripts\/plan-id\.sh/);
+  assert.ok(!existsSync(join(cwd, "docs")));
+});
 
 test("every id it builds is one discover-topic.sh resolves", (t) => {
   const cwd = scratch(t);

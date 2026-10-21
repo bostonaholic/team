@@ -27,10 +27,13 @@
    begins. Read [tracking rules](../team-pr/references/tracking.md) and follow its
    ticket-lifecycle rules, best-effort — skip silently when no tracker
    mechanism exists. Never block the pipeline on a tracker update.
-4. **Derive `<id>`:**
-   - With ticket: `<TICKET>-<kebab-topic>` (e.g., `ENG-1234-add-auth`)
-   - Without ticket: `<YYYY-MM-DD>-<kebab-topic>` (e.g.,
-     `2026-05-01-add-auth`)
+4. **Derive `<id>`:** choose a 2–4 word `<kebab-topic>` from the
+   description, then run
+   `<team-skill-dir>/scripts/plan-id.sh [--ticket <ticketId>] <kebab-topic>`,
+   where `<team-skill-dir>` is the absolute directory containing this
+   installed `SKILL.md`. Its `id=` line is `<id>` (`ENG-1234-add-auth` with
+   a ticket, `2026-05-01-add-auth` without). Exit 2: fix the topic or
+   ticket its stderr names and rerun.
 5. **Seed the TodoWrite ledger** with one item per phase, in order:
    `Worktree → Question → Research → Design → Structure → Plan → Implement → PR`.
    Mark `Worktree` as `in_progress`.
@@ -53,8 +56,9 @@
 7. **Resume detection.** If artifacts already exist for `<id>` under the
    canonical artifact directory resolved in step 6, fast-forward the
    ledger. Mark completed any phase whose artifacts are present. DESIGN is
-   complete only when the latest `design-review-<n>.md` carries a passing
-   verdict (APPROVE or COMMENT). A `6-design.md` with no passing review
+   complete only when
+   `<team-skill-dir>/scripts/design-review-status.sh <artifact-dir>` exits 0
+   (`passed`). A `6-design.md` with no passing review
    resumes **at the review step**, never a re-draft (any `approved` fields
    left by older runs are ignored). Then mark the first incomplete phase
    `in_progress`.

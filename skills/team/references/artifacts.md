@@ -4,7 +4,7 @@ This is the schema contract for durable pipeline state under `docs/plans/<id>/`.
 
 ## Artifact inventory
 
-`<id>` is `<TICKET>-<kebab-topic>` (for example `ENG-1234-add-rate-limiting`) or `<YYYY-MM-DD>-<kebab-topic>` (for example `2026-05-01-add-rate-limiting`). `skills/team/discover-topic.sh` owns executable `ID_RE` and `PHASE_FILES` definitions ([durable state rules](principles/durable-state.md)).
+`<id>` is `<TICKET>-<kebab-topic>` (for example `ENG-1234-add-rate-limiting`) or `<YYYY-MM-DD>-<kebab-topic>` (for example `2026-05-01-add-rate-limiting`). `skills/team/scripts/plan-id.sh` owns the executable `ID_RE` and builds every new `<id>`; `skills/team/discover-topic.sh` owns `PHASE_FILES` ([durable state rules](principles/durable-state.md)).
 
 | Artifact | Path | Created by | Required |
 |---|---|---|---|

@@ -212,8 +212,10 @@ reporting, mismatch handling, and unsupported-host limits.
 - **Runtime vs. development split** (`CLAUDE.md`, `docs/architecture.md`). Only
   the distributed set ports: `agents/`, `skills/*/SKILL.md` + `registry.json` +
   the bundled skill scripts (`supports-nesting.mjs`, `ste-lint.mjs`,
-  `external-review.mjs`, `discover-topic.sh`, `team-pr`'s `scripts/splice.mjs` plus its
-  `scripts/*.sh`, `team-design`'s `scripts/review-record.mjs`,
+  `external-review.mjs`, `discover-topic.sh`, `team`'s shared `scripts/*`
+  (among them `plan-id.sh`, `design-review-status.sh`, `render-research.mjs`,
+  and `record-design-review.mjs`), `team-pr`'s `scripts/splice.mjs` plus its
+  `scripts/*.sh`, `team-question`'s `scripts/prepare-plan-dir.sh`,
   `team-worktree`'s `scripts/*.sh`, and `team-fix`'s
   `scripts/branch-gate.sh`),
   `.claude-plugin/`. The entire `.claude/`
@@ -227,7 +229,11 @@ reporting, mismatch handling, and unsupported-host limits.
   bundled skills use, and keep the script free of relative imports and of
   environment reads that resolve its own location, so it runs from any install
   path (`ste-lint.mjs` does both). Reading the environment for something other
-  than the script's own path is fine and sometimes required.
+  than the script's own path is fine and sometimes required. The one
+  exception is a call to a shared helper in `skills/team/scripts/`: its
+  siblings, `discover-topic.sh`, and `prepare-plan-dir.sh` locate it relative
+  to their own file, because every host installs the `skills/` tree whole.
+  A missing helper is a loud non-zero exit, never a silent skip.
   `skills/team/references/agent-dispatch.md` still interpolates the variable directly.
   That command is Claude-Code-specific, but the pipeline it serves is not:
   nested dispatch degrades to its documented inline fallback on every other

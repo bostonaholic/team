@@ -1,4 +1,20 @@
 #!/usr/bin/env bash
+#
+# Resolve the artifact directory a /team-* command works in.
+#
+#   usage: discover-topic.sh explicit-path predecessor [--require-passing-review]
+#
+# Run it from the repository root. An existing explicit-path directory wins
+# verbatim. Otherwise prints the docs/plans/<id>/ directory whose name
+# scripts/plan-id.sh --parse accepts, which holds <predecessor>, and whose
+# newest phase artifact is most recent. --require-passing-review also requires
+# scripts/design-review-status.sh to report passed. Prints nothing when no
+# directory qualifies.
+#
+# Exit codes:
+#   0  printed a path, or nothing when no directory qualifies
+#   1  a sibling script under scripts/ is missing
+#   2  usage fault
 
 set -u
 
@@ -21,41 +37,26 @@ if [ -n "$explicit_path" ] && [ -d "$explicit_path" ]; then
   exit 0
 fi
 
-ID_RE='^([A-Za-z][A-Za-z0-9_]*-[0-9]+|[0-9]{4}-[0-9]{2}-[0-9]{2})-[a-z0-9][a-z0-9-]*$'
+scripts="$(dirname "${BASH_SOURCE[0]}")/scripts"
+for helper in plan-id.sh design-review-status.sh; do
+  if [ ! -x "$scripts/$helper" ]; then
+    printf 'missing helper: %s\n' "$scripts/$helper" >&2
+    exit 1
+  fi
+done
+
 PHASE_FILES="1-task 2-questions 5-research 6-design 7-structure 8-plan"
 best=""
 best_mtime=-1
 
 for dir in docs/plans/*/; do
   name="$(basename "$dir")"
-  printf '%s' "$name" | grep -qE "$ID_RE" || continue
+  # The file test first spares a helper process per directory that cannot qualify.
   [ -f "$dir$predecessor" ] || continue
+  "$scripts/plan-id.sh" --parse "$name" >/dev/null || continue
 
   if [ "$review_requirement" = "--require-passing-review" ]; then
-    review=""
-    review_number=-1
-    for candidate in "$dir"design-review-*.md; do
-      [ -f "$candidate" ] || continue
-      number="$(basename "$candidate" .md)"
-      number="${number#design-review-}"
-      case "$number" in ''|*[!0-9]*) continue;; esac
-      [ "$number" -gt "$review_number" ] && {
-        review_number="$number"
-        review="$candidate"
-      }
-    done
-    [ -n "$review" ] || continue
-    frontmatter="$(
-      awk '
-        NR == 1 { if (!/^---$/) exit 1; next }
-        NR > 60 { exit 1 }
-        /^---$/ { closed = 1; exit }
-        { print }
-        END { if (!closed) exit 1 }
-      ' "$review"
-    )" || continue
-    printf '%s\n' "$frontmatter" \
-      | grep -qE '^verdict:[[:space:]]*(APPROVE|COMMENT)[[:space:]]*$' || continue
+    "$scripts/design-review-status.sh" "$dir" >/dev/null || continue
   fi
 
   mtime=-1
