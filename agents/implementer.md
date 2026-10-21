@@ -86,7 +86,8 @@ After each slice, return concisely to the orchestrator:
 
 ## Completion
 
-When all slices are done and all acceptance tests pass, return:
+When all slices are done, all acceptance tests pass, and the final run of
+the full suite and every project static check is complete, return:
 
 ```
 ## Implementation Complete
@@ -101,6 +102,7 @@ When all slices are done and all acceptance tests pass, return:
 
 ### Test Results
 - Total acceptance tests: N; Passing: N; Failing: 0
+- Static checks: [one result per check, e.g. lint PASS, typecheck FAIL]
 
 ### Notes
 - [Blockers encountered; concerns or observations for the reviewer]

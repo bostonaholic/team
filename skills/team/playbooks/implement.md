@@ -74,7 +74,8 @@ Then run the full suite, resolve every failure type from the round, and report e
 - Follow plan order. `[sequential]` steps depend on prior steps; `[parallel]` steps may reorder. Switch repo worktrees for `[repo: <slug>]` steps and `<repo>:` tests.
 - A slice finishes only when its acceptance tests and all prior-slice tests pass.
 - Read [commit discipline](../team-pr/references/commit.md): Conventional Commits, 50/72, one logical change. Single repo: one commit using the slice `Commit:` subject and citing design/structure paths. Multi-repo slice: one commit per named repo using its `Commit:` subject; each body cites the same paths and says `part of slice <N>: <name>`.
-- Report `{slice: <name>, testsPassing: [list], commits: [{repo: <slug>, sha: <sha>}, ...]}`; single-repo has one commit entry. After all slices, return paths, slice list, and final test status.
+- Report `{slice: <name>, testsPassing: [list], commits: [{repo: <slug>, sha: <sha>}, ...]}`; single-repo has one commit entry.
+- After the last slice, run the full suite and every static check the project defines (typecheck, lint, format, build), detected the way the [verify playbook](playbooks/verify.md) detects them. Fix each failure inside the plan scope. Report each check's result, then return paths, the slice list, and final test status.
 
 ### TDD and scope invariants
 

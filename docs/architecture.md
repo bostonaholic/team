@@ -293,7 +293,9 @@ No gate. The plan is mechanically derived from the structure.
    acceptance suite, and the gate becomes "the checks reproduce the baseline
    captured before any file moved". Green is the correct state throughout.
 3. **Slice execution.** `implementer` works through the plan one slice
-   at a time, committing each atomically.
+   at a time, committing each atomically. After its last slice, it runs the
+   full suite and every project static check, fixes each failure inside the
+   plan scope, and reports each check's result.
 
 IMPLEMENT ends when the implementer returns its completion report. It
 dispatches no reviewer.

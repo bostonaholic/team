@@ -85,7 +85,9 @@ stated contract is zero behavior change has nothing to write — the current
 suite is the acceptance suite — so that dispatch is skipped with a recorded
 reason and the mechanical gate runs in its inverted form. IMPLEMENT advances
 when the implementer returns its completion report. It dispatches no
-reviewer.
+reviewer. A red check in that report still advances: REVIEW round 1's
+verifier owns it as a Blocking finding with a lint, typecheck, or build
+class.
 
 `skills/team/registry.json` inventories the 13 specialist agents for
 documentation only. The orchestrator dispatches based on the phase table
