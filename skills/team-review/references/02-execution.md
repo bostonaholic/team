@@ -39,16 +39,19 @@ the record states (malformed, current, stale) in the
    Never add the implementer's account of its own work to a reviewer's
    payload.
 
-   **Tree check.** Immediately before the dispatch, record
-   `git rev-parse HEAD` and `git status --porcelain --untracked-files=all`.
-   When all five return, record both again before anything else writes.
-   Reviewers judge and never write, and Claude Code ignores a plugin
-   agent's `permissionMode`, so only this check catches a reviewer's shell
-   mutation. A moved HEAD or any changed status line is a **Blocking**
-   `review` finding that names the new HEAD or each changed path. Do not
-   revert it yourself; the implementer resolves it in step 8. In multi-repo
-   mode, record and compare HEAD and status in every worktree in scope. Tag
-   the finding `[tree-check]` in the tier sort.
+   **Tree check.** `<team-review-skill-dir>` is the absolute directory
+   that holds the installed `skills/team-review/SKILL.md`. Immediately
+   before the dispatch, run
+   `"<team-review-skill-dir>/scripts/tree-check.sh" snapshot` from each
+   worktree in scope. When all reviewers return, run
+   `"<team-review-skill-dir>/scripts/tree-check.sh" compare` from each one
+   before anything else writes. Reviewers judge and never write, and Claude
+   Code ignores a plugin agent's `permissionMode`, so only this check
+   catches a reviewer's shell mutation. Exit 1 is a **Blocking** `review`
+   finding that names every `head` and `path` line the compare printed,
+   tagged `[tree-check]` in the tier sort. Do not revert it yourself; the
+   implementer resolves it in step 8. Exit 2 from any run halts the phase
+   with its stderr line.
 4. **Validate each report.** Each case below retries the named reviewer once
    with the error, inside a fresh tree check. A second failure halts loudly,
    and the round writes no record.

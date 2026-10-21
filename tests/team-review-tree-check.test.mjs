@@ -1,4 +1,4 @@
-// Runs skills/team-implement/scripts/tree-check.sh against scratch repositories.
+// Runs skills/team-review/scripts/tree-check.sh against scratch repositories.
 import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
-const SCRIPT = resolve("skills/team-implement/scripts/tree-check.sh");
+const SCRIPT = resolve("skills/team-review/scripts/tree-check.sh");
 const BASH = spawnSync("sh", ["-c", "command -v bash"], { encoding: "utf8" }).stdout.trim();
 
 // A repository with one commit holding a.txt and b.txt.
