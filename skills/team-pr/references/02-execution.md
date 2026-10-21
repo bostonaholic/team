@@ -16,6 +16,16 @@
 3. **Resume path** — `$ARGUMENTS/1-task.md` exists: read `ticketId` from
    its frontmatter. Read `$ARGUMENTS/6-design.md` for the "why" behind the
    changes.
+   Before step 6 edits the changelog and step 7 makes the ship commit, read
+   the newest `$ARGUMENTS/review-<n>.md` once. Read the
+   [artifact schema](../team/references/artifacts.md) for the record
+   states. Resolve the worktrees by the home-worktree order in
+   [the team-review input](../team-review/references/01-input.md). Bind the
+   record path and one review status for the whole run:
+   - `current`: the newest record is PASS and current.
+   - `stale`: the newest record is PASS and stale.
+   - `missing`: no record exists, or the newest record is FAIL or
+     malformed.
    In either mode, gather the shared [inputs](01-input.md) for each changed repository.
 4. **Decide UI impact and resolve the screenshot manifest.** Read the
    [ux reviewer brief](../team/references/ux-reviewer.md) and apply its
@@ -43,8 +53,8 @@
      `git status` and judge whether the uncommitted changes are worth
      shipping; if not, report "Nothing to ship." and stop. (Standalone mode
      is single-repo only.)
-   - Skip aggregate-gate enforcement. Warn the user once that they are
-     taking responsibility for correctness.
+   - No review record applies in standalone mode. Warn the user once that
+     they are taking responsibility for correctness.
 6. **Update an existing CHANGELOG.md** before committing (see Changelog Update
    below). If the root file is absent, leave it absent and report the skip
    unless the user explicitly requested a new changelog. In multi-repo mode,
@@ -123,12 +133,12 @@ worktree path, the base branch, and the scratch directory.
 
 | Subagent | Brief adds | Edits | Returns |
 | --- | --- | --- | --- |
-| Inputs | [Input](01-input.md); `1-task.md` and `6-design.md` in resume mode; skip `CHANGELOG.md`, which Changelog owns | writes only `<scratch>/pr-inputs.md` | the `pr-inputs.md` path: project terms, the why, available check results, evidence gaps |
+| Inputs | [Input](01-input.md); `1-task.md`, `6-design.md`, and the bound review record path and status in resume mode; skip `CHANGELOG.md`, which Changelog owns | writes only `<scratch>/pr-inputs.md` | the `pr-inputs.md` path: project terms, the why, available check results, evidence gaps |
 | Screenshots | step 4 above; the [ux reviewer brief](../team/references/ux-reviewer.md) | the capture directory, its manifest, and `entries.json` | UI-impact decision, then the script's printed JSON, or the skip reason |
 | Changelog | [Changelog Update](05-changelog-update.md) | `CHANGELOG.md` only; no commit | the added bullets, or the absent-file skip |
 | Body | `pr-inputs.md`; the manifest; the Changelog return; the [PR Body Template](03-pr-body-template.md); the [writing standards](../team/references/writing.md) | writes only `<scratch>/pr-body.md` | the `pr-body.md` path and the title |
 | Upload | the PR URL; the manifest; [Screenshot Upload](04-screenshot-upload.md) | the PR body's `## Screenshots` section | uploaded asset count, or the degraded-note reason |
-| Review comments | the PR URL; [Review Comments](07-review-comments.md) | PR comments only | posted, skipped, and failed comment counts |
+| Review comments | the PR URL; the bound review record path and status; [Review Comments](07-review-comments.md) | PR comments only | posted, skipped, and failed comment counts |
 
 Dispatch Inputs, Screenshots, and Changelog together. Body starts after
 all three return. Open the PR inline from `pr-body.md`. Then

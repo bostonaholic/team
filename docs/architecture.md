@@ -371,7 +371,10 @@ ux-reviewer brief before rendering the section.
 When `docs/plans/<id>/cross-model-notes.md` exists, team-pr posts its
 blocks as PR review comments
 (`skills/team-pr/references/07-review-comments.md`), replacing the final
-round's inline disposition block so every round appears exactly once. The worktree stays in place
+round's inline disposition block so every round appears exactly once.
+`/team-pr` reads the newest `review-<n>.md` once and posts its
+`### Minor and below` lines in `review-notes`. A stale or missing review is
+disclosed, not refused. The worktree stays in place
 after the PR opens. Teardown is deferred until the PR merges or the user
 asks, so the branch remains available for iteration. The final report tells the user how to mark the PR ready for review and move its ticket.
 
