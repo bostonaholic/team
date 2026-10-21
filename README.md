@@ -96,6 +96,7 @@ Or run individual phases:
 /team-plan docs/plans/<id>/
 /team-implement docs/plans/<id>/
 /team-code-review docs/plans/<id>/
+/team-security-review docs/plans/<id>/
 /team-pr docs/plans/<id>/
 ```
 
@@ -156,7 +157,7 @@ Each agent does work and returns an artifact. The orchestrator dispatches the ne
 ## Pipeline (QRSPI)
 
 ```
-WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → CODE REVIEW → PR
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → CODE REVIEW → SECURITY REVIEW → PR
 ```
 
 - **Worktree.** Orchestrator prepares an isolated git worktree first and authors `docs/plans/<id>/` inside it, keeping the home checkout's `git status` clean for the whole run.
@@ -166,7 +167,8 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 - **Structure.** Break the design into vertical slices with verification checkpoints. Produced autonomously. Advances to Plan with no gate.
 - **Plan.** Tactical implementation plan derived from the structure. Read by the implementer. Not gated.
 - **Implement.** Test-first, where test-architect writes failing tests and a mechanical gate checks them and the project's static checks. Then slice execution, where implementer commits each vertical slice atomically.
-- **Code review.** Adversarial verification, with 5 parallel reviewers and a typed failure-class fix loop that runs until no Blocking or Major finding remains. Each round writes one `review-<n>.md`.
+- **Code review.** Adversarial verification, with 4 parallel reviewers and a typed failure-class fix loop that runs until no Blocking or Major finding remains. Each round writes one `review-<n>.md`.
+- **Security review.** The security reviewer runs alone after Code review passes, in the same fix loop, until no CRITICAL or HIGH finding remains. Each round writes one `security-review-<n>.md`. A security fix sends the run back through Code review before PR.
 - **PR.** Update an existing changelog, commit, open pull request with inline UI screenshots when applicable, surface the tracking item. Repositories without a root changelog remain unchanged unless the user explicitly requests one.
 
 ## Architecture
@@ -176,9 +178,9 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **12 skills** in `skills/`: the `/team` orchestrator, the nine phase commands, `/team-fix`, and the explicit-only `/team-migrate`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
+- **13 skills** in `skills/`: the `/team` orchestrator, the ten phase commands, `/team-fix`, and the explicit-only `/team-migrate`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
-- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, per-round code-review records live in `review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
+- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, per-round code-review records live in `review-<n>.md`, per-round security-review records in `security-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
 
 ## References and inspiration
 

@@ -38,7 +38,7 @@ plan, `prototype-report.md` for prototype); they create no production worktree.
 
 ## Branch state
 
-This section is the one definition of branch progress. Its readers are Setup resume detection, the `team-implement` resume branch, the phase loop's CODE REVIEW predecessor check, the feature playbook's state table, the `review-<n>.md` record states, and the `team-code-review` entry guards and review range. Resolve each term below per worktree in scope.
+This section is the one definition of branch progress. Its readers are Setup resume detection, the `team-implement` resume branch, the phase loop's CODE REVIEW predecessor check, the feature playbook's state table, the `review-<n>.md` and `security-review-<n>.md` record states, and the `team-code-review` and `team-security-review` entry guards and review range. Resolve each term below per worktree in scope.
 
 - **Worktrees in scope.** The home worktree, resolved by the order in the [team-code-review input](../team-code-review/references/01-input.md#worktrees), plus the companions that `4-repos.md` lists in multi-repo mode.
 - **Default branch.** Run `git -C <worktree> symbolic-ref --short refs/remotes/origin/HEAD` and drop the `origin/` prefix. When that fails, use the first of `main` and `master` that exists. With an `origin` remote, test `refs/remotes/origin/<name>`. Without one, test `refs/heads/<name>`. When no name resolves, halt and name the worktree path.
@@ -51,25 +51,25 @@ This section is the one definition of branch progress. Its readers are Setup res
 
 - Never restore the retired `^approved:` frontmatter gate; review records alone determine passage.
 - `design-review-<n>.md`: orchestrator-written at the highest existing `<n>` + 1, or 1. Frontmatter is `topic`, `date`, `phase: design-review`, and `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`; body is the verbatim report. Highest-round APPROVE or COMMENT passes. REQUEST CHANGES re-dispatches `design-author` with findings verbatim and increments numeric `revision`; missing/non-numeric means `0`, so the first rewrite writes `revision: 1`.
-- `review-<n>.md`: written by the session that runs `team-code-review`, one per completed CODE REVIEW round, at the highest numeric `<n>` + 1, or 1. Never overwrite a record. Ignore a file with a non-numeric suffix, such as `review-final.md`. Frontmatter is `topic`, `date`, `phase: review`, and `verdict: <PASS|FAIL>`. The body holds three sections, in this order:
+- `review-<n>.md` and `security-review-<n>.md`: two record families with one schema. The session that runs `team-code-review` writes `review-<n>.md`, one per completed CODE REVIEW round, with `phase: review`. The session that runs `team-security-review` writes `security-review-<n>.md`, one per completed SECURITY REVIEW round, with `phase: security-review`. Each family numbers its own records at the highest numeric `<n>` + 1, or 1. A `review-<n>.md` name starts with `review-`, so `security-review-<n>.md` and `design-review-<n>.md` files are never `review-<n>.md` records. Never overwrite a record. Ignore a file with a non-numeric suffix, such as `review-final.md` or `security-review-final.md`. Frontmatter is `topic`, `date`, `phase`, and `verdict: <PASS|FAIL>`. The body holds three sections, in this order:
   - `## Scope`: one `<repo-slug>: <merge-base-sha>..<head-sha>` line per repo with commits beyond its merge-base, in full SHAs pinned at dispatch. `<repo-slug>` is the `4-repos.md` slug, or `home` in single-repo mode.
   - `## Tier sort`: `### Blocking`, `### Major`, and `### Minor and below`, one line per finding. An empty tier reads exactly `None.`.
   - `## Reports`: one `### <reviewer>` subsection per reviewer, with the report verbatim.
 
   `verdict` is PASS only when `### Blocking` and `### Major` both read `None.`.
-- `review-<n>.md` record states, one definition for every reader:
+- Record states for both families, one definition for every reader:
   - Malformed, when any of these holds:
     - Its frontmatter does not open on line 1 and close within 60 lines.
     - Its `verdict` is not exactly `PASS` or `FAIL`.
     - Its body lacks `## Scope`, `## Tier sort`, or `## Reports`, or `## Tier sort` lacks one of its three tier headings.
-    - `## Reports` lacks one of the five `### <reviewer>` subsections: `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, and `verifier`.
+    - `## Reports` lacks a `### <reviewer>` subsection its family requires. A `review-<n>.md` requires `code-reviewer`, `technical-writer`, `ux-reviewer`, and `verifier`. A `security-review-<n>.md` requires `security-reviewer`.
     - `## Scope` holds no line in the form above.
     - Its `verdict` disagrees with its tier sort. PASS needs `None.` under both `### Blocking` and `### Major`. FAIL needs at least one finding line under one of them.
-    - The `### verifier` report ends `### Verdict: FAIL`, and `### Blocking` holds no `[verifier]` line.
+    - In a `review-<n>.md`, the `### verifier` report ends `### Verdict: FAIL`, and `### Blocking` holds no `[verifier]` line.
   - Current: well-formed, and each `## Scope` line's `<head-sha>` equals `git -C <worktree> rev-parse HEAD` for that repo. Also, no worktree in scope has commits beyond its merge-base without a `## Scope` line, and every worktree in scope is clean outside `docs/plans/`: `git -C <worktree> status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'` prints nothing.
   - Stale: well-formed and not current.
 
-  A malformed record counts as not passing. The readers are `team-code-review`, Setup resume detection, the phase loop's PR predecessor check, and `/team-pr`. Reviewers and the implementer never read a record.
+  A malformed record counts as not passing. The readers are `team-code-review`, `team-security-review`, Setup resume detection, the phase loop's SECURITY REVIEW and PR predecessor checks, and `/team-pr`. Reviewers and the implementer never read a record.
 - `cross-model-notes.md`: orchestrator-written, append-only, one already-blockquoted `### Cross-model disposition` block per DESIGN or CODE REVIEW round. Frontmatter: copied `topic`, `date`, `phase: cross-model-review`; no `verdict`. A block starting `> **Design round <n>**` is from DESIGN; unlabeled means CODE REVIEW. Create only on first use; reviewers never read it as prior state.
 - `cross-model-raw.md`: orchestrator-written, append-only DESIGN capture with one result line plus fenced raw output per vendor call; zero calls append nothing. Frontmatter: copied `topic`, `date`, `phase: cross-model-raw`; no `verdict`. It supports live/pre-merge audit only because `docs/plans/` is gitignored and the worktree teardown deletes the topic directory.
 

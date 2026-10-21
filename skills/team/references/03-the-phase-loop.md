@@ -37,28 +37,40 @@ loop:
        (test confirmation)" below).
      - ROUTER-EMIT (worktree, PR): perform the action.
      - AGGREGATE (code review): call the Skill tool with `team-code-review` and the
-       canonical artifact directory. `team-code-review` dispatches the five
+       canonical artifact directory. `team-code-review` dispatches the four
        reviewers, sorts findings, and runs the fix loop with no consult.
        Advance when it returns and the newest `review-<n>.md` carries PASS
        and is current.
+     - AGGREGATE (security review): call the Skill tool with
+       `team-security-review` and the canonical artifact directory.
+       `team-security-review` dispatches `security-reviewer`, sorts
+       findings, and runs the fix loop with no consult. When it returns,
+       read both newest records. Advance when the newest
+       `security-review-<n>.md` and the newest `review-<n>.md` both carry
+       PASS and are current. When the security record passes but the
+       review record does not, a SECURITY REVIEW fix commit made it stale:
+       move back one phase. Mark Security review `pending` and Code review
+       `in_progress`, and skip step 7 this pass.
   7. Update TodoWrite — mark current phase `completed` and the next one
-     `in_progress`.
+     `in_progress`. The AGGREGATE (security review) move back to
+     CODE REVIEW replaces this step.
   8. Goto loop.
 ```
 
 ### Phase table
 
-| Phase       | Agent(s)                                                | Predecessor artifact                                            | Next phase on pass |
-|-------------|---------------------------------------------------------|-----------------------------------------------------------------|--------------------|
-| WORKTREE    | (orchestrator-emit)                                     | (none — description in `$ARGUMENTS`)                            | QUESTION           |
-| QUESTION    | `questioner`                                            | worktree prepared (+ description in `$ARGUMENTS`)               | RESEARCH           |
-| RESEARCH    | `file-finder`, `researcher` (parallel, isolated)        | `docs/plans/<id>/2-questions.md`                                  | DESIGN             |
-| DESIGN      | `design-author` (→ design review)                       | `docs/plans/<id>/5-research.md`                                   | STRUCTURE          |
-| STRUCTURE   | `structure-planner`                                     | `docs/plans/<id>/6-design.md` + passing `design-review-<n>.md`    | PLAN               |
-| PLAN        | `planner`                                               | `docs/plans/<id>/7-structure.md`                                  | IMPLEMENT          |
-| IMPLEMENT   | `test-architect`, `implementer`                         | `docs/plans/<id>/8-plan.md`                                       | CODE REVIEW        |
-| CODE REVIEW | (orchestrator-emit)                                     | `docs/plans/<id>/8-plan.md` + IMPLEMENT complete                  | PR                 |
-| PR          | (orchestrator-emit)                                     | newest `review-<n>.md` PASS and current                         | SHIPPED            |
+| Phase           | Agent(s)                                         | Predecessor artifact                                                             | Next phase on pass |
+|-----------------|--------------------------------------------------|----------------------------------------------------------------------------------|--------------------|
+| WORKTREE        | (orchestrator-emit)                              | (none — description in `$ARGUMENTS`)                                             | QUESTION           |
+| QUESTION        | `questioner`                                     | worktree prepared (+ description in `$ARGUMENTS`)                                | RESEARCH           |
+| RESEARCH        | `file-finder`, `researcher` (parallel, isolated) | `docs/plans/<id>/2-questions.md`                                                 | DESIGN             |
+| DESIGN          | `design-author` (→ design review)                | `docs/plans/<id>/5-research.md`                                                  | STRUCTURE          |
+| STRUCTURE       | `structure-planner`                              | `docs/plans/<id>/6-design.md` + passing `design-review-<n>.md`                   | PLAN               |
+| PLAN            | `planner`                                        | `docs/plans/<id>/7-structure.md`                                                 | IMPLEMENT          |
+| IMPLEMENT       | `test-architect`, `implementer`                  | `docs/plans/<id>/8-plan.md`                                                      | CODE REVIEW        |
+| CODE REVIEW     | (orchestrator-emit)                              | `docs/plans/<id>/8-plan.md` + IMPLEMENT complete                                 | SECURITY REVIEW    |
+| SECURITY REVIEW | (orchestrator-emit)                              | newest `review-<n>.md` PASS and current                                          | PR                 |
+| PR              | (orchestrator-emit)                              | newest `review-<n>.md` and newest `security-review-<n>.md` both PASS and current | SHIPPED            |
 
 For QUESTION, pass the questioner the full description. When it returns, make
 sure `1-task.md` and `2-questions.md` exist in `docs/plans/<id>/`.

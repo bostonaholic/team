@@ -24,7 +24,7 @@ Or 🔗 [check the installation instructions](https://github.com/bostonaholic/te
 ## What is Team?
 
 Team orchestrates 13 specialized agents. They range from isolated researchers to adversarial
-reviewers. Together they drive a feature through a 9-phase pipeline (QRSPI) and deliver a
+reviewers. Together they drive a feature through a 10-phase pipeline (QRSPI) and deliver a
 verified pull request.
 
 Agents are decoupled microservices. Each one consumes a predecessor artifact on disk, does its
@@ -35,7 +35,7 @@ and the human reviews the finished PR.
 ## The pipeline
 
 ```
-WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → CODE REVIEW → PR
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → CODE REVIEW → SECURITY REVIEW → PR
 ```
 
 | Phase | What happens |
@@ -47,7 +47,8 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 | **Structure** | Break the design into vertical slices with verification checkpoints. It advances to Plan with no gate. |
 | **Plan** | The planner derives a tactical implementation plan from the structure. The implementer reads it. No gate applies. |
 | **Implement** | Test-first → slice execution. |
-| **Code review** | 5 parallel reviewers + typed fix loop, one `review-<n>.md` per round. |
+| **Code review** | 4 parallel reviewers + typed fix loop, one `review-<n>.md` per round. |
+| **Security review** | The security reviewer alone + the same fix loop, one `security-review-<n>.md` per round. A security fix sends the run back through Code review. |
 | **PR** | Update an existing changelog, commit, open pull request. A missing root changelog stays absent unless explicitly requested. |
 
 ## The governance stack

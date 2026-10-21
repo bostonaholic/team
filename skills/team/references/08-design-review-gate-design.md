@@ -87,4 +87,4 @@ When the `design-author` returns a draft:
    ticket. Setup steps 4 through 7 re-derive `<id>` and fast-forward the
    ledger to the first incomplete phase. A recovered run can instead
    continue one phase command at a time, through `/team-implement`,
-   `/team-code-review`, and `/team-pr`.
+   `/team-code-review`, `/team-security-review`, and `/team-pr`.

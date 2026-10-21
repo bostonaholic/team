@@ -29,7 +29,7 @@ For missing imports, fixtures, types, or runner config, add only the minimum pla
 
 ### 4. Lock the test list
 
-After correct Red state, acceptance tests are immutable during IMPLEMENT and CODE REVIEW:
+After correct Red state, acceptance tests are immutable during IMPLEMENT, CODE REVIEW, and SECURITY REVIEW:
 
 - add none;
 - remove none;
@@ -59,7 +59,7 @@ Before changing production code, audit every immutable acceptance test against t
 
 ### Review-fix dispatch (after a hard-gate failure)
 
-`team-code-review` supplies the typed failure classes and this round's Blocking and Major lines. Fix every named item:
+`team-code-review` or `team-security-review` supplies the typed failure classes and this round's Blocking and Major lines. Fix every named item:
 
 - Security: fix the vulnerability directly—parameterize queries, remove secrets, add auth, escape output; never weaken the fix.
 - Tests: change code, never the immutable tests. Code review: fix every finding the dispatch names. Lint/format/typecheck/build: rerun until passing; use `--fix` first where available.
@@ -67,7 +67,7 @@ Before changing production code, audit every immutable acceptance test against t
 - When a finding names a bug class, fix every instance of that class in the review range in this one fix round.
 - Under a `Reconsider approach:` line, complete **Root Cause Analysis (5 Whys)** ([diagnosis reference](../team-fix/references/diagnosis.md)) for each open finding class. Replace the approach that produces the class, inside scope, instead of a patch to the cited lines. The scope is the plan's named changes. When `8-plan.md` is absent, the scope is the `1-task.md` acceptance criteria.
 
-Then run the full suite and resolve every failure type from the round. Commit the round's fixes per [commit discipline](../team-pr/references/commit.md): a Conventional Commits subject and one logical change per commit. Never bypass commit signing. In multi-repo mode, commit in each worktree the fixes touched. Never commit `docs/plans/`. Leave every worktree in scope clean outside it, so `git status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'` prints nothing. The next round reviews only commits, and a review record is current only over a clean tree. Report each fix with its commit SHA. `team-code-review` then runs a fresh five-reviewer round.
+Then run the full suite and resolve every failure type from the round. Commit the round's fixes per [commit discipline](../team-pr/references/commit.md): a Conventional Commits subject and one logical change per commit. Never bypass commit signing. In multi-repo mode, commit in each worktree the fixes touched. Never commit `docs/plans/`. Leave every worktree in scope clean outside it, so `git status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'` prints nothing. The next round reviews only commits, and a review record is current only over a clean tree. Report each fix with its commit SHA. The dispatching skill then runs a fresh round.
 
 ### Slice-by-slice execution
 

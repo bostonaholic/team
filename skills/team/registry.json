@@ -1,5 +1,5 @@
 {
-  "$comment": "Agent inventory for the Team pipeline. Dispatch is driven by the phase table in skills/team/SKILL.md, not by this file. The phases array documents which artifacts each phase produces under docs/plans/. WORKTREE is the leading orchestrator-emit phase: it runs before QUESTION, creating the home worktree on branch <id> and authoring docs/plans/<id>/ inside it. The agents array lists every specialist agent and the phase it serves (no agent serves WORKTREE — it is orchestrator-emit). The gates array documents the gate kind that follows each phase that has one (no mid-run human gates; DESIGN is gated by an adversarial design review; STRUCTURE advances autonomously). Kept in sync with agents/*.md frontmatter (each agent's `phase` field) by .claude/hooks/check-registry-sync.mjs. CODE REVIEW is orchestrator-emit in the phase table, and the team-code-review skill dispatches the agents tagged CODE REVIEW plus the implementer.",
+  "$comment": "Agent inventory for the Team pipeline. Dispatch is driven by the phase table in skills/team/SKILL.md, not by this file. The phases array documents which artifacts each phase produces under docs/plans/. WORKTREE is the leading orchestrator-emit phase: it runs before QUESTION, creating the home worktree on branch <id> and authoring docs/plans/<id>/ inside it. The agents array lists every specialist agent and the phase it serves (no agent serves WORKTREE — it is orchestrator-emit). The gates array documents the gate kind that follows each phase that has one (no mid-run human gates; DESIGN is gated by an adversarial design review; STRUCTURE advances autonomously). Kept in sync with agents/*.md frontmatter (each agent's `phase` field) by .claude/hooks/check-registry-sync.mjs. CODE REVIEW and SECURITY REVIEW are orchestrator-emit in the phase table. The team-code-review skill dispatches the agents tagged CODE REVIEW plus the implementer, and the team-security-review skill dispatches the agent tagged SECURITY REVIEW plus the implementer.",
   "phases": [
     {"name": "WORKTREE", "artifacts": []},
     {"name": "QUESTION", "artifacts": ["1-task.md", "2-questions.md"]},
@@ -9,6 +9,7 @@
     {"name": "PLAN", "artifacts": ["8-plan.md"]},
     {"name": "IMPLEMENT", "artifacts": []},
     {"name": "CODE REVIEW", "artifacts": ["review-<n>.md"]},
+    {"name": "SECURITY REVIEW", "artifacts": ["security-review-<n>.md"]},
     {"name": "PR", "artifacts": []}
   ],
   "agents": [
@@ -21,7 +22,7 @@
     {"name": "test-architect", "phase": "IMPLEMENT"},
     {"name": "implementer", "phase": "IMPLEMENT"},
     {"name": "code-reviewer", "phase": "CODE REVIEW", "parallel": true},
-    {"name": "security-reviewer", "phase": "CODE REVIEW", "parallel": true},
+    {"name": "security-reviewer", "phase": "SECURITY REVIEW"},
     {"name": "technical-writer", "phase": "CODE REVIEW", "parallel": true},
     {"name": "ux-reviewer", "phase": "CODE REVIEW", "parallel": true},
     {"name": "verifier", "phase": "CODE REVIEW", "parallel": true}
@@ -31,6 +32,7 @@
     {"after": "DESIGN", "type": "review", "artifact": "design-review-<n>.md"},
     {"after": "DESIGN", "type": "orchestrator-emit", "action": "prepare secondary worktrees per 4-repos.md and back-record ## Worktrees (multi-repo only)"},
     {"after": "test-architect", "type": "mechanical", "condition": "all tests fail with assertion errors, not crashes, and expected results do not use the implementation under test"},
-    {"after": "5 reviewers", "type": "aggregate", "hardGates": ["security-reviewer", "verifier", "code-reviewer"]}
+    {"after": "4 reviewers", "type": "aggregate", "hardGates": ["verifier", "code-reviewer"]},
+    {"after": "security-reviewer", "type": "aggregate", "hardGates": ["security-reviewer"]}
   ]
 }

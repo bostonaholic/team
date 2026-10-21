@@ -22,8 +22,8 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 - **Never** stop to ask the user which Blocking or Major items to address (the no-consult rule).
 - The loop has no count cap. It ends only when no Blocking or Major finding remains.
 - Persist `### Cross-model disposition` to `cross-model-notes.md` only when it does not begin `Not run:`.
-- At PASS, when the TodoWrite ledger holds a `PR` phase item, return to the `/team` phase loop in the same turn. Otherwise, print the Next line for `/team-pr`.
-- Never load `team-pr`.
+- At PASS, when the TodoWrite ledger holds a `PR` phase item, return to the `/team` phase loop in the same turn. Otherwise, print the Next line for `/team-security-review`.
+- Never load `team-security-review` or `team-pr`.
 
 ## Procedure references
 

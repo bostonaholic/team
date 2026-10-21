@@ -1,10 +1,12 @@
 ### Orchestrator-Emit Gate (PR / ship)
 
-When the newest `review-<n>.md` carries PASS and is current:
+When the newest `review-<n>.md` and the newest `security-review-<n>.md` both
+carry PASS and are current:
 
-1. **Edit nothing before `team-pr` binds the review status.** Leave
-   `CHANGELOG.md` to `team-pr`: its execution step 3 binds the status from
-   the newest `review-<n>.md`, and only then does its step 6 apply the
+1. **Edit nothing before `team-pr` binds the review and security statuses.**
+   Leave `CHANGELOG.md` to `team-pr`: its execution step 3 binds both
+   statuses from the newest `review-<n>.md` and the newest
+   `security-review-<n>.md`, and only then does its step 6 apply the
    [changelog rules](../team-pr/references/changelog.md). A record is
    current only over a tree clean outside `docs/plans/`, so an edit here
    would bind `stale`.
