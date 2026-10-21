@@ -28,7 +28,8 @@ discovery command below resolves it. The `design-author` reads
 `$ARGUMENTS/5-research.md`.
 
 Resolve `<team-skill-dir>` to the absolute directory containing
-`skills/team/SKILL.md`. From the repository root, run:
+`skills/team/SKILL.md`, and `<team-design-skill-dir>` to the absolute
+directory containing this installed `SKILL.md`. From the repository root, run:
 
 ```sh
 "<team-skill-dir>/discover-topic.sh" "${ARGUMENTS:-}" "5-research.md"
@@ -54,10 +55,11 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 
    If `$ARGUMENTS/6-design.md` already exists, skip this dispatch and
    resume at step 3 — never re-draft an existing design ([durable state rules](../team/principles/durable-state.md)).
-3. **Design review gate.** If the latest
-   `$ARGUMENTS/design-review-<n>.md` already carries a passing verdict
-   (APPROVE or COMMENT), skip straight to step 4 — never re-review a
-   passed design. Otherwise, before each review dispatch, run the
+3. **Design review gate.** Run
+   `node "<team-design-skill-dir>/scripts/review-record.mjs" status "$ARGUMENTS"`.
+   On `passed <n>`, skip straight to step 4 — never re-review a passed
+   design. On `pending <n>`, `<n>` is this round's number. Before each
+   review dispatch, run the
    external cross-model pass: read the
    [cross-model review](../team/references/cross-model-review.md) and follow
    its `## Design-review pass`. Its one gate: the
@@ -78,19 +80,13 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    `## Review brief` from the
    [design reviewer brief](../team/references/design-reviewer.md),
    substitute the artifact directory, attach the paths named at the top of this file, and give it to a fresh-context
-   read-only `Explore` subagent each round. Write the findings + verdict
-   to `$ARGUMENTS/design-review-<n>.md`, where `<n>` is the highest
-   existing `<n>` + 1 (1 when none exists) — never overwrite an earlier
-   verdict record. Derive the `verdict:` frontmatter from the **last
-   verdict token** in the report body — the reviewer's verdict is the
-   terminal line of its report. When the report contains a
-   `### Cross-model disposition` section, append that section as one
-   block to `$ARGUMENTS/cross-model-notes.md`, blockquote-wrapped —
-   prefix every line with `>` at append time, per the
-   [design review gate](../team/references/08-design-review-gate-design.md)
-   — opening with the orchestrator-authored label line — the literal
-   `> **Design round <n>**` — prepended inside the wrap, with frontmatter
-   on first append per the artifact schema. Then act on the verdict:
+   read-only `Explore` subagent each round. Write the reviewer's report
+   verbatim to a scratch file outside `$ARGUMENTS` with the Write tool, then
+   run `node "<team-design-skill-dir>/scripts/review-record.mjs" record "$ARGUMENTS" <report-file>`.
+   It records `design-review-<n>.md` and any cross-model disposition, and
+   prints `round <n>` and `verdict <verdict>`. Exit 3 is an unparseable
+   verdict; any other non-zero exit halts loudly with its stderr. Then act
+   on the printed verdict:
    - **APPROVE or COMMENT** — the review passes. Advance.
    - **REQUEST CHANGES** — re-dispatch `design-author` with the
      reviewer's findings verbatim. The agent re-drafts and increments
@@ -99,8 +95,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
    - **Unparseable verdict or reviewer crash** — retry the review once
      with the error; on second failure, halt loudly. Fail closed —
      never advance on a missing verdict ([verified results rules](../team/principles/verified-results.md)).
-4. **Stop once `$ARGUMENTS/6-design.md` exists and the latest
-   `$ARGUMENTS/design-review-<n>.md` verdict is APPROVE or COMMENT.**
+4. **Stop once `$ARGUMENTS/6-design.md` exists and `status` prints
+   `passed <n>`.**
 
 Report design path and tell the user:
 **"Next: run `/team-structure docs/plans/<id>/`"**

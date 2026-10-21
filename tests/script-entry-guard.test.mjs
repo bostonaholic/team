@@ -97,3 +97,14 @@ test("importing assemble.mjs through a symlinked directory has no side effects",
   const run = importModule(t, join(symlinkedDir(t, "skills/team-research/scripts"), "assemble.mjs"));
   assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
 });
+
+test("review-record.mjs run through a symlinked directory reaches its usage error", (t) => {
+  const run = runScript(join(symlinkedDir(t, "skills/team-design/scripts"), "review-record.mjs"));
+  assert.equal(run.status, 2);
+  assert.match(run.stderr, /^review-record\.mjs: usage: review-record\.mjs /);
+});
+
+test("importing review-record.mjs through a symlinked directory has no side effects", (t) => {
+  const run = importModule(t, join(symlinkedDir(t, "skills/team-design/scripts"), "review-record.mjs"));
+  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
+});

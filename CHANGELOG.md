@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team-design` records each review round with a script.** `scripts/review-record.mjs` reports whether the latest `design-review-<n>.md` passed and which round comes next, then writes the round record: the verdict from the last verdict token in the report, the report verbatim, and any `### Cross-model disposition` section appended to `cross-model-notes.md` under its `> **Design round <n>**` label. The session no longer numbers rounds, parses the verdict, or blockquote-wraps the disposition by hand, so two runs on the same report write the same files. **What this asks of you:** nothing.
+
 ## [0.160.0] - 2026-10-21
 
 ### Changed
