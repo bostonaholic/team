@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.168.0] - 2026-10-21
+
 ### Changed
 
 - **Security review is now its own phase, SECURITY REVIEW, with a new `/team-security-review` command.** The pipeline runs IMPLEMENT → CODE REVIEW → SECURITY REVIEW → PR. CODE REVIEW now runs four reviewers: code, docs, UX, and verifier. After CODE REVIEW passes, SECURITY REVIEW runs the security-reviewer alone over the whole branch and fixes CRITICAL and HIGH findings until none remain, with no round cap and no prompt. Each round writes `docs/plans/<id>/security-review-<n>.md`. MEDIUM and LOW findings go to the PR's `review-notes` comment with CODE REVIEW's Minor findings. A security fix commit moves HEAD, so the run goes back through CODE REVIEW once SECURITY REVIEW passes. The draft PR opens only when the newest review record and the newest security record both passed at the current HEAD. `/team-pr` reads both records, and it discloses a missing security record instead of refusing. A `/team` resume picks up at SECURITY REVIEW when CODE REVIEW has passed and no current passing security record exists. `/team-question` and `/team-implement` have shorter catalog descriptions to offset part of the new one. **What this asks of you:** after a standalone `/team-code-review`, run `/team-security-review docs/plans/<id>/` before `/team-pr`. When `/team-security-review` fixes a finding, it names `/team-code-review` as the next command. Start a new session after you upgrade so the command appears.
@@ -1526,7 +1528,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.167.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.168.0...HEAD
+[0.168.0]: https://github.com/bostonaholic/team/compare/v0.167.0...v0.168.0
 [0.167.0]: https://github.com/bostonaholic/team/compare/v0.166.0...v0.167.0
 [0.166.0]: https://github.com/bostonaholic/team/compare/v0.165.0...v0.166.0
 [0.165.0]: https://github.com/bostonaholic/team/compare/v0.164.0...v0.165.0
