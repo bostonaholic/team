@@ -331,7 +331,7 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
    path, so no methodology registration remains for Codex to list. The principle
    tier is returning as guarded `disable-model-invocation` skills, kept out of
    Codex's implicit catalog by `allow_implicit_invocation: false`; the `$`
-   picker shows the 12 commands. See
+   picker shows the 13 commands. See
    [the divergence note](#57-codex-port) for the historical evidence.
 
 3. **Recency risk.** This is cross-cutting rather than a primitive gap. Codex's
@@ -448,7 +448,7 @@ full parity. It starts from the matrix and works around the named gaps.
   equivalent — `policy.allow_implicit_invocation: false` in each skill's
   `agents/openai.yaml` — keeps it out of the implicit catalog. The
   divergence is deliberate and the validator finding is expected.
-- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 12 commands remain in the picker. The guarded `team-migrate` declares `allow_implicit_invocation: false`, so it adds no implicit-invocation entry.
+- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 13 commands remain in the picker. The guarded `team-migrate` declares `allow_implicit_invocation: false`, so it adds no implicit-invocation entry.
   Historical probe evidence: the `$` picker was fed by the `skills/list` app-server method, which returned all
   100 Team skills with `enabled: true`, `team:principle-fix-root-causes` among
   them. Its `SkillMetadata` payload carries nine fields — `dependencies`,
@@ -723,7 +723,7 @@ handle.
   Skills bypass the gate entirely. Codex gates "project-local config, hooks, and
   exec policies" (`config/src/loader/mod.rs:912`) and skills are absent from that
   set, so a user-scope skill install is exposed to every session with no prompt.
-- **Resource limit: Codex `agents.max_threads=6`.** Team's 5-reviewer parallel
+- **Resource limit: Codex `agents.max_threads=6`.** Team's 4-reviewer parallel
   dispatch must fit the host's thread ceiling. Behavior: cap or batch reviewer
   dispatch per host.
 
