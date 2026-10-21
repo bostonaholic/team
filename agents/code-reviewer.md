@@ -42,11 +42,12 @@ siblings and conventions the `System Fit` item names.
 The entry mode sets which tests are locked. A value flag on a locked test is
 a non-blocking note:
 
-- `/team`, and `/team-implement` with `8-plan.md`: the acceptance list in the
+- `/team`, and `/team-review` with `8-plan.md`: the acceptance list in the
   `8-plan.md` beside the design and structure paths the slice commits cite,
   or at the predecessor artifact path in your dispatch.
-- Standalone `/team-implement`: the `Locked acceptance tests:` line in your
-  dispatch. A line that reads `unknown` locks every test the branch adds.
+- Standalone `/team-review` without `8-plan.md`: the
+  `Locked acceptance tests:` line in your dispatch. A line that reads
+  `unknown` locks every test the branch adds.
 
 ## Review methodology
 

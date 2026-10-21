@@ -97,7 +97,7 @@ order:
 
 1. `review-notes`: the `## Review notes` heading, then the findings from
    (a)-(c). Then, under a `cross-model-notes` tag line, every unlabeled block
-   in file order. The IMPLEMENT blocks carry no label, so they go here. Text
+   in file order. The REVIEW blocks carry no label, so they go here. Text
    above the first block goes here too.
 2. `design-round-<n>`, in ascending `<n>`: every block labeled
    `Design round <n>`, in file order. The label is the first visible line.
@@ -127,7 +127,7 @@ count, so Team still posts its own.
 
 ### Accepted limits
 
-- Team never edits or deletes a posted comment. Findings or IMPLEMENT blocks
+- Team never edits or deletes a posted comment. Findings or REVIEW blocks
   added after the PR opens do not reach the PR.
 - Source (a) lives in the session only. When the `review-notes` post fails
   and the session ends before a refresh, (a) is lost.

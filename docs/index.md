@@ -24,7 +24,7 @@ Or 🔗 [check the installation instructions](https://github.com/bostonaholic/te
 ## What is Team?
 
 Team orchestrates 13 specialized agents. They range from isolated researchers to adversarial
-reviewers. Together they drive a feature through an 8-phase pipeline (QRSPI) and deliver a
+reviewers. Together they drive a feature through a 9-phase pipeline (QRSPI) and deliver a
 verified pull request.
 
 Agents are decoupled microservices. Each one consumes a predecessor artifact on disk, does its
@@ -35,7 +35,7 @@ and the human reviews the finished PR.
 ## The pipeline
 
 ```
-WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → PR
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → REVIEW → PR
 ```
 
 | Phase | What happens |
@@ -46,7 +46,8 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 | **Design** *(design review)* | The design author drafts an alignment doc. It resolves its own open questions as recorded assumptions. An adversarial design review gates advancement. |
 | **Structure** | Break the design into vertical slices with verification checkpoints. It advances to Plan with no gate. |
 | **Plan** | The planner derives a tactical implementation plan from the structure. The implementer reads it. No gate applies. |
-| **Implement** | Test-first → slice execution → 5 parallel reviewers + typed retry loop. |
+| **Implement** | Test-first → slice execution. |
+| **Review** | 5 parallel reviewers + typed fix loop, one `review-<n>.md` per round. |
 | **PR** | Update an existing changelog, commit, open pull request. A missing root changelog stays absent unless explicitly requested. |
 
 ## The governance stack
@@ -59,7 +60,7 @@ as machinery rather than as manners.
 | The rule | How Team enforces it |
 |----------|----------------------|
 | An author never approves their own work | Reviewers hold no `Write` or `Edit` tool and run in `plan` mode. Enforced by frontmatter, not requested in a prompt. |
-| Review is not a rubber stamp | The implement loop re-runs until no Blocking or Major finding is left. There is no fixed number of rounds to outwait. |
+| Review is not a rubber stamp | The review loop re-runs until no Blocking or Major finding is left. There is no fixed number of rounds to outwait. |
 | A reviewer cannot be lobbied | Reviewers read the diff and a spec written before the code existed, never the implementer's account of its own work. |
 | The design is challenged before it is built | A fresh-context adversarial design review hard-gates the pipeline. |
 | Nobody escalates to dodge a check | The orchestrator is forbidden from handing a blocking finding to the human mid-run. |

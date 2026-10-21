@@ -50,7 +50,7 @@ Every finding has one tier.
 
 | Tier | Findings in this tier | Action |
 |------|-----------------------|--------|
-| **Blocking** | `issue (blocking)`, code-reviewer REQUEST CHANGES, security CRITICAL/HIGH, any verifier failure | Auto-fixed in the loop. **Never** surfaced to the user. |
+| **Blocking** | `issue (blocking)`, a bare `issue:` with no decoration, code-reviewer REQUEST CHANGES, security CRITICAL/HIGH, any verifier failure | Auto-fixed in the loop. **Never** surfaced to the user. |
 | **Major** | ux-reviewer REQUEST CHANGES | Auto-fixed in the loop. **Never** surfaced to the user. |
 | **Minor and below** | `suggestion (non-blocking)`, `nitpick (non-blocking)`, security MEDIUM, security LOW, technical-writer GAPS (REQUIRED and RECOMMENDED alike), any COMMENT-level note | Recorded in the home PR's `review-notes` comment — never presented mid-run. |
 
@@ -65,7 +65,7 @@ write Minor-and-below to the PR's `review-notes` comment, tagged by reviewer.
 
 ## Aggregating Verdicts
 
-1. Any Blocking/Major: FAIL; return to IMPLEMENT with no consult.
+1. Any Blocking/Major: FAIL; re-dispatch the implementer with no consult.
 2. Only Minor-and-below: PASS with the PR's `review-notes` comment; proceed to SHIP.
 3. No findings: PASS; proceed to SHIP.
 

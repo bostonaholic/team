@@ -186,7 +186,7 @@ Flag a changed test that matches a [junk class](#junk-patterns) when the [retent
 - promises more than it checks
 - removal without evidence
 
-A flag on an editable test is blocking on first occurrence. A flag on a locked acceptance test is a non-blocking note, because no agent may edit that test during IMPLEMENT. The [code reviewer brief](references/code-reviewer.md) sets the finding labels.
+A flag on an editable test is blocking on first occurrence. A flag on a locked acceptance test is a non-blocking note, because no agent may edit that test during IMPLEMENT and REVIEW. The [code reviewer brief](references/code-reviewer.md) sets the finding labels.
 
 ## Flaky-test red flags (reviewer checklist)
 

@@ -14,8 +14,8 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 
 Two modes:
 
-- **Resume mode** — Implement passed the aggregate gate; `$ARGUMENTS/1-task.md`
-  and `$ARGUMENTS/6-design.md` exist.
+- **Resume mode** — `$ARGUMENTS/1-task.md` and `$ARGUMENTS/6-design.md`
+  exist.
 - **Standalone mode** — no matching artifact directory, but the working
   tree has commits or staged changes ready to ship. Treat the current
   branch as the work source.

@@ -31,7 +31,7 @@ that only locates a skill's install directory — "the directory containing
 `skills/<name>/SKILL.md`" names a location, not the skill.
 
 The edges are therefore **directed**, and reading them transitively gives the
-graph. `team-implement` loads `team-pr`. Neither loads back.
+graph. `team` loads `team-pr` and `team-review`. Neither loads back.
 `**Uses:** None` marks a
 leaf with no further consumption.
 
@@ -41,7 +41,7 @@ This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 11 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 12 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 Skills outside the pipeline moved out of Team; see [Skills that moved](index.md#skills-that-moved).
@@ -53,11 +53,11 @@ full run or drives one phase of the QRSPI pipeline.
 
 ### [team](https://github.com/bostonaholic/team/blob/main/skills/team/SKILL.md)
 
-Runs the 8-phase QRSPI feature pipeline, or a leading-argument route.
+Runs the 9-phase QRSPI feature pipeline, or a leading-argument route.
 
 **Used by:** None
 
-**Uses:** `team-implement`, `team-pr`, `team-worktree`
+**Uses:** `team-pr`, `team-review`, `team-worktree`
 
 ### [team-question](https://github.com/bostonaholic/team/blob/main/skills/team-question/SKILL.md)
 
@@ -109,17 +109,25 @@ Prepares isolated git worktrees.
 
 ### [team-implement](https://github.com/bostonaholic/team/blob/main/skills/team-implement/SKILL.md)
 
-Executes and verifies implementation slices.
+Executes implementation slices.
+
+**Used by:** None
+
+**Uses:** None
+
+### [team-review](https://github.com/bostonaholic/team/blob/main/skills/team-review/SKILL.md)
+
+Reviews the built branch and fixes Blocking and Major findings.
 
 **Used by:** `team`
 
-**Uses:** `team-pr`
+**Uses:** None
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
 Opens PRs with project terms, evidence, and risk.
 
-**Used by:** `team`, `team-implement`
+**Used by:** `team`
 
 **Uses:** None
 

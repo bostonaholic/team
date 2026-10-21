@@ -95,6 +95,7 @@ Or run individual phases:
 /team-structure docs/plans/<id>/
 /team-plan docs/plans/<id>/
 /team-implement docs/plans/<id>/
+/team-review docs/plans/<id>/
 /team-pr docs/plans/<id>/
 ```
 
@@ -140,7 +141,7 @@ Every team you have worked on had rules that made its output trustworthy: an aut
 | The rule | How Team enforces it |
 |----------|----------------------|
 | An author never approves their own work | Reviewers hold no `Write` or `Edit` tool and run in `plan` mode. Enforced by frontmatter, not requested in a prompt. |
-| Review is not a rubber stamp | The implement loop re-runs until no Blocking or Major finding is left. There is no fixed number of rounds to outwait. |
+| Review is not a rubber stamp | The review loop re-runs until no Blocking or Major finding is left. There is no fixed number of rounds to outwait. |
 | A reviewer cannot be lobbied | Reviewers read the diff and a spec written before the code existed, never the implementer's account of its own work. |
 | The design is challenged before it is built | A fresh-context adversarial design review hard-gates the pipeline. |
 | Nobody escalates to dodge a check | The orchestrator is forbidden from handing a blocking finding to the human mid-run. |
@@ -155,7 +156,7 @@ Each agent does work and returns an artifact. The orchestrator dispatches the ne
 ## Pipeline (QRSPI)
 
 ```
-WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → PR
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → REVIEW → PR
 ```
 
 - **Worktree.** Orchestrator prepares an isolated git worktree first and authors `docs/plans/<id>/` inside it, keeping the home checkout's `git status` clean for the whole run.
@@ -164,7 +165,8 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 - **Design** *(design review)*. Design author drafts an alignment doc, resolving its own open questions as recorded assumptions. An adversarial design review gates advancement.
 - **Structure.** Break the design into vertical slices with verification checkpoints. Produced autonomously. Advances to Plan with no gate.
 - **Plan.** Tactical implementation plan derived from the structure. Read by the implementer. Not gated.
-- **Implement.** Test-first, where test-architect writes failing tests and a mechanical gate checks them and the project's static checks. Then slice execution, where implementer commits each vertical slice atomically. Then adversarial verification, with 5 parallel reviewers and a typed failure-class retry loop that runs until no Blocking or Major finding remains.
+- **Implement.** Test-first, where test-architect writes failing tests and a mechanical gate checks them and the project's static checks. Then slice execution, where implementer commits each vertical slice atomically.
+- **Review.** Adversarial verification, with 5 parallel reviewers and a typed failure-class fix loop that runs until no Blocking or Major finding remains. Each round writes one `review-<n>.md`.
 - **PR.** Update an existing changelog, commit, open pull request with inline UI screenshots when applicable, surface the tracking item. Repositories without a root changelog remain unchanged unless the user explicitly requests one.
 
 ## Architecture
@@ -174,9 +176,9 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **11 skills** in `skills/`: the `/team` orchestrator, the eight phase commands, `/team-fix`, and the explicit-only `/team-migrate`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
+- **12 skills** in `skills/`: the `/team` orchestrator, the nine phase commands, `/team-fix`, and the explicit-only `/team-migrate`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
-- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
+- **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, per-round code-review records live in `review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
 
 ## References and inspiration
 

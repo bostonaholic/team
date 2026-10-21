@@ -1,6 +1,6 @@
 ---
 name: implementer
-description: Use when the implementation plan needs to be executed slice by slice. A seasoned coding expert that reads the plan, follows TDD discipline, executes one vertical slice at a time, and commits each slice atomically when its tests pass. Dispatched during the Implement phase.
+description: Use when the implementation plan needs to be executed slice by slice. A seasoned coding expert that reads the plan, follows TDD discipline, executes one vertical slice at a time, and commits each slice atomically when its tests pass. Dispatched during the Implement phase and for Review fix rounds.
 color: green
 model: opus
 effort: high

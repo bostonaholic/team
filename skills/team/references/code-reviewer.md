@@ -120,19 +120,19 @@ verdict gates the pipeline.
 
 - **PASS:** No CRITICAL or HIGH findings. MEDIUM/LOW findings are reported but
   do not block.
-- **FAIL:** Any CRITICAL or HIGH finding. The pipeline MUST loop back to
-  IMPLEMENT. No override.
+- **FAIL:** Any CRITICAL or HIGH finding. The pipeline MUST re-dispatch the
+  implementer. No override.
 
 ### Verifier
 
 - **PASS:** All detected checks (format, lint, typecheck, build, test) pass.
-- **FAIL:** Any check fails. The pipeline loops back to IMPLEMENT.
+- **FAIL:** Any check fails. The pipeline re-dispatches the implementer.
 
 ### Code Reviewer
 
 - **✅ APPROVE:** All done criteria met, no blocking issues, tests pass.
-- **❌ REQUEST CHANGES:** Blocking issues found. The pipeline MUST loop back to
-  IMPLEMENT. No override.
+- **❌ REQUEST CHANGES:** Blocking issues found. The pipeline MUST re-dispatch
+  the implementer. No override.
 - **💬 COMMENT:** Non-blocking suggestions only. Implementation is correct.
 
 **Test-quality flags.** Test files are part of the diff. Walk every changed
@@ -160,10 +160,11 @@ A diff with no test changes gets no value finding.
   `issue (blocking): Test Value — <class>` on first occurrence.
 - A locked acceptance test that hits one gets
   `suggestion (non-blocking): Test Value — locked acceptance test`. No agent
-  may edit a locked test during IMPLEMENT, so a block on it has no fix.
+  may edit a locked test during IMPLEMENT and REVIEW, so a block on it has
+  no fix.
 - The lock source is the acceptance list in the `8-plan.md` beside the
   design and structure paths the slice commits cite, or at the predecessor
-  artifact path in your dispatch. Standalone `/team-implement` uses the
+  artifact path in your dispatch. Standalone `/team-review` uses the
   `Locked acceptance tests:` line in your dispatch. A line that reads
   `unknown` locks every test the branch adds. Read a malformed line as
   `unknown`, and say so under `### Checks`. An absent line adds no lock
@@ -245,8 +246,9 @@ contracts; trace affected callers before concluding behavior is safe. Three
 obligations are non-negotiable:
 
 - **Verify every done criterion is met.** Flag any that are missing or
-  incomplete.
+  incomplete. An unmet done criterion is an `issue (blocking)` finding.
 - **Run the project's test suite.** Report the command used and the result.
+  A failing suite is an `issue (blocking)` finding.
 - **Check each rule the diff introduces reaches every surface it must.**
   When the changed code or prose has more than one way in — two entry modes,
   a path documented as usable on its own, a split across turns or processes —

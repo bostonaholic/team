@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Code review is now its own phase, REVIEW, with a new `/team-review` command.** The pipeline runs IMPLEMENT → REVIEW → PR. IMPLEMENT now only builds: it writes the tests and commits the slices, and dispatches no reviewer. REVIEW runs the five reviewers over the whole branch, from the merge-base to HEAD, and fixes Blocking and Major findings until none remain. Each round writes `docs/plans/<id>/review-<n>.md`, and a `/team` resume reads those records to pick up at the right phase. **What this asks of you:** after a standalone `/team-implement`, run `/team-review docs/plans/<id>/` before `/team-pr`. Start a new session after you upgrade so the command appears.
+
 ## [0.166.0] - 2026-10-21
 
 ### Changed

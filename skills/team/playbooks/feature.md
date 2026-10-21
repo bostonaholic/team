@@ -4,7 +4,7 @@ Before this operation, read [artifact schema](references/artifacts.md).
 Before each consuming step, read its linked shared rules. Resolve links from the installed `skills/team/` directory.
 If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
-Eight sequential phases; none are skippable.
+Nine sequential phases; none are skippable.
 
 ## Phase Sequence
 
@@ -16,10 +16,11 @@ Eight sequential phases; none are skippable.
 | **DESIGN** | `6-design.md` and `design-review-<n>.md` each round | REVIEW: APPROVE/COMMENT advance; REQUEST CHANGES redrafts and reviews again |
 | **STRUCTURE** | `7-structure.md` (vertical slices) | NONE: autonomous |
 | **PLAN** | `8-plan.md` | SOFT: no approval; reviewed design is contract |
-| **IMPLEMENT** | code, passing tests, per-slice commits | AGGREGATE: security, verifier, code-review hard gates |
+| **IMPLEMENT** | code, passing tests, per-slice commits | MECHANICAL: assertion-only failures and passing static checks before slices |
+| **REVIEW** | `review-<n>.md` each round; fix commits | AGGREGATE: security, verifier, code-review hard gates |
 | **PR** | GitHub draft PR | terminal: record URL; close ledger |
 
-WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`. IMPLEMENT has four sub-phases: test-architect writes failing acceptance tests; a mechanical gate requires assertion failures rather than crashes plus passing static checks, inverting to a reproduced green pre-change baseline for a zero-behavior-change refactor, whose test-architect dispatch is skipped with a recorded reason; implementer commits green slices; 5 parallel code/security/docs/ux/verifier reviews return typed failures until no Blocking/Major remains.
+WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`. IMPLEMENT has three sub-phases: test-architect writes failing acceptance tests; a mechanical gate requires assertion failures rather than crashes plus passing static checks, inverting to a reproduced green pre-change baseline for a zero-behavior-change refactor, whose test-architect dispatch is skipped with a recorded reason; implementer commits green slices. REVIEW runs `skills/team-review/`: 5 parallel code/security/docs/ux/verifier reviews return typed failures until no Blocking/Major remains, and each round writes `review-<n>.md`.
 
 ## Artifact and isolation invariants
 
@@ -49,11 +50,12 @@ These rows add to Setup step 7 resume detection:
 | Latest durable state | Next/current phase |
 |---|---|
 | worktree exists; no `1-task.md` | WORKTREE |
-| topic commits plus clean verifier | PR |
+| `8-plan.md`; no commits beyond the merge-base | IMPLEMENT |
+| commits beyond the merge-base; no PASS record that is current | REVIEW |
+| newest `review-<n>.md` PASS and current | PR |
 | PR(s) open or commits shipped | SHIPPED |
 
-Worktree check: `git worktree list --porcelain | grep -q <id>`; multi-repo paths come from `4-repos.md`. Latest `review-<n>.md` records verifier status.
-Confirm IMPLEMENT only when `git log <merge-base>..<id>` is non-empty; a worktree and `8-plan.md` alone remain PLAN.
+Worktree check: `git worktree list --porcelain | grep -q <id>`; multi-repo paths come from `4-repos.md`.
 
 ## Scope and sequencing rules
 

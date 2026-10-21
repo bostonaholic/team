@@ -29,7 +29,7 @@ For missing imports, fixtures, types, or runner config, add only the minimum pla
 
 ### 4. Lock the test list
 
-After correct Red state, acceptance tests are immutable during IMPLEMENT:
+After correct Red state, acceptance tests are immutable during IMPLEMENT and REVIEW:
 
 - add none;
 - remove none;
@@ -45,7 +45,7 @@ A needed change returns to PLAN; the structure regenerates the plan. There is no
 
 ### Completion contract
 
-Proceed to VERIFY only when all acceptance tests pass unchanged, none were added or removed, and the full prior suite has no regression.
+Proceed to REVIEW only when all acceptance tests pass unchanged, none were added or removed, and the full prior suite has no regression.
 
 ## Implementer contract
 
@@ -59,13 +59,13 @@ Before changing production code, audit every immutable acceptance test against t
 
 ### Review-fix dispatch (after a hard-gate failure)
 
-The orchestrator supplies a typed failure class and reviewer findings. Fix every named item:
+`team-review` supplies the typed failure classes and this round's Blocking and Major lines. Fix every named item:
 
 - Security: fix the vulnerability directly—parameterize queries, remove secrets, add auth, escape output; never weaken the fix.
 - Tests: change code, never the immutable tests. Code review: fix every `issue:`. Lint/format/typecheck/build: rerun until passing; use `--fix` first where available.
 - For a non-obvious failure whose first fix is a guess, read [diagnosis reference](../team-fix/references/diagnosis.md) and complete **Root Cause Analysis (5 Whys)** ([bug fix rules](../team-fix/playbooks/bug-fix.md)). Skip it for an obvious typo, named assertion, or one-line correction.
 
-Then run the full suite, resolve every failure type from the round, and report each fix. The orchestrator re-dispatches ALL 5 reviewers.
+Then run the full suite, resolve every failure type from the round, and report each fix. `team-review` then runs a fresh five-reviewer round.
 
 ### Slice-by-slice execution
 

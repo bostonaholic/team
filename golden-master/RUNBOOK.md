@@ -109,7 +109,7 @@ Point the metrics extractor (#136, when it lands) at the session transcript JSON
 that Claude Code wrote locally. It emits the machine-readable vector and a human
 summary. The vector records these fields as a minimum:
 
-- **time**: total and per-phase (Q→R→D→S→P→I→PR).
+- **time**: total and per-phase (Q→R→D→S→P→I→Rev→PR).
 - **tokens**: input and output **separately**, plus cache-read and
   cache-creation. Roll them up, and also break them down per phase and per agent.
 - **cost**: from the run model's pricing.
@@ -176,7 +176,7 @@ autonomous runs.
   "backend": "claude-code",
   "pipeline_version": "team vX.Y.Z (commit …)",
   "interaction_protocol": "autonomous-design-review-v1",
-  "time_s": { "total": 0, "question": 0, "research": 0, "design": 0, "structure": 0, "plan": 0, "implement": 0, "pr": 0 },
+  "time_s": { "total": 0, "question": 0, "research": 0, "design": 0, "structure": 0, "plan": 0, "implement": 0, "review": 0, "pr": 0 },
   "tokens": { "input": 0, "output": 0, "cache_read": 0, "cache_creation": 0, "per_phase": {} },
   "cost_usd": 0,
   "shape": {

@@ -35,7 +35,7 @@ session was launched from.
 
 ### Setup (router responsibility)
 
-At the **leading WORKTREE phase** — phase 1 of 8, before QUESTION — the
+At the **leading WORKTREE phase** — phase 1 of 9, before QUESTION — the
 router creates the home repo's worktree on branch `<id>` off `origin/HEAD`
 and authors `docs/plans/<id>/` **inside** it, so no copy is ever needed.
 Secondary repos get theirs after the design review, once `4-repos.md`

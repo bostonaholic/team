@@ -1,6 +1,6 @@
 ### Orchestrator-Emit Gate (PR / ship)
 
-When the aggregate gate passes:
+When the newest `review-<n>.md` carries PASS and is current:
 
 1. Update an existing `CHANGELOG.md`: read [changelog rules](../team-pr/references/changelog.md) and apply it
    — bullets go under `## [Unreleased]`. If the root file is absent, leave it

@@ -40,7 +40,26 @@ plan, `prototype-report.md` for prototype); they create no production worktree.
 
 - Never restore the retired `^approved:` frontmatter gate; review records alone determine passage.
 - `design-review-<n>.md`: orchestrator-written at the highest existing `<n>` + 1, or 1. Frontmatter is `topic`, `date`, `phase: design-review`, and `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`; body is the verbatim report. Highest-round APPROVE or COMMENT passes. REQUEST CHANGES re-dispatches `design-author` with findings verbatim and increments numeric `revision`; missing/non-numeric means `0`, so the first rewrite writes `revision: 1`.
-- `cross-model-notes.md`: orchestrator-written, append-only, one already-blockquoted `### Cross-model disposition` block per DESIGN or IMPLEMENT review round. Frontmatter: copied `topic`, `date`, `phase: cross-model-review`; no `verdict`. A block starting `> **Design round <n>**` is from DESIGN; unlabeled means IMPLEMENT. Create only on first use; reviewers never read it as prior state.
+- `review-<n>.md`: written by the session that runs `team-review`, one per completed REVIEW round, at the highest numeric `<n>` + 1, or 1. Never overwrite a record. Ignore a file with a non-numeric suffix, such as `review-final.md`. Frontmatter is `topic`, `date`, `phase: review`, and `verdict: <PASS|FAIL>`. The body holds three sections, in this order:
+  - `## Scope`: one `<repo-slug>: <merge-base-sha>..<head-sha>` line per repo with commits beyond its merge-base, in full SHAs pinned at dispatch. `<repo-slug>` is the `4-repos.md` slug, or `home` in single-repo mode.
+  - `## Tier sort`: `### Blocking`, `### Major`, and `### Minor and below`, one line per finding. An empty tier reads exactly `None.`.
+  - `## Reports`: one `### <reviewer>` subsection per reviewer, with the report verbatim.
+
+  `verdict` is PASS only when `### Blocking` and `### Major` both read `None.`.
+- `review-<n>.md` record states, one definition for every reader:
+  - Malformed, when any of these holds:
+    - Its frontmatter does not open on line 1 and close within 60 lines.
+    - Its `verdict` is not exactly `PASS` or `FAIL`.
+    - Its body lacks `## Scope`, `## Tier sort`, or `## Reports`, or `## Tier sort` lacks one of its three tier headings.
+    - `## Reports` lacks one of the five `### <reviewer>` subsections: `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, and `verifier`.
+    - `## Scope` holds no line in the form above.
+    - Its `verdict` disagrees with its tier sort. PASS needs `None.` under both `### Blocking` and `### Major`. FAIL needs at least one finding line under one of them.
+    - The `### verifier` report ends `### Verdict: FAIL`, and `### Blocking` holds no `[verifier]` line.
+  - Current: well-formed, and each `## Scope` line's `<head-sha>` equals `git -C <worktree> rev-parse HEAD` for that repo. Also, no worktree in scope has commits beyond its merge-base without a `## Scope` line.
+  - Stale: well-formed and not current.
+
+  A malformed record counts as not passing. The readers are `team-review`, Setup resume detection, the phase loop's PR predecessor check, and `/team-pr`. Reviewers and the implementer never read a record.
+- `cross-model-notes.md`: orchestrator-written, append-only, one already-blockquoted `### Cross-model disposition` block per DESIGN or REVIEW round. Frontmatter: copied `topic`, `date`, `phase: cross-model-review`; no `verdict`. A block starting `> **Design round <n>**` is from DESIGN; unlabeled means REVIEW. Create only on first use; reviewers never read it as prior state.
 - `cross-model-raw.md`: orchestrator-written, append-only DESIGN capture with one result line plus fenced raw output per vendor call; zero calls append nothing. Frontmatter: copied `topic`, `date`, `phase: cross-model-raw`; no `verdict`. It supports live/pre-merge audit only because `docs/plans/` is gitignored and the worktree teardown deletes the topic directory.
 
 ## Topic and ticket invariants
