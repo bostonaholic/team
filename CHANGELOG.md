@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.167.0] - 2026-10-21
+
 ### Changed
 
 - **Code review is now its own phase, CODE REVIEW, with a new `/team-code-review` command.** The pipeline runs IMPLEMENT → CODE REVIEW → PR. IMPLEMENT now only builds: it writes the tests and commits the slices, and dispatches no reviewer. CODE REVIEW runs the five reviewers over the whole branch, from the merge-base to HEAD, and fixes Blocking and Major findings until none remain. Each round writes `docs/plans/<id>/review-<n>.md`, and a `/team` resume reads those records to pick up at the right phase. A resume enters CODE REVIEW only after every slice in `8-plan.md` has its commit in each repo it touches, so an interrupted build resumes at IMPLEMENT. The merge-base comes from `origin/<default>`, the ref each worktree is cut from, so a stale local default branch adds no upstream commits to the review. The implementer commits each fix round, and a record counts as current only while the tree is clean outside `docs/plans/`. `/team-code-review` refuses to start while the tree holds uncommitted changes outside `docs/plans/`, and names each path. After three failed rounds in a row, each fix round must reconsider its approach instead of patching the cited lines. The loop still has no round count cap. A code-reviewer finding on a defect older than the branch carries `issue (pre-existing)`, goes to the PR's `review-notes` comment, and does not force a fix. Findings name their bug class and list each instance, so one fix round covers the class. `/team-pr` takes the Minor findings from the newest review record, so they reach `review-notes` in a new session too. The implementer runs the project's static checks before it hands off to CODE REVIEW. **What this asks of you:** after a standalone `/team-implement`, run `/team-code-review docs/plans/<id>/` before `/team-pr`. Start a new session after you upgrade so the command appears.
@@ -1519,7 +1521,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.166.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.167.0...HEAD
+[0.167.0]: https://github.com/bostonaholic/team/compare/v0.166.0...v0.167.0
 [0.166.0]: https://github.com/bostonaholic/team/compare/v0.165.0...v0.166.0
 [0.165.0]: https://github.com/bostonaholic/team/compare/v0.164.0...v0.165.0
 [0.164.0]: https://github.com/bostonaholic/team/compare/v0.163.0...v0.164.0
