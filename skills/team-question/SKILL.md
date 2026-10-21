@@ -17,31 +17,28 @@ Run the QUESTION phase only, then stop. The phase writes, in `docs/plans/<id>/`:
 
 - `1-task.md` — the human's full intent. **Never** read by `researcher` or
   `file-finder`.
-- `2-questions.md` — neutral research questions phrased without intent. The
-  only file `researcher` and `file-finder` ever read.
-- `3-prd.md` — **only when the request is vague, multi-story, cross-cutting,
-  or replaces existing behavior** (criteria: `## Conditional PRD` in
-  `skills/team/playbooks/question.md`).
-- `4-repos.md` — **only when the topic spans more than one repository**.
-  Lists each involved repo's slug, absolute path, and role.
+- `2-questions.md` — neutral research questions without intent; the only file
+  `researcher` and `file-finder` read.
+- `3-prd.md` — **only** under `## Conditional PRD` in
+  `skills/team/playbooks/question.md`.
+- `4-repos.md` — **only when the topic spans more than one repository**:
+  each involved repo's slug, absolute path, and role.
 
 ## Execution
 
 1. **Resolve `$ARGUMENTS`** to a description:
    - Empty: **discover, do not demand.** Read recent `git log` activity and
-     the repo's `README` / `CLAUDE.md` to propose a likely topic, then use
-     `AskUserQuestion` with labeled options only to fill a genuine gap in
-     intent. Never bare-stop with a plain "describe it" demand when context
-     is already available.
-   - Ticket-only: ask the user for context, or use any tracker integration
-     they have configured to fetch the issue body.
+     the repo's `README` / `CLAUDE.md` to propose a likely topic; use
+     `AskUserQuestion` with labeled options only for a genuine gap in intent.
+     Never bare-stop with a "describe it" demand when context is available.
+   - Ticket-only: ask the user for context, or fetch the issue body through a
+     configured tracker integration.
    - Issue URL: run `gh issue view <url> --json title,body` (or equivalent)
      and use the title plus body as the description.
    - Free text: use directly.
 
-   A ticket identifier (e.g. `ENG-1234`) is recorded as `ticketId` on
-   `1-task.md`'s frontmatter. The orchestrator does not call any ticketing
-   system.
+   A ticket identifier (e.g. `ENG-1234`) is recorded as `ticketId` in
+   `1-task.md` frontmatter. The orchestrator calls no ticketing system.
 2. **Choose `<kebab-topic>`**: a 2–4 word kebab-case slug derived from the
    description. Resolve `<team-question-skill-dir>` to the absolute directory
    containing this `SKILL.md`. From the repository root, run
@@ -56,9 +53,7 @@ Run the QUESTION phase only, then stop. The phase writes, in `docs/plans/<id>/`:
      questioner only writes `2-questions.md`.
    - `complete`: skip dispatch and go to the report.
 5. Dispatch the `questioner` agent with the full description and the
-   target directory `docs/plans/<id>/`. It writes the artifacts above. It
-   writes `4-repos.md` when it makes sure with the user that the topic
-   spans multiple repos.
+   target directory `docs/plans/<id>/`. It writes the artifacts above.
 6. **Stop once the rerun reports `state=complete`**: rerun the step 2 command
    with `--date <date>` from its first `date=` line. Do not continue to
    RESEARCH. Any other state means the questioner did not write
@@ -69,6 +64,5 @@ Report:
 - Path to `1-task.md` and `2-questions.md` (and `3-prd.md` / `4-repos.md` when
   written)
 - Topic slug and `<id>`
-- Mode: single-repo or multi-repo (with the involved repo slugs if
-  multi-repo)
+- Mode: single-repo, or multi-repo with the involved repo slugs
 - Tell the user: **"Next: run `/team-research docs/plans/<id>/`"**

@@ -4,8 +4,7 @@ A reasoning lens for co-changing callers and siblings. It produces no artifact a
 
 ## Core lenses
 
-- **Blast radius over diff radius** — the lines a change edits are rarely the whole change. Include callers, config, docs, tests, and sibling implementations that must change together.
-- **Callers and siblings first** — find consumers and comparable implementations before judging or changing a component.
+- **Blast radius over diff radius** — include callers, config, docs, tests, and sibling implementations that must change together; find them before judging or changing a component.
 - **Conventions are contracts** — follow established naming, errors, layout, and idioms unless a documented decision requires divergence.
 - **Leave the system consistent** — callers work and siblings agree, or every divergence is explicit.
 
@@ -31,8 +30,8 @@ Search for an existing implementation first. Update all affected callers in the 
 
 ## When reviewing
 
-Does a sibling diverge? Does a caller or consumer outside the diff need change? Does the change follow conventions established elsewhere? Cite the convention. Convention governs where no written rule speaks; a written rule outranks observed precedent.
+Flag a diverging sibling, a caller or consumer outside the diff that needs change, or a break from conventions established elsewhere; cite the convention. Convention governs where no written rule speaks; a written rule outranks observed precedent.
 
 ## Lens, not dogma
 
-This lens informs judgment and never blocks. Greenfield or single-file work can have no callers, siblings, or conventions; "none found" is a complete answer. Never manufacture findings.
+Greenfield or single-file work can have no callers, siblings, or conventions; "none found" is a complete answer. Never manufacture findings.

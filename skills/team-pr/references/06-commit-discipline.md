@@ -1,17 +1,7 @@
 ## Commit Discipline
 
-When creating the commit, read [commit discipline](commit.md) and apply it:
+When creating the commit, apply [commit discipline](commit.md). The ship commit is only for uncommitted final changes (e.g., changelog); slice commits stay as they are.
 
-- Subject ≤ 50 chars, imperative, no trailing period
-- Reference the issue or design path in the footer if present
+Report the outcome (draft PR URL and commit hash). A non-null screenshot `operator_note` goes into the report verbatim ([Screenshot Upload](04-screenshot-upload.md#read-the-result)), never into a PR body.
 
-The PR may contain multiple commits (one per slice). The ship commit is
-only used if there are uncommitted final changes (e.g., changelog).
-
-Report the outcome (draft PR URL and commit hash). When the screenshot
-upload returned a non-null `operator_note`, the report carries that note
-verbatim (see Screenshot Upload, "Read the result"); it never enters a PR
-body.
-
-Next: when the PR is ready for review, run `gh pr ready` and move its
-ticket to in-review per the [tracking rules](tracking.md).
+Next: when the PR is ready for review, run `gh pr ready` and move its ticket to in-review per the [tracking rules](tracking.md).

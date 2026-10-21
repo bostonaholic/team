@@ -6,7 +6,7 @@
 - An issue URL: fetch its title and body with `gh issue view`.
 - Free-form text: the bug description.
 
-When `$ARGUMENTS` is empty, **discover, do not demand**: read recent `git log`
-activity and the repo's `README` / `CLAUDE.md` to surface the likely failing
-area, then use `AskUserQuestion` with labeled options to fill any genuine gap.
-Never bare-stop with a plain "describe the bug" demand when context is available.
+When empty, **discover, do not demand**: read recent `git log` and the repo's
+`README` / `CLAUDE.md` to surface the likely failing area, then use
+`AskUserQuestion` with labeled options for any genuine gap. Never bare-stop
+with "describe the bug" when context is available.

@@ -14,33 +14,26 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 
 Two modes:
 
-- **Resume mode** — `$ARGUMENTS/1-task.md` and `$ARGUMENTS/6-design.md`
-  exist. Execution step 3 binds one review status from the newest
-  `review-<n>.md` and one security status from the newest
-  `security-review-<n>.md`.
-- **Standalone mode** — no matching artifact directory, but the working
-  tree has commits or staged changes ready to ship. Treat the current
-  branch as the work source.
+- **Resume mode** — `$ARGUMENTS/1-task.md` and `$ARGUMENTS/6-design.md` exist. Execution step 3 binds one review status from the newest `review-<n>.md` and one security status from the newest `security-review-<n>.md`.
+- **Standalone mode** — no matching artifact directory, but the working tree has commits or staged changes ready to ship. The current branch is the work source.
 
 ## Core contracts
 
-1. **Update an existing CHANGELOG.md** after execution step 3 binds the review and security statuses, and commit before opening any PR. If the
-   root file is absent, leave it absent and report the skip unless the user
-   explicitly requested a new changelog.
-2. **Open a draft PR automatically — do not stop to ask.** Push, then run `gh pr create --draft`.
-3. After creation, report the draft PR and how to mark it ready for review.
-4. In multi-repo mode, open one draft PR per repo and add `## Companion PRs` links.
-5. Read [tracking rules](references/tracking.md) for the in-review transition and the multi-repo home-only closing rule.
-6. After each push, refresh the body. Re-emit exactly one closing line: never duplicated, never dropped.
-7. **A branch that impacts a UI always carries screenshots.** Apply the ux-reviewer brief's UI-impact gate to the full branch diff. When it holds and no captured manifest exists, capture before rendering the section.
-8. **Post the deferred findings and cross-model dispositions as comments on the home PR, never in the body.** After the PR opens and after each body refresh, run [review comments](references/07-review-comments.md). A refresh posts only the missing comments.
-9. Run gathering, capture, changelog, body authoring, upload, and review comments in fresh subagents per `## Step dispatch` in [Execution](references/02-execution.md). Pushes, `gh pr create`, and ticket moves stay inline.
+Each is detailed in [Execution](references/02-execution.md) at the step named.
 
-Apply the detailed [body authoring rules](references/03-pr-body-template.md) to initial drafts and every refresh.
+1. **Update an existing CHANGELOG.md** after step 3 binds the review and security statuses, and commit before opening any PR; never create one unrequested (step 6).
+2. **Open a draft PR automatically — do not stop to ask** (step 7), then report it and how to mark it ready for review.
+3. Multi-repo: one draft PR per repo, with `## Companion PRs` links. [Tracking rules](references/tracking.md) own the in-review transition and the home-only closing rule.
+4. After each push, refresh the body with exactly one closing line: never duplicated, never dropped (step 10).
+5. **A branch that impacts a UI always carries screenshots** (step 4).
+6. **Deferred findings and cross-model dispositions are comments on the home PR, never the body**: run [review comments](references/07-review-comments.md) after open and after each refresh; a refresh posts only missing comments.
+7. Subagents and inline work split per Execution `## Step dispatch`.
+
+Apply the [body authoring rules](references/03-pr-body-template.md) to initial drafts and every refresh.
 
 ## Procedure references
 
-Read each reference completely when reaching that stage. Follow them in order; later stages depend on state and gates established earlier.
+Read each reference completely when reaching that stage, in order.
 
 1. [Input](references/01-input.md)
 2. [Execution](references/02-execution.md)

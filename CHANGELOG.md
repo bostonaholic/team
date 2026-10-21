@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Team's skills and agents load about 25% fewer tokens.** The runtime Markdown under `skills/` and `agents/` drops from 485,020 to 361,262 bytes, about 121k to 90k tokens. Filler, rationale, and repeated rules are gone, and prose that described what a script already checks now gives only the command and what to do with each outcome. Every command, threshold, gate, template field, and authorization rule is kept. **What this asks of you:** nothing.
+
 ## [0.168.0] - 2026-10-21
 
 ### Changed

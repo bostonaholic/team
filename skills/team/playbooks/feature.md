@@ -1,8 +1,7 @@
 # Feature playbook
 
 Before this operation, read [artifact schema](references/artifacts.md).
-Before each consuming step, read its linked shared rules. Resolve links from the installed `skills/team/` directory.
-If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
+Resolve links from the installed `skills/team/` directory and read each step's linked rules before it. If a read fails, stop that step and report the resolved path; never use checkout fallback or recursive loading.
 
 Ten sequential phases; none are skippable.
 
@@ -21,34 +20,27 @@ Ten sequential phases; none are skippable.
 | **SECURITY REVIEW** | `security-review-<n>.md` each round; fix commits | AGGREGATE: security hard gate |
 | **PR** | GitHub draft PR | terminal: record URL; close ledger |
 
-WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`. IMPLEMENT has three sub-phases: test-architect writes failing acceptance tests; a mechanical gate requires assertion failures rather than crashes plus passing static checks, inverting to a reproduced green pre-change baseline for a zero-behavior-change refactor, whose test-architect dispatch is skipped with a recorded reason; implementer commits green slices. CODE REVIEW runs `skills/team-code-review/`: 4 parallel code/docs/ux/verifier reviews return typed failures until no Blocking/Major remains, and each round writes `review-<n>.md`. SECURITY REVIEW runs `skills/team-security-review/`: `security-reviewer` alone runs the same loop and writes `security-review-<n>.md` each round. When its fix commits leave the review record stale, the run moves back to CODE REVIEW.
+WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`.
+
+IMPLEMENT has three sub-phases: (1) test-architect writes failing acceptance tests; (2) a mechanical gate requires assertion failures, not crashes, plus passing static checks — for a zero-behavior-change refactor it inverts to a reproduced green pre-change baseline and the test-architect dispatch is skipped with a recorded reason; (3) implementer commits green slices.
+
+CODE REVIEW runs `skills/team-code-review/`: 4 parallel code/docs/ux/verifier reviews loop until no Blocking/Major remains.
+
+SECURITY REVIEW runs `skills/team-security-review/`: `security-reviewer` alone runs the same loop. When its fix commits leave the review record stale, the run moves back to CODE REVIEW.
 
 ## Artifact and isolation invariants
 
-[artifact schema](references/artifacts.md) owns `<id>`, inventory, `3-prd.md`, `4-repos.md`, topic, and `ticketId` schemas.
-
-Research is blind ([independent review rules](principles/independent-review.md)).
+The [artifact schema](references/artifacts.md) owns every artifact schema. Research is blind ([independent review rules](principles/independent-review.md)).
 
 ## Gates
 
-### HARD
-
-Block until satisfied or explicitly overridden by the user. Examples: REQUEST CHANGES, gating security findings, test failures.
-
-### SOFT
-
-Add eligible findings to the PR's `review-notes` comment; never ask mid-run. The
-[finding format](references/findings.md) "Severity Tiers and the Auto-Fix Boundary" alone defines gating, auto-fix, and which lower-tier findings qualify ([durable state rules](principles/durable-state.md)). Human owns the ends ([human control rules](principles/human-control.md)).
-
-### ADVISORY
-
-Non-blocking; no acknowledgment, e.g. documentation-gap analysis or style suggestions. Deterministic checks enforce rules where possible ([verified results rules](principles/verified-results.md)).
+- **HARD:** block until satisfied or explicitly overridden by the user (e.g. REQUEST CHANGES, gating security findings, test failures).
+- **SOFT:** add eligible findings to the PR's `review-notes` comment; never ask mid-run. "Severity Tiers and the Auto-Fix Boundary" in the [finding format](references/findings.md) alone defines gating, auto-fix, and which lower-tier findings qualify ([durable state rules](principles/durable-state.md), [human control rules](principles/human-control.md)).
+- **ADVISORY:** non-blocking, no acknowledgment (e.g. documentation gaps, style); deterministic checks enforce rules where possible ([verified results rules](principles/verified-results.md)).
 
 ## State and transitions
 
-These rows add to Setup step 7 resume detection. "IMPLEMENT complete" is the
-rule in the "Branch state" section of the
-[artifact schema](references/artifacts.md).
+These rows add to Setup step 7 resume detection. "IMPLEMENT complete" is the rule in the "Branch state" section of the [artifact schema](references/artifacts.md).
 
 | Latest durable state | Next/current phase |
 |---|---|
@@ -63,7 +55,7 @@ Worktree check: `git worktree list --porcelain | grep -q <id>`; multi-repo paths
 
 ## Scope and sequencing rules
 
-- Reject horizontal database/API/UI layering; slices must be end-to-end, testable, atomic (playbooks/structure.md). Never implement without structure.
+- Never implement without structure; slices follow playbooks/structure.md.
 - Add no feature, test, or abstraction beyond structure. Expand the artifact first; material expansion returns to DESIGN review ([human control rules](principles/human-control.md)).
-- Move backward one phase only. A structure flaw returns to STRUCTURE; a design flaw to DESIGN.
+- Move backward one phase only: a structure flaw returns to STRUCTURE, a design flaw to DESIGN.
 - Never enter PR while a HARD gate, Blocking, or Major finding remains.

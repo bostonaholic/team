@@ -16,12 +16,12 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 ## Core contracts
 
 - Require `7-structure.md`, `8-plan.md`, and a non-default-branch worktree. Use `AskUserQuestion` only for missing standalone setup.
-- If `4-repos.md` exists, multi-repo work requires worktrees; refuse in-place execution.
+- With `4-repos.md`, multi-repo work requires worktrees; refuse in-place execution.
 - After the implementer's completion report, print **"Next: run `/team-code-review docs/plans/<id>/`"** in every mode. Never load `team-code-review` or `team-pr`.
 
 ## Procedure references
 
-Read each reference completely when reaching that stage. Follow them in order.
+Read each reference completely when reaching it, in order.
 
 1. [Input](references/01-input.md)
 2. [Worktree Check](references/02-worktree-check.md)

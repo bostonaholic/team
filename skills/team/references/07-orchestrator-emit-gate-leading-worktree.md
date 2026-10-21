@@ -1,51 +1,36 @@
 ### Orchestrator-Emit Gate (leading worktree)
 
-This phase exists so a `/team` run authors `docs/plans/<id>/` inside an isolated
-worktree on branch `<id>` from phase 1. The home checkout's `git status` thus
-stays clean for the whole run.
+A `/team` run authors `docs/plans/<id>/` inside an isolated worktree on branch
+`<id>` from phase 1, so the home checkout stays clean all run.
 
-0. **Preflight the environment, then continue regardless.** Run
-   `<team-skill-dir>/scripts/preflight.sh` once, where `<team-skill-dir>` is
-   the installed `skills/team/` directory, and report its four lines.
-   **None of them blocks the run**, and neither does a non-zero exit.
+0. **Preflight, then continue regardless.** Run
+   `<team-skill-dir>/scripts/preflight.sh` once (`<team-skill-dir>` is the
+   installed `skills/team/` directory) and report its four lines. **No
+   reading or exit code blocks the run.** What each failed reading predicts:
+   - **Unreachable `ssh-agent`:** the PR-phase push fails; with global
+     `commit.gpgsign` `true`, tests that commit to a scratch repo stall on
+     signing and fail far from the diff.
+   - **Failing or hanging signing probe:** every later commit stalls, a hard
+     stop under the no-unsigned-commits rule.
+   - **Missing `gh` login:** only the PR phase fails.
 
-   - **An unreachable `ssh-agent`** breaks the push at the PR phase. While
-     global `commit.gpgsign` is `true`, it also breaks any test that commits to
-     a scratch repository: those inherit the setting, try to sign, and stall
-     until they time out. A suite that normally runs in a minute takes ten
-     and fails in places unrelated to the diff.
-   - **A signing probe that fails or hangs** predicts every later commit —
-     each slice commit and the ship commit — stalling on the signing
-     agent, which the no-unsigned-commits rule turns into a hard stop.
-   - **A missing `gh` login** breaks the PR phase only, at the very end.
-
-   Report the readings and move on. When a later failure matches one of them,
-   say so instead of diagnosing the symptom: a suite that fails only under the
-   developer's own git config is an environment reading, not a regression in
-   the branch.
-
-1. **Create the home worktree** on branch `<id>` off `origin/HEAD`.
-   Use the host's native worktree support when it offers one, otherwise
-   `git worktree add`. Call the Skill tool with
-   `team-worktree` and follow the
-   single-repo block under "Create the worktree(s)". Only the
-   home repo gets a worktree at this phase. Multi-repo secondary worktrees
-   are deferred until after the design review (see "Orchestrator-Emit Gate
-   (post-design-review secondary worktrees)" below).
-   **If the run was started from inside a linked worktree on a non-default branch, reuse it instead of creating a new one**
-   (see "Detect existing worktree" in `skills/team-worktree/SKILL.md`). If
-   that worktree is on the default branch, stop rather than implement on
-   it.
-2. **Create `docs/plans/<id>/` inside the worktree.** The artifact directory
-   lives in the worktree from the start, so no copy is ever needed.
-3. **Compute the worktree's absolute path once** and thread it into every
-   downstream dispatch as the worktree-rooted `docs/plans/<id>/` path. The
+   When a later failure matches a reading, cite the reading as an
+   environmental cause instead of diagnosing it as a branch regression.
+1. **Create the home worktree** on branch `<id>` off `origin/HEAD`, with the
+   host's native worktree support when offered, otherwise `git worktree add`:
+   call the Skill tool with `team-worktree` and follow the single-repo block
+   under "Create the worktree(s)". Only the home repo gets a worktree here;
+   multi-repo secondaries wait for the post-design-review gate.
+   **If the run started inside a linked worktree on a non-default branch, reuse it**
+   ("Detect existing worktree" in `skills/team-worktree/SKILL.md`); on the
+   default branch, stop rather than implement on it.
+2. **Create `docs/plans/<id>/` inside the worktree.**
+3. **Compute the worktree's absolute path once** and thread the
+   worktree-rooted `docs/plans/<id>/` path into every downstream dispatch. The
    main session does NOT `cd` into the worktree.
-4. **Edge — branch `<id>` already exists** (re-invocation): if a worktree
-   is already on branch `<id>`, reuse it. Do not recreate.
-5. **Edge — home-worktree creation fails.** Report loudly and fall back to
-   **in-place for the entire run**. Author `docs/plans/<id>/` at the
-   home-repo root, and thread that root downstream as the absolute path.
-   Never block the pipeline because worktree creation failed (mirror the
-   best-effort fallback in `skills/team-worktree/playbooks/worktree.md` →
-   "Fallback").
+4. **Edge — branch `<id>` already exists** (re-invocation): reuse the
+   worktree already on it; do not recreate.
+5. **Edge — home-worktree creation fails.** Report loudly and run
+   **in place for the entire run**: author `docs/plans/<id>/` at the home-repo
+   root and thread that absolute path downstream; never block on it ("Fallback"
+   in `skills/team-worktree/playbooks/worktree.md`).

@@ -1,38 +1,33 @@
 # Bug diagnosis reference
 
-Read this when a failure is non-obvious, intermittent, or whose first fix would be a guess. Never skip to fixing: understand the cause first.
+Read this when a failure is non-obvious, intermittent, or its first fix would be a guess.
 
 ## 4-phase investigation
 
 ### Phase 1: OBSERVE
 
-Gather evidence before forming any theory.
+Gather evidence before any theory; do not hypothesize yet.
 
-- Read error messages and stack traces completely.
-- Reproduce the failure and record exact steps.
-- Collect multiple data points: logs, stack traces, test output, runtime state.
-- Note what still works — the boundary between working and broken narrows the search.
-- Trace a bad value from the visible failure through its callers to where it was produced. Compare the working path when one exists.
-- Record timestamps and sequence: what changed just before, in git, deploys, or dependencies. When the trail leads to code that looks deliberate and the question becomes "why was it written this way" rather than "what broke", that is design-rationale archaeology: trace the introducing commit (`git log -S`, `git blame` on the parent revision) and its PR or issue before changing the code.
-- Treat intermittency as evidence, not noise. Record the failure rate, environment variance, and the timing, concurrency, resources, and shared state in the path.
-
-Do not hypothesize during OBSERVE.
+- Read errors and stack traces completely; reproduce and record exact steps.
+- Note what still works; trace a bad value back to where it was produced, comparing the working path.
+- Record what changed just before (git, deploys, dependencies). When the question becomes "why was it written this way", trace the introducing commit (`git log -S`, `git blame` on the parent revision) and its PR or issue before changing the code.
+- Intermittency is evidence: record failure rate, environment variance, and the timing, concurrency, resources, and shared state in the path.
 
 ### Phase 2: HYPOTHESIZE
 
-List at least two explanations that explain ALL the observed evidence. Rank common causes before exotic ones; configuration before code; environment before logic. State what each hypothesis predicts, so a discriminating test can prove it wrong.
+List at least two hypotheses that explain ALL the evidence, common before exotic, configuration before code, environment before logic. State what each predicts.
 
 ### Phase 3: TEST
 
-Run a discriminating experiment that eliminates a hypothesis under either outcome. Change one variable at a time. Record expected and actual results immediately. Keep disproved theories closed unless new evidence appears. With a working baseline and failing tip, use `git bisect`; apply the same binary search to config, dependency, or feature-flag ranges.
+Run a discriminating experiment that eliminates a hypothesis either way, changing one variable at a time and recording expected and actual results. With a working baseline and failing tip, use `git bisect`; binary-search config, dependency, or feature-flag ranges likewise.
 
 ### Phase 4: CONCLUDE
 
-Identify the root cause, not the proximate symptom. Make the original reproduction pass without changing unrelated behavior. Search for related instances and document evidence and eliminated theories.
+Fix the root cause, not the proximate symptom; the original reproduction passes with no unrelated behavior change. Search for related instances; document evidence and eliminated theories.
 
 #### Root Cause Analysis (5 Whys)
 
-Ask why from the symptom and stop at a cause you can change. Anchor every link in OBSERVE evidence; branch when a link has multiple causes. The chain can be length one — five is the technique's name, not its quota. Fix the root link, not a proximate link above it. Blame the process, not the person.
+Ask why from the symptom and stop at a cause you can change. Anchor every link in OBSERVE evidence; branch when a link has multiple causes. The chain can be length one. Fix the root link, not one above it.
 
 ## Escalation rules
 
@@ -42,4 +37,4 @@ Widen to adjacent systems, environment differences, questioned evidence, and com
 
 ### When to escalate to the user
 
-Escalate only after plausible hypotheses are exhausted, required environment is inaccessible, reproduction remains unreliable, or the cause is external. Give observed evidence, tested hypotheses, eliminated explanations, and remaining possibilities. Never return only "I do not know."
+Only after plausible hypotheses are exhausted, the required environment is inaccessible, reproduction stays unreliable, or the cause is external. Give evidence, eliminated hypotheses, and remaining possibilities.

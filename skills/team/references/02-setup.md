@@ -1,83 +1,63 @@
 ## Setup
 
-0. **Select the route first.** Read [routing](routing.md) and identify the
-   selected route from the leading argument, before any worktree or artifact
-   is authored. A limited-scope route (`investigate`, `plan`, `prototype`)
-   creates no production worktree: it writes its artifacts in place under the
-   home `docs/plans/<id>/` and stops at its deliverable. Only a full route
-   (`feature`, `fix`, `refactor`, or unprefixed) runs the leading WORKTREE
-   phase below. Record `route: <route>` on `1-task.md` before dispatching any
-   agent, and set `routeStatus: complete` when a limited-scope route finishes.
-1. **Resolve `$ARGUMENTS`** to a description (fetch issue through `gh` if a
-   URL. Lookup tracker if a ticket-only ID. Otherwise use as-is).
-   After routing, `$ARGUMENTS` (or its remaining task tokens) may be:
-   - A ticket identifier (e.g. `ENG-1234`) — used as `<id>` prefix and
-     recorded as `ticketId` on `1-task.md`.
-   - An issue URL (e.g. `https://github.com/org/repo/issues/42`) — fetched
-     through `gh issue view` to extract the title and body.
-   - Free-form text — used directly as the feature description.
+0. **Select the route first** per [routing](routing.md), before authoring any
+   worktree or artifact. Only a full route (`feature`, `fix`, `refactor`, or
+   unprefixed) runs the leading WORKTREE phase; a limited-scope route writes
+   in place under the home `docs/plans/<id>/` and stops at its deliverable.
+1. **Resolve `$ARGUMENTS`** (after routing, its remaining task tokens) to a
+   description:
+   - Ticket identifier (e.g. `ENG-1234`): look it up in the tracker.
+   - Issue URL (e.g. `https://github.com/org/repo/issues/42`): extract the
+     title and body with `gh issue view`.
+   - Free-form text: use as-is.
 
    If `$ARGUMENTS` is empty, ask the user to describe the feature and stop.
-2. **Capture `ticketId`** — if `$ARGUMENTS` starts with a ticket-like
-   pattern (e.g., `<system>-<id>`), set it aside as `ticketId` for
-   `1-task.md`. Otherwise leave `ticketId` as `null`.
-3. **Move the ticket to in-progress.** If a `ticketId` or issue was
-   resolved in steps 1–2, move that ticket to its tracker's in-progress
-   state. This is the first action of the run, before any other work
-   begins. Read [tracking rules](../team-pr/references/tracking.md) and follow its
-   ticket-lifecycle rules, best-effort — skip silently when no tracker
-   mechanism exists. Never block the pipeline on a tracker update.
+2. **Capture `ticketId`**: if `$ARGUMENTS` starts with a ticket-like pattern
+   (e.g. `<system>-<id>`), it is `ticketId` (the `<id>` prefix and
+   `1-task.md`'s `ticketId`); otherwise `null`.
+3. **Move the ticket to in-progress** as the run's first action when steps
+   1–2 resolved a `ticketId` or issue, per the ticket-lifecycle rules in
+   [tracking rules](../team-pr/references/tracking.md). Best-effort: skip
+   silently with no tracker mechanism; never block on it.
 4. **Derive `<id>`:** choose a 2–4 word `<kebab-topic>` from the
    description, then run
    `<team-skill-dir>/scripts/plan-id.sh [--ticket <ticketId>] <kebab-topic>`,
    where `<team-skill-dir>` is the absolute directory containing this
-   installed `SKILL.md`. Its `id=` line is `<id>` (`ENG-1234-add-auth` with
-   a ticket, `2026-05-01-add-auth` without). Exit 2: fix the topic or
+   installed `SKILL.md`. Its `id=` line is `<id>`. Exit 2: fix the topic or
    ticket its stderr names and rerun.
 5. **Seed the TodoWrite ledger** with one item per phase, in order:
-   `Worktree → Question → Research → Design → Structure → Plan → Implement → Code review → Security review → PR`.
-   Mark `Worktree` as `in_progress`.
-   See [execution rules](references/execution.md) for the per-step tracking convention agents follow within each phase.
-   With no TodoWrite on the host, seed the substitute file ledger the
-   Rules reference defines instead; it is written once WORKTREE creates
-   the directory.
-   The home worktree and `docs/plans/<id>/` are both created at the leading
-   WORKTREE phase (see "Orchestrator-Emit Gate (leading worktree)" below) —
-   not here.
-6. **Resolve the canonical artifact directory.** Artifacts now live inside
-   the worktree, authored there at the leading WORKTREE phase. Run
-   `git worktree list` and look for a worktree path whose basename is
-   `<id>`, per the `.claude/worktrees/<id>` convention. If one exists, the
-   canonical artifact directory is `<worktree-path>/docs/plans/<id>/` — use
-   it for resume detection and for the rest of the session (thread its
-   absolute path into every downstream dispatch). If no worktree for `<id>`
-   exists, fall back to the in-place home `docs/plans/<id>/` (the fallback
-   path from the leading WORKTREE phase).
-7. **Resume detection.** If artifacts already exist for `<id>` under the
-   canonical artifact directory resolved in step 6, fast-forward the
-   ledger. Mark completed any phase whose artifacts are present. DESIGN is
-   complete only when
-   `<team-skill-dir>/scripts/design-review-status.sh <artifact-dir>` exits 0
-   (`passed`). A `6-design.md` with no passing review
-   resumes **at the review step**, never a re-draft (any `approved` fields
-   left by older runs are ignored). IMPLEMENT is complete only by the
-   "IMPLEMENT complete" rule in the "Branch state" section of the
-   [artifact schema](references/artifacts.md). A run interrupted before its
-   last slice commit resumes at IMPLEMENT. CODE REVIEW is complete only when the
-   newest `review-<n>.md` is PASS and current, per the record states in the
-   same schema. A run whose IMPLEMENT is complete and that has no current
-   PASS record resumes at CODE REVIEW. SECURITY REVIEW is complete only when CODE REVIEW is
-   complete and the newest `security-review-<n>.md` is PASS and current. A
-   run whose CODE REVIEW is complete and that has no current PASS security record
-   resumes at SECURITY REVIEW. A SECURITY REVIEW fix commit leaves the `review-<n>.md`
-   record stale, so that run resumes at CODE REVIEW. Resume never re-dispatches
-   `test-architect` or `implementer`. Then mark the first incomplete phase
-   `in_progress`.
-   **Never re-dispatch a phase whose artifact already exists** — re-running
-   QUESTION over an existing `1-task.md`, for example, would overwrite
-   in-progress work (data loss).
-   Resume is an idempotent re-run: already-done is done, never an error ([durable state rules](principles/durable-state.md)).
+   `Worktree → Question → Research → Design → Structure → Plan → Implement → Code review → Security review → PR`,
+   with `Worktree` `in_progress` ([execution rules](references/execution.md)).
+   With no TodoWrite, use the Rules reference's substitute file ledger. The
+   home worktree and `docs/plans/<id>/` are created at WORKTREE, not here.
+6. **Resolve the canonical artifact directory.** If `git worktree list` shows
+   a worktree whose basename is `<id>` (the `.claude/worktrees/<id>`
+   convention), it is `<worktree-path>/docs/plans/<id>/`; otherwise the
+   in-place home `docs/plans/<id>/`. Use it for resume detection and the rest
+   of the session, threading its absolute path into every downstream dispatch.
+7. **Resume detection.** If artifacts for `<id>` exist there, fast-forward the
+   ledger, marking completed each phase whose artifacts are present, except:
+   - DESIGN is complete only when
+     `<team-skill-dir>/scripts/design-review-status.sh <artifact-dir>` exits 0.
+     A `6-design.md` with no passing review resumes **at the review step**,
+     never a re-draft; ignore `approved` fields from older runs.
+   - IMPLEMENT is complete only by "IMPLEMENT complete" ("Branch state" in the
+     [artifact schema](references/artifacts.md)).
+   - CODE REVIEW is complete only when the newest `review-<n>.md` is PASS and
+     current per that schema. Otherwise, with IMPLEMENT complete, resume at
+     CODE REVIEW.
+   - SECURITY REVIEW is complete only when CODE REVIEW is complete and the
+     newest `security-review-<n>.md` is PASS and current. Otherwise, with CODE
+     REVIEW complete, resume at SECURITY REVIEW. A SECURITY REVIEW fix commit
+     leaves the `review-<n>.md` record stale, so that run resumes at CODE
+     REVIEW.
+   - Resume never re-dispatches `test-architect` or `implementer`.
 
-**Research-isolation invariant.** You hold the description in your own context. Downstream of QUESTION the
-description must NEVER appear in any artifact or agent payload outside
-`1-task.md` and the questioner's own outputs.
+   Then mark the first incomplete phase `in_progress`. **Never re-dispatch a
+   phase whose artifact already exists** (re-running QUESTION overwrites
+   `1-task.md`). Already-done is done, never an error
+   ([durable state rules](principles/durable-state.md)).
+
+**Research-isolation invariant.** You hold the description in your own
+context. Downstream of QUESTION it must NEVER appear in any artifact or agent
+payload outside `1-task.md` and the questioner's own outputs.
