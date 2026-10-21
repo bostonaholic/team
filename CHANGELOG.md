@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.157.0] - 2026-10-21
+
 ### Changed
 
 - **`/team-structure` checks the design review with a script.** A bundled `check-design-review.sh` finds the highest-numbered `design-review-<n>.md`, reads its frontmatter verdict, and exits non-zero unless it is APPROVE or COMMENT, on the same rule discovery already applies. The agent no longer parses the review file by hand for an explicit path, so an unreviewed or rejected design is refused the same way on every run. **What this asks of you:** nothing.
@@ -1458,7 +1460,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.156.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.157.0...HEAD
+[0.157.0]: https://github.com/bostonaholic/team/compare/v0.156.0...v0.157.0
 [0.156.0]: https://github.com/bostonaholic/team/compare/v0.155.0...v0.156.0
 [0.155.0]: https://github.com/bostonaholic/team/compare/v0.154.0...v0.155.0
 [0.154.0]: https://github.com/bostonaholic/team/compare/v0.153.0...v0.154.0
