@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.165.0] - 2026-10-21
+
+### Changed
+
+- **IMPLEMENT's reviewer tree check now runs as a script.** `skills/team-implement/scripts/tree-check.sh` records `HEAD` and `git status` before the five-reviewer dispatch and compares them after it, printing each moved `HEAD` and changed path, so the orchestrator no longer holds and diffs the status output itself. Status is now read with `--no-renames`, so a reviewer rename names both paths. A tree check that cannot run halts the phase. **What this asks of you:** nothing.
+
 ## [0.164.0] - 2026-10-21
 
 ### Changed
@@ -1502,7 +1508,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.164.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.165.0...HEAD
+[0.165.0]: https://github.com/bostonaholic/team/compare/v0.164.0...v0.165.0
 [0.164.0]: https://github.com/bostonaholic/team/compare/v0.163.0...v0.164.0
 [0.163.0]: https://github.com/bostonaholic/team/compare/v0.162.0...v0.163.0
 [0.162.0]: https://github.com/bostonaholic/team/compare/v0.161.0...v0.162.0
