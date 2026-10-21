@@ -4,16 +4,10 @@ This phase exists so a `/team` run authors `docs/plans/<id>/` inside an isolated
 worktree on branch `<id>` from phase 1. The home checkout's `git status` thus
 stays clean for the whole run.
 
-0. **Preflight the environment, then continue regardless.** Run these three
-   read-only checks once and report what they say. **None of them blocks the
-   run.**
-
-   ```bash
-   ssh-add -l >/dev/null 2>&1 && echo "ssh-agent: keys loaded" || echo "ssh-agent: UNREACHABLE"
-   gh auth status >/dev/null 2>&1 && echo "gh auth: ok" || echo "gh auth: NOT LOGGED IN"
-   echo "global commit.gpgsign: $(git config --global --get commit.gpgsign || echo unset)"
-   T=$(mktemp -d); git -C "$T" init -q; timeout 20 git -C "$T" -c user.name=probe -c user.email=probe@example.com commit --allow-empty -q -m probe >/dev/null 2>&1 && echo "commit signing: ok" || echo "commit signing: FAILED OR HUNG"; rm -rf "$T"
-   ```
+0. **Preflight the environment, then continue regardless.** Run
+   `<team-skill-dir>/scripts/preflight.sh` once, where `<team-skill-dir>` is
+   the installed `skills/team/` directory, and report its four lines.
+   **None of them blocks the run**, and neither does a non-zero exit.
 
    - **An unreachable `ssh-agent`** breaks the push at the PR phase. While
      global `commit.gpgsign` is `true`, it also breaks any test that commits to

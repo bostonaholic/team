@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team` writes its own gate artifacts with scripts.** The environment preflight, the `5-research.md` envelope around the two research returns, each `design-review-<n>.md` record with its round number and verdict, and each `cross-model-notes.md` block now come from scripts under `skills/team/scripts/` rather than the orchestrator retyping commands and formats each run. The preflight's signing probe also no longer depends on a `timeout` command, which macOS lacks, so it stops reporting a false `FAILED OR HUNG` there. **What this asks of you:** nothing.
+
 ## [0.162.0] - 2026-10-21
 
 ### Changed
