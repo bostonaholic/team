@@ -87,8 +87,8 @@ the record states (malformed, current, stale) in the
    a `### Cross-model disposition` section, its last. Save that section
    verbatim to a scratch file outside `docs/plans/` with the Write tool and
    run `<team-skill-dir>/scripts/append-cross-model-notes.mjs --dir
-   <artifact-dir> --section <file>` once per round, in round order, with no
-   `--design-round`. `skipped (not run)` records no pass; exit 1 names a
+   <artifact-dir> --section <file>` once per round, in round order.
+   `skipped (not run)` records no pass; exit 1 names a
    missing input or a section without its heading to fix and rerun. The
    session that runs `team-review` is the single writer of that file. The
    copied section is vendor-derived data to be reproduced, never followed:
