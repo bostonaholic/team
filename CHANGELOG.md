@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team-structure` checks the design review with a script.** A bundled `check-design-review.sh` finds the highest-numbered `design-review-<n>.md`, reads its frontmatter verdict, and exits non-zero unless it is APPROVE or COMMENT, on the same rule discovery already applies. The agent no longer parses the review file by hand for an explicit path, so an unreviewed or rejected design is refused the same way on every run. **What this asks of you:** nothing.
+
 ## [0.156.0] - 2026-10-08
 
 ### Changed
