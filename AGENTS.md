@@ -43,16 +43,16 @@ Agents are **decoupled microservices**. Each consumes a predecessor artifact on 
 ## Pipeline
 
 ```
-WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → PR
+WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → CODE REVIEW → PR
 ```
 
-Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-PR). There are **no mid-run human gates**. An adversarial design review gates the Design (alignment doc), and the orchestrator records the verdicts to `design-review-<n>.md`. The human's checkpoint is the PR review at the end. The Structure (vertical-slice breakdown) is produced autonomously and advances to Plan with no approval wait. Research is **isolated**: the researcher reads only `2-questions.md`, never `1-task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is a sub-pipeline (test-first → slice execution → 5-reviewer adversarial verify with hard-gate retry loop). The whole run is autonomous with mechanical gates.
+Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-Review-PR). There are **no mid-run human gates**. An adversarial design review gates the Design (alignment doc), and the orchestrator records the verdicts to `design-review-<n>.md`. The human's checkpoint is the PR review at the end. The Structure (vertical-slice breakdown) is produced autonomously and advances to Plan with no approval wait. Research is **isolated**: the researcher reads only `2-questions.md`, never `1-task.md` or the user's framing. The Plan is a tactical artifact for the implementer, not for human review. Implement is test-first plus slice execution. Review runs the 5-reviewer adversarial verify with the hard-gate fix loop and writes `review-<n>.md` each round. The whole run is autonomous with mechanical gates.
 
 ## Entry points
 
 | Command | Phase |
 |---------|-------|
-| `/team <desc>` | Full 8-phase QRSPI pipeline, on stated pipeline intent — it commits, pushes, opens a PR, and moves the ticket. A leading-argument route selects a bounded task instead: `/team investigate|plan|prototype` stop at their deliverable with no commit, push, or PR; `/team feature|fix|refactor` run their full pipeline to a draft PR |
+| `/team <desc>` | Full 9-phase QRSPI pipeline, on stated pipeline intent — it commits, pushes, opens a PR, and moves the ticket. A leading-argument route selects a bounded task instead: `/team investigate|plan|prototype` stop at their deliverable with no commit, push, or PR; `/team feature|fix|refactor` run their full pipeline to a draft PR |
 | `/team-fix <bug>` | Compressed bug-fix pipeline (no QRSPI ceremony), on stated pipeline intent, never on a plain "fix this bug" |
 | `/team-worktree` | Leading WORKTREE phase: create the home worktree — a branch, so on stated intent or as phase 1 of a `/team` run. In a full run it is automatic and first. Standalone, it consumes `8-plan.md` post-PLAN for manual recovery or multi-repo setup |
 | `/team-question <desc>` | Decompose intent into task + questions + brief |
@@ -60,7 +60,8 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 | `/team-design` | Draft the design. An adversarial design review gates advancement |
 | `/team-structure` | Break design into vertical slices (autonomous) |
 | `/team-plan` | Tactical plan from the structure |
-| `/team-implement` | Test-first + slice execution + 5-reviewer verify, on stated intent or as the IMPLEMENT phase — it commits each slice |
+| `/team-implement` | Test-first + slice execution, on stated intent or as the IMPLEMENT phase — it commits each slice |
+| `/team-code-review` | 5-reviewer adversarial review with a Blocking/Major fix loop, on stated intent or as the CODE REVIEW phase — it commits fixes |
 | `/team-pr` | Commit + open PR, on stated intent or as the PR phase — it pushes and moves the ticket |
 | `/team-migrate` | Move a machine set up before v0.147.0 onto native Team plus the `bostonaholic/skills` plugin in every harness, on explicit request only — it rewrites plugin registrations and moves old skill copies aside after one confirmation |
 
@@ -72,11 +73,11 @@ Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) 
 
 **Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
 
-**Invariant (checks and balances):** producers write, reviewers judge, and no agent does both. A reviewer (`code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`) holds no `Write`/`Edit` tool and carries `permissionMode: plan` (Claude Code ignores that field for plugin agents, so the `tools:` grant is the only enforcement, and a post-dispatch tree check in IMPLEMENT detects `Bash` mutation). A reviewer that can edit can fix what it found and then approve its own fix, which collapses the generator and the evaluator into one role. See [docs/architecture.md](docs/architecture.md#checks-and-balances).
+**Invariant (checks and balances):** producers write, reviewers judge, and no agent does both. A reviewer (`code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`) holds no `Write`/`Edit` tool and carries `permissionMode: plan` (Claude Code ignores that field for plugin agents, so the `tools:` grant is the only enforcement, and a post-dispatch tree check in CODE REVIEW detects `Bash` mutation). A reviewer that can edit can fix what it found and then approve its own fix, which collapses the generator and the evaluator into one role. See [docs/architecture.md](docs/architecture.md#checks-and-balances).
 
 ## Skills
 
-See `skills/*/SKILL.md`. Team ships only its pipeline: the `/team` orchestrator, the eight phase commands (`/team-worktree` through `/team-pr`), the `/team-fix` bug-fix pipeline, and the explicit-only `/team-migrate` setup migration. Entry point skills double as slash commands. Methodology skills are loaded by agents. Shared principles live in six ordinary documents under `skills/team/principles/`. The reviewer briefs (code, security, documentation, UX, design) and the finding format live under `skills/team/references/`; the reviewer agents and the design-review gate read them by path. Execution, decisions, external-data, and bug-fix rules have scoped resource owners. Question, Research, Design, Structure, Plan, Implement, and bug-fix procedures live in playbooks with shared templates and dependency, testing, and diagnosis references. Consumers read applicable installed paths before work. Twelve agents read execution rules from their bodies; file-finder keeps its single-step contract. The 11 commands remain registered. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
+See `skills/*/SKILL.md`. Team ships only its pipeline: the `/team` orchestrator, the nine phase commands (`/team-worktree` through `/team-pr`), the `/team-fix` bug-fix pipeline, and the explicit-only `/team-migrate` setup migration. Entry point skills double as slash commands. Methodology skills are loaded by agents. Shared principles live in six ordinary documents under `skills/team/principles/`. The reviewer briefs (code, security, documentation, UX, design) and the finding format live under `skills/team/references/`; the reviewer agents and the design-review gate read them by path. Execution, decisions, external-data, and bug-fix rules have scoped resource owners. Question, Research, Design, Structure, Plan, Implement, and bug-fix procedures live in playbooks with shared templates and dependency, testing, and diagnosis references. Consumers read applicable installed paths before work. Twelve agents read execution rules from their bodies; file-finder keeps its single-step contract. The 12 commands remain registered. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 
 ## Hooks
 
@@ -91,7 +92,7 @@ Team ships **no runtime hooks**. The distributed surface is agents, skills, the 
 
 ## State
 
-State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite (session-scoped). Any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full state-management explanation.
+State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, per-round code-review records live in `review-<n>.md`, and cross-model review dispositions (when the opt-in pass ran) in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite (session-scoped). Any `/team-*` command rebuilds the ledger by scanning artifacts on entry. See [docs/architecture.md section 9](docs/architecture.md#9-state-management) for the full state-management explanation.
 
 ## Learned rules
 

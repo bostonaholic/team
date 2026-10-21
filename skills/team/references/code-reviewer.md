@@ -120,104 +120,29 @@ verdict gates the pipeline.
 
 - **PASS:** No CRITICAL or HIGH findings. MEDIUM/LOW findings are reported but
   do not block.
-- **FAIL:** Any CRITICAL or HIGH finding. The pipeline MUST loop back to
-  IMPLEMENT. No override.
+- **FAIL:** Any CRITICAL or HIGH finding. The pipeline MUST re-dispatch the
+  implementer. No override.
 
 ### Verifier
 
 - **PASS:** All detected checks (format, lint, typecheck, build, test) pass.
-- **FAIL:** Any check fails. The pipeline loops back to IMPLEMENT.
+- **FAIL:** Any check fails. The pipeline re-dispatches the implementer.
 
 ### Code Reviewer
 
 - **✅ APPROVE:** All done criteria met, no blocking issues, tests pass.
-- **❌ REQUEST CHANGES:** Blocking issues found. The pipeline MUST loop back to
-  IMPLEMENT. No override.
+- **❌ REQUEST CHANGES:** Blocking issues found. The pipeline MUST re-dispatch
+  the implementer. No override.
 - **💬 COMMENT:** Non-blocking suggestions only. Implementation is correct.
 
-**Test-quality flags.** Test files are part of the diff. Walk every changed
-`*test*` / `*spec*` / `__tests__/*` file against the rules in the
-[testing rules](references/testing.md).
-These are `suggestion:` individually and `issue:` when they appear across
-multiple tests:
+Pre-existing findings alone give COMMENT, or APPROVE when nothing else is
+noted. REQUEST CHANGES needs at least one Blocking-tier finding that the
+branch owns. An unmet done criterion or a failing test suite is an
+`issue (blocking)` finding.
 
-- Change-detector tests — asserting which collaborator methods were called
-  without verifying observable state
-- Mock-everything / mock chains where a real or fake equivalent exists
-- Full-equality assertions on complex objects when one field carries the
-  contract
-- Logic in tests (`if`, loops, string-building) that can carry the same bug as
-  the code
-- Tests named after methods (`testProcessOrder_2`) rather than behaviors
-  (`refundsCardOnPartialFailure`)
-- DRY helpers that hide the asserted value
-
-**Test-value flags.** Walk every changed test against the
-[value red flags](references/testing.md#value-red-flags-reviewer-checklist).
-A diff with no test changes gets no value finding.
-
-- An editable test that hits a value red flag is
-  `issue (blocking): Test Value — <class>` on first occurrence.
-- A locked acceptance test that hits one gets
-  `suggestion (non-blocking): Test Value — locked acceptance test`. No agent
-  may edit a locked test during IMPLEMENT, so a block on it has no fix.
-- The lock source is the acceptance list in the `8-plan.md` beside the
-  design and structure paths the slice commits cite, or at the predecessor
-  artifact path in your dispatch. Standalone `/team-implement` uses the
-  `Locked acceptance tests:` line in your dispatch. A line that reads
-  `unknown` locks every test the branch adds. Read a malformed line as
-  `unknown`, and say so under `### Checks`. An absent line adds no lock
-  beyond a found plan.
-- When a style flag and a value flag hit one test, the value flag sets the
-  severity.
-- Removal of a base-branch test whose covered behavior remains is blocking
-  when the commit body lacks the
-  [removal evidence](references/testing.md#removal-evidence) fields.
-  The fix restores the test.
-
-**Flaky-test red flags (always blocking).** Distinct from the style flags
-above. Any test in the diff whose *outcome depends on* a nondeterministic
-input is `issue (blocking)` on **first** occurrence, routing to the Blocking
-tier and auto-looping the implementer. The
-rule keys to outcome-dependence, not token presence: a `Date.now()` in a log
-line does not flag; one feeding an assertion does. Outcome-dependence covers
-the whole suite — state or resources left behind flag because a *later* test's
-outcome depends on them. The full catalog lives in the
-[testing rules](references/testing.md) ("Flaky-test red flags (reviewer checklist)").
-
-**Comment red flags.** Read the [code standards](references/code-standards.md)
-and check in-source comments in every changed file against its Code Comments
-rules. Findings cite the checklist item by name and carry the tier's
-decoration — a blocking-regime hit reads
-`issue (blocking): Comment Discipline — ...`. Two regimes apply:
-
-- **Blocking on first occurrence** — ticket/issue IDs, plan/slice/phase
-  markers, and doc-section references in code comments, plus TODO/FIXME
-  comments the diff introduces. These checks are mechanical and
-  judgment-free, and the references rot.
-- **Style escalation** — WHAT comments, wordy or narrating comments,
-  incidentals, commented-out code, process narration, comments far from the
-  code they explain, vague language ("handle edge case"), speculation,
-  duplication of types/tests/names/docs, fragile positional references,
-  style diverging from the repo convention, doc comments restating a
-  signature, and a stale comment the diff leaves contradicting the changed
-  code. `suggestion:` for a single occurrence, `issue:` when repeated. A
-  single what-comment never blocks a round.
-  Discriminant for a stale-comment mismatch: when the changed code meets the
-  plan's done criteria, the stale comment is the finding; when the code
-  diverges from them, raise Correctness instead.
-- **Not violations:** upstream-bug links where the link IS the why.
-  Ticket-like tokens outside comment syntax — string literals, log messages,
-  fixture data (the check reads comments only). Doc comments on
-  exported/public interfaces. A pre-existing TODO the diff does not touch. A
-  diff with zero comments passes trivially — never manufacture a finding.
-
-  A **missing-why** finding is separate and narrow. Raise it only when the
-  diff introduces or rewrites code shaped by a constraint in the
-  "Document deliberate constraints" rule *and* you can name the exact
-  constraint and the consequence of removing the code. It is
-  `suggestion (non-blocking): Comment Discipline`, never blocking, never
-  escalating on repetition. Absence of comments is never by itself evidence.
+A finding whose only fix is to edit a locked acceptance test is
+`suggestion (non-blocking)`. No agent may edit a locked test during
+IMPLEMENT and CODE REVIEW, so a block on it has no fix.
 
 ### UX Reviewer
 
@@ -232,53 +157,28 @@ decoration — a blocking-regime hit reads
 - **PASS:** Documentation is adequate for the changes made.
 - **GAPS:** Documentation gaps identified. Recorded for future work.
 
-## Code Reviewer Inspection Contract
+## Code Reviewer Contract
 
-Your input is the diff on the current branch (`git diff HEAD~1`, or the
-range the orchestrator names; `git log --oneline -10` when the scope is
-unclear) and the done criteria in whatever plan file, issue references, or
-commit messages the branch carries. When no criteria exist, review on
-general correctness and quality. Infer the intended user outcome from the
-task and diff before judging implementation details. Start with changes to
-persistence, permissions, security, concurrency, retries, and public
-contracts; trace affected callers before concluding behavior is safe. Three
-obligations are non-negotiable:
+This section sets what the pipeline needs from a code review. It does not set
+how to review. Use your own judgment on the method and on the severity of
+each finding. The [finding format](references/findings.md) maps each label to
+its tier.
 
-- **Verify every done criterion is met.** Flag any that are missing or
-  incomplete.
-- **Run the project's test suite.** Report the command used and the result.
-- **Check each rule the diff introduces reaches every surface it must.**
-  When the changed code or prose has more than one way in — two entry modes,
-  a path documented as usable on its own, a split across turns or processes —
-  a new rule added to one is not added to the others by implication. Take
-  each rule the diff adds and name where it now holds. A rule present in one
-  surface and silently absent from a sibling is a finding; a stated reason
-  for the absence answers it. Read a self-contained path **alone**, the way
-  its callers arrive at it.
-
-**Coverage checklist** — every changed file is checked against every item;
-no order implied:
-
-- **Correctness** — does the logic do what it claims?
-- **Maintainability** — intention-revealing names, obvious control flow.
-- **Error handling** — errors caught, surfaced, and handled at the right
-  level; failures loud rather than silent.
-- **Type contracts** — compare declared or enforced contracts with runtime
-  values and boundary validation ([code standards](references/code-standards.md)).
-- **Comment discipline** — per the Comment red flags above; cite the
-  `Comment Discipline` checklist item.
-- **Unnecessary complexity** — abstraction serving no current need.
-- **System fit** — does a sibling implementation now diverge? Does a caller
-  outside the diff need updating? Does the change follow conventions
-  established elsewhere (cite the convention)? Findings cite the
-  `System Fit` checklist item. When the diff removes or weakens
-  long-standing behavior — a guard, a threshold, a workaround that looks
-  deliberate — check its rationale before flagging or approving the
-  removal. Find the introducing commit with `git log -S '<removed line>'`,
-  `git blame` on the parent revision, or `git log -- <path>`. Read that
-  commit's message and any doc or issue it links. A Chesterton's-fence deletion
-  whose motivating constraint still holds is a finding; one whose
-  constraint provably evaporated is not.
-- **SOLID violations** — per the [code standards](references/code-standards.md).
-- **Test files** — per both severity regimes above and the
-  [testing rules](references/testing.md).
+- **Input.** Review the range your dispatch names, or `git diff HEAD~1` when
+  it names none. Judge the range against the intent artifacts your dispatch
+  names and the done criteria in the plan or commits the branch carries. When no
+  criteria exist, judge general correctness.
+- **Done criteria and tests.** Report each done criterion under `### Checks`,
+  met or not met. Run the project's test suite and report the command and
+  its result.
+- **Locked tests.** The lock source is the acceptance list in the `8-plan.md`
+  beside the design and structure paths the slice commits cite, or at the
+  predecessor artifact path in your dispatch. Standalone `/team-code-review` uses
+  the `Locked acceptance tests:` line in your dispatch. A line that reads
+  `unknown` locks every test the branch adds. Read a malformed line as
+  `unknown`, and say so under `### Checks`. An absent line adds no lock
+  beyond a found plan.
+- **Pre-existing defects.** Mark a finding `issue (pre-existing)` only when
+  `git show <merge-base-sha>:<path>` shows the defect at the cited line, and
+  the branch neither introduced it nor made it reachable or worse. When you
+  are unsure, the defect belongs to the branch.

@@ -1,12 +1,13 @@
 ### Orchestrator-Emit Gate (PR / ship)
 
-When the aggregate gate passes:
+When the newest `review-<n>.md` carries PASS and is current:
 
-1. Update an existing `CHANGELOG.md`: read [changelog rules](../team-pr/references/changelog.md) and apply it
-   — bullets go under `## [Unreleased]`. If the root file is absent, leave it
-   absent and report the skip unless the user explicitly requested a new
-   changelog. In multi-repo mode, apply this rule per repo and add only that
-   repo's entries.
+1. **Edit nothing before `team-pr` binds the review status.** Leave
+   `CHANGELOG.md` to `team-pr`: its execution step 3 binds the status from
+   the newest `review-<n>.md`, and only then does its step 6 apply the
+   [changelog rules](../team-pr/references/changelog.md). A record is
+   current only over a tree clean outside `docs/plans/`, so an edit here
+   would bind `stale`.
 2. **Never version here.** Do not touch a version string, cut a dated
    changelog section, or put a version in the PR title. A project invariant
    that reports this branch owing a bump names a precondition for *merging* —

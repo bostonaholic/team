@@ -33,8 +33,8 @@ Resolve `<team-skill-dir>` to the absolute directory containing
     description, then proceed from the new directory in **standalone mode**.
 
 **Standalone mode** — whenever the directory (explicit, user-given, or freshly
-derived) lacks `8-plan.md`, run `test-architect` → `implementer` → reviewers
-from `$ARGUMENTS/1-task.md` alone.
+derived) lacks `8-plan.md`, run `test-architect` → `implementer` from
+`$ARGUMENTS/1-task.md` alone. This phase dispatches no reviewer.
 
 Seed TodoWrite:
-`Test-architect → Mechanical gate → Implementer (per slice) → Review round 1`.
+`Test-architect → Mechanical gate → Implementer (per slice)`.

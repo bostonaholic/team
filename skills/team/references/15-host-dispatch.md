@@ -66,10 +66,10 @@ Capability mapping for the body-load path:
   the enforcement, and the orchestrator verifies the subagent holds no mutating
   tool before dispatch. Claude Code ignores `permissionMode` for plugin agents
   and under an auto, `acceptEdits`, or `bypassPermissions` main session, so
-  there the tool grant is the only enforcement. IMPLEMENT's tree check
+  there the tool grant is the only enforcement. CODE REVIEW's tree check
   detects a reviewer's shell mutation.
 
-Dispatch independent agents concurrently — RESEARCH's pair, IMPLEMENT's five
+Dispatch independent agents concurrently — RESEARCH's pair, CODE REVIEW's five
 reviewers — up to the host's concurrent-subagent cap. Batch the fan-out when it
 exceeds the cap; never serialize reviewers for convenience. Every dispatch must
 return to the orchestrator in full. A host mode that returns only a truncated
@@ -78,6 +78,6 @@ notice and holds the body elsewhere loses a return-only agent's entire output
 
 The body-load payload is the same for every phase: the agent body, the
 canonical artifact directory, and the predecessor artifact paths the phase
-table names. The orchestrator never adds the user's original description
+table names or, for CODE REVIEW, the intent paths `team-code-review` names. The orchestrator never adds the user's original description
 downstream of QUESTION, and never adds the implementer's account of its own
 work to a reviewer's payload.

@@ -29,7 +29,7 @@ For missing imports, fixtures, types, or runner config, add only the minimum pla
 
 ### 4. Lock the test list
 
-After correct Red state, acceptance tests are immutable during IMPLEMENT:
+After correct Red state, acceptance tests are immutable during IMPLEMENT and CODE REVIEW:
 
 - add none;
 - remove none;
@@ -45,7 +45,7 @@ A needed change returns to PLAN; the structure regenerates the plan. There is no
 
 ### Completion contract
 
-Proceed to VERIFY only when all acceptance tests pass unchanged, none were added or removed, and the full prior suite has no regression.
+Proceed to CODE REVIEW only when all acceptance tests pass unchanged, none were added or removed, and the full prior suite has no regression.
 
 ## Implementer contract
 
@@ -59,20 +59,23 @@ Before changing production code, audit every immutable acceptance test against t
 
 ### Review-fix dispatch (after a hard-gate failure)
 
-The orchestrator supplies a typed failure class and reviewer findings. Fix every named item:
+`team-code-review` supplies the typed failure classes and this round's Blocking and Major lines. Fix every named item:
 
 - Security: fix the vulnerability directly—parameterize queries, remove secrets, add auth, escape output; never weaken the fix.
-- Tests: change code, never the immutable tests. Code review: fix every `issue:`. Lint/format/typecheck/build: rerun until passing; use `--fix` first where available.
+- Tests: change code, never the immutable tests. Code review: fix every finding the dispatch names. Lint/format/typecheck/build: rerun until passing; use `--fix` first where available.
 - For a non-obvious failure whose first fix is a guess, read [diagnosis reference](../team-fix/references/diagnosis.md) and complete **Root Cause Analysis (5 Whys)** ([bug fix rules](../team-fix/playbooks/bug-fix.md)). Skip it for an obvious typo, named assertion, or one-line correction.
+- When a finding names a bug class, fix every instance of that class in the review range in this one fix round.
+- Under a `Reconsider approach:` line, complete **Root Cause Analysis (5 Whys)** ([diagnosis reference](../team-fix/references/diagnosis.md)) for each open finding class. Replace the approach that produces the class, inside scope, instead of a patch to the cited lines. The scope is the plan's named changes. When `8-plan.md` is absent, the scope is the `1-task.md` acceptance criteria.
 
-Then run the full suite, resolve every failure type from the round, and report each fix. The orchestrator re-dispatches ALL 5 reviewers.
+Then run the full suite and resolve every failure type from the round. Commit the round's fixes per [commit discipline](../team-pr/references/commit.md): a Conventional Commits subject and one logical change per commit. Never bypass commit signing. In multi-repo mode, commit in each worktree the fixes touched. Never commit `docs/plans/`. Leave every worktree in scope clean outside it, so `git status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'` prints nothing. The next round reviews only commits, and a review record is current only over a clean tree. Report each fix with its commit SHA. `team-code-review` then runs a fresh five-reviewer round.
 
 ### Slice-by-slice execution
 
 - Follow plan order. `[sequential]` steps depend on prior steps; `[parallel]` steps may reorder. Switch repo worktrees for `[repo: <slug>]` steps and `<repo>:` tests.
 - A slice finishes only when its acceptance tests and all prior-slice tests pass.
-- Read [commit discipline](../team-pr/references/commit.md): Conventional Commits, 50/72, one logical change. Single repo: one commit using the slice `Commit:` subject and citing design/structure paths. Multi-repo slice: one commit per named repo using its `Commit:` subject; each body cites the same paths and says `part of slice <N>: <name>`.
-- Report `{slice: <name>, testsPassing: [list], commits: [{repo: <slug>, sha: <sha>}, ...]}`; single-repo has one commit entry. After all slices, return paths, slice list, and final test status.
+- Read [commit discipline](../team-pr/references/commit.md): Conventional Commits, 50/72, one logical change. Use the slice `Commit:` subject byte for byte: the "IMPLEMENT complete" rule in the "Branch state" section of the [artifact schema](references/artifacts.md) matches it exactly. Single repo: one commit citing design/structure paths. Multi-repo slice: one commit with that subject in each named repo; each body cites the same paths and says `part of slice <N>: <name>`.
+- Report `{slice: <name>, testsPassing: [list], commits: [{repo: <slug>, sha: <sha>}, ...]}`; single-repo has one commit entry.
+- After the last slice, run the full suite and every static check the project defines (typecheck, lint, format, build), detected the way the [verify playbook](playbooks/verify.md) detects them. Fix each failure inside the plan scope, and commit those fixes per [commit discipline](../team-pr/references/commit.md): a Conventional Commits subject, one logical change per commit, signing never bypassed, `docs/plans/` never committed. Hand off with every worktree clean outside `docs/plans/`, so `git status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'` prints nothing; CODE REVIEW refuses a dirty tree. Report each check's result, then return paths, the slice list, and final test status.
 
 ### TDD and scope invariants
 
@@ -87,3 +90,5 @@ Then run the full suite, resolve every failure type from the round, and report e
 1. Record what is blocked, why, and the required unblocker.
 2. Continue only with dependency-safe unblocked slices.
 3. Revisit blocked slices after unblocked work completes.
+
+In a review-fix dispatch, a blocker names the finding and the plan step. When `8-plan.md` is absent, it names the `1-task.md` criterion instead of a plan step.

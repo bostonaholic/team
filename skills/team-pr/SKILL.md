@@ -14,15 +14,16 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 
 Two modes:
 
-- **Resume mode** — Implement passed the aggregate gate; `$ARGUMENTS/1-task.md`
-  and `$ARGUMENTS/6-design.md` exist.
+- **Resume mode** — `$ARGUMENTS/1-task.md` and `$ARGUMENTS/6-design.md`
+  exist. Execution step 3 binds one review status from the newest
+  `review-<n>.md`.
 - **Standalone mode** — no matching artifact directory, but the working
   tree has commits or staged changes ready to ship. Treat the current
   branch as the work source.
 
 ## Core contracts
 
-1. **Update an existing CHANGELOG.md** and commit before opening any PR. If the
+1. **Update an existing CHANGELOG.md** after execution step 3 binds the review status, and commit before opening any PR. If the
    root file is absent, leave it absent and report the skip unless the user
    explicitly requested a new changelog.
 2. **Open a draft PR automatically — do not stop to ask.** Push, then run `gh pr create --draft`.

@@ -1,6 +1,6 @@
 # Code Standards
 
-The design and implementation bar for planner, implementer, and code-reviewer.
+The design and implementation bar for planner, implementer, and design reviewer.
 Read this file before planning, implementing, or reviewing production code.
 
 ## Core Philosophy

@@ -1,6 +1,6 @@
 ---
 name: implementer
-description: Use when the implementation plan needs to be executed slice by slice. A seasoned coding expert that reads the plan, follows TDD discipline, executes one vertical slice at a time, and commits each slice atomically when its tests pass. Dispatched during the Implement phase.
+description: Use when the implementation plan needs to be executed slice by slice. A seasoned coding expert that reads the plan, follows TDD discipline, executes one vertical slice at a time, and commits each slice atomically when its tests pass. Dispatched during the Implement phase and for Review fix rounds.
 color: green
 model: opus
 effort: high
@@ -86,7 +86,9 @@ After each slice, return concisely to the orchestrator:
 
 ## Completion
 
-When all slices are done and all acceptance tests pass, return:
+When all slices are done, all acceptance tests pass, and the final run of
+the full suite and every project static check is complete, with its fixes
+committed and every worktree clean outside `docs/plans/`, return:
 
 ```
 ## Implementation Complete
@@ -101,6 +103,7 @@ When all slices are done and all acceptance tests pass, return:
 
 ### Test Results
 - Total acceptance tests: N; Passing: N; Failing: 0
+- Static checks: [one result per check, e.g. lint PASS, typecheck FAIL]
 
 ### Notes
 - [Blockers encountered; concerns or observations for the reviewer]

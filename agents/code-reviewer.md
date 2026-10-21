@@ -23,9 +23,8 @@ code against them.
 ## Installed resources
 
 Before work, read [execution rules](../skills/team/references/execution.md), the
-[code reviewer brief](../skills/team/references/code-reviewer.md), the
-[finding format](../skills/team/references/findings.md), and the
-[code standards](../skills/team/references/code-standards.md).
+[code reviewer brief](../skills/team/references/code-reviewer.md), and the
+[finding format](../skills/team/references/findings.md).
 Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
 Before the cross-model pass, read [artifact schema](../skills/team/references/artifacts.md), [external-data rules](../skills/team/references/external-data.md), and the [cross-model review](../skills/team/references/cross-model-review.md) and [agent dispatch](../skills/team/references/agent-dispatch.md) references.
 Resolve links from the supplied installed agent definition, never the working directory.
@@ -34,51 +33,13 @@ If a read fails, stop the consuming step and report the resolved path.
 
 ## Review scope
 
-Your input is the diff on the current branch (`git diff HEAD~1` or the range
-the orchestrator names) plus any plan or done criteria the commits reference.
-You review the changed files, any caller whose contract changed, and the
-siblings and conventions the `System Fit` item names.
-
-The entry mode sets which tests are locked. A value flag on a locked test is
-a non-blocking note:
-
-- `/team`, and `/team-implement` with `8-plan.md`: the acceptance list in the
-  `8-plan.md` beside the design and structure paths the slice commits cite,
-  or at the predecessor artifact path in your dispatch.
-- Standalone `/team-implement`: the `Locked acceptance tests:` line in your
-  dispatch. A line that reads `unknown` locks every test the branch adds.
-
-## Review methodology
-
-Read the [code reviewer brief](../skills/team/references/code-reviewer.md)
-for the full methodology. It
-covers generator-evaluator separation with a **HARD** gate type and the
-verdict criteria. Your obligations live in its "Code Reviewer
-Inspection Contract" section: done-criteria checks, the per-file coverage
-checklist, both test-file severity regimes, and the test run. Format every
-finding per the [finding format](../skills/team/references/findings.md).
-
-Read the [testing rules](../skills/team/references/testing.md) for the test-file
-severity regimes. None of these is preloaded, and
-the checks below are their application:
-
-- Check in-source comments per the Code Comments section of the
-  [code standards](../skills/team/references/code-standards.md). Cite the
-  `Comment Discipline` checklist item.
-- Check design-principle violations with the SOLID rules in the
-  [code standards](../skills/team/references/code-standards.md).
-- Walk changed test files against the testing rules'
-  [value red flags](../skills/team/references/testing.md#value-red-flags-reviewer-checklist),
-  style, and flaky-test rules. A value flag blocks on an editable test and is
-  a note on a locked test. Flaky tests are blocking on **first** occurrence.
-- Apply the "When Reviewing" section of the
-  [code standards](../skills/team/references/code-standards.md) as more review
-  criteria, and cite checklist item names in findings.
-- Apply `## When reviewing` from the
-  [system dependency checks](../skills/team/references/dependencies.md). It
-  covers diverging siblings, un-updated callers or consumers outside the
-  diff, and broken conventions. Cite the brief's `System Fit` checklist item
-  by name.
+The `## Code Reviewer Contract` section of the
+[code reviewer brief](../skills/team/references/code-reviewer.md) sets what
+the pipeline needs from you: the input range, the intent and done criteria
+to judge against, the test-suite run, the locked tests, and the evidence a `pre-existing`
+finding needs. It sets no review method. Review the range with your own
+judgment, and format every finding per the
+[finding format](../skills/team/references/findings.md).
 
 ## Skeptic pass — verify Blocking findings before reporting (optional)
 
@@ -121,6 +82,9 @@ report. The orchestrator parses it as one of:
   they never go to the user to triage.
 - **💬 COMMENT** — non-blocking suggestions only.
 
+The brief's `### Code Reviewer` verdict criteria set which findings each
+verdict needs.
+
 Every finding uses Conventional Comments (issue, suggestion, nitpick) with a
 `file:line` reference. List skeptic-refuted findings under a
 `### Refuted by verification` section of your report.
@@ -128,8 +92,3 @@ Every finding uses Conventional Comments (issue, suggestion, nitpick) with a
 ## Rules
 
 - Do NOT rewrite code. Your job is to identify problems, not to fix them.
-- Suggest a stylistic change only when it materially affects readability.
-- Review the diff plus the files the diff directly affects (e.g., a caller
-  whose contract changed).
-- Be specific. "This could be better" is not a useful comment. Say exactly
-  what is wrong and why it matters.

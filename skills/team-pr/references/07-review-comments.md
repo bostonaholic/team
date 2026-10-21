@@ -14,10 +14,12 @@ finding goes. When `docs/plans/<id>/cross-model-notes.md` exists, the notes
 file is the single carrier of those findings. Sources (a) and (b) each exclude
 any finding under the `### Cross-model disposition` heading.
 
-- (a) Every Minor-and-below finding from the final aggregate review round,
-  tagged by source reviewer, such as `[code-reviewer]` or
-  `[security-reviewer]`. Apply the exclusion to the final round's inline
-  disposition block.
+- (a) Every line under `### Minor and below` in the review record bound at
+  execution step 3, when its status is `current` or `stale`. Each line
+  already carries its source reviewer tag, such as `[code-reviewer]` or
+  `[security-reviewer]`. The record's tier sort already excludes
+  `### Cross-model disposition` findings. A tier that reads `None.` gives
+  an empty (a).
 - (b) COMMENT findings from the latest `design-review-<n>.md`, tagged
   `design-review-<n>`. Apply the exclusion the same way.
 - (c) The loud unresolved-repo omission note from `6-design.md` `## Risks`, or
@@ -55,10 +57,12 @@ steps in order:
    ```
 
 2. Write (a)-(c) to `$RUN_DIR/findings.md` with the Write tool, one tagged
-   finding per line. Never write it with a heredoc or a shell argument. The
-   findings are reviewer text, so pass them by file only, per the
+   finding per line. Copy (a) from the bound record. Never write it with a
+   heredoc or a shell argument. The findings are reviewer text, so pass them
+   by file only, per the
    [external data rules](../../team/references/external-data.md). When (a)-(c)
-   are empty, write no findings file.
+   are empty, write no findings file. The ship commit moves HEAD after the
+   binding and changes nothing here.
 3. Read the existing PR comments:
 
    ```sh
@@ -97,7 +101,7 @@ order:
 
 1. `review-notes`: the `## Review notes` heading, then the findings from
    (a)-(c). Then, under a `cross-model-notes` tag line, every unlabeled block
-   in file order. The IMPLEMENT blocks carry no label, so they go here. Text
+   in file order. The CODE REVIEW blocks carry no label, so they go here. Text
    above the first block goes here too.
 2. `design-round-<n>`, in ascending `<n>`: every block labeled
    `Design round <n>`, in file order. The label is the first visible line.
@@ -127,10 +131,10 @@ count, so Team still posts its own.
 
 ### Accepted limits
 
-- Team never edits or deletes a posted comment. Findings or IMPLEMENT blocks
+- Team never edits or deletes a posted comment. Findings or CODE REVIEW blocks
   added after the PR opens do not reach the PR.
-- Source (a) lives in the session only. When the `review-notes` post fails
-  and the session ends before a refresh, (a) is lost.
+- Source (a) comes from the review record bound at execution step 3, so a
+  new session reads the same lines.
 - A different `gh` login between open and refresh sees no viewer markers, so
   it posts duplicates.
 - Two sessions that post to one PR at the same time can both post.
@@ -147,8 +151,8 @@ and a report, per [focused work rules](../../team/principles/focused-work.md).
   unreadable file, or a malformed existing-comments file.
 - When a `gh pr comment` fails, stop posting. Report the key, the `gh` error,
   and each key not attempted.
-- In a new session that does not hold the aggregate result, (a) is not
-  available. Post (b)-(d) and report that (a) was not in this session.
+- When the bound review status is `missing`, post (b)-(d) and report that
+  no passing review record exists.
 
 ### Completion report
 
