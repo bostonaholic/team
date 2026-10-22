@@ -127,7 +127,7 @@ npx skills@latest add bostonaholic/skills
 
 As plugins, the skills carry the `bostonaholic:` prefix instead of `team:`. Update Team first, then install the skills. Docs: https://skills.bostonaholic.dev
 
-**Set up before v0.147.0?** Update Team, then run `/team-migrate` (`team:team-migrate` on Codex). It finds every harness on the machine, shows one plan, and after you confirm it installs Team and the collection natively everywhere, removes local-checkout installs and their pull hooks, and moves old-name skill copies to a `-retired` folder. It deletes no skill copy, and a second run changes nothing.
+**Set up before v0.147.0?** Update Team, then run `/team-migrate` (`team:team-migrate` on Codex). It finds every harness on the machine, shows one plan, and after you confirm it installs Team and the collection natively everywhere, removes local-checkout installs and their pull hooks, and moves old-name skill copies to a `-retired` folder. It deletes no skill copy, and a second run changes nothing. To update Team later in every harness that has it, run `/team-update` (`team:team-update` on Codex): it plans, asks once, and updates only installs that came from a release. It installs nothing new, and it leaves a dev install from a local checkout for you to pull.
 
 The pipeline does not need these skills. It keeps its own copies of the reviewer briefs, the screenshot upload, and the worktree teardown.
 

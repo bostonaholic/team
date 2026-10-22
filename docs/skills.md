@@ -41,7 +41,7 @@ This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 13 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 14 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
 
 Skills outside the pipeline moved out of Team; see [Skills that moved](index.md#skills-that-moved).
@@ -147,15 +147,25 @@ Runs the compressed bug-fix pipeline.
 
 **Uses:** `team-worktree`
 
-## Setup migration
+## Setup migration and update
 
-An explicit-only command that changes the user's agent setup rather than a
+Explicit-only commands that change the user's agent setup rather than a
 repository.
 
 ### [team-migrate](https://github.com/bostonaholic/team/blob/main/skills/team-migrate/SKILL.md)
 
 Moves a machine set up before v0.147.0 onto the Team and bostonaholic/skills
 plugins in every harness, with no moved skill missing or shown twice.
+
+**Used by:** None
+
+**Uses:** None
+
+### [team-update](https://github.com/bostonaholic/team/blob/main/skills/team-update/SKILL.md)
+
+Updates Team to the latest release in every harness that already has it from a
+release. It installs Team nowhere new, retires no skill copy, and leaves a dev
+install from a local checkout for the developer to pull.
 
 **Used by:** None
 

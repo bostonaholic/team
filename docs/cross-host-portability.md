@@ -331,7 +331,7 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
    path, so no methodology registration remains for Codex to list. The principle
    tier is returning as guarded `disable-model-invocation` skills, kept out of
    Codex's implicit catalog by `allow_implicit_invocation: false`; the `$`
-   picker shows the 13 commands. See
+   picker shows the 14 commands. See
    [the divergence note](#57-codex-port) for the historical evidence.
 
 3. **Recency risk.** This is cross-cutting rather than a primitive gap. Codex's
@@ -443,12 +443,12 @@ full parity. It starts from the matrix and works around the named gaps.
   runs the new code under the old number (#355).
 - **Codex's plugin validator rejects `disable-model-invocation`.**
   `plugin-creator`'s `validate_plugin.py` requires the key to be absent or
-  `false`, and Team's guarded skill, `team-migrate`, sets it `true` because Claude Code
+  `false`, and Team's guarded skills, `team-migrate` and `team-update`, set it `true` because Claude Code
   needs it. The runtime does not enforce the rule, and this host's own
   equivalent — `policy.allow_implicit_invocation: false` in each skill's
   `agents/openai.yaml` — keeps it out of the implicit catalog. The
   divergence is deliberate and the validator finding is expected.
-- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 13 commands remain in the picker. The guarded `team-migrate` declares `allow_implicit_invocation: false`, so it adds no implicit-invocation entry.
+- **Codex ignores `user-invocable: false` for the retired methodology registrations.** The playbook refactor removed those registrations, so only the 14 commands remain in the picker. The guarded `team-migrate` and `team-update` declare `allow_implicit_invocation: false`, so they add no implicit-invocation entry.
   Historical probe evidence: the `$` picker was fed by the `skills/list` app-server method, which returned all
   100 Team skills with `enabled: true`, `team:principle-fix-root-causes` among
   them. Its `SkillMetadata` payload carries nine fields — `dependencies`,
@@ -552,7 +552,7 @@ a file, and installing from a URL clones fresh so the socket never exists.
 
 **`disable-model-invocation` is honored.** With the plugin installed, the probe (taken when the plugin shipped 54 skills, two of which set the key) had the agent list 52 of them. The two missing ones were exactly the two that set the key. This host therefore keeps every guarded skill out of the model's reach on its own, and it is why Team's install for this host withholds nothing.
 
-Codex reaches the same end through its own key: `team-migrate` declares `policy.allow_implicit_invocation: false` in its `agents/openai.yaml`.
+Codex reaches the same end through its own key: `team-migrate` and `team-update` declare `policy.allow_implicit_invocation: false` in their `agents/openai.yaml`.
 OpenAI [documents](https://learn.chatgpt.com/docs/build-skills) that key as
 blocking implicit invocation while leaving explicit `$skill` invocation
 working, which is what `disable-model-invocation` buys on the other two hosts.

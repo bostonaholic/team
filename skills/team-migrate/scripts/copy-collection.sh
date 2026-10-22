@@ -25,6 +25,8 @@
 set -euo pipefail
 export LC_ALL=C
 
+# shellcheck disable=SC2034  # names this script in lib.sh's messages
+TOOL=team-migrate
 # shellcheck source=lib.sh
 . "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 
