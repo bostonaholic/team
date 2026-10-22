@@ -257,6 +257,16 @@ test("a current Antigravity copy with no release clone plans no clone", (t) => {
   assert.ok(!existsSync(fx.release));
 });
 
+test("an Antigravity copy newer than the tag is kept, not downgraded", (t) => {
+  const fx = fixture(t);
+  fx.install.antigravity("99.0.0");
+  const plan = planOf(fx);
+  assert.equal(plan.status, 0, plan.stdout + plan.stderr);
+  assert.deepEqual(stepsOf(plan), []);
+  assert.match(plan.stdout, /Harnesses with Team from a release: antigravity$/m);
+  assert.match(plan.stdout, /^Nothing to do\.$/m);
+});
+
 test("an Antigravity copy behind with no release clone clones, then installs", (t) => {
   const fx = fixture(t);
   fx.install.antigravity(OLD_VERSION);
@@ -342,6 +352,33 @@ test("a path Team's install did not make is left, not a blocker", (t) => {
   assert.equal(plan.status, 0, plan.stdout + plan.stderr);
   assert.match(plan.stdout, /^ {2}- opencode: .*\/plugins\/team\.js was not made by Team's install; leaving it$/m);
   assert.match(plan.stdout, /^ {2}- cursor: .*\/local\/team was not made by Team's install; leaving it$/m);
+});
+
+test("a regular file at the Antigravity path and a link at the Cursor path are left", (t) => {
+  const fx = fixture(t);
+  mkdirSync(dirname(fx.agyTeam), { recursive: true });
+  writeFileSync(fx.agyTeam, "mine\n");
+  mkdirSync(dirname(fx.cursorTeam), { recursive: true });
+  symlinkSync(fx.dev, fx.cursorTeam);
+  const before = machine(fx);
+  const plan = planOf(fx);
+  assert.equal(plan.status, 0, plan.stdout + plan.stderr);
+  assert.deepEqual(stepsOf(plan), []);
+  assert.match(plan.stdout, /^ {2}- antigravity: .*\/plugins\/team was not made by Team's install; leaving it$/m);
+  assert.match(plan.stdout, /^ {2}- cursor: .*\/local\/team was not made by Team's install; leaving it$/m);
+  assert.equal(fx.run(["apply", plan.id]).status, 0);
+  assert.equal(machine(fx), before);
+});
+
+test("a failed Codex read blocks without saying Team is not installed in Codex", (t) => {
+  const fx = fixture(t);
+  fx.install.claude(OLD_VERSION);
+  fx.setState((s) => ({ ...s, codex: { markets: { gone: { sourceType: "local", source: "/nowhere", root: "/nowhere" } }, plugins: [] } }));
+  const plan = planOf(fx);
+  assert.equal(plan.status, 4, plan.stdout + plan.stderr);
+  assert.match(plan.stdout, /codex: cannot list plugins: .*codex plugin marketplace remove <name>/);
+  assert.doesNotMatch(plan.stdout, /^ {2}- codex: Team is not installed/m);
+  assert.doesNotMatch(plan.stdout, /\[codex\]/);
 });
 
 test("a marketplace from another source blocks the plan", (t) => {

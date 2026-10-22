@@ -41,9 +41,12 @@
 #                      odd harness does not stop the others. A Claude Code or
 #                      Codex marketplace from another source does block, as
 #                      in team-migrate: plan_team names the remedy.
-#   Antigravity copy   Counted among the harnesses with Team always, but needs
-#                      the release clone only when its version is behind, so a
-#                      current copy with no clone plans nothing.
+#   Antigravity copy   A copy carries no source marker, so a copy made from a
+#                      local checkout is replaced like one from the release
+#                      clone. It needs the release clone only when its version
+#                      is behind the tag; a copy at or past the tag is kept, so
+#                      a current copy with no clone plans nothing and a newer
+#                      one is never downgraded.
 #   Run in place       Apply runs from this skill's own directory. It runs no
 #                      dev uninstall, and git and the plugin hosts replace
 #                      files instead of editing them, so the open script
@@ -109,7 +112,7 @@ classify_codex() {
 classify_antigravity() {
   if [ -L "$AGY_TEAM" ]; then dev_install antigravity "$(readlink "$AGY_TEAM")"
   elif [ -d "$AGY_TEAM" ]; then
-    if [ "$(plugin_version "$AGY_TEAM/plugin.json")" = "$TEAM_VERSION" ]; then keep antigravity; else keep antigravity dir; fi
+    if version_current "$(plugin_version "$AGY_TEAM/plugin.json")" "$TEAM_VERSION"; then keep antigravity; else keep antigravity dir; fi
   elif present "$AGY_TEAM"; then foreign antigravity "$AGY_TEAM"
   else absent antigravity; fi
 }

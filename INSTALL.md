@@ -8,7 +8,9 @@ installation. Execution limits are listed beside setup. Pick yours.
 
 Already installed from a release? `/team-update` (`team:team-update` on Codex)
 updates Team in every harness that has it in one step. It installs Team into no
-harness that lacks it and leaves a local-checkout install for you to pull.
+harness that lacks it and leaves a local-checkout install for you to pull. An
+Antigravity copy carries no source marker, so a behind copy made from a local
+checkout is replaced.
 
 ## Claude Code
 

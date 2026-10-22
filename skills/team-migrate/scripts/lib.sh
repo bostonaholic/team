@@ -9,9 +9,6 @@
 #   BLOCKS     one line per condition that stops the plan from running
 #   HARNESSES  the harnesses on this machine, space-separated
 #   SESSIONS   other running agent sessions, one per line
-# A script that sources this file sets TOOL (its name, for messages) first,
-# and defines plan_header, before_apply, and
-# done_message, which the plan runner at the end of the file calls.
 # Runs under macOS /bin/bash 3.2: no associative arrays, no mapfile.
 
 LIB_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -580,10 +577,11 @@ compute_plan() {
 
 # --- Running a plan ------------------------------------------------------------
 
-# Callers fill STEPS, BLOCKS, and optionally LEFT (lines for what the plan
-# leaves alone), then call parse_command and run_command. Each caller defines
-# plan_header (the lines above the steps), before_apply <plan-id> (runs before
-# the first step of a real apply), and done_message.
+# A script that sources this file sets TOOL (its name, for messages) first. It
+# fills STEPS, BLOCKS, and optionally LEFT (lines for what the plan leaves
+# alone), then calls parse_command and run_command. It defines plan_header (the
+# lines above the steps), before_apply <plan-id> (runs before the first step of
+# a real apply), and done_message.
 
 usage() {
   printf 'usage: %s plan | %s apply <plan-id>\n' "$0" "$0" >&2
