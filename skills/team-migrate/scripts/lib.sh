@@ -1,6 +1,7 @@
 # shellcheck shell=bash
-# Shared paths and read-only state readers for team-migrate. Sourced by
-# migrate.sh and verify.sh; it changes nothing on its own.
+# Shared paths, read-only state readers, and the plan runner for team-migrate
+# and team-update. Sourced by migrate.sh, verify.sh, and team-update's
+# update.sh; it changes nothing on its own.
 #
 # compute_plan reads every harness on the machine and fills:
 #   STEPS      one record per step, in run order: <harness>, <action>, <arg>,
@@ -8,6 +9,9 @@
 #   BLOCKS     one line per condition that stops the plan from running
 #   HARNESSES  the harnesses on this machine, space-separated
 #   SESSIONS   other running agent sessions, one per line
+# A script that sources this file sets TOOL (its name, for messages) first,
+# and defines plan_header, before_apply, and
+# done_message, which the plan runner at the end of the file calls.
 # Runs under macOS /bin/bash 3.2: no associative arrays, no mapfile.
 
 LIB_DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -47,7 +51,7 @@ NL='
 '
 
 die() {
-  printf 'team-migrate: %s\n' "$1" >&2
+  printf '%s: %s\n' "$TOOL" "$1" >&2
   exit 1
 }
 
@@ -547,7 +551,7 @@ other_sessions() {
 
 compute_plan() {
   local harness
-  STEPS="" BLOCKS="" TEAM_REMOVED=false RELEASE_MOVES=false DIR_HARNESSES=""
+  STEPS="" BLOCKS="" LEFT="" TEAM_REMOVED=false RELEASE_MOVES=false DIR_HARNESSES=""
   load_names
   HARNESSES="$(harnesses)"
   for harness in $HARNESSES; do
@@ -572,4 +576,205 @@ compute_plan() {
   plan_team
   # shellcheck disable=SC2034  # read by the scripts that source this file
   SESSIONS="$(other_sessions)" || SESSIONS=""
+}
+
+# --- Running a plan ------------------------------------------------------------
+
+# Callers fill STEPS, BLOCKS, and optionally LEFT (lines for what the plan
+# leaves alone), then call parse_command and run_command. Each caller defines
+# plan_header (the lines above the steps), before_apply <plan-id> (runs before
+# the first step of a real apply), and done_message.
+
+usage() {
+  printf 'usage: %s plan | %s apply <plan-id>\n' "$0" "$0" >&2
+  exit 2
+}
+
+# Checks the command line: `plan`, or `apply` with a 40-hex plan id.
+parse_command() {
+  case "${1:-}" in
+    plan) [ "$#" -eq 1 ] || usage ;;
+    apply)
+      [ "$#" -eq 2 ] || usage
+      case "$2" in *[!0-9a-f]* | "") usage ;; esac
+      [ "${#2}" -eq 40 ] || usage
+      ;;
+    *) usage ;;
+  esac
+}
+
+# Runs the planned command. Outside any repository, so the id is always
+# SHA-1's 40 hex.
+run_command() {  # <plan | apply> [<plan-id>]
+  PLAN_ID="$(printf '%s' "$STEPS" | (cd / && git hash-object --stdin))"
+  case "$1" in
+    plan)
+      render_plan
+      [ -z "$BLOCKS" ] || exit 4
+      ;;
+    apply) apply_plan "$2" ;;
+  esac
+}
+
+RUN_MODE=run
+
+# Every command goes through here, so the plan shows exactly what apply runs.
+run() {
+  if [ "$RUN_MODE" = show ] || [ "${DRY_RUN:-}" = true ]; then
+    if [ "$RUN_MODE" = show ]; then printf '     $'; else printf '  [dry run]'; fi
+    printf ' %q' "$@"
+    printf '\n'
+    return 0
+  fi
+  "$@"
+}
+
+# Moves each named entry of a directory into its -retired sibling. Every
+# target is checked absent first, `mv -n` never replaces a file, and each move
+# is checked after it runs.
+retire() {  # <dir> <names>
+  local dir="$1" names="$2" name moved=""
+  set --
+  for name in $names; do
+    if [ "$RUN_MODE" = run ]; then
+      if ! present "$dir/$name"; then
+        echo "  skip: $dir/$name is already gone"
+        continue
+      fi
+      if present "$dir-retired/$name"; then
+        echo "$TOOL: $dir-retired/$name already exists; move $dir/$name aside by hand" >&2
+        return 1
+      fi
+    fi
+    set -- "$@" "$dir/$name"
+    moved="$moved $name"
+  done
+  [ "$#" -gt 0 ] || return 0
+  run mkdir -p "$dir-retired" && run mv -n "$@" "$dir-retired/" || return 1
+  if [ "$RUN_MODE" != run ] || [ "${DRY_RUN:-}" = true ]; then return 0; fi
+  for name in $moved; do
+    if present "$dir/$name" || ! present "$dir-retired/$name"; then
+      echo "$TOOL: $dir/$name did not move to $dir-retired/$name" >&2
+      return 1
+    fi
+  done
+}
+
+record_checkout() {
+  if [ "$RUN_MODE" != run ] || [ "${DRY_RUN:-}" = true ]; then return 0; fi
+  mkdir -p "$MIGRATE_HOME"
+  grep -qxF "$1" "$CHECKOUTS_FILE" 2>/dev/null || printf '%s\n' "$1" >> "$CHECKOUTS_FILE"
+}
+
+run_step() {  # <action> <arg> <arg2>
+  case "$1" in
+    release-clone)
+      run mkdir -p "$MIGRATE_HOME" &&
+        run git -c advice.detachedHead=false clone --quiet --depth 1 --branch "$2" "$TEAM_URL" "$RELEASE_DIR" ;;
+    release-update)
+      run git -C "$RELEASE_DIR" fetch --quiet --depth 1 origin tag "$2" &&
+        run git -C "$RELEASE_DIR" -c advice.detachedHead=false checkout --quiet --detach "$2" ;;
+    claude-marketplace-add) run claude plugin marketplace add "$2" ;;
+    claude-marketplace-update) run claude plugin marketplace update "$2" ;;
+    claude-marketplace-remove) run claude plugin marketplace remove "$2" ;;
+    claude-install) run claude plugin install "$2" --scope user ;;
+    claude-update) run claude plugin update "$2" --scope user ;;
+    claude-uninstall) run claude plugin uninstall "$2" --scope "$3" ;;
+    codex-marketplace-add) run codex plugin marketplace add "$2" ;;
+    codex-marketplace-upgrade) run codex plugin marketplace upgrade "$2" ;;
+    codex-marketplace-remove) run codex plugin marketplace remove "$2" ;;
+    codex-add) run codex plugin add "$2" ;;
+    codex-remove) run codex plugin remove "$2" ;;
+    collection-copy)
+      # $2 is a list of fixed harness names, split on purpose.
+      # shellcheck disable=SC2086
+      run "$LIB_DIR/copy-collection.sh" "$3" $2 ;;
+    retire) retire "$2" "$3" ;;
+    agy-uninstall) run agy plugin uninstall "$2" ;;
+    agy-install)
+      # agy writes through a link at its target, into the checkout it names.
+      if [ "$RUN_MODE" = run ] && [ "${DRY_RUN:-}" != true ] && [ -L "$AGY_TEAM" ]; then
+        echo "$TOOL: $AGY_TEAM is still a link; refusing to install through it" >&2
+        return 1
+      fi
+      run agy plugin install "$2" ;;
+    release-uninstall) run "$RELEASE_DIR/script/dev-uninstall-$2" ;;
+    release-install) run "$RELEASE_DIR/script/dev-install-$2" ;;
+    # Recorded first, so a later run finds the checkout's hooks even when this
+    # uninstall stops partway.
+    dev-uninstall) record_checkout "$2" && run "$2/script/dev-uninstall" ;;
+    *) die "unknown step action: $1" ;;
+  esac
+}
+
+render_plan() {
+  local n=0 harness action arg arg2 gap labels="" touched="" line
+  plan_header
+  if [ -z "$STEPS" ] && [ -z "$BLOCKS" ]; then
+    echo "Nothing to do."
+  fi
+  if [ -n "$STEPS" ]; then
+    labels=" $(printf '%s' "$STEPS" | cut -d "$SEP" -f1 | tr '\n' ' ')"
+    for line in claude codex antigravity opencode cursor; do
+      if in_list "$line" "$labels"; then touched="$touched $line"; fi
+    done
+    case "$labels" in *"other agents"*) touched="$touched, other agents" ;; esac
+    echo "  Touched by this plan:$touched"
+    echo "Steps, in order:"
+    RUN_MODE=show
+    while IFS="$SEP" read -r harness action arg arg2 gap; do
+      [ -n "$action" ] || continue
+      n=$((n + 1))
+      printf '  %d. [%s] gap: %s\n' "$n" "$harness" "$gap"
+      run_step "$action" "$arg" "$arg2"
+    done <<< "$STEPS"
+    RUN_MODE=run
+  fi
+  if [ -n "$BLOCKS" ]; then
+    echo "Blocked; nothing runs until each is resolved:"
+    while IFS= read -r line; do
+      [ -z "$line" ] || printf '  - %s\n' "$line"
+    done <<< "$BLOCKS"
+  fi
+  if [ -n "$LEFT" ]; then
+    echo "Left as they are:"
+    while IFS= read -r line; do
+      [ -z "$line" ] || printf '  - %s\n' "$line"
+    done <<< "$LEFT"
+  fi
+  if [ -n "$SESSIONS" ]; then
+    echo "Other agent sessions are running. Each keeps what it loaded until restarted:"
+    while IFS= read -r line; do printf '  - %s\n' "$line"; done <<< "$SESSIONS"
+  fi
+  echo "Plan id: $PLAN_ID"
+}
+
+apply_plan() {
+  local total n=0 harness action arg arg2 gap rest
+  if [ "$1" != "$PLAN_ID" ]; then
+    echo "$TOOL: the plan changed since it was confirmed (now $PLAN_ID); nothing ran" >&2
+    exit 3
+  fi
+  if [ -n "$BLOCKS" ]; then
+    printf '%s: blocked; nothing ran:\n%s' "$TOOL" "$BLOCKS" >&2
+    exit 4
+  fi
+  if [ -z "$STEPS" ]; then
+    echo "Nothing to do."
+    return 0
+  fi
+  before_apply "$1"
+  total="$(printf '%s' "$STEPS" | grep -c .)"
+  while IFS="$SEP" read -r harness action arg arg2 gap; do
+    [ -n "$action" ] || continue
+    n=$((n + 1))
+    printf '[%d/%d] [%s] %s\n' "$n" "$total" "$harness" "$gap"
+    if ! run_step "$action" "$arg" "$arg2"; then
+      printf '%s: step %d failed: [%s] %s\n' "$TOOL" "$n" "$harness" "$gap" >&2
+      rest="$(printf '%s' "$STEPS" | awk -F "$SEP" -v from="$((n + 1))" 'NR >= from { printf "  not run: [%s] %s\n", $1, $5 }')"
+      [ -z "$rest" ] || printf '%s\n' "$rest" >&2
+      exit 1
+    fi
+  done <<< "$STEPS"
+  done_message
 }

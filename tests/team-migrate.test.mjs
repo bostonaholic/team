@@ -334,6 +334,17 @@ test("apply refuses a plan id the machine no longer matches", (t) => {
   assert.equal(machine(fx), before);
 });
 
+test("an exported TOOL or LEFT does not change the plan or a message", (t) => {
+  const fx = fixture(t);
+  const plain = planOf(fx);
+  const exported = fx.run("migrate.sh", ["plan"], { TOOL: "team-update", LEFT: "claude: injected" });
+  assert.equal(exported.status, 0, exported.stderr);
+  assert.equal(exported.stdout, plain.stdout);
+  const stale = fx.run("migrate.sh", ["apply", "0".repeat(40)], { TOOL: "team-update", LEFT: "claude: injected" });
+  assert.equal(stale.status, 3);
+  assert.match(stale.stderr, /^team-migrate: the plan changed/);
+});
+
 test("usage faults exit 2", (t) => {
   const fx = fixture(t);
   assert.equal(fx.run("migrate.sh").status, 2);
