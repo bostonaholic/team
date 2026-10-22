@@ -1,0 +1,7 @@
+interface:
+  display_name: "Team Update"
+  short_description: "Update Team in every harness that has it"
+  default_prompt: "Use $team-update to update Team in every harness that already has it."
+
+policy:
+  allow_implicit_invocation: false

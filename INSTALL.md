@@ -6,6 +6,10 @@ leaving you to find out. The full pipeline runs on Claude Code, Codex CLI, and
 Antigravity CLI. OpenCode support covers native skill/command discovery and
 installation. Execution limits are listed beside setup. Pick yours.
 
+Already installed from a release? `/team-update` (`team:team-update` on Codex)
+updates Team in every harness that has it in one step. It installs Team into no
+harness that lacks it and leaves a local-checkout install for you to pull.
+
 ## Claude Code
 
 ### Native plugin installation
@@ -83,6 +87,9 @@ claude plugin update team@team-dev
 The order matters. `plugin update` reads the cached catalog, so on its own it
 reports nothing to do.
 
+`/team-update` runs these two commands, and each other harness's update, from
+one confirmed plan.
+
 ### Live development installation
 
 ```bash
@@ -118,6 +125,9 @@ codex plugin add team@team-dev
 
 The first command registers this repo as a Git marketplace; the second installs
 from it.
+
+To update later, run `/team-update` (`team:team-update`), which refreshes the
+marketplace and then adds the plugin again at the latest release.
 
 ### Local git checkout installation
 

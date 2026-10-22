@@ -858,7 +858,7 @@ command.
 The field is honored by Claude Code only. Codex reads no invocability
 field at all, so it lists every registered methodology skill in
 its `$` picker and a user can invoke any of them. Guarded commands such as
-`team-migrate` avoid that leak with `disable-model-invocation: true` plus
+`team-migrate` and `team-update` avoid that leak with `disable-model-invocation: true` plus
 `allow_implicit_invocation: false` in their `agents/openai.yaml`, which keeps them out of Codex's implicit
 catalog. There is no fix on
 Team's side, and the workarounds that look plausible all fail — see
@@ -977,8 +977,8 @@ An overage requires a reviewed reason stating its exact line count.
    Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
    Twelve agent bodies read execution rules. File-finder retains its single-step contract.
-   Resources use no skill frontmatter or discovery metadata. Keep the 13 commands registered.
-   Guarded commands such as `team-migrate` carry skill frontmatter and
+   Resources use no skill frontmatter or discovery metadata. Keep the 14 commands registered.
+   Guarded commands such as `team-migrate` and `team-update` carry skill frontmatter and
    `agents/openai.yaml`, register as commands, and set `disable-model-invocation:
    true` so the model never applies them on its own. Do not add unguarded
    principle registrations, recursive loading, compatibility stubs, or a resource registry.

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`/team-update` updates Team in every harness that already has it.** It reads Claude Code, Codex, Antigravity, OpenCode, and Cursor, prints one ordered plan with the exact command for each step, and runs only after you confirm that plan. It updates installs that came from a release. It installs Team into no harness that lacks it, retires no skill copy, and does not touch the `bostonaholic/skills` plugin. A dev install from a local checkout is left alone and the plan names the checkout, so you can pull it and rerun `script/dev-install`. `/team-update` shares its harness detection and plan runner with `/team-migrate`, whose output does not change. **What this asks of you:** nothing. Run `/team-update` (`team:team-update` on Codex) when you want the latest release, then start a new session in each harness.
+
 ## [0.168.1] - 2026-10-21
 
 ### Changed
