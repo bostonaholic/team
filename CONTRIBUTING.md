@@ -53,10 +53,12 @@ label taxonomy.
 1. **Branch off the latest `main`.** Keep history linear: never commit directly
    to `main`, and never create merge commits (rebase, do not merge).
 2. **Run the checks.** `node --test tests/*.test.mjs` runs the test suite.
-   `node .claude/scripts/check-agents.mjs` checks the agent config.
+   `node .claude/scripts/check-agents.mjs` checks the agent config, and
+   `.claude/scripts/check-version-consistency.sh` checks the manifests.
    `claude plugin validate .` and `git diff --check` must also pass locally.
    `.github/workflows/checks.yml` runs the test suite, the agent-config
-   checker, and `git diff --check` on every pull request.
+   checker, version consistency, and `git diff --check` on every pull
+   request.
 3. **Keep the agent registry in sync.** When you add or rename an agent, update
    both `agents/*.md` and `skills/team/registry.json` in the same commit.
    `node .claude/scripts/check-agents.mjs` checks the sync. The dev hook

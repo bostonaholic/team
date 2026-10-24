@@ -1081,9 +1081,9 @@ Development hooks (`.claude/hooks/`, not distributed):
 | `pre-merge-guard.mjs`    | PreToolUse(Bash)         | Deny `gh pr merge` when the version-bump invariant fails             |
 
 Development scripts (`.claude/scripts/`, not distributed) house dev-only
-tooling run by plugin developers: version computation, the land-time
-version-consistency assertion, the agent-config checker, and project-board
-helpers.
+tooling run by plugin developers: version computation, the
+version-consistency assertion that runs at land time and in CI, the
+agent-config checker, and project-board helpers.
 
 ## 8. Testing
 
@@ -1093,7 +1093,8 @@ tree. Run the suite from the repo root with `node --test tests/*.test.mjs`.
 
 `.github/workflows/checks.yml` runs one job on each pull request to `main`.
 Its steps are "Test suite", "Agent config"
-(`node .claude/scripts/check-agents.mjs`), and "Whitespace"
+(`node .claude/scripts/check-agents.mjs`), "Version consistency"
+(`.claude/scripts/check-version-consistency.sh`), and "Whitespace"
 (`git diff --check` over the PR range). Each check step runs even after an earlier one fails, and any failure
 fails the job. `claude plugin validate .` stays a local check.
 

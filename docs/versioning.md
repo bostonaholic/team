@@ -296,7 +296,7 @@ Every check lives at the cheapest layer that can catch it:
 | Check | Layer | Where |
 |-------|-------|-------|
 | Runtime-vs-dev bump invariant. A runtime diff must bump. A dev-only diff must not. The measure is relative to the fork point. | Pre-merge dev hook | `.claude/scripts/version-bump-required.sh`, `.claude/hooks/pre-merge-guard.mjs` |
-| Six version strings agree, on strict semver, and the host manifests agree on the plugin and marketplace names. This holds on every commit, drafted or landed. | Land-time assertion (`version-bump`) | `.claude/scripts/check-version-consistency.sh` |
+| Six version strings agree, on strict semver, and the host manifests agree on the plugin and marketplace names. This holds on every commit, drafted or landed. | Land-time assertion (`version-bump`) and CI on every pull request | `.claude/scripts/check-version-consistency.sh`, `.github/workflows/checks.yml` |
 | Released-section and footer-compare-link invariants hold for the assigned version. It runs after the changelog cut and before the commit. | Land-time assertion (`version-bump`) | `.claude/skills/version-bump/SKILL.md` |
 | Title prefix matches the version. It applies only when the branch bumped the version forward of its fork point, after `version-bump` bumps. It no-ops otherwise. | CI (needs PR context) | `.github/workflows/pr-title-sync.yml` |
 | Tag + GitHub release on merge | CI (needs write perms) | `.github/workflows/release-on-merge.yml` |
