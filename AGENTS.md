@@ -26,7 +26,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 |---------|---------------|-------------|
 | Pipeline agents, skills, OpenCode adapter | `agents/`, `skills/`, `opencode/` | End users |
 | Plugin manifests | `.claude-plugin/` (Claude Code), `.codex-plugin/` + `.agents/plugins/` (Codex), root `plugin.json` (Antigravity) | End users |
-| Registry sync validation | `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
+| Agent config validation | `.claude/scripts/check-agents.mjs`, `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
 | Pre-merge version gate | `.claude/hooks/pre-merge-guard.mjs` | Plugin developers |
 | Dev scripts | `.claude/scripts/` | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
@@ -73,7 +73,7 @@ See `agents/*.md`. Each agent file uses only Claude Code's [supported frontmatte
 
 Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) hold the `Agent` tool and may spawn read-only nested sub-agents (Claude Code ≥ 2.1.172) under the guardrails in `skills/team/references/agent-dispatch.md`. Nesting is an optimization with an inline fallback, invisible to the orchestrator. See [docs/architecture.md](docs/architecture.md#10-nested-sub-agents).
 
-**Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The dev hook `.claude/hooks/check-registry-sync.mjs` enforces this automatically.
+**Invariant:** the agent inventory in `skills/team/registry.json` (which carries the `phase` mapping) and the files under `agents/` must always agree by name. When adding or renaming an agent, update both in the same commit. The `checks.yml` "Agent config" step and the dev hook `.claude/hooks/check-registry-sync.mjs` both run `.claude/scripts/check-agents.mjs`, which fails on a mismatch.
 
 **Invariant (checks and balances):** producers write, reviewers judge, and no agent does both. A reviewer (`code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier`) holds no `Write`/`Edit` tool and carries `permissionMode: plan` (Claude Code ignores that field for plugin agents, so the `tools:` grant is the only enforcement, and a post-dispatch tree check in CODE REVIEW and SECURITY REVIEW detects `Bash` mutation). A reviewer that can edit can fix what it found and then approve its own fix, which collapses the generator and the evaluator into one role. The reviewer table in `.claude/scripts/check-agents.mjs` changes with this reviewer list. See [docs/architecture.md](docs/architecture.md#checks-and-balances).
 
@@ -89,7 +89,7 @@ Team ships **no runtime hooks**. The distributed surface is agents, skills, the 
 
 | Hook | Event | Purpose |
 |------|-------|---------|
-| `check-registry-sync.mjs` | PostToolUse(Write\|Edit) | Cross-check agent frontmatter against registry.json |
+| `check-registry-sync.mjs` | PostToolUse(Write\|Edit) | Run `check-agents.mjs` after an agent or registry edit in this repo or a linked worktree, and exit 2 on a violation |
 | `pre-merge-guard.mjs` | PreToolUse(Bash) | Deny `gh pr merge` when the version-bump invariant fails. Its reach is one surface: a literal `gh pr merge` Bash tool call in a session that loaded `.claude/settings.json`. Every other merge surface — UI, raw terminal, a wrapped call, another host — runs no version-bump check and shows no red signal for it (see [docs/versioning.md](docs/versioning.md)) |
 
 ## State
