@@ -1081,7 +1081,8 @@ Development hooks (`.claude/hooks/`, not distributed):
 
 Development scripts (`.claude/scripts/`, not distributed) house dev-only
 tooling run by plugin developers: version computation, the land-time
-version-consistency assertion, and project-board helpers.
+version-consistency assertion, the agent-config checker, and project-board
+helpers.
 
 ## 8. Testing
 
@@ -1090,8 +1091,9 @@ against synthetic inputs, such as a scratch git repository or a temporary
 tree. Run the suite from the repo root with `node --test tests/*.test.mjs`.
 
 `.github/workflows/checks.yml` runs one job on each pull request to `main`.
-Its steps are "Test suite" and "Whitespace" (`git diff --check` over the PR
-range). Each check step runs even after an earlier one fails, and any failure
+Its steps are "Test suite", "Agent config"
+(`node .claude/scripts/check-agents.mjs`), and "Whitespace"
+(`git diff --check` over the PR range). Each check step runs even after an earlier one fails, and any failure
 fails the job. `claude plugin validate .` stays a local check.
 
 ## 9. State management

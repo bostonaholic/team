@@ -30,6 +30,10 @@ jobs:
       - name: Test suite
         run: node --test tests/*.test.mjs
 
+      - name: Agent config
+        if: ${{ !cancelled() && steps.setup-node.outcome == 'success' }}
+        run: node .claude/scripts/check-agents.mjs
+
       - name: Whitespace
         if: ${{ !cancelled() && steps.setup-node.outcome == 'success' }}
         env:
