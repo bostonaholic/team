@@ -34,6 +34,10 @@ jobs:
         if: ${{ !cancelled() && steps.setup-node.outcome == 'success' }}
         run: node .claude/scripts/check-agents.mjs
 
+      - name: Version consistency
+        if: ${{ !cancelled() && steps.setup-node.outcome == 'success' }}
+        run: .claude/scripts/check-version-consistency.sh
+
       - name: Whitespace
         if: ${{ !cancelled() && steps.setup-node.outcome == 'success' }}
         env:
