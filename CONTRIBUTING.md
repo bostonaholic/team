@@ -58,7 +58,8 @@ label taxonomy.
    `claude plugin validate .` and `git diff --check` must also pass locally.
    `.github/workflows/checks.yml` runs the test suite, the agent-config
    checker, version consistency, and `git diff --check` on every pull
-   request.
+   request. A PR that adds, removes, or rewires a check updates its row in
+   [docs/invariants.md](docs/invariants.md) in the same PR.
 3. **Keep the agent registry in sync.** When you add or rename an agent, update
    both `agents/*.md` and `skills/team/registry.json` in the same commit.
    `node .claude/scripts/check-agents.mjs` checks the sync. The dev hook

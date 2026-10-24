@@ -29,6 +29,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Agent config validation | `.claude/scripts/check-agents.mjs`, `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
 | Pre-merge version gate | `.claude/hooks/pre-merge-guard.mjs` | Plugin developers |
 | Dev scripts | `.claude/scripts/` | Plugin developers |
+| Hard-invariant inventory | [docs/invariants.md](docs/invariants.md) | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
 | Work tracking | [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1) | Plugin developers |
 | Versioning & release automation | [docs/versioning.md](docs/versioning.md), `.claude/skills/version-bump/`, `.claude/scripts/next-version.sh`, `.github/workflows/` | Plugin developers |

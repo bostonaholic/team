@@ -1098,6 +1098,9 @@ Its steps are "Test suite", "Agent config"
 (`git diff --check` over the PR range). Each check step runs even after an earlier one fails, and any failure
 fails the job. `claude plugin validate .` stays a local check.
 
+Each hard invariant and the check that enforces it, or the reason it stays
+prose, is listed in [the invariant inventory](invariants.md).
+
 ## 9. State management
 
 **Primary state:** the artifacts in `docs/plans/<id>/*.md`. Each
