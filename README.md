@@ -12,7 +12,13 @@ The [shared principle resources](docs/skills.md#shared-principle-resources) defi
 
 ## Install
 
-Copy/paste into your CLI prompt:
+On Claude Code 2.1.275 or later, run this command inside a Claude Code session:
+
+```text
+/plugin install team --marketplace bostonaholic/team
+```
+
+On an older Claude Code, or on another host, copy/paste this into your CLI prompt:
 
 ```text
 Install the Team plugin from https://github.com/bostonaholic/team, refer to the repo's AGENTS.md for instructions.
