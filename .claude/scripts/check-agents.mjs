@@ -40,6 +40,9 @@ const SOURCE_BALANCES = "(AGENTS.md, checks and balances)";
 const KEY_LINE = /^[A-Za-z][A-Za-z0-9_-]*:( .*)?$/;
 // YAML 1.1 parsers read these as line breaks, so a value holding one can hide a second key.
 const YAML_LINE_BREAKS = /[\u0085\u2028\u2029]/;
+// A value YAML may continue past the line end: a tag, an anchor, a flow collection, or a quoted scalar.
+const MULTI_LINE_OPENER = /^[!&[{"']/;
+const CLOSED_QUOTED_SCALAR = /^(?:"(?:[^"\\]|\\.)*"|'(?:[^']|'')*')[ \t]*$/;
 const KEBAB_CASE = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 const YAML_RESERVED_SCALARS = ["y", "yes", "n", "no", "true", "false", "on", "off", "null"];
 const BARE_TOOL_NAME = /^[A-Za-z][A-Za-z0-9_]*$/;
@@ -153,7 +156,11 @@ function readFrontmatter(root, file) {
       fail(`line ${lineNumber} repeats the key ${key}`);
       continue;
     }
-    keys.set(key, line.slice(colon + 1));
+    const value = line.slice(colon + 1);
+    if (opensMultiLineValue(value)) {
+      fail(`line ${lineNumber} value starts a tag, anchor, flow collection, or quoted scalar that does not close at the line end: ${JSON.stringify(line)}`);
+    }
+    keys.set(key, value);
   }
 
   const name = keys.get("name");
@@ -166,6 +173,11 @@ function readFrontmatter(root, file) {
     if (YAML_RESERVED_SCALARS.includes(value)) fail(`name ${JSON.stringify(value)} is a YAML 1.1 reserved scalar`);
   }
   return { keys, violations };
+}
+
+function opensMultiLineValue(raw) {
+  const value = raw.replace(/^[ \t]+/, "");
+  return MULTI_LINE_OPENER.test(value) && !CLOSED_QUOTED_SCALAR.test(value);
 }
 
 function scalar(raw) {

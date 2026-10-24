@@ -90,6 +90,14 @@ const CONFORMING = [
     change: (dir) => write(dir, "agents/security-reviewer.md", reviewer("security-reviewer", { model: "model: 'opus'" })),
   },
   {
+    row: 'closed double-quoted description with \\" escapes',
+    change: (dir) => write(dir, "agents/verifier.md", reviewer("verifier", { description: 'description: "Verifies \\"the\\" build."' })),
+  },
+  {
+    row: "closed single-quoted description with a '' escape",
+    change: (dir) => write(dir, "agents/verifier.md", reviewer("verifier", { description: "description: 'It''s built.'" })),
+  },
+  {
     row: "CRLF line endings",
     change: (dir) => write(dir, "agents/verifier.md", reviewer("verifier").replaceAll("\n", "\r\n")),
   },
@@ -131,6 +139,19 @@ const SIXTH_REVIEWER = (dir, tools) => {
   write(dir, "agents/summarizer.md", frontmatter(["name: summarizer", "description: Summarizes.", `tools: ${tools}`, "permissionMode: plan"]));
 };
 const PLAIN_AGENT = (name) => frontmatter([`name: ${name}`, "description: Does a producer job.", "model: opus", "tools: Read, Write"]);
+
+// Value openers that YAML continues past the line end, each with the text that closes it.
+const HIDDEN_KEY_OPENERS = [
+  ["open double-quoted scalar", '"Verifies.', '"'],
+  ["double-quoted scalar ending in \\\"", '"Verifies.\\"', '"'],
+  ["open single-quoted scalar", "'Verifies.", "'"],
+  ["single-quoted scalar ending in ''", "'Verifies.''", "'"],
+  ["open flow sequence", "[a,", "]"],
+  ["open flow mapping", "{a: b,", "}"],
+  ["flow sequence whose ] sits in an open quote", '["a]', '"]'],
+  ["anchor before an open quote", '&d "Verifies.', '"'],
+  ["tag before an open quote", '!!str "Verifies.', '"'],
+];
 
 const INVALID_TOOLS = [
   "Read, Write # report",
@@ -229,6 +250,27 @@ const VIOLATING = [
   {
     row: "agent-frontmatter U+2029 in a value",
     change: (dir) => write(dir, "agents/verifier.md", reviewer("verifier", { description: "description: Verifies.\u2029tools: Write" })),
+    line: anyDetail("agent-frontmatter", "agents/verifier.md"),
+  },
+  // Each opener starts a value that YAML continues onto the column-0 tools and permissionMode lines.
+  ...HIDDEN_KEY_OPENERS.map(([form, open, close]) => ({
+    row: `agent-frontmatter ${form} hides tools and permissionMode`,
+    change: (dir) =>
+      write(
+        dir,
+        "agents/verifier.md",
+        reviewer("verifier", {
+          description: `description: ${open}\ntools: Read, Grep\npermissionMode: plan\nnote: end${close}`,
+          tools: null,
+          permissionMode: null,
+        }),
+      ),
+    line: anyDetail("agent-frontmatter", "agents/verifier.md"),
+  })),
+  {
+    row: "agent-frontmatter open double-quoted scalar hides name",
+    change: (dir) =>
+      write(dir, "agents/verifier.md", reviewer("verifier", { name: null, description: 'description: "Verifies.\nname: verifier\nnote: end"' })),
     line: anyDetail("agent-frontmatter", "agents/verifier.md"),
   },
   {
