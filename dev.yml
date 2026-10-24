@@ -9,6 +9,7 @@ up:
 
 check:
   plugin: "claude plugin validate ."
+  tests: "node --test tests/*.test.mjs"
 
 commands:
   install:
