@@ -16,6 +16,16 @@ checkout is replaced.
 
 ### Native plugin installation
 
+On Claude Code 2.1.275 or later, run this command inside a Claude Code session:
+
+```text
+/plugin install team --marketplace bostonaholic/team
+```
+
+It installs Team from this repo's `team-dev` marketplace in one step.
+
+From a shell, or on an older Claude Code, run:
+
 ```bash
 claude plugin marketplace add bostonaholic/team
 claude plugin install team@team-dev
