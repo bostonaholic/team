@@ -1085,11 +1085,14 @@ version-consistency assertion, and project-board helpers.
 
 ## 8. Testing
 
-Team currently has no test suite. The previous behavioral-eval harness
-(`tests/`, `evals/`, and its CI workflows) was removed so a new testing
-methodology can be designed from scratch. What remains is static: the dev
-hooks under `.claude/hooks/`, the version scripts under `.claude/scripts/`
-and `.github/scripts/`, and `claude plugin validate .`.
+`tests/*.test.mjs` holds `node:test` script tests. Each test runs a script
+against synthetic inputs, such as a scratch git repository or a temporary
+tree. Run the suite from the repo root with `node --test tests/*.test.mjs`.
+
+`.github/workflows/checks.yml` runs one job on each pull request to `main`.
+Its steps are "Test suite" and "Whitespace" (`git diff --check` over the PR
+range). Each check step runs even after an earlier one fails, and any failure
+fails the job. `claude plugin validate .` stays a local check.
 
 ## 9. State management
 
