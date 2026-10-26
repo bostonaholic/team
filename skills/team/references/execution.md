@@ -27,3 +27,10 @@ Without a todo tool, state the ledger once inline and name each completed step.
 Track numbered steps; for unnumbered work, natural units such as slices or findings, never guidance sentences. Mark `in_progress` at start and `completed` when done.
 The orchestrator owns one phase ledger. Agents own their local sub-step ledgers. Never merge or read across those ledgers.
 Standalone skills own their ledgers. The [feature playbook](playbooks/feature.md) owns the orchestrator's phase-specific seed rules.
+
+## Docs and code
+
+A doc is any prose about the code, such as `AGENTS.md`, `CLAUDE.md`, a README, a comment, or a design doc.
+When a doc's claim about current code disagrees with the code, act on the code.
+Treat the code as current behavior, not as intended behavior.
+Report each conflict with the doc's `file:line` and what the code shows.

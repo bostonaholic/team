@@ -29,7 +29,8 @@ The subagent sees none of the conversation. Give it a self-contained brief:
 
 - **Goal:** the step's one outcome.
 - **Inputs:** absolute paths: the artifact directory, the step's playbook or
-  reference section, and the installed [writing standards](writing.md) when it
+  reference section, the installed [execution rules](execution.md) to read
+  before work, and the installed [writing standards](writing.md) when it
   authors prose. Pass earlier facts as paths or quoted values, never a
   conversation summary.
 - **Boundaries:** the files it may edit, the commands it may run, and what it
