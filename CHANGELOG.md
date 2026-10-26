@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **When a doc disagrees with the code, Team's agents now act on the code.** A new "Docs and code" section in `skills/team/references/execution.md` covers any prose about the code, such as `AGENTS.md`, `CLAUDE.md`, a README, a comment, or a design doc. The agent treats the code as current behavior and reports each conflict with the doc's `file:line` and what the code shows, so you can fix the stale doc. The 12 agents and the `/team` orchestrator already read that file before work. The step brief in `skills/team/references/step-delegation.md` now names it too, so the subagents that `/team-fix`, `/team-pr`, and `/team-implement` start for each step get the rule. **What this asks of you:** nothing. When an agent reports a conflict, fix the doc it names.
+
 ## [0.169.0] - 2026-10-22
 
 ### Added
