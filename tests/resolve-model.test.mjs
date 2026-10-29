@@ -1,7 +1,8 @@
-// Fails when Codex model selection picks the wrong catalog ID for a class or pin, or reports the wrong error.
+// Fails when Codex model selection picks the wrong catalog ID, reports the wrong error, or a host's spawn arguments change.
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { HOSTS } from "../skills/team/references/model-config.mjs";
 import { resolveModel } from "../skills/team/references/resolve-model.mjs";
 
 const ALL_SIX = Object.freeze(["low", "medium", "high", "xhigh", "max", "ultra"]);
@@ -298,5 +299,31 @@ for (const row of CONFIGURED_ROWS) {
 
     assert.equal(result.configured, row.configured);
     assert.equal(result.spawn[row.spawnField], row.spawnValue);
+  });
+}
+
+const SPAWN_ROWS = {
+  codex: {
+    request: { host: "codex", tier: "sonnet", effort: "high", available: CATALOG },
+    overrides: {},
+    defaults: CLASS_DEFAULTS,
+    expected: { model: "gpt-6.1-sol", reasoning_effort: "high", fork_turns: "none" },
+  },
+  antigravity: {
+    request: { host: "antigravity", tier: "sonnet", effort: "high", available: { flash: [] } },
+    overrides: {},
+    defaults: { antigravity: { sonnet: { model: "flash" } } },
+    expected: { Model: "flash" },
+  },
+};
+
+for (const host of HOSTS) {
+  test(`resolver spawn arguments ask for no parent history: ${host}`, () => {
+    const row = SPAWN_ROWS[host];
+    assert.ok(row, `no expected spawn arguments for host ${host}: decide its history argument and add a SPAWN_ROWS entry`);
+
+    const result = resolveOrFail(row.request, row.overrides, row.defaults);
+
+    assert.deepEqual(result.spawn, row.expected);
   });
 }

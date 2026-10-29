@@ -28,6 +28,10 @@ Never substitute a source-checkout file for a missing installed resource.
 Standalone agents use their own installed definition path and the same reads;
 a host that does not expose that path must have its dispatcher supply it.
 
+Each spawned child, named or body-loaded, starts with a
+[fresh context window](step-delegation.md#fresh-context) that holds only its
+payload, never a fork of the dispatcher's conversation.
+
 Resolve every dispatch in this order:
 
 1. **Named agent.** If the host resolves Team agents by name (Claude Code
