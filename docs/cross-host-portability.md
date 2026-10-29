@@ -109,7 +109,8 @@ through the portable definition contract in
   registration is required.
 - A producer may run inline only when no subagent facility exists; a reviewer
   never runs inline, because a reviewer sharing the author's context cannot
-  judge it.
+  judge it. The RESEARCH phase never runs `file-finder` or `researcher` inline
+  either, because the orchestrator's context holds the task framing.
 
 The consequence for this study: the "agent dispatch" primitive is reachable on
 every host that can spawn a subagent, without a per-host shim. The remaining

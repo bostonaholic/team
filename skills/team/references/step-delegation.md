@@ -62,6 +62,8 @@ reviewer.
 - A Codex body-loaded agent on a build whose `spawn_agent` takes neither
   argument starts no child. It stops under [model selection](model-selection.md)
   and never runs inline.
+- A host that can start a child only as a fork of the parent counts as unable
+  to spawn. Use the fallback of the reference that owns the dispatch.
 
 ## Host mapping
 
