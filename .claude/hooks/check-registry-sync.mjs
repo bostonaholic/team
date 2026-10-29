@@ -1,22 +1,25 @@
 #!/usr/bin/env node
 
-/**
- * Development-time hook — cross-checks the agent inventory against registry.json.
- *
- * This is a dev concern (validating the plugin is built correctly), not a
- * runtime concern. It lives in .claude/hooks/, not in the distributed plugin.
- *
- * Triggers on PostToolUse for Write|Edit when the edited file is an agent
- * definition or the registry. Validates that:
- *   - every agents/<name>.md has a matching agents[*].name in registry.json
- *   - every registry.agents[*].name has a matching agents/<name>.md file
- *
- * `phase` lives only in registry.json (not in agent frontmatter — Claude
- * Code's supported agent frontmatter does not include custom fields).
- */
+// Dev hook: after an agent or registry edit in this repository or one of its
+// linked worktrees, runs every agent-config rule through
+// .claude/scripts/check-agents.mjs. Exit 2 is the channel Claude Code feeds
+// back to the model; an edit in any other repository exits 0 silently.
 
-import { readFile, readdir } from "node:fs/promises";
-import { resolve, relative, extname, join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { existsSync, realpathSync } from "node:fs";
+import { basename, dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const GIT_TIMEOUT_MS = 1000;
+const CHECKER_TIMEOUT_MS = 7000;
+const REGISTRY_PATH = "skills/team/registry.json";
+const AGENT_PATH = /^agents\/[^./][^/]*\.md$/;
+const VIOLATION_COUNT = /^check-agents: \d+ violation\(s\)$/;
+const RECOVERY =
+  "Fix agents/*.md, skills/team/registry.json, and the reviewer table in .claude/scripts/check-agents.mjs together, then rerun: node .claude/scripts/check-agents.mjs";
+
+const PASS = { code: 0, message: "" };
+const fault = (message) => ({ code: 2, message: `check-registry-sync: ${message}\n` });
 
 async function readStdin() {
   const chunks = [];
@@ -26,91 +29,46 @@ async function readStdin() {
   return Buffer.concat(chunks).toString("utf-8");
 }
 
-function warn(message) {
-  const payload = JSON.stringify({
-    hookSpecificOutput: {
-      additionalContext: `WARNING: ${message}`,
-    },
+// Returns { lines } on success, or { exit } when the hook must stop here.
+function runGit(dir, args, expectedLines) {
+  const run = spawnSync("git", ["-C", dir, ...args], { timeout: GIT_TIMEOUT_MS, encoding: "utf8" });
+  if (run.error?.code === "ENOENT") return { exit: PASS };
+  if (run.error?.code === "ETIMEDOUT") return { exit: fault(`git did not finish: timeout after ${GIT_TIMEOUT_MS} ms`) };
+  if (run.error) throw run.error;
+  if (run.signal) return { exit: fault(`git did not finish: ${run.signal}`) };
+  if (run.status !== 0) return { exit: PASS };
+  const lines = run.stdout.replace(/\n$/, "").split("\n");
+  if (lines.length !== expectedLines) return { exit: fault("git gave unexpected output") };
+  return { lines };
+}
+
+function isCandidatePath(filePath) {
+  const agentShaped = basename(dirname(filePath)) === "agents" && filePath.endsWith(".md");
+  return agentShaped || filePath.endsWith(REGISTRY_PATH);
+}
+
+function sameRealPath(a, b) {
+  try {
+    return realpathSync(a) === realpathSync(b);
+  } catch {
+    return false;
+  }
+}
+
+function runChecker(hookDir, toplevel) {
+  const checker = join(hookDir, "..", "scripts", "check-agents.mjs");
+  if (!existsSync(checker)) return fault(`check-agents did not run: ${checker} not found`);
+  const run = spawnSync(process.execPath, [checker, "--root", toplevel], {
+    timeout: CHECKER_TIMEOUT_MS,
+    encoding: "utf8",
   });
-  process.stderr.write(payload);
-}
-
-function parseFrontmatter(content) {
-  if (!content.startsWith("---")) return null;
-  const endIdx = content.indexOf("\n---", 3);
-  if (endIdx === -1) return null;
-
-  const frontmatter = content.slice(4, endIdx);
-  const result = { name: null };
-
-  for (const line of frontmatter.split("\n")) {
-    const nameMatch = line.match(/^name:\s*(.+)/);
-    if (nameMatch) result.name = nameMatch[1].trim();
+  if (run.status === 0) return PASS;
+  // Node also exits 1 on an uncaught throw, so only the count line marks a real violation report.
+  const lastLine = run.stderr.replace(/\n$/, "").split("\n").at(-1);
+  if (run.status === 1 && VIOLATION_COUNT.test(lastLine)) {
+    return { code: 2, message: `${run.stderr.replace(/\n?$/, "\n")}${RECOVERY}\n` };
   }
-
-  return result;
-}
-
-async function crossCheck(projectRoot, editedPath) {
-  const registryPath = join(projectRoot, "skills", "team", "registry.json");
-  const agentsDir = join(projectRoot, "agents");
-
-  let registry;
-  try {
-    registry = JSON.parse(await readFile(registryPath, "utf-8"));
-  } catch {
-    return; // Registry missing or invalid — nothing to check.
-  }
-
-  if (!Array.isArray(registry.agents)) return;
-
-  const mismatches = [];
-  const registryNames = new Set(registry.agents.map((a) => a.name));
-
-  let agentFiles;
-  try {
-    agentFiles = await readdir(agentsDir);
-  } catch {
-    return;
-  }
-
-  const agentFileNames = new Set();
-
-  for (const file of agentFiles) {
-    if (extname(file) !== ".md") continue;
-
-    let content;
-    try {
-      content = await readFile(join(agentsDir, file), "utf-8");
-    } catch {
-      continue;
-    }
-
-    const fm = parseFrontmatter(content);
-    if (!fm || !fm.name) continue;
-
-    agentFileNames.add(fm.name);
-
-    if (!registryNames.has(fm.name)) {
-      mismatches.push(
-        `${file}: agent "${fm.name}" missing from registry.json`
-      );
-    }
-  }
-
-  for (const name of registryNames) {
-    if (!agentFileNames.has(name)) {
-      mismatches.push(
-        `registry.json: agent "${name}" has no matching agents/${name}.md file`
-      );
-    }
-  }
-
-  if (mismatches.length > 0) {
-    warn(
-      `Registry/frontmatter sync: ${mismatches.length} mismatch(es) in ${editedPath}:\n${mismatches.join("\n")}`
-    );
-  }
+  return fault(`check-agents did not run: ${run.error?.code ?? run.signal ?? `exit ${run.status}`}`);
 }
 
 async function main() {
@@ -118,35 +76,42 @@ async function main() {
   try {
     input = JSON.parse(await readStdin());
   } catch {
-    process.exit(0);
+    return PASS;
   }
 
   const toolName = input?.tool_name;
-  if (toolName !== "Write" && toolName !== "Edit") {
-    process.exit(0);
-  }
-
   const filePath = input?.tool_input?.file_path;
-  if (typeof filePath !== "string") {
-    process.exit(0);
+  if ((toolName !== "Write" && toolName !== "Edit") || typeof filePath !== "string") return PASS;
+  if (!isCandidatePath(filePath)) return PASS;
+
+  let dir;
+  try {
+    dir = realpathSync(dirname(resolve(filePath)));
+  } catch {
+    return PASS;
   }
+  const edited = runGit(dir, ["rev-parse", "--path-format=absolute", "--show-toplevel", "--git-common-dir"], 2);
+  if (edited.exit) return edited.exit;
+  const [toplevel, editedCommonDir] = edited.lines;
 
-  const projectRoot = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-  const relativePath = relative(projectRoot, resolve(filePath));
+  const relativePath = relative(toplevel, join(dir, basename(filePath)));
+  if (relativePath !== REGISTRY_PATH && !AGENT_PATH.test(relativePath)) return PASS;
 
-  if (relativePath.startsWith("..")) {
-    process.exit(0);
-  }
+  const hookDir = realpathSync(dirname(fileURLToPath(import.meta.url)));
+  const own = runGit(hookDir, ["rev-parse", "--path-format=absolute", "--git-common-dir"], 1);
+  if (own.exit) return own.exit;
+  if (!sameRealPath(editedCommonDir, own.lines[0])) return PASS;
 
-  const isAgentEdit =
-    relativePath.startsWith("agents/") && extname(relativePath) === ".md";
-  const isRegistryEdit = relativePath === "skills/team/registry.json";
-
-  if (isAgentEdit || isRegistryEdit) {
-    await crossCheck(projectRoot, relativePath);
-  }
-
-  process.exit(0);
+  return runChecker(hookDir, toplevel);
 }
 
-main().catch(() => process.exit(0));
+main().then(
+  ({ code, message }) => {
+    process.stderr.write(message);
+    process.exitCode = code;
+  },
+  (error) => {
+    process.stderr.write(`check-registry-sync: ${error.message}\n`);
+    process.exitCode = 2;
+  },
+);

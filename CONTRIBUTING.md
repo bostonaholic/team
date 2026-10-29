@@ -52,12 +52,19 @@ label taxonomy.
 
 1. **Branch off the latest `main`.** Keep history linear: never commit directly
    to `main`, and never create merge commits (rebase, do not merge).
-2. **Run the static checks.** `claude plugin validate .` and `git diff --check`
-   must pass. Team has no test suite at the moment: the previous harness was
-   removed and a new testing methodology is being designed from scratch.
+2. **Run the checks.** `node --test tests/*.test.mjs` runs the test suite.
+   `node .claude/scripts/check-agents.mjs` checks the agent config, and
+   `.claude/scripts/check-version-consistency.sh` checks the manifests.
+   `claude plugin validate .` and `git diff --check` must also pass locally.
+   `.github/workflows/checks.yml` runs the test suite, the agent-config
+   checker, version consistency, and `git diff --check` on every pull
+   request. A PR that adds, removes, or rewires a check updates its row in
+   [docs/invariants.md](docs/invariants.md) in the same PR.
 3. **Keep the agent registry in sync.** When you add or rename an agent, update
-   both `agents/*.md` and `skills/team/registry.json` in the same commit. The
-   dev hook `.claude/hooks/check-registry-sync.mjs` enforces this.
+   both `agents/*.md` and `skills/team/registry.json` in the same commit.
+   `node .claude/scripts/check-agents.mjs` checks the sync. The dev hook
+   `.claude/hooks/check-registry-sync.mjs` runs the checker after each agent
+   or registry edit.
 4. **Write [Conventional Commits](https://www.conventionalcommits.org):**
    `type(scope): subject`, imperative mood, following the 50/72 rule.
 5. **Record user-facing changes in the changelog.** Add a bullet under

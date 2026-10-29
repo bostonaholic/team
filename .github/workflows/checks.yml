@@ -1,0 +1,45 @@
+# version-bump-required.sh stays out: it is red for a runtime PR until land.
+name: Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - id: setup-node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Test suite
+        run: node --test tests/*.test.mjs
+
+      - name: Agent config
+        if: ${{ !cancelled() && steps.setup-node.outcome == 'success' }}
+        run: node .claude/scripts/check-agents.mjs
+
+      - name: Version consistency
+        if: ${{ !cancelled() && steps.setup-node.outcome == 'success' }}
+        run: .claude/scripts/check-version-consistency.sh
+
+      - name: Whitespace
+        if: ${{ !cancelled() && steps.setup-node.outcome == 'success' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: git diff --check "$BASE_SHA" HEAD

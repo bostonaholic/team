@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
-# check-version-consistency.sh — land-time consistency assertion for the
-# version-bump skill (docs/versioning.md).
+# check-version-consistency.sh — consistency assertion for the version-bump
+# skill at land time and for CI on every pull request
+# (.github/workflows/checks.yml). See docs/versioning.md.
 #
 # The version string lives in six places across five files. All six must be
 # strict semver and agree; the host manifests must agree on the plugin name,
@@ -46,6 +47,7 @@ name=$(q "$CLAUDE_PLUGIN" .name)
 [ "$(q "$CODEX_PLUGIN" .name)" = "$name" ] || fail "$CODEX_PLUGIN name differs from $CLAUDE_PLUGIN"
 [ "$(q "$CLAUDE_MARKET" '.plugins[0].name')" = "$name" ] || fail "$CLAUDE_MARKET plugins[0].name differs from $CLAUDE_PLUGIN"
 [ "$(q "$CODEX_MARKET" '.plugins[0].name')" = "$name" ] || fail "$CODEX_MARKET plugins[0].name differs from $CLAUDE_PLUGIN"
+[ "$(q "$ROOT_PLUGIN" .name)" = "$name" ] || fail "$ROOT_PLUGIN name differs from $CLAUDE_PLUGIN"
 [ "$(q "$CODEX_MARKET" .name)" = "$(q "$CLAUDE_MARKET" .name)" ] || fail "marketplace name differs between $CODEX_MARKET and $CLAUDE_MARKET"
 
 description=$(q "$CLAUDE_PLUGIN" .description)
@@ -57,6 +59,7 @@ check_description "$CLAUDE_MARKET" .metadata.description
 check_description "$CLAUDE_MARKET" '.plugins[0].description'
 check_description "$CODEX_PLUGIN" .description
 check_description "$CODEX_MARKET" '.plugins[0].description'
+check_description "$ROOT_PLUGIN" .description
 check_description "$PKG" .description
 
 if [ "$ERRORS" -gt 0 ]; then

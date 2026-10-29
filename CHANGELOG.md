@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- **Phase commands now find the newest plan directory on Linux.** `discover-topic.sh` read each artifact's modification time with `stat -f %m`, falling back to `stat -c %Y`. On Linux, GNU `stat -f` reports on the filesystem instead and still exits 0, so the fallback never ran, every directory scored the same, and a bare `/team-*` command resolved no topic. The script now tries the GNU form first and the BSD form second, so it works on both. [`skills/team/discover-topic.sh`](https://github.com/bostonaholic/team/blob/main/skills/team/discover-topic.sh)
 
 ## [0.170.0] - 2026-10-29
 

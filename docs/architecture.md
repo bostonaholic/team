@@ -450,9 +450,10 @@ asks, so the branch remains available for iteration. The final report tells the 
 
 Each agent's QRSPI phase is recorded in `skills/team/registry.json`.
 Agent frontmatter uses only Claude Code's [supported fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields).
-The dev hook `.claude/hooks/check-registry-sync.mjs` validates that
-the inventory in registry.json and the files under `agents/` agree by
-name.
+The dev hook `.claude/hooks/check-registry-sync.mjs` runs
+`.claude/scripts/check-agents.mjs`, which checks that the inventory in
+registry.json and the files under `agents/` agree by name, and checks the
+reviewer rules. CI runs the same checker.
 
 ### Checks and balances
 
@@ -1076,20 +1077,29 @@ Development hooks (`.claude/hooks/`, not distributed):
 
 | Hook                     | Event                    | Purpose                                                              |
 |--------------------------|--------------------------|----------------------------------------------------------------------|
-| `check-registry-sync.mjs`| PostToolUse(Write\|Edit) | Verify the agents/ directory and registry.json agree by agent name   |
+| `check-registry-sync.mjs`| PostToolUse(Write\|Edit) | Run the agent-config checker on agent and registry edits, and exit 2 on a violation |
 | `pre-merge-guard.mjs`    | PreToolUse(Bash)         | Deny `gh pr merge` when the version-bump invariant fails             |
 
 Development scripts (`.claude/scripts/`, not distributed) house dev-only
-tooling run by plugin developers: version computation, the land-time
-version-consistency assertion, and project-board helpers.
+tooling run by plugin developers: version computation, the
+version-consistency assertion that runs at land time and in CI, the
+agent-config checker, and project-board helpers.
 
 ## 8. Testing
 
-Team currently has no test suite. The previous behavioral-eval harness
-(`tests/`, `evals/`, and its CI workflows) was removed so a new testing
-methodology can be designed from scratch. What remains is static: the dev
-hooks under `.claude/hooks/`, the version scripts under `.claude/scripts/`
-and `.github/scripts/`, and `claude plugin validate .`.
+`tests/*.test.mjs` holds `node:test` script tests. Each test runs a script
+against synthetic inputs, such as a scratch git repository or a temporary
+tree. Run the suite from the repo root with `node --test tests/*.test.mjs`.
+
+`.github/workflows/checks.yml` runs one job on each pull request to `main`.
+Its steps are "Test suite", "Agent config"
+(`node .claude/scripts/check-agents.mjs`), "Version consistency"
+(`.claude/scripts/check-version-consistency.sh`), and "Whitespace"
+(`git diff --check` over the PR range). Each check step runs even after an earlier one fails, and any failure
+fails the job. `claude plugin validate .` stays a local check.
+
+Each hard invariant and the check that enforces it, or the reason it stays
+prose, is listed in [the invariant inventory](invariants.md).
 
 ## 9. State management
 
