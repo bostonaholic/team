@@ -56,9 +56,10 @@ PLUGIN_JSON='.claude-plugin/plugin.json'
 RUNTIME_DIRS=(agents skills opencode)
 
 # Host manifest directories. Each host reads its own: Claude Code takes
-# .claude-plugin/, Codex prefers .codex-plugin/ and .agents/plugins/ over it.
+# .claude-plugin/, Codex prefers .codex-plugin/ and .agents/plugins/ over it, Cursor
+# reads .cursor-plugin/.
 # All ship to end users, so content changes here are runtime changes.
-MANIFEST_DIRS=('.claude-plugin' '.codex-plugin' '.agents/plugins')
+MANIFEST_DIRS=('.claude-plugin' '.codex-plugin' '.cursor-plugin' '.agents/plugins')
 
 # Antigravity's manifest cannot live in a directory of its own: that host
 # resolves skills/ and agents/ as siblings of the manifest, so its marker sits at

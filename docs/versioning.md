@@ -66,7 +66,7 @@ someone recomputes it. This is what happened on PR #208, which opened as
 The version, changelog, and release exist for **plugin end users**, so a bump is
 warranted **only when a PR changes the distributed plugin**: `agents/`,
 `skills/`, `opencode/`, or host manifest *content* — `.claude-plugin/`,
-`.codex-plugin/`, `.agents/plugins/`, root `plugin.json` — (the
+`.codex-plugin/`, `.cursor-plugin/`, `.agents/plugins/`, root `plugin.json` — (the
 [Runtime vs. development](../AGENTS.md) split). Contributor-facing and
 plugin-developer infrastructure (`.github/`, `.claude/`, `docs/`, and build
 tooling) **never bumps**, whatever its conventional-commit
@@ -136,7 +136,7 @@ intend to land:
    its commit type (see [Choosing the level](#choosing-the-level)): observable
    to a plugin user → minor, internal-only and backward compatible → patch.
 2. Computes the next free version (`next-version.sh`).
-3. Bumps the six version strings.
+3. Bumps the seven version strings.
 4. **Cuts the changelog section**: moves the `[Unreleased]` body into a dated
    `## [X.Y.Z]` section and re-points the footer.
 5. Runs the **land-time consistency assertion**, after the cut and before the
@@ -183,7 +183,7 @@ section. `version-bump` re-runs them itself, and CI does not check them on every
 push. The assertion runs **after the changelog cut and before the commit**. It
 fails fast and loud, and it never commits an invalid tree. It checks that:
 
-- `.claude/scripts/check-version-consistency.sh` passes (strict semver, the six
+- `.claude/scripts/check-version-consistency.sh` passes (strict semver, the seven
   strings agree, and the host manifests agree on names and description).
 - The dated `## [X.Y.Z] - YYYY-MM-DD` released section exists.
 - The footer carries a `[X.Y.Z]: …compare/…` link. The `[Unreleased]` footer
@@ -192,9 +192,9 @@ fails fast and loud, and it never commits an invalid tree. It checks that:
 If any check fails, `version-bump` stops before committing. Nothing is
 committed, pushed, or merged. See `.claude/skills/version-bump/SKILL.md` step 5.
 
-## The six version strings
+## The seven version strings
 
-The version lives in **six places across five files**. Forgetting one ships
+The version lives in **seven places across six files**. Forgetting one ships
 an internally inconsistent tree, and this is the single most common versioning
 mistake in this repo's history.
 
@@ -203,6 +203,7 @@ mistake in this repo's history.
 | `.claude-plugin/plugin.json` | 1 (`version`): **canonical. CI reads this one.** |
 | `.claude-plugin/marketplace.json` | 2 (`metadata.version` **and** `plugins[0].version`) |
 | `.codex-plugin/plugin.json` | 1 (`version`): what Codex reports |
+| `.cursor-plugin/plugin.json` | 1 (`version`): what Cursor reports |
 | `package.json` | 1 (`version`) |
 | `plugin.json` (repo root) | 1 (`version`): what Antigravity reports |
 
@@ -216,10 +217,10 @@ One grep proves consistency:
 
 ```sh
 grep -rn '"version"' package.json plugin.json .claude-plugin/plugin.json \
-  .claude-plugin/marketplace.json .codex-plugin/plugin.json
+  .claude-plugin/marketplace.json .codex-plugin/plugin.json .cursor-plugin/plugin.json
 ```
 
-All six lines must show the same version.
+All seven lines must show the same version.
 `.claude/scripts/check-version-consistency.sh` asserts this mechanically.
 
 ## Picking the next version
