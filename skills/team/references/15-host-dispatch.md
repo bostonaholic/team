@@ -28,6 +28,11 @@ Never substitute a source-checkout file for a missing installed resource.
 Standalone agents use their own installed definition path and the same reads;
 a host that does not expose that path must have its dispatcher supply it.
 
+Each spawned child, named or body-loaded, starts with a
+[fresh context window](step-delegation.md#fresh-context) that holds only its
+payload, never a fork of the dispatcher's conversation. A host that can start
+only a forked child cannot spawn, so step 3 applies.
+
 Resolve every dispatch in this order:
 
 1. **Named agent.** If the host resolves Team agents by name (Claude Code
@@ -41,6 +46,12 @@ Resolve every dispatch in this order:
 3. **Inline fallback.** If the host cannot spawn a subagent, run a **producer**
    agent's body in the orchestrator's own context. Never run a **reviewer**
    inline; stop and report instead ([independent review rules](principles/independent-review.md)).
+   The RESEARCH phase dispatch of `file-finder` and `researcher`, from the
+   `/team` orchestrator or from `/team-research`, never runs inline either.
+   Stop and report the host limitation and the artifact directory, because
+   the dispatcher's context holds the task framing. A nested
+   `team:file-finder` scout is a different dispatch, so its parent keeps the
+   inline fallback in [agent dispatch](agent-dispatch.md).
 
 Capability mapping for the body-load path:
 

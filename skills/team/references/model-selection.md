@@ -59,13 +59,17 @@ for a rejected mapping.
 Apply the returned `spawn` fields to the actual host tool call:
 
 - **Codex:** pass `model`, `reasoning_effort`, and `fork_turns: "none"` to
-  `spawn_agent` (full-history forks ignore these overrides). Supply the definition body and resource paths in `message`.
+  `spawn_agent` (full-history forks ignore these overrides). When
+  `spawn_agent` does not take `fork_turns`, pass `fork_context: false` in its
+  place. When it takes both, send only `fork_turns: "none"`
+  ([fresh context](step-delegation.md#fresh-context)). Supply the definition body and resource paths in `message`.
 - **Antigravity:** pass `Model` on the corresponding `invoke_subagent.Subagents`
   entry, alongside its `TypeName`, `Role`, and `Prompt`. `define_subagent` alone
   does not select the model. Never put a top-level CLI model ID in `Model`.
 
 If the active tool cannot express these selections, stop and name that host
-limitation. Model mappings grant no permission or full-pipeline parity;
+limitation. A Codex `spawn_agent` that takes neither `fork_turns` nor
+`fork_context` cannot express them. Model mappings grant no permission or full-pipeline parity;
 tool-grant, reviewer isolation, and resource-read rules still apply. A resume
 uses the same child and model; a changed selection needs a fresh dispatch.
 

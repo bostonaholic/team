@@ -66,7 +66,8 @@ path. Never invoke the vendor CLIs directly, and never pass extra flags
 Assemble the prompt into a scratch file (shell redirection is fine for your
 own outbound content). Dispatch each `run` through its own read-only
 `Explore` **courier sub-agent**, **named after its vendor** (`codex-review`,
-`agy-review`), all in one message ([execution rules](references/execution.md)),
+`agy-review`), each in a
+[fresh context window](references/step-delegation.md#fresh-context), all in one message ([execution rules](references/execution.md)),
 with this fixed errand:
 
 > Run exactly this command once with the Bash tool, in the foreground,

@@ -995,8 +995,9 @@ Dependent steps run one at a time; independent steps fan out in one turn.
 delegates input gathering, screenshots, the changelog, body authoring,
 upload, and review comments. The mechanical test gate delegates its
 evidence run. The host mapping (Claude Code `Agent`, Codex `spawn_agent`
-with `fork_turns: "none"`, Antigravity `invoke_subagent`) and the inline
-fallback live in `skills/team/references/step-delegation.md`.
+with `fork_turns: "none"`, Antigravity `invoke_subagent`), the fresh-context
+rule, and the inline fallback live in
+`skills/team/references/step-delegation.md`.
 
 ### Codex host manifests
 

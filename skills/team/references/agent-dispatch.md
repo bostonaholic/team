@@ -25,11 +25,12 @@ For Team helpers, read [host dispatch](references/15-host-dispatch.md) before na
 Supply the installed root, definition, and applicable resource paths, as operational context, in every initial and follow-up prompt.
 
 - Helpers are read-only: built-in `Explore`, `team:file-finder`, or `general-purpose` with an explicitly read-only prompt. They NEVER write files, commit, or write under `docs/plans/`; the parent or orchestrator writes artifacts.
+- Every helper starts with a [fresh context window](references/step-delegation.md#fresh-context). On Claude Code, the parent names the `subagent_type` (`Explore`, `team:file-finder`, or `general-purpose`) on every call and never passes `fork`.
 - Every call passes `model:`: `haiku` for location, grep, and bulk reading; `sonnet` for subsystem traces or claim checks; `opus` only after a `sonnet` helper was inconclusive, with that failure named. Effort: `low` for lookups, `medium` for tracing, never `xhigh`.
 - You are at depth 2 of 5. Spawn at most ONE more level; every helper works directly and never spawns ([focused work rules](principles/focused-work.md)).
 - Helpers never ask users. Resolve ambiguity or record it in your artifact's open questions/assumptions ([decisions rules](references/decisions.md)).
 - At most **4 helpers** in flight. Dispatch independent work in parallel. Spot-verify every reported claim; you own it.
-- Use `SendMessage` for an in-scope follow-up to a live scout when available (same in-flight cap); otherwise respawn. Skeptics are always fresh and one-shot: one skeptic per claim ([independent review rules](principles/independent-review.md)).
+- Use `SendMessage` for an in-scope follow-up to a live scout when available (same in-flight cap); otherwise respawn. A follow-up continues that scout's own context, never the parent's. Skeptics are always fresh and one-shot: one skeptic per claim ([independent review rules](principles/independent-review.md)).
 
 ## Prose procedure for non-vendor helpers
 

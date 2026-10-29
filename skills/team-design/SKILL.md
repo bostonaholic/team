@@ -59,7 +59,8 @@ discovery command resolves it. Resolve `<team-skill-dir>` to the absolute direct
    b. **Review.** Read the `## Review brief` from the
       [design reviewer brief](../team/references/design-reviewer.md),
       substitute the artifact directory, attach the paths named at the top of
-      this file, and give it to a fresh-context read-only `Explore` subagent.
+      this file, and give it to a read-only `Explore` subagent in a
+      [fresh context window](../team/references/step-delegation.md#fresh-context).
    c. **Record.** Write the reviewer's report verbatim to a scratch file
       outside `$ARGUMENTS` with the Write tool, then run
       `node "<team-skill-dir>/scripts/record-design-review.mjs" --dir "$ARGUMENTS" --report <report-file>`.
