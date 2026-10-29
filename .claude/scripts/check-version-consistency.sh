@@ -3,7 +3,7 @@
 # check-version-consistency.sh — land-time consistency assertion for the
 # version-bump skill (docs/versioning.md).
 #
-# The version string lives in seven places across six files. All seven must be
+# The version string lives in every file listed below. Every copy must be
 # strict semver and agree; the host manifests must agree on the plugin name,
 # the marketplace name, and the description. Exit 0 = consistent, 1 = drift
 # (each drift printed). Requires: jq.
@@ -67,4 +67,4 @@ if [ "$ERRORS" -gt 0 ]; then
   printf '%d inconsistency(ies) found\n' "$ERRORS" >&2
   exit 1
 fi
-printf 'OK: seven version strings agree on %s; host manifests agree on names and description\n' "$version"
+printf 'OK: every version string agrees on %s; host manifests agree on names and description\n' "$version"

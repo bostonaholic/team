@@ -157,9 +157,9 @@ answer it rather than asking the user.
 bash .claude/scripts/next-version.sh <level>
 ```
 
-### 3. Bump all seven version strings
+### 3. Bump every version string
 
-The version lives in **seven places across six files**:
+The version lives in **every file below**:
 
 | File | Occurrences |
 |------|-------------|
@@ -177,14 +177,14 @@ of its own because that host resolves `skills/` and `agents/` as siblings of
 its manifest. A stale one makes the same release look like two different
 versions depending on the host.
 
-Edit all six files, then prove it:
+Edit every file, then prove it:
 
 ```bash
 grep -rn '"version"' package.json plugin.json .claude-plugin/plugin.json \
   .claude-plugin/marketplace.json .codex-plugin/plugin.json .cursor-plugin/plugin.json
 ```
 
-All seven lines must show the **new** version. Zero may still show the old one.
+Every line must show the **new** version. None may still show the old one.
 
 ### 4. Cut the changelog section
 

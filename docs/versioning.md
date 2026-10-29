@@ -136,7 +136,7 @@ intend to land:
    its commit type (see [Choosing the level](#choosing-the-level)): observable
    to a plugin user → minor, internal-only and backward compatible → patch.
 2. Computes the next free version (`next-version.sh`).
-3. Bumps the seven version strings.
+3. Bumps every version string.
 4. **Cuts the changelog section**: moves the `[Unreleased]` body into a dated
    `## [X.Y.Z]` section and re-points the footer.
 5. Runs the **land-time consistency assertion**, after the cut and before the
@@ -183,8 +183,8 @@ section. `version-bump` re-runs them itself, and CI does not check them on every
 push. The assertion runs **after the changelog cut and before the commit**. It
 fails fast and loud, and it never commits an invalid tree. It checks that:
 
-- `.claude/scripts/check-version-consistency.sh` passes (strict semver, the seven
-  strings agree, and the host manifests agree on names and description).
+- `.claude/scripts/check-version-consistency.sh` passes (strict semver, every
+  version string agrees, and the host manifests agree on names and description).
 - The dated `## [X.Y.Z] - YYYY-MM-DD` released section exists.
 - The footer carries a `[X.Y.Z]: …compare/…` link. The `[Unreleased]` footer
   compares from `vX.Y.Z...HEAD`.
@@ -192,9 +192,9 @@ fails fast and loud, and it never commits an invalid tree. It checks that:
 If any check fails, `version-bump` stops before committing. Nothing is
 committed, pushed, or merged. See `.claude/skills/version-bump/SKILL.md` step 5.
 
-## The seven version strings
+## The version strings
 
-The version lives in **seven places across six files**. Forgetting one ships
+The version lives in **every file below**. Forgetting one ships
 an internally inconsistent tree, and this is the single most common versioning
 mistake in this repo's history.
 
@@ -220,7 +220,7 @@ grep -rn '"version"' package.json plugin.json .claude-plugin/plugin.json \
   .claude-plugin/marketplace.json .codex-plugin/plugin.json .cursor-plugin/plugin.json
 ```
 
-All seven lines must show the same version.
+Every line must show the same version.
 `.claude/scripts/check-version-consistency.sh` asserts this mechanically.
 
 ## Picking the next version
