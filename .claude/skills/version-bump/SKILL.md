@@ -157,15 +157,16 @@ answer it rather than asking the user.
 bash .claude/scripts/next-version.sh <level>
 ```
 
-### 3. Bump all six version strings
+### 3. Bump every version string
 
-The version lives in **six places across five files**:
+The version lives in **every file below**:
 
 | File | Occurrences |
 |------|-------------|
 | `.claude-plugin/plugin.json` | 1 (`version`) |
 | `.claude-plugin/marketplace.json` | 2 (`metadata.version` **and** `plugins[0].version`) |
 | `.codex-plugin/plugin.json` | 1 (`version`) |
+| `.cursor-plugin/plugin.json` | 1 (`version`): what Cursor reports |
 | `package.json` | 1 (`version`) |
 | `plugin.json` (repo root) | 1 (`version`): what Antigravity reports |
 
@@ -176,14 +177,14 @@ of its own because that host resolves `skills/` and `agents/` as siblings of
 its manifest. A stale one makes the same release look like two different
 versions depending on the host.
 
-Edit all five files, then prove it:
+Edit every file, then prove it:
 
 ```bash
 grep -rn '"version"' package.json plugin.json .claude-plugin/plugin.json \
-  .claude-plugin/marketplace.json .codex-plugin/plugin.json
+  .claude-plugin/marketplace.json .codex-plugin/plugin.json .cursor-plugin/plugin.json
 ```
 
-All six lines must show the **new** version. Zero may still show the old one.
+Every line must show the **new** version. None may still show the old one.
 
 ### 4. Cut the changelog section
 
@@ -219,7 +220,7 @@ committing**:
 
 ```bash
 bash .claude/scripts/check-version-consistency.sh
-node -e "['.claude-plugin/plugin.json','.claude-plugin/marketplace.json','.codex-plugin/plugin.json','.agents/plugins/marketplace.json','plugin.json','package.json'].forEach(f=>JSON.parse(require('fs').readFileSync(f)));console.log('JSON OK')"
+node -e "['.claude-plugin/plugin.json','.claude-plugin/marketplace.json','.codex-plugin/plugin.json','.cursor-plugin/plugin.json','.agents/plugins/marketplace.json','plugin.json','package.json'].forEach(f=>JSON.parse(require('fs').readFileSync(f)));console.log('JSON OK')"
 ```
 
 The released-section and footer-compare-link invariants hold only after the
@@ -246,7 +247,8 @@ Commit the bump as its own commit in the PR branch:
 
 ```bash
 git add .claude-plugin/plugin.json .claude-plugin/marketplace.json \
-  .codex-plugin/plugin.json plugin.json package.json CHANGELOG.md
+  .codex-plugin/plugin.json .cursor-plugin/plugin.json plugin.json package.json \
+  CHANGELOG.md
 git commit -m "chore(version): X.Y.Z"
 ```
 
