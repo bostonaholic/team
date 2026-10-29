@@ -25,7 +25,8 @@ When the `design-author` returns a draft:
    `subagent_type: Explore` and `model: opus` (never a cheaper default). Pass the
    `## Review brief` from the [design reviewer brief](references/design-reviewer.md)
    as the prompt, with the artifact directory substituted and the paths from
-   the top of this file attached, in a fresh subagent context each round.
+   the top of this file attached, in a
+   [fresh context window](references/step-delegation.md#fresh-context) each round.
    `Explore` holds no Write/Edit tools, so the reviewer cannot change
    `6-design.md` or forge a verdict. If the environment lacks `Explore`, treat
    it as a reviewer crash (step 8); never substitute a full-tool agent.
