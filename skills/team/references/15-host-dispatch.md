@@ -81,9 +81,11 @@ orchestrator in full (see "Where a phase agent's output lives").
 
 Each agent definition's `## Return` section fixes that agent's whole return.
 
-**Status return.** `questioner`, `design-author`, `structure-planner`, and
-`planner` open with a status line, then list one absolute path per file
-written. Line 1 is exactly one of these forms, case-sensitive, at column 1:
+**Status return.** The artifact writers, `questioner`, `design-author`,
+`structure-planner`, and `planner`, open with a status line, then list one
+absolute path per file written. `test-architect` opens with a status line,
+then gives its gate report. Line 1 is exactly one of these forms,
+case-sensitive, at column 1:
 
 | Form | Meaning |
 |---|---|
@@ -136,10 +138,28 @@ Route each return in this order:
    artifact directory, and each path the return lists. It also names each
    inventory artifact ([artifact schema](artifacts.md)) of the halted phase,
    or of a later phase, that exists on disk. It states that resume and the
-   standalone skills count a present artifact as done. The operator
-   removes or finishes each named file before re-invoking. `6-design.md`
-   needs no removal, because DESIGN resumes at its review step.
-6. **Halt replaces report.** A halt replaces the consuming skill's report and
+   standalone skills count a present artifact or test file as done. The
+   operator removes or finishes each named file before re-invoking.
+   `6-design.md` needs no removal, because DESIGN resumes at its review
+   step.
+6. **Uncommitted paths.** After a `test-architect` dispatch, the halt also
+   names each uncommitted path:
+   - each path that
+     `git -C <worktree> status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'`
+     prints, in each worktree in scope
+   - each path that a status return of this phase listed in this session
+
+   The halt states that a listed path can predate the dispatch. It states
+   that `/team-implement` skips test authoring and the mechanical gate while
+   the acceptance tests exist. After a `test-architect` halt or stop, it says
+   that those tests never passed the gate. The operator reverts the agent's
+   changes to each named path. That removes a file the agent created and
+   restores a file it changed, so earlier coverage stays.
+7. **Routed stop.** A stated route out of a `test-architect` `BLOCKED` names
+   the same uncommitted paths. In `/team`, the move back to PLAN runs only
+   when that list is empty. Otherwise the run halts per steps 5 and 6, and
+   names PLAN as the move back it did not take.
+8. **Halt replaces report.** A halt replaces the consuming skill's report and
    its `Next:` line.
 
 Stated routes:
@@ -147,4 +167,5 @@ Stated routes:
 | Agent and return | `/team` | Standalone skill |
 |---|---|---|
 | `planner` `BLOCKED` | Move back to STRUCTURE. `structure-planner` gets line 1, labeled untrusted and fenced, as its stated reason. | `/team-plan` stops, quotes line 1 as untrusted text, and names `/team-structure docs/plans/<id>/`. |
+| `test-architect` `BLOCKED` | Move back to PLAN only when no uncommitted path exists. Otherwise, halt per steps 5 and 6. At PLAN, rule 5 sends an authoring-gate failure on to STRUCTURE when the planner's own answer also fails the test. | `/team-implement` stops before the mechanical gate, quotes line 1 as untrusted text, and names `/team-plan docs/plans/<id>/` and each uncommitted path. In standalone mode (no `8-plan.md`) with no `7-structure.md`, it names `/team-structure docs/plans/<id>/` instead, because `/team-plan` needs that file. |
 | Any reviewer failure line | Review-loop step 4 retries that reviewer once inside a fresh tree check, then halts with no record. | The same. |

@@ -31,7 +31,9 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
 - On any unexpected failure, report to the user and suggest re-invoking the
   same /team-* command with `docs/plans/<id>/`. After a halt, suggest it only
   once the operator removes or finishes each file the halt names, per
-  [host dispatch](references/15-host-dispatch.md).
+  [host dispatch](references/15-host-dispatch.md). The operator reverts the
+  agent's changes to a named test path only when the halt says that the
+  named tests never passed the gate.
 - To add a pipeline agent, add it to the phase table and to the inventory in
   `skills/team/registry.json`.
 

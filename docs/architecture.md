@@ -527,6 +527,10 @@ The four artifact writers (`questioner`, `design-author`,
 one absolute path per file written, and nothing else. A note that a writer's
 rules ask it to report goes into a named section of its artifact.
 
+`test-architect` is a code writer. It also gives a status return, but its
+bulk output is test files in the worktree, so its gate report follows line
+1. Its only `BLOCKED` forms are a scope defect and an authoring-gate stop.
+
 The seven read-only agents (`file-finder`, `researcher`, and the five
 reviewers) give a report return. They return their template report in full,
 with no status line, because the dispatcher copies it verbatim into
@@ -553,6 +557,15 @@ directory, each listed path, and each inventory artifact of the halted or a
 later phase on disk. Resume counts a present artifact as done, so the
 operator removes or finishes each named file before re-invoking.
 `6-design.md` is exempt, because DESIGN resumes at its review step.
+
+After a `test-architect` dispatch, the halt also names each uncommitted path:
+each path the clean-tree `git status` command prints, plus each path a status
+return listed. `test-architect` commits nothing, and `/team-implement` skips
+test authoring while those tests exist. Those tests never passed the gate, so
+the operator reverts the agent's changes to each one. In `/team`, a
+`test-architect` `BLOCKED` moves the run back to PLAN only when no
+uncommitted path exists. Otherwise the run halts, because no operator is
+present to remove a file.
 
 ### Model tiering
 
