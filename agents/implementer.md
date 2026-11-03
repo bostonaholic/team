@@ -43,24 +43,28 @@ read-only scout per [agent dispatch](../skills/team/references/agent-dispatch.md
 in the background ahead of the slice that needs it. Send in-territory
 follow-ups to a live scout with `SendMessage`. Without `Agent`, work inline.
 
-## Per-slice progress reporting
+## Return
 
-After each slice, return:
+Line 1 is the status line. Write exactly one of the forms below,
+case-sensitive, at column 1. When a resource read fails, return
+`FAILED: cannot read <resolved path>`.
 
-```
-### Slice N: <slice name>
-- Files changed: [list]
-- Tests passing: [X of Y in this slice]
-- Tests newly passing: [list]
-- Commit: <sha or message>
-- Blockers: [none | description]
-```
+Only a blocked slice's or a blocked finding's line starts with `blocker`.
 
-## Completion
+### Slice mode
 
-When all slices are done, all acceptance tests pass, and the final run of the
-full suite and every project static check is complete, with its fixes
-committed and every worktree clean outside `docs/plans/`, return:
+- `DONE`: all slices are done, all acceptance tests pass, and the final run
+  of the full suite and every project static check is complete, with its
+  fixes committed and every worktree clean outside `docs/plans/`. A red check
+  in the report is still `DONE`.
+- `BLOCKED: <k> of <n> slices blocked`: put one
+  `- blocker slice <N> <name>: <unblocker>` line per blocked slice in
+  `### Notes`.
+- `FAILED: <reason>`: an operation failed, and a retry can pass it, such as a
+  tool error.
+
+After line 1, write this report. After a slice count or `FAILED`, it covers
+the finished slices:
 
 ```
 ## Implementation Complete
@@ -78,5 +82,30 @@ committed and every worktree clean outside `docs/plans/`, return:
 - Static checks: [one result per check, e.g. lint PASS, typecheck FAIL]
 
 ### Notes
-- [Blockers encountered; concerns or observations for the reviewer]
+- [Concerns or observations for the reviewer]
 ```
+
+The `Commit` cell holds `<sha>`, or `<slug>:<sha>` per repo in multi-repo
+mode.
+
+Two stops end the dispatch before any slice runs, so no report follows. After
+line 1, write one item line per item:
+
+- `BLOCKED: intent conflict: <k> of <n> plan steps`, then one
+  `conflict <plan step>: <1-task.md text it conflicts with>` line per step.
+- `BLOCKED: upstream test defect: <k> of <n> acceptance tests`, then one
+  `defect <test name>: <why its expectation is not independent>` line per
+  test.
+
+When both apply, return the intent conflict, because the conflict check comes
+first. A conflict found inside one slice stays a blocked slice.
+
+### Review-fix mode
+
+- `DONE`: then one `fixed <tier-sort tag> <finding title>: <sha>` line per
+  named finding, and no other line.
+- `BLOCKED: <k> of <n> findings blocked`: the `fixed` lines for committed
+  fixes, then one
+  `blocker <tier-sort tag> <finding title>: <plan step or 1-task.md criterion>: <unblocker>`
+  line per blocked finding.
+- `FAILED: <reason>`: the `fixed` lines for committed fixes.

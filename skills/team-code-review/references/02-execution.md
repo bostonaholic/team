@@ -108,12 +108,23 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
      with the canonical artifact directory, the typed class(es), this round's
      `### Blocking` and `### Major` lines, and any reconsider line. On a
      dispatch crash, retry once with the error, then halt loudly.
-   - On return, rerun the clean-tree entry guard
-     ([input](references/01-input.md), Entry guards, 4). A dirty path retries
-     the dispatch once naming each path, then halts loudly.
-   - When the implementer reports a blocker against an open Blocking or
-     Major finding, halt loudly naming the absolute `docs/plans/<id>/` path, the newest
-     `review-<n>.md` path, and the blocker line. Ask no question.
+   - On return, sort the implementer's return per
+     [host dispatch](../team/references/15-host-dispatch.md) into one of
+     three classes, checked in this order:
+     - **Blocked:** a blocker line, or a `BLOCKED` line 1, whatever line 1 says.
+       Run the clean-tree entry guard's command
+       ([input](references/01-input.md), Entry guards, 4), but a dirty path
+       never re-dispatches. Halt loudly naming the absolute `docs/plans/<id>/`
+       path, the newest `review-<n>.md` path, line 1, and each blocker line.
+       Name any mismatch between line 1 and the blocker lines, and each dirty
+       path the command prints. Ask no question.
+     - **Crash:** `FAILED`, an unrecognized line 1, or a `DONE` with a line
+       that is neither a `fixed` line nor a blocker line. Retry once with the
+       error, then halt loudly. The retry error asks for each unfixed finding
+       as a `blocker` line.
+     - **Clean:** a `DONE` with only `fixed` lines. Rerun the clean-tree entry
+       guard. A dirty path retries the dispatch once naming each path, then
+       halts loudly.
    - Return to step 2 for a fresh round.
    - **Never** ask the user which Blocking or Major items to address; a
      prompt listing a blocking or major finding is a defect. The loop has no

@@ -39,5 +39,7 @@
 4. Dispatch `implementer` → executes slices with per-slice commits,
    revalidating every action against `$ARGUMENTS/1-task.md`. In standalone
    mode it works from that task and the failing tests.
-5. **Hand-off.** Present the implementer's completion report and tell the
-   user **"Next: run `/team-code-review docs/plans/<id>/`"**.
+5. **Hand-off.** On `DONE`, present the implementer's completion report and
+   tell the user **"Next: run `/team-code-review docs/plans/<id>/`"**. On
+   `BLOCKED`, present line 1 and the lines after it, and print no `Next:`
+   line.
