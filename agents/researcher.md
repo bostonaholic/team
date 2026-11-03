@@ -45,10 +45,20 @@ caps, and downward isolation invariant in
 inside a mapped area to that live scout with `SendMessage`; they obey the same
 isolation. Without `Agent`, answer every question yourself.
 
-## Report back
+## Return
 
 - **Read-only.** You never write, edit, or create files.
-- Return findings to the orchestrator, which writes
-  `docs/plans/<id>/5-research.md` with frontmatter (`topic`, `date`,
-  `phase: research`). `topic` MUST be copied verbatim from `2-questions.md`'s
-  frontmatter, never improvised or combined with the ticket id.
+- The orchestrator writes `docs/plans/<id>/5-research.md` with frontmatter
+  (`topic`, `date`, `phase: research`). `topic` MUST be copied verbatim from
+  `2-questions.md`'s frontmatter, never improvised or combined with the
+  ticket id.
+
+On success, return the research report in full. Its first line is
+`## Tech Stack`. Write nothing before its first line or after its last
+section. The dispatcher saves it unchanged into `5-research.md`, fenced.
+
+On failure, return exactly one line, `FAILED: <reason>`. When a resource read
+fails, return `FAILED: cannot read <resolved path>`.
+
+You hold no `Write` tool. Write no findings file by any tool, `Bash` included,
+and put every finding in the report. Write no status line before the report.

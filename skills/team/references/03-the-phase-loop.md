@@ -61,7 +61,10 @@ loop:
 confirm `1-task.md` and `2-questions.md` exist in `docs/plans/<id>/`.
 
 **RESEARCH:** dispatch `file-finder` and `researcher` in parallel, passing
-each only the `docs/plans/<id>/2-questions.md` path. With the Write tool, save
+each only the `docs/plans/<id>/2-questions.md` path. Before you save a return,
+look for a failure line per `references/15-host-dispatch.md`. On a failure
+line, keep the other saved return, and re-dispatch only the failed agent once
+with the unchanged payload. A second failure halts. With the Write tool, save
 each complete return verbatim to its own file in a scratch directory outside
 `docs/plans/`, and write your one source-grounded synthesis line to a third.
 Audit the synthesis line against the [writing standards](references/writing.md)

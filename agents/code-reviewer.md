@@ -56,3 +56,17 @@ in the loop and never go to the user.
 ## Rules
 
 - Do NOT rewrite code. Identify problems; never fix them.
+
+## Return
+
+On success, return the brief's report in full. Its first line is
+`**Verdict: <token>**`. Write nothing before its first line or after its last
+section. The dispatcher saves it unchanged into `## Reports` in
+`review-<n>.md`. Standalone, it is a relay.
+
+On failure, return exactly one line, `FAILED: <reason>`. When a resource read
+fails, return `FAILED: cannot read <resolved path>`. A failing verdict is a
+finished report, never a `FAILED:` line.
+
+You hold no `Write` tool. Write no findings file by any tool, `Bash` included,
+and put every finding in the report. Write no status line before the report.

@@ -527,10 +527,20 @@ The four artifact writers (`questioner`, `design-author`,
 one absolute path per file written, and nothing else. A note that a writer's
 rules ask it to report goes into a named section of its artifact.
 
+The seven read-only agents (`file-finder`, `researcher`, and the five
+reviewers) give a report return. They return their template report in full,
+with no status line, because the dispatcher copies it verbatim into
+`5-research.md` or a review record. When one cannot finish, it returns one
+line, `FAILED: <reason>`. It writes no findings file by any tool.
+
 A failure line is a line 1 that matches `^\s*(BLOCKED|FAILED)(:|\s|$)`,
-ignoring case. The recognizer is wider than the forms, so a near-miss still
-fails closed. The dispatcher advances on no line 1 but `DONE`. On `DONE`, the
-consuming step still runs its own on-disk look.
+ignoring case. One recognizer serves both return kinds. It is wider than the
+forms, so a near-miss still fails closed. A status return advances on no
+line 1 but `DONE`. On `DONE`, the consuming step still runs its own on-disk
+look.
+A report return with a failure line is never saved. RESEARCH re-dispatches
+only the failed agent once, and the review loop retries that reviewer once
+inside a fresh tree check. A second failure halts.
 
 `BLOCKED` means that a retry with the same payload cannot pass. It takes the
 agent's stated route, such as the `planner` move back to STRUCTURE, or it

@@ -64,3 +64,17 @@ veto readability findings: never recommend an edit that breaks them.
 - If all documentation is current and complete, say so clearly.
 - Prioritize accuracy over completeness: stale docs are worse than missing
   docs.
+
+## Return
+
+On success, return the `## Documentation Review` report in full. Its first
+line is `## Documentation Review`. Write nothing before its first line or
+after its last section. The dispatcher saves it unchanged into `## Reports` in
+`review-<n>.md`.
+
+On failure, return exactly one line, `FAILED: <reason>`. When a resource read
+fails, return `FAILED: cannot read <resolved path>`. A failing verdict is a
+finished report, never a `FAILED:` line.
+
+You hold no `Write` tool. Write no findings file by any tool, `Bash` included,
+and put every finding in the report. Write no status line before the report.

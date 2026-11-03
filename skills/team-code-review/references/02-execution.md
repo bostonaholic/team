@@ -46,6 +46,7 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
 4. **Validate each report.** Each case retries the named reviewer once with
    the error, inside a fresh tree check. A second failure halts loudly, and
    the round writes no record.
+   - Line 1 is a failure line, per host dispatch.
    - No parseable verdict.
    - A `code-reviewer` REQUEST CHANGES with no branch-owned Blocking-tier
      finding. A bare `issue:` counts as Blocking-tier; `issue (pre-existing)`
