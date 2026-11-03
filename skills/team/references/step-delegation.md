@@ -6,12 +6,15 @@ subagent does the step's reads and edits and returns a short report and paths.
 
 ## What the orchestrator keeps
 
-Keep a step inline when any of these holds:
+A subagent pays off for read-heavy, isolated work, where it reads more than
+it returns and runs on its brief alone. Keep a step inline when any of these
+holds:
 
 - It asks the user; subagents cannot.
 - It decides a gate, verdict, route, or retry. A subagent may gather evidence.
-- It is one or two commands whose output the orchestrator needs next, such as
-  a branch gate, `mkdir`, or a ticket move.
+- Its reads are no larger than its return, such as one or two commands or
+  files whose full output the orchestrator needs next: a branch gate,
+  `mkdir`, or a ticket move.
 - It owns a TodoWrite ledger item or writes a root-owned artifact envelope.
 
 Delegate every other numbered step. A step dispatched to a named Team agent

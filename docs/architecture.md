@@ -1056,7 +1056,9 @@ A skill's main session orchestrates; it does not do the step work itself.
 Each numbered step runs in a fresh-context subagent with a self-contained
 brief (goal, input paths, boundaries, return shape, done condition) and
 returns a status line plus evidence. The main session keeps user questions,
-gate and verdict decisions, one-command steps, and the TodoWrite ledger.
+gate and verdict decisions, each step whose reads are no larger than its
+return, and the TodoWrite ledger. A subagent pays off only for read-heavy,
+isolated work that reads more than it returns.
 Dependent steps run one at a time; independent steps fan out in one turn.
 `/team-fix` delegates Reproduce, Red, Green, Verify, and Ship. `/team-pr`
 delegates input gathering, screenshots, the changelog, body authoring,
