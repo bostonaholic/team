@@ -8,7 +8,8 @@ Resolve these links from the installed `SKILL.md` directory.
 
 ### Design Review Gate (design)
 
-When the `design-author` returns a draft:
+When the `design-author` returns `DONE`, or, inline, when the body's
+`## Return` reaches `DONE`:
 
 1. Make sure `docs/plans/<id>/6-design.md` exists. Run
    `<team-skill-dir>/scripts/design-review-status.sh <artifact-dir>`. Exit 0:

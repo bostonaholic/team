@@ -43,7 +43,9 @@ discovery command resolves it. Resolve `<team-skill-dir>` to the absolute direct
 2. If `$ARGUMENTS/6-design.md` already exists, skip to step 3 — never re-draft
    an existing design ([durable state rules](../team/principles/durable-state.md)).
    Otherwise dispatch `design-author`; it writes `$ARGUMENTS/6-design.md`
-   with frontmatter `revision: 0`.
+   with frontmatter `revision: 0`. Go to step 3 only when it returns `DONE`,
+   or, inline, when the body's `## Return` reaches `DONE`. Route any other
+   return per host dispatch.
 3. **Design review gate.** Run
    `"<team-skill-dir>/scripts/design-review-status.sh" "$ARGUMENTS"`.
    Exit 0 (`passed`): skip to step 4 — never re-review a passed design.
@@ -70,8 +72,9 @@ discovery command resolves it. Resolve `<team-skill-dir>` to the absolute direct
    d. **Act on the verdict:**
       - **APPROVE or COMMENT** — the review passes. Advance.
       - **REQUEST CHANGES** — re-dispatch `design-author` with the reviewer's
-        findings verbatim; it re-drafts and increments `revision: <n+1>`, then
-        a fresh round runs. No round cap; the loop ends on the verdict.
+        findings verbatim; it re-drafts and increments `revision: <n+1>`.
+        When it returns `DONE`, a fresh round runs. No round cap; the loop
+        ends on the verdict.
       - **Unparseable verdict or reviewer crash** — retry the review once with
         the error; on second failure, halt loudly. Fail closed — never advance
         on a missing verdict ([verified results rules](../team/principles/verified-results.md)).

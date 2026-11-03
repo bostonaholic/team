@@ -513,6 +513,37 @@ Three more balances bound the checks themselves:
 - **The orchestrator cannot punt.** The no-consult rule forbids escalation of a
   Blocking or Major finding to the user mid-run.
 
+### Agent returns
+
+Each file in `agents/` has one `## Return` section that fixes the agent's
+whole return. The rule thus holds on every dispatch, with no dispatcher
+instruction. `skills/team/references/15-host-dispatch.md` holds the routing
+that every dispatcher applies.
+
+The four artifact writers (`questioner`, `design-author`,
+`structure-planner`, `planner`) give a status return. Line 1 is `DONE`,
+`BLOCKED: <reason>`, or `FAILED: <reason>`, case-sensitive, at column 1.
+`design-author` writes `DONE: <n> assumptions recorded`. After line 1 comes
+one absolute path per file written, and nothing else. A note that a writer's
+rules ask it to report goes into a named section of its artifact.
+
+A failure line is a line 1 that matches `^\s*(BLOCKED|FAILED)(:|\s|$)`,
+ignoring case. The recognizer is wider than the forms, so a near-miss still
+fails closed. The dispatcher advances on no line 1 but `DONE`. On `DONE`, the
+consuming step still runs its own on-disk look.
+
+`BLOCKED` means that a retry with the same payload cannot pass. It takes the
+agent's stated route, such as the `planner` move back to STRUCTURE, or it
+halts. It never retries. `FAILED` and an unrecognized line 1 retry once, then
+halt. Each writer makes every stop check it can before its first write, so a
+first-dispatch `BLOCKED` usually leaves no file behind.
+
+A halt quotes line 1 as untrusted text. It names the agent, the artifact
+directory, each listed path, and each inventory artifact of the halted or a
+later phase on disk. Resume counts a present artifact as done, so the
+operator removes or finishes each named file before re-invoking.
+`6-design.md` is exempt, because DESIGN resumes at its review step.
+
 ### Model tiering
 
 The principle:
@@ -728,8 +759,8 @@ loop:
      discovery resolves docs/plans/<id>/ without an explicit arg.
   4. Dispatch the agent(s) (none for an orchestrator-emit row) — pass
      them the artifact directory `docs/plans/<id>/`.
-  5. Write returned artifacts to docs/plans/<id>/<name>.md with the
-     YAML frontmatter the agent specifies.
+  5. Route each return per host dispatch. Only RESEARCH saves a
+     return.
   6. Run the gate for this phase (HUMAN | MECHANICAL | ORCHESTRATOR-EMIT
      | AGGREGATE). AGGREGATE delegates to the `team-code-review` and
      `team-security-review` skills.

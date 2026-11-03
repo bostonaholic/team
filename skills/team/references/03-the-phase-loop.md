@@ -19,8 +19,8 @@ loop:
      `references/15-host-dispatch.md`, read before each initial call or retry.
      A row whose Agent(s) cell reads `(orchestrator-emit)` names no agent:
      skip steps 4 and 5 and run its gate in step 6.
-  5. Write each returned artifact to docs/plans/<id>/<name>.md with the
-     YAML frontmatter the agent file and artifact schema specify.
+  5. Route each return per `references/15-host-dispatch.md`. Only RESEARCH
+     saves a return.
   6. Run the gate for this phase:
      - REVIEW (design): "Design Review Gate (design)".
      - MECHANICAL (tests-failing): "Mechanical Gate (test confirmation)".

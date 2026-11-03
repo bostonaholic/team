@@ -67,8 +67,30 @@ writing one is a defect.
 - **Enumerate edge cases.** Walk the six categories in the template's
   `## Desired end state`. Happy-path only is incomplete.
 
-## Output to orchestrator
+## Return
 
-Once `6-design.md` is written, return
-`{designPath, id, assumptionsRecorded: <number>}`. The orchestrator then
-dispatches the adversarial review, recorded to `design-review-<n>.md`.
+Line 1 is the status line. Write exactly one of these forms, case-sensitive,
+at column 1:
+
+- `DONE: <n> assumptions recorded`: the job finished as this definition
+  states. `<n>` counts the assumptions you recorded, and may be `0`.
+- `BLOCKED: <reason>`: any stop. A retry with the same payload cannot pass
+  it. The reason names the unblocker.
+- `FAILED: <reason>`: an operation failed, and a retry can pass it, such as a
+  tool error.
+
+After `DONE`, write the absolute path of `6-design.md`, then of `4-repos.md`
+when written. Write nothing else.
+
+After `BLOCKED` or `FAILED`, write one absolute path per file written in this
+dispatch, or nothing.
+
+When a resource read fails, return `FAILED: cannot read <resolved path>`.
+
+Make every stop check you can before your first write.
+
+Put a doc and code conflict in `6-design.md` `## Current state`, never in a
+return line.
+
+On `DONE`, the orchestrator dispatches the adversarial review, recorded to
+`design-review-<n>.md`.

@@ -38,4 +38,4 @@ For `1-task.md`'s inferred goal and acceptance signals, ask who it is for, what 
 3. Choose a 2–4 word kebab-case topic.
 4. List the directories, modules, and repos research will inspect.
 5. Draft neutral questions; in multi-repo mode prefix each with `in repo <name>`.
-6. Write `1-task.md`, `2-questions.md`, and conditional `3-prd.md`/`4-repos.md`; return the structured result.
+6. Write `1-task.md`, `2-questions.md`, and conditional `3-prd.md`/`4-repos.md`; return per the questioner's `## Return`.
