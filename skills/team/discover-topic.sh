@@ -63,7 +63,8 @@ for dir in docs/plans/*/; do
   for phase in $PHASE_FILES; do
     file="$dir$phase.md"
     [ -f "$file" ] || continue
-    seconds="$(stat -f %m "$file" 2>/dev/null || stat -c %Y "$file" 2>/dev/null)" || continue
+    # GNU first: GNU `stat -f` is filesystem mode and exits 0 with no mtime.
+    seconds="$(stat -c %Y "$file" 2>/dev/null || stat -f %m "$file" 2>/dev/null)" || continue
     [ "${seconds:-0}" -gt "$mtime" ] && mtime="$seconds"
   done
   [ "$mtime" -gt "$best_mtime" ] && {

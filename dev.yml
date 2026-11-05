@@ -9,6 +9,9 @@ up:
 
 check:
   plugin: "claude plugin validate ."
+  tests: "node --test tests/*.test.mjs"
+  agents: "node .claude/scripts/check-agents.mjs"
+  versions: ".claude/scripts/check-version-consistency.sh"
 
 commands:
   install:
