@@ -520,7 +520,9 @@ whole return. The rule thus holds on every dispatch, with no dispatcher
 instruction. `skills/team/references/15-host-dispatch.md` holds the routing
 that every dispatcher applies. The `tools:` grant sets the return kind. An
 agent with `Write` gives a status return, and an agent without `Write` gives a
-report return.
+report return. Line 1, column 1, and every saved return mean the agent's own
+text, after the dispatcher removes any host frame, indent, or trailer lines,
+and a return it cannot separate counts as a `FAILED` failure line.
 
 The four artifact writers (`questioner`, `design-author`, `structure-planner`,
 `planner`) give a status return. Line 1 is `DONE`, `BLOCKED: <reason>`, or

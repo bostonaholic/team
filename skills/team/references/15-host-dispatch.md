@@ -84,10 +84,13 @@ The definition's `tools:` grant sets the return kind. An agent with `Write`
 gives a status return, and an agent without `Write` gives a report return.
 
 **Host framing.** A host can add a frame above a return, an indent on each
-line, and trailer lines after it. Remove what the host added before routing.
-Line 1, column 1, and every later line in this section refer to the agent's
-own text. When you cannot tell the host's additions from the agent's text,
-treat line 1 as unrecognized.
+line, and trailer lines after it. Remove what the host added before routing
+and before any save. A saved return is the agent's own text, and "verbatim"
+and "byte-for-byte" refer to that text. Line 1, column 1, and every later line
+in this section refer to the agent's own text. When you cannot tell the host's
+additions from the agent's text, treat the return, of either kind, as a
+failure line with the status `FAILED`. Its line 1 is then the first line you
+received.
 
 **Status return.** The artifact writers, `questioner`, `design-author`,
 `structure-planner`, and `planner`, open with a status line, then list one
