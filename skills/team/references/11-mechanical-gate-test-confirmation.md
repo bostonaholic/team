@@ -1,6 +1,7 @@
 ### Mechanical Gate (test confirmation)
 
-When the `test-architect` returns failing tests:
+When the `test-architect` returns `DONE`, or, inline, when the body's
+`## Return` reaches `DONE`:
 
 1. Run the test suite.
 2. Run every **static** check the project defines (typecheck, lint, format,
@@ -29,7 +30,9 @@ suite and its correct state is green, not red:
    moves ([durable state rules](principles/durable-state.md)). A check that
    could not run is UNKNOWN, never a pass.
 2. Skip the `test-architect` dispatch and record the reason on a named line
-   ([verified results rules](principles/verified-results.md)).
+   ([verified results rules](principles/verified-results.md)). The inverted
+   gate starts on this recorded skip, never on `DONE`, because no
+   `test-architect` return exists.
 3. Advance only when the checks **reproduce that baseline**. A check red
    before the change stays red; a new failure is a regression.
 

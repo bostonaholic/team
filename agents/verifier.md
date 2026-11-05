@@ -57,3 +57,17 @@ Exit code: 1
 
 End every report with a single `### Verdict: PASS` or `### Verdict: FAIL`
 line per the playbook's verdict logic.
+
+## Return
+
+On success, return the verification report in full. Its first line is
+`## Verification Report`. Write nothing before its first line or after its
+last section. The dispatcher saves it unchanged into `## Reports` in
+`review-<n>.md`.
+
+On failure, return exactly one line, `FAILED: <reason>`. When a resource read
+fails, return `FAILED: cannot read <resolved path>`. A failing verdict is a
+finished report, never a `FAILED:` line.
+
+You hold no `Write` tool. Write no findings file by any tool, `Bash` included,
+and put every finding in the report. Write no status line before the report.

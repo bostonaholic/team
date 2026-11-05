@@ -46,23 +46,33 @@ Write into `docs/plans/<id>/`: always `1-task.md` and `2-questions.md`;
 spans more than one repository. Each file MUST open with YAML frontmatter per
 the playbook templates. `topic` is identical in `1-task.md` and
 `2-questions.md`: `<id>` minus the `<TICKET>-` or `<YYYY-MM-DD>-` prefix.
-Then return:
 
-```json
-{
-  "taskPath": "docs/plans/<id>/1-task.md",
-  "questionsPath": "docs/plans/<id>/2-questions.md",
-  "prdPath": "docs/plans/<id>/3-prd.md",
-  "reposPath": "docs/plans/<id>/4-repos.md",
-  "id": "<id>",
-  "multiRepo": true
-}
-```
+## Return
 
-Include `prdPath` only when you wrote `3-prd.md`, and `reposPath` and
-`multiRepo: true` only when you wrote `4-repos.md`. **No `description` field,
-no `taskMd` field** — the orchestrator must not propagate the user's framing
-to the research agents.
+Line 1 is the status line. Write exactly one of these forms, case-sensitive,
+at column 1:
+
+- `DONE`: the job finished as this definition states.
+- `BLOCKED: <reason>`: a stop that a retry with the same payload cannot
+  pass. The reason names the unblocker.
+- `FAILED: <reason>`: an operation failed, and a retry can pass it, such as a
+  tool error.
+
+After `DONE`, write one absolute path per file written: `1-task.md`,
+`2-questions.md`, then `3-prd.md` and `4-repos.md` when written. Write
+nothing else. No line carries the description or task text. Under the
+research-isolation invariant, the orchestrator must not propagate the user's
+framing to the research agents.
+
+After `BLOCKED` or `FAILED`, write one absolute path per file written in this
+dispatch, or nothing.
+
+When a resource read fails, return `FAILED: cannot read <resolved path>`.
+
+Make every stop check you can before your first write.
+
+Put a doc and code conflict in `1-task.md` `## Open assumptions`, never in a
+return line.
 
 ## Rules
 

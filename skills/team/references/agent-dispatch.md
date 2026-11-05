@@ -51,7 +51,7 @@ Fan out read-only exploration when questions cluster into independent areas or `
 - Scout types: `team:file-finder` or built-in `Explore`; nothing else.
 - Spawn only when a cluster needs more reading than the report will quote.
 - Isolation extends downward: scout prompts and follow-ups carry task-derived content only as the [independent review rules](principles/independent-review.md) "Neutral investigation" allow (verbatim `2-questions.md` text, its `Codebase context`, `4-repos.md` slugs/paths). Never mention `1-task.md`.
-- At most 4 scouts, preferably parallel. Each returns `file:line` findings and spawns nothing; the researcher folds that evidence, `file:line` preserved, into its own return.
+- At most 4 scouts, preferably parallel. Each returns `file:line` findings and spawns nothing, except that a `team:file-finder` scout returns its definition's report, whose paths carry no line numbers. The researcher folds that evidence into its own return and keeps each `file:line` a scout carries. A parent that needs line evidence from a scout sends `Explore`.
 
 ### `code-reviewer` and `security-reviewer` — skeptic passes
 
@@ -77,6 +77,6 @@ Each vendor `run` uses one read-only `Explore` courier named `codex-review` or `
 
 Spawn a built-in `Explore` or `team:file-finder` scout when a slice touches a subsystem the plan does not explain and direct mapping would mean reading more than ~3 files you will not edit.
 
-- At most 2 scouts in flight. Each returns `file:line` findings and spawns nothing.
+- At most 2 scouts in flight. Each returns `file:line` findings and spawns nothing, except that a `team:file-finder` scout returns its definition's report, whose paths carry no line numbers.
 - Run scouts in the background: dispatch for the next unfamiliar slice while completing the current one, then collect when that slice starts.
 - Scouts never write, edit, commit, implement a slice, or run the fix loop.

@@ -2,10 +2,11 @@ Before each dispatch or retry, read [host dispatch](references/15-host-dispatch.
 
 ## Where a phase agent's output lives
 
-| Kind | Agents | Output lands |
-|------|--------|--------------|
-| **Self-writing** | `questioner`, `design-author`, `structure-planner`, `planner` | on disk, in `docs/plans/<id>/` |
-| **Return-only** | `researcher`, `file-finder` | in the returned text, nowhere else |
+| Kind | Agents | Output lands | Return |
+|------|--------|--------------|--------|
+| **Self-writing** | `questioner`, `design-author`, `structure-planner`, `planner` | on disk, in `docs/plans/<id>/` | the status line, then the paths written |
+| **Code-writing** | `test-architect`, `implementer` | as tests and commits in the worktree | the status line, then the gate report |
+| **Return-only** | `researcher`, `file-finder`, `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` | in the returned text, nowhere else | the template report, or one failure line |
 
 Return-only agents hold no `Write` tool; the orchestrator persists what they
 return. **Dispatch every phase agent so its full result returns to you.** If a

@@ -60,6 +60,30 @@ phase: plan
 Copy `topic` verbatim from `7-structure.md`. Never re-derive, re-word, or
 combine it with the ticket id.
 
+## Return
+
+Line 1 is the status line. Write exactly one of these forms, case-sensitive,
+at column 1:
+
+- `DONE`: the job finished as this definition states.
+- `BLOCKED: structure defect: <test name>: <authoring gate question it fails>`:
+  a structure test fails the authoring gate (tactical rule 5). This is the
+  only `BLOCKED` form. On this line, write no `8-plan.md`.
+- `FAILED: <reason>`: an operation failed, and a retry can pass it, such as a
+  tool error.
+
+After `DONE`, write the absolute path of `8-plan.md`. Write nothing else.
+
+After `BLOCKED` or `FAILED`, write one absolute path per file written in this
+dispatch, or nothing.
+
+When a resource read fails, return `FAILED: cannot read <resolved path>`.
+
+Make every stop check you can before your first write.
+
+Put an omitted action, with the `1-task.md` text it conflicts with, and a doc
+and code conflict in `8-plan.md` `## Context`, never in a return line.
+
 ## What you do NOT do
 
 - Do not re-litigate design decisions. The design passed review.

@@ -2,17 +2,23 @@
    in resume mode, or bootstrap `$ARGUMENTS/1-task.md` in standalone mode.
 2. Dispatch `test-architect` → revalidates every acceptance test against
    `$ARGUMENTS/1-task.md`, then writes failing tests. A test without task
-   support returns to PLAN and never enters the Red suite. In standalone
-   mode it derives acceptance criteria from `1-task.md` instead of
-   `7-structure.md`. If those tests already exist, skip this dispatch and
+   support returns to PLAN through the `BLOCKED` line and never enters the
+   Red suite. On `BLOCKED`, stop before the gate with no retry. Quote line 1,
+   and name `/team-plan docs/plans/<id>/` and each uncommitted path, per
+   [host dispatch](../team/references/15-host-dispatch.md). In standalone
+   mode with no `7-structure.md`, name `/team-structure docs/plans/<id>/`
+   instead. In standalone mode it derives acceptance criteria from
+   `1-task.md` instead of `7-structure.md`. If those tests already exist, skip this dispatch and
    resume at step 5 (the hand-off) when the "IMPLEMENT complete" rule in the
    "Branch state" section of the
    [artifact schema](../team/references/artifacts.md) holds, otherwise at
    step 4. For a change whose stated contract is zero behavior change, skip
    this dispatch, record the reason on a named line, and run step 3
    inverted.
-3. **Mechanical gate** — confirm all tests fail with assertion errors (not
-   crashes), the test-architect reports
+3. **Mechanical gate** — run only after `DONE`, or, inline, when the body's
+   `## Return` reaches `DONE`, or, inverted, on the recorded skip from
+   step 2. Confirm all tests fail with assertion errors (not crashes), the
+   test-architect reports
    `Expected results derived independently: YES`, **and** every static check
    the project defines passes (detect them as the
    [verify playbook](../team/playbooks/verify.md) does). On crash, fix test
@@ -33,5 +39,7 @@
 4. Dispatch `implementer` → executes slices with per-slice commits,
    revalidating every action against `$ARGUMENTS/1-task.md`. In standalone
    mode it works from that task and the failing tests.
-5. **Hand-off.** Present the implementer's completion report and tell the
-   user **"Next: run `/team-code-review docs/plans/<id>/`"**.
+5. **Hand-off.** On `DONE`, present the implementer's completion report and
+   tell the user **"Next: run `/team-code-review docs/plans/<id>/`"**. On
+   `BLOCKED`, present line 1 and the lines after it, and print no `Next:`
+   line.

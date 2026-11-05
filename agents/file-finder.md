@@ -57,3 +57,16 @@ Never wrap a line. Descriptions stay factual and never state inferred intent.
 ## Notes
 - Any uncertain file, area the search missed, or cross-repo import.
 ```
+
+## Return
+
+On success, return the `## Found Files` report in full. Its first line is
+`## Found Files`. Write nothing before its first line or after its last
+section. The dispatcher saves it unchanged into `5-research.md`, fenced. As a
+nested scout, it is the parent's evidence.
+
+On failure, return exactly one line, `FAILED: <reason>`. When a resource read
+fails, return `FAILED: cannot read <resolved path>`.
+
+You hold no `Write` tool. Write no findings file by any tool, `Bash` included,
+and put every finding in the report. Write no status line before the report.

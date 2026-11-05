@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.172.0] - 2026-11-04
+
+### Changed
+
+- **Each Team agent definition now states its own return in a `## Return` section, so the return shape holds on every dispatch without a dispatcher instruction.** The questioner, design-author, structure-planner, and planner return a status line (`DONE`, `BLOCKED`, or `FAILED`), then one absolute path per file written. Their JSON return blocks are gone. No Team consumer read those fields, but if a script of yours parses an agent's return, it must read the status line instead. `skills/team/references/15-host-dispatch.md` gains one failure-line recognizer and the routing steps: `BLOCKED` takes its stated route or halts, `FAILED` retries once and then halts, and a halt names each file a resume would count as done. Routing and saves use the agent's own text, after removing any frame, indent, or trailer lines the host added. A return that cannot be separated from those lines counts as a `FAILED` line, so it is never saved, retries once, and then halts. The seven agents without `Write` (`file-finder`, `researcher`, `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, and `verifier`) return their template report in full, or one `FAILED:` line when they cannot finish, and write no findings file. RESEARCH and the review loops (`skills/team-code-review/references/02-execution.md`) never save a failure line; they retry only that agent once, then halt. `test-architect` returns a status line, then its gate report, and its scope-defect and authoring-gate stops become two `BLOCKED` forms routed to PLAN. Because `test-architect` commits nothing, each halt or stop after it names every uncommitted path, and `/team` moves back to PLAN only when none exists. The implementer's line 1 is `DONE`, `BLOCKED: <k> of <n> slices blocked`, or `FAILED`, followed by its completion report; in review-fix mode `DONE` carries one `fixed` line per finding, and a `blocker` line blocks the return whatever line 1 says. The per-slice progress block and the per-slice JSON in `skills/team/playbooks/implement.md` are gone. `skills/team/references/step-delegation.md` now says when a step stays inline: when its reads are no larger than its return. No current step changes class. **What this asks of you:** restart every agent session after you update, because a session can keep the agent definitions it loaded at start. When a halt names files, remove or finish each one before you re-invoke the command.
+
 ## [0.171.0] - 2026-10-29
 
 ### Changed
@@ -1552,7 +1558,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.171.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.172.0...HEAD
+[0.172.0]: https://github.com/bostonaholic/team/compare/v0.171.0...v0.172.0
 [0.171.0]: https://github.com/bostonaholic/team/compare/v0.170.0...v0.171.0
 [0.170.0]: https://github.com/bostonaholic/team/compare/v0.169.0...v0.170.0
 [0.169.0]: https://github.com/bostonaholic/team/compare/v0.168.1...v0.169.0

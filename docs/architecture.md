@@ -316,8 +316,8 @@ No gate. The plan is mechanically derived from the structure.
    plan scope, commits those fixes, and reports each check's result. It
    hands CODE REVIEW a tree clean outside `docs/plans/`.
 
-IMPLEMENT ends when the implementer returns its completion report. It
-dispatches no reviewer.
+IMPLEMENT ends when the implementer returns `DONE` with its completion
+report. It dispatches no reviewer.
 
 ### Phase 8: Code review
 
@@ -512,6 +512,75 @@ Three more balances bound the checks themselves:
   positives only.
 - **The orchestrator cannot punt.** The no-consult rule forbids escalation of a
   Blocking or Major finding to the user mid-run.
+
+### Agent returns
+
+Each file in `agents/` has one `## Return` section that fixes the agent's
+whole return. The rule thus holds on every dispatch, with no dispatcher
+instruction. `skills/team/references/15-host-dispatch.md` holds the routing
+that every dispatcher applies. The `tools:` grant sets the return kind. An
+agent with `Write` gives a status return, and an agent without `Write` gives a
+report return. Line 1, column 1, and every saved return mean the agent's own
+text, after the dispatcher removes any host frame, indent, or trailer lines,
+and a return it cannot separate counts as a `FAILED` failure line.
+
+The four artifact writers (`questioner`, `design-author`, `structure-planner`,
+`planner`) give a status return. Line 1 is `DONE`, `BLOCKED: <reason>`, or
+`FAILED: <reason>`, case-sensitive, at column 1. `design-author` writes
+`DONE: <n> assumptions recorded`. After line 1 comes one absolute path per
+file written, and nothing else. A note that a writer's rules ask it to report
+goes into a named section of its artifact.
+
+`test-architect` and `implementer` are code writers. They also give a status
+return, but their bulk output is tests and commits in the worktree, so their
+gate report follows line 1. The only `test-architect` `BLOCKED` forms are a
+scope defect and an authoring-gate stop. The `implementer` writes
+`BLOCKED: <k> of <n> slices blocked` in slice mode and
+`BLOCKED: <k> of <n> findings blocked` in review-fix mode. Two more forms,
+`intent conflict` and `upstream test defect`, end a dispatch before any slice
+runs. In review-fix mode, `DONE` carries one `fixed` line per finding.
+
+In both `implementer` modes, a line after line 1 that matches
+`^\s*(-\s+)?blocker(\s|:|$)`, ignoring case, is a blocker line. It blocks the
+return, whatever line 1 says. The fix loop thus keeps its blocker halt, with
+no retry, even when line 1 reads `DONE`.
+
+The seven read-only agents (`file-finder`, `researcher`, and the five
+reviewers) give a report return. They return their template report in full,
+with no status line, because the dispatcher copies it verbatim into
+`5-research.md` or a review record. When one cannot finish, it returns one
+line, `FAILED: <reason>`. It writes no findings file by any tool.
+
+A failure line is a line 1 that matches `^\s*(BLOCKED|FAILED)(:|\s|$)`,
+ignoring case. One recognizer serves both return kinds. It is wider than the
+forms, so a near-miss still fails closed. A status return advances on no line
+1 but `DONE`. On `DONE`, the consuming step still runs its own on-disk look. A
+report return with a failure line is never saved. RESEARCH re-dispatches only
+the failed agent once, and the review loop retries that reviewer once inside a
+fresh tree check. A second failure halts.
+
+`BLOCKED` means that a retry with the same payload cannot pass. It takes the
+agent's stated route, such as the `planner` move back to STRUCTURE, or it
+halts. It never retries. `FAILED` and an unrecognized line 1 retry once, then
+halt. Each writer makes every stop check it can before its first write, so a
+first-dispatch `BLOCKED` usually leaves no file behind.
+
+A halt quotes line 1 as untrusted text. It names the agent, the artifact
+directory, each listed path, and each inventory artifact of the halted or a
+later phase on disk. Resume counts a present artifact as done, so the operator
+removes or finishes each named file before re-invoking. `6-design.md` is
+exempt, because DESIGN resumes at its review step.
+
+After a `test-architect` or `implementer` dispatch, the halt also names each
+uncommitted path: each path the clean-tree `git status` command prints, plus
+each path a status return listed. `test-architect` commits nothing, and
+`/team-implement` skips test authoring while those tests exist. After a
+`test-architect` stop or an upstream test defect, those tests never passed the
+gate, so the operator reverts the agent's changes to each one. After any other
+implementer halt, tests that passed the gate stay. In `/team`, a
+`test-architect` `BLOCKED` moves the run back to PLAN only when no uncommitted
+path exists. Otherwise the run halts, because no operator is present to remove
+a file.
 
 ### Model tiering
 
@@ -728,8 +797,8 @@ loop:
      discovery resolves docs/plans/<id>/ without an explicit arg.
   4. Dispatch the agent(s) (none for an orchestrator-emit row) — pass
      them the artifact directory `docs/plans/<id>/`.
-  5. Write returned artifacts to docs/plans/<id>/<name>.md with the
-     YAML frontmatter the agent specifies.
+  5. Route each return per host dispatch. Only RESEARCH saves a
+     return.
   6. Run the gate for this phase (HUMAN | MECHANICAL | ORCHESTRATOR-EMIT
      | AGGREGATE). AGGREGATE delegates to the `team-code-review` and
      `team-security-review` skills.
@@ -989,7 +1058,9 @@ A skill's main session orchestrates; it does not do the step work itself.
 Each numbered step runs in a fresh-context subagent with a self-contained
 brief (goal, input paths, boundaries, return shape, done condition) and
 returns a status line plus evidence. The main session keeps user questions,
-gate and verdict decisions, one-command steps, and the TodoWrite ledger.
+gate and verdict decisions, each step whose reads are no larger than its
+return, and the TodoWrite ledger. A subagent pays off only for read-heavy,
+isolated work that reads more than it returns.
 Dependent steps run one at a time; independent steps fan out in one turn.
 `/team-fix` delegates Reproduce, Red, Green, Verify, and Ship. `/team-pr`
 delegates input gathering, screenshots, the changelog, body authoring,

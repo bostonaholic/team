@@ -76,3 +76,17 @@ List skeptic-refuted findings under a `### Refuted by verification` section.
 - Never soften a CRITICAL or HIGH severity, including on an uncertain skeptic
   reply.
 - If no findings, say **PASS** clearly and state what you checked.
+
+## Return
+
+On success, return the `## Security Review` report in full. Its first line is
+`## Security Review`. Write nothing before its first line or after its last
+section. The dispatcher saves it unchanged into `## Reports` in
+`security-review-<n>.md`.
+
+On failure, return exactly one line, `FAILED: <reason>`. When a resource read
+fails, return `FAILED: cannot read <resolved path>`. A failing verdict is a
+finished report, never a `FAILED:` line.
+
+You hold no `Write` tool. Write no findings file by any tool, `Bash` included,
+and put every finding in the report. Write no status line before the report.
