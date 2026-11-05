@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A reviewer retry now carries the failed return's line 1 labeled untrusted and fenced.** Status-return retries already did this. A `FAILED:` line can be shaped by the code under review, so `skills/team/references/15-host-dispatch.md` now applies the same rule to the review-loop retry. `docs/cross-host-portability.md` also drops its stale JSON-envelope wording and describes the status-line and report returns.
+
 ## [0.172.0] - 2026-11-04
 
 ### Changed
