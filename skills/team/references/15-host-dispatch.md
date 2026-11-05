@@ -83,6 +83,12 @@ Each agent definition's `## Return` section fixes that agent's whole return.
 The definition's `tools:` grant sets the return kind. An agent with `Write`
 gives a status return, and an agent without `Write` gives a report return.
 
+**Host framing.** A host can add a frame above a return, an indent on each
+line, and trailer lines after it. Remove what the host added before routing.
+Line 1, column 1, and every later line in this section refer to the agent's
+own text. When you cannot tell the host's additions from the agent's text,
+treat line 1 as unrecognized.
+
 **Status return.** The artifact writers, `questioner`, `design-author`,
 `structure-planner`, and `planner`, open with a status line, then list one
 absolute path per file written. The code writers, `test-architect` and
