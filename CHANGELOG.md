@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.173.0] - 2026-11-05
+
+### Changed
+
+- **A reviewer retry now carries the failed return's line 1 labeled untrusted and fenced.** Status-return retries already did this. A `FAILED:` line can be shaped by the code under review, so `skills/team/references/15-host-dispatch.md` now applies the same rule to the review-loop retry. `docs/cross-host-portability.md` also drops its stale JSON-envelope wording and describes the status-line and report returns.
+
 ## [0.172.0] - 2026-11-04
 
 ### Changed
@@ -1558,7 +1564,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.172.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.173.0...HEAD
+[0.173.0]: https://github.com/bostonaholic/team/compare/v0.172.0...v0.173.0
 [0.172.0]: https://github.com/bostonaholic/team/compare/v0.171.0...v0.172.0
 [0.171.0]: https://github.com/bostonaholic/team/compare/v0.170.0...v0.171.0
 [0.170.0]: https://github.com/bostonaholic/team/compare/v0.169.0...v0.170.0

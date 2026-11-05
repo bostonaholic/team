@@ -67,7 +67,8 @@ The portability surface splits cleanly. Three layers are already host-neutral:
 - The Markdown bodies of every agent and skill. They are plain prose and use no
   Claude Code APIs.
 - The artifact file I/O under `docs/plans/<id>/`.
-- The agent→orchestrator JSON-envelope convention.
+- The agent→orchestrator return convention: a status line and paths, or a
+  report ([Agent returns](architecture.md#agent-returns)).
 
 These layers move to any host unchanged.
 
@@ -250,9 +251,10 @@ reporting, mismatch handling, and unsupported-host limits.
   which is Markdown with YAML frontmatter, carries the same *system-prompt body*
   Codex reads through its TOML agent roles. The body ports. The frontmatter and
   TOML binding does not.
-- **The JSON-envelope convention is host-agnostic by construction**
-  (`skills/agent-open-questions/SKILL.md`). It layers on whatever result channel
-  the host gives: final-text on Claude, `--output-schema` on Codex.
+- **The return convention is host-agnostic by construction**
+  (`skills/team/references/15-host-dispatch.md`). A return is plain final text,
+  and the dispatcher removes any frame, indent, or trailer lines the host adds
+  before it reads line 1.
 
 ## The capability matrix
 
@@ -269,7 +271,7 @@ facility, so the design must work around it.
 | Hide a skill from the user's menu | native (`user-invocable: false` keeps it out of `/`) | **hard gap**: every discovered skill is listed in the `$` picker; no frontmatter or manifest field suppresses one |
 | Subagent dispatch (parallel) | native (Agent/Task tool) | native (`spawn_agent`/`wait_agent`…, `features.multi_agent`) |
 | Nested subagents | native (depth 2, ≤4, read-only) | workaround: `max_depth=1`, nesting capped one level |
-| Structured agent→caller output | native (final-text JSON envelope) | native and strongest (`--output-schema` JSON Schema). A silent-drop bug under tools ([codex#15451](https://github.com/openai/codex/issues/15451)) was fixed April 2026 |
+| Structured agent→caller output | native (final text; Team reads a status line or report) | native and strongest (`--output-schema` JSON Schema). A silent-drop bug under tools ([codex#15451](https://github.com/openai/codex/issues/15451)) was fixed April 2026 |
 | `PreToolUse` hook | native | native (`PreToolUse`) |
 | `PostToolUse` hook | native | native (`PostToolUse`) |
 | `SessionStart` hook | native | native (`SessionStart`) |
@@ -345,7 +347,7 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
 ## Decisions made
 
 1. **Shared definitions with native host bindings.** The Markdown bodies,
-   Node hook logic, artifact I/O, and envelope convention are maintained once.
+   Node hook logic, artifact I/O, and return convention are maintained once.
    Claude, Codex, and Antigravity install through native manifests. The proposed
    generated core and shim layer were not needed for those installs. Add
    adapters only for demonstrated host differences, such as OpenCode discovery
