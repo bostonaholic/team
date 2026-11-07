@@ -14,7 +14,7 @@ function writeJson(dir, rel, value) {
   writeFileSync(join(dir, rel), JSON.stringify(value, null, 2));
 }
 
-// The six files the script reads, holding only the fields it reads, all at version 1.2.3.
+// The seven files the script reads, holding only the fields it reads, all at version 1.2.3.
 function manifestTree(t) {
   const dir = mkdtempSync(join(tmpdir(), "check-version-consistency-"));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
@@ -25,6 +25,7 @@ function manifestTree(t) {
     plugins: [{ name: "team", version: "1.2.3", description: DESCRIPTION }],
   });
   writeJson(dir, ".codex-plugin/plugin.json", { name: "team", version: "1.2.3", description: DESCRIPTION });
+  writeJson(dir, ".cursor-plugin/plugin.json", { name: "team", version: "1.2.3", description: DESCRIPTION });
   writeJson(dir, ".agents/plugins/marketplace.json", { name: "team-dev", plugins: [{ name: "team", description: DESCRIPTION }] });
   writeJson(dir, "plugin.json", { name: "team", version: "1.2.3", description: DESCRIPTION });
   writeJson(dir, "package.json", { version: "1.2.3", description: DESCRIPTION });
@@ -38,7 +39,7 @@ const runScript = (dir) => spawnSync("bash", [join(dir, ".claude/scripts/check-v
 test("check-version-consistency passes a consistent manifest tree", (t) => {
   const run = runScript(manifestTree(t));
   assert.equal(run.status, 0, run.stderr);
-  assert.match(run.stdout, /^OK: six version strings agree on 1\.2\.3; /);
+  assert.match(run.stdout, /^OK: every version string agrees on 1\.2\.3; /);
 });
 
 const DRIFTS = [
