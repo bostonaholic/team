@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.174.0] - 2026-11-11
+
 ### Changed
 
 - **Both review phases now measure each round's change and pick one of three review depths before they dispatch a reviewer.** A new script, `skills/team-code-review/scripts/change-profile.mjs`, counts the changed lines, files, and areas of the pinned range. It also flags four risk classes: `config`, `multi-repo`, `removal`, and `sensitive-path`. A change of 20 lines or fewer in 3 files or fewer gets `light`. A change of 400 lines or fewer, 20 files or fewer, and 6 areas or fewer gets `standard`, which is the review you get today. Every larger change gets `deep`. Any risk class raises the depth one step, and `deep` stays `deep`. At `light`, `code-reviewer` makes no vendor CLI call. At `deep`, `code-reviewer` and `security-reviewer` each report a `Coverage:` line that names what they read. A report without that line retries once, and a second miss halts the phase with no record. Every reviewer still runs at every depth, and no verdict, severity, or fix-loop rule changes. Each `review-<n>.md` and `security-review-<n>.md` record gains a `## Depth` section with the script output, and the PASS hand-off states the depth. A script fault halts the phase before dispatch, and the round writes no record. Records from earlier versions have no `## Depth` and stay well-formed. **What this asks of you:** restart every agent session after you update, because a session can keep the agent definitions it loaded at start.
@@ -1568,7 +1570,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.173.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.174.0...HEAD
+[0.174.0]: https://github.com/bostonaholic/team/compare/v0.173.0...v0.174.0
 [0.173.0]: https://github.com/bostonaholic/team/compare/v0.172.0...v0.173.0
 [0.172.0]: https://github.com/bostonaholic/team/compare/v0.171.0...v0.172.0
 [0.171.0]: https://github.com/bostonaholic/team/compare/v0.170.0...v0.171.0
