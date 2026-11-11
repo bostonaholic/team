@@ -14,10 +14,21 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
 2. **Pin the range.** For each worktree in scope with branch commits, record
    entry guard 2's full merge-base SHA and
    `git -C <worktree-path> rev-parse HEAD`.
+   `<team-code-review-skill-dir>` is the absolute directory holding the
+   installed `skills/team-code-review/SKILL.md`.
    - Single-repo: one line, `Review range: <merge-base-sha>..<head-sha>`.
    - Multi-repo: one line per repo with commits,
      `Review range (<slug>): <merge-base-sha>..<head-sha> in <worktree-path>`.
    - Never use `HEAD~1`; a one-commit branch still uses the merge-base.
+   - Profile the range once per round. Run
+     `node "<team-code-review-skill-dir>/scripts/change-profile.mjs"` with one
+     `<worktree-path> <merge-base-sha> <head-sha>` triple per range line, in
+     range-line order. In single-repo mode, pass the home worktree. Keep its
+     stdout as the round's change profile.
+   - Halt the phase before step 3 on any non-zero exit. Also halt on exit 0
+     when stdout is not exactly six lines keyed `depth`, `base_depth`,
+     `lines`, `files`, `areas`, `risk`, in that order. Name the stderr line,
+     or `malformed change profile` on exit 0. The round writes no record.
 3. **Dispatch the four reviewers in parallel:** `code-reviewer`,
    `technical-writer`, `ux-reviewer`, `verifier`, per
    [host dispatch](../team/references/15-host-dispatch.md). Each payload
@@ -31,11 +42,15 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
    `unknown` when the session holds none. Send no line after a
    zero-behavior-change skip recorded this session.
 
+   Send `code-reviewer` two more lines after the range lines,
+   `Review depth: <depth>` and
+   `Change profile: lines=<lines> files=<files> areas=<areas> risk=<risk>`.
+   Copy each value from step 2's stdout. Send these lines to no other
+   reviewer.
+
    Never add the implementer's account of its own work to a payload.
 
-   **Tree check.** `<team-code-review-skill-dir>` is the absolute directory
-   holding the installed `skills/team-code-review/SKILL.md`. Immediately
-   before the dispatch, run
+   **Tree check.** Immediately before the dispatch, run
    `"<team-code-review-skill-dir>/scripts/tree-check.sh" snapshot` from each
    worktree in scope; when all reviewers return, run
    `"<team-code-review-skill-dir>/scripts/tree-check.sh" compare` from each
@@ -54,6 +69,11 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
    - A `code-reviewer` `issue (pre-existing)` finding lacking the
      `file: <merge-base-sha>:<path>:<line>` line, or whose SHA is not one of
      this round's merge-bases.
+   - The round's depth is `deep`, and the `code-reviewer` report has no line
+     that starts `Coverage: `. The retry error quotes the `Coverage:` line
+     form from the
+     [code reviewer brief](../team/references/code-reviewer.md). Test only
+     the prefix, never the counts in the line.
 5. **Tier sort.** Sort every finding into `### Blocking`, `### Major`, and
    `### Minor and below` per "Severity Tiers and the Auto-Fix Boundary" in
    the [finding format](../team/references/findings.md). One line per
@@ -84,9 +104,10 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
    sessions on one topic can pick the same `<n>`, and the later write
    replaces the earlier record. Every reader classifies a record against
    HEAD again, so a lost record costs at most one more round, never a false
-   PASS. Write `review-<n>.md` per the artifact schema, with `## Tier sort`
-   from step 5 and `## Reports` holding four `### <reviewer>` subsections,
-   each report verbatim.
+   PASS. Write `review-<n>.md` per the artifact schema, with `## Depth`
+   holding step 2's stdout verbatim, `## Tier sort` from step 5, and
+   `## Reports` holding four `### <reviewer>` subsections, each report
+   verbatim.
 
    `verdict: PASS` only when `### Blocking` and `### Major` both read
    `None.`; otherwise `verdict: FAIL`. A failed write halts loudly. CODE
@@ -135,8 +156,11 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
    **Recovery** (after an operator stop or a context-exhausted session):
    re-invoke `/team-code-review` bare; the round number continues from the
    newest persisted record, and a stale newest record runs a fresh round.
-9. **Hand-off at PASS.** Present every review verdict and the PASS round
-   number. Never present Minor-and-below findings mid-run; they stay in the
+9. **Hand-off at PASS.** Present every review verdict, the PASS round
+   number, and the PASS record's `depth=` line. When that record has no
+   `## Depth` section, say `depth not recorded`. Step 1 can jump here with an
+   older PASS record, so the value comes from the record, not from step 2.
+   Never present Minor-and-below findings mid-run; they stay in the
    record for the PR's `review-notes` comment.
    - **Full pipeline** (the TodoWrite ledger holds a `PR` phase item `/team`
      seeded): do **not** end the turn; return to the `/team` phase loop in

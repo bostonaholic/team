@@ -121,3 +121,14 @@ test("importing manifest-entries.mjs through a symlinked directory has no side e
   const run = importModule(t, join(symlinkedDir(t, "skills/team-pr/scripts"), "manifest-entries.mjs"));
   assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
 });
+
+test("change-profile.mjs run through a symlinked directory reaches its usage error", (t) => {
+  const run = runScript(join(symlinkedDir(t, "skills/team-code-review/scripts"), "change-profile.mjs"));
+  assert.equal(run.status, 2);
+  assert.match(run.stderr, /^change-profile\.mjs: usage: change-profile\.mjs /);
+});
+
+test("importing change-profile.mjs through a symlinked directory has no side effects", (t) => {
+  const run = importModule(t, join(symlinkedDir(t, "skills/team-code-review/scripts"), "change-profile.mjs"));
+  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
+});

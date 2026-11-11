@@ -9,8 +9,8 @@ delta runs as written.
 |---|---|
 | 1. **Read state.** | List the `$ARGUMENTS/security-review-<n>.md` files whose `<n>` is numeric. Ignore a file with a non-numeric suffix, such as `security-review-final.md`. The TodoWrite item is `Security review round <n>`. |
 | 2. **Pin the range.** | No change. |
-| 3. **Dispatch.** | Dispatch `security-reviewer` alone. Its payload carries `Security round: <n>` in place of `Review round: <n>`, plus the canonical artifact directory, the range lines, and the intent paths. Send no `Locked acceptance tests` line. The tree check runs as written around this one dispatch. |
-| 4. **Validate each report.** | Only the failure line case and the no-parseable-verdict case apply. |
+| 3. **Dispatch.** | Dispatch `security-reviewer` alone. Its payload carries `Security round: <n>` in place of `Review round: <n>`, plus the canonical artifact directory, the range lines, the `Review depth:` and `Change profile:` lines from step 2 after the range lines, and the intent paths. Send no `Locked acceptance tests` line. The tree check runs as written around this one dispatch. |
+| 4. **Validate each report.** | The failure line case, the no-parseable-verdict case, and the `Coverage: ` case apply, with the `Coverage: ` case applied to `security-reviewer`. |
 | 5. **Tier sort.** | The one reviewer span: from the `#### [SEVERITY] <title>` heading through that finding's last field. The tree-check line is unchanged. The `### Major` tier always reads `None.`, because no security severity maps to Major. The heading stays, so one record-state rule serves both record families. |
 | 6. **Persist the cross-model record.** | Skip. `security-reviewer` runs no cross-model pass. |
 | 7. **Write the record.** | The file is `security-review-<n>.md`, with `phase: security-review`. `## Reports` holds one `### security-reviewer` subsection. |
@@ -24,8 +24,9 @@ blocker, and step 8 halts loudly per its blocker rule. That halt is how such
 a finding ends the loop. The finding stays Blocking, and the operator decides
 the next move.
 
-**Hand-off at PASS.** Present the security verdict and the PASS round number.
-MEDIUM and LOW findings stay under `### Minor and below` in the record for the
+**Hand-off at PASS.** Present the security verdict, the PASS round number, and
+the PASS record's `depth=` line, or `depth not recorded` when that record has
+no `## Depth` section. MEDIUM and LOW findings stay under `### Minor and below` in the record for the
 PR's `review-notes` comment. Never present them mid-run. Then classify the
 newest `$ARGUMENTS/review-<n>.md` again per the artifact schema. A SECURITY REVIEW fix
 commit moves HEAD, so it leaves that record stale.

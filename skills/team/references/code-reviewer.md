@@ -152,3 +152,21 @@ review. Use your own judgment on method and severity.
   `git show <merge-base-sha>:<path>` shows the defect at the cited line, and
   the branch neither introduced it nor made it reachable or worse. When you
   are unsure, the defect belongs to the branch.
+- **Review depth.** Your dispatch can carry `Review depth: <depth>` and a
+  `Change profile:` line. Read a missing or unknown depth token as
+  `standard`.
+  - At `light`, run no cross-model pass, and write
+    `### Cross-model disposition` as exactly `Not run: review depth light.`
+  - At `standard`, run the pass.
+  - At `deep`, run the pass, and put one line in `### Checks` in exactly
+    this form:
+
+    ```text
+    Coverage: read <k> of <n> changed files; not read: <path (reason), ... | none>; outside the range: <path, ... | none>.
+    ```
+
+    `outside the range` names each unchanged file you read to judge a
+    caller, consumer, or sibling of the change.
+
+  Depth changes nothing else. The test-suite run, the skeptic pass, the five
+  headings, and the verdict rules hold at every depth.
