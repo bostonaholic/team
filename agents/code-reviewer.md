@@ -40,10 +40,11 @@ are no Blocking findings or `Agent` is unavailable; it never softens a verdict.
 ## Cross-model review pass
 
 Run the [cross-model review](../skills/team/references/cross-model-review.md)
-on every review; it carries the whole procedure and the
-`### Cross-model disposition` block. The vendor CLIs run full-access, so after
-the pass check the tree per its `## Invocation` and report any mutation you did
-not make as a Blocking finding. Skip loudly on any failure, per
+at each review depth the brief's `## Code Reviewer Contract` allows; it
+carries the whole procedure and the `### Cross-model disposition` block. The
+vendor CLIs run full-access, so after the pass check the tree per its
+`## Invocation` and report any mutation you did not make as a Blocking
+finding. Skip loudly on any failure, per
 [verified results rules](../skills/team/principles/verified-results.md); the
 pass never softens a verdict.
 

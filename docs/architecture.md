@@ -131,8 +131,9 @@ reviewer's findings verbatim. The orchestrator increments
 
 **Code-review record** (`review-<n>.md`): each CODE REVIEW round, the session
 that runs `team-code-review` writes `docs/plans/<id>/review-<n>.md` with
-`verdict: <PASS|FAIL>`, the round's pinned review range, the tier sort, and
-the four reviewer reports verbatim. Resume detection and `/team-pr` read
+`verdict: <PASS|FAIL>`, the round's pinned review range, the round's change
+profile under `## Depth`, the tier sort, and the four reviewer reports
+verbatim. Resume detection and `/team-pr` read
 it. The
 [artifact schema](https://github.com/bostonaholic/team/blob/main/skills/team/references/artifacts.md)
 owns its frontmatter, its sections, and its malformed, current, and stale
@@ -329,7 +330,15 @@ report. It dispatches no reviewer.
 The orchestrator delegates this phase to the `team-code-review` skill
 (`skills/team-code-review/references/02-execution.md`).
 
-1. **Code review.** 4 reviewers in parallel: `code-reviewer`,
+1. **Code review.** Before any dispatch,
+   `skills/team-code-review/scripts/change-profile.mjs` measures the round's
+   pinned review range: changed lines, files, and areas, plus four risk
+   classes (`config`, `multi-repo`, `removal`, `sensitive-path`). It picks
+   the review depth `light` (at most 20 lines and 3 files, and no risk
+   class) or `standard`, which is the full review. All four reviewers run at
+   every depth. At `light`, the code-reviewer runs no cross-model pass. A
+   script fault halts the phase before dispatch, and the round writes no
+   record. Then 4 reviewers run in parallel: `code-reviewer`,
    `technical-writer`, `ux-reviewer`, `verifier`. Each
    dispatch names the round's pinned review range, from the merge-base to
    HEAD.
@@ -385,7 +394,9 @@ set.
 The orchestrator delegates this phase to the `team-security-review` skill
 (`skills/team-security-review/references/02-execution.md`). That skill runs the
 `team-code-review` loop by citation and owns only a per-step delta table. It
-dispatches `security-reviewer` alone over the same pinned range. CRITICAL
+dispatches `security-reviewer` alone over the same pinned range. It profiles
+that range in the same step as CODE REVIEW, writes `## Depth` in each record,
+and states the PASS record's depth at hand-off. CRITICAL
 and HIGH findings are Blocking. MEDIUM and LOW findings are Minor and stay
 in the record for the PR's `review-notes` comment. The loop has no count
 cap, never consults the user, and appends

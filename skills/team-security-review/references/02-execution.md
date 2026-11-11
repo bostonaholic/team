@@ -24,8 +24,9 @@ blocker, and step 8 halts loudly per its blocker rule. That halt is how such
 a finding ends the loop. The finding stays Blocking, and the operator decides
 the next move.
 
-**Hand-off at PASS.** Present the security verdict and the PASS round number.
-MEDIUM and LOW findings stay under `### Minor and below` in the record for the
+**Hand-off at PASS.** Present the security verdict, the PASS round number, and
+the PASS record's `depth=` line, or `depth not recorded` when that record has
+no `## Depth` section. MEDIUM and LOW findings stay under `### Minor and below` in the record for the
 PR's `review-notes` comment. Never present them mid-run. Then classify the
 newest `$ARGUMENTS/review-<n>.md` again per the artifact schema. A SECURITY REVIEW fix
 commit moves HEAD, so it leaves that record stale.

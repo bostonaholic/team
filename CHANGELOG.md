@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Both review phases now measure each round's change and pick a review depth before they dispatch a reviewer.** A new script, `skills/team-code-review/scripts/change-profile.mjs`, counts the changed lines, files, and areas of the pinned range. It also flags four risk classes: `config`, `multi-repo`, `removal`, and `sensitive-path`. A change of 20 lines or fewer in 3 files or fewer, with no risk class, gets `light`, and `code-reviewer` then makes no vendor CLI call. Every other change gets `standard`, which is the review you get today. Every reviewer still runs at every depth, and no verdict, severity, or fix-loop rule changes. Each `review-<n>.md` and `security-review-<n>.md` record gains a `## Depth` section with the script output, and the PASS hand-off states the depth. A script fault halts the phase before dispatch, and the round writes no record. Records from earlier versions have no `## Depth` and stay well-formed. **What this asks of you:** restart every agent session after you update, because a session can keep the agent definitions it loaded at start.
+
 ## [0.173.0] - 2026-11-05
 
 ### Changed
