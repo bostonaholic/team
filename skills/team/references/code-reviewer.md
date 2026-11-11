@@ -158,6 +158,15 @@ review. Use your own judgment on method and severity.
   - At `light`, run no cross-model pass, and write
     `### Cross-model disposition` as exactly `Not run: review depth light.`
   - At `standard`, run the pass.
+  - At `deep`, run the pass, and put one line in `### Checks` in exactly
+    this form:
+
+    ```text
+    Coverage: read <k> of <n> changed files; not read: <path (reason), ... | none>; outside the range: <path, ... | none>.
+    ```
+
+    `outside the range` names each unchanged file you read to judge a
+    caller, consumer, or sibling of the change.
 
   Depth changes nothing else. The test-suite run, the skeptic pass, the five
   headings, and the verdict rules hold at every depth.

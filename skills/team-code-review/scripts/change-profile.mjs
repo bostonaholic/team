@@ -12,8 +12,8 @@
 //
 // Output on exit 0, six lines in this order:
 //
-//   depth=<light|standard>
-//   base_depth=<light|standard>
+//   depth=<light|standard|deep>
+//   base_depth=<light|standard|deep>
 //   lines=<n>     added plus deleted lines; a binary file adds none
 //   files=<n>     changed files; a rename is one file
 //   areas=<n>     per triple, the distinct first-two-directory prefixes of
@@ -38,9 +38,11 @@
 // capital run that a lowercase letter follows (`JWTVerifier` gives `jwt` and
 // `verifier`). Lowercase each token.
 //
-// Depth: `base_depth` is `light` when lines <= 20 and files <= 3, else
-// `standard`. Any risk class raises `light` to `standard`; the result is
-// `depth`.
+// Depth: `base_depth` is `light` when lines <= 20 and files <= 3. Otherwise
+// it is `standard` when lines <= 400, files <= 20, and areas <= 6, and `deep`
+// in every other case. Any risk class raises `base_depth` one step (`light`
+// to `standard`, `standard` to `deep`); `deep` stays `deep`, and classes do
+// not stack. The result is `depth`.
 //
 // Two configuration effects the fixed flags do not pin: `diff.renameLimit`
 // can turn renames into delete-and-add pairs on large ranges, and a
@@ -66,6 +68,10 @@ const MAX_BUFFER_BYTES = 64 * 1024 * 1024;
 
 const LIGHT_MAX_LINES = 20;
 const LIGHT_MAX_FILES = 3;
+const STANDARD_MAX_LINES = 400;
+const STANDARD_MAX_FILES = 20;
+const STANDARD_MAX_AREAS = 6;
+const DEPTHS = ["light", "standard", "deep"];
 
 const SENSITIVE_TERMS = new Set([
   "acl", "auth", "authenticate", "authentication", "authn", "authorization", "authorize",
@@ -163,6 +169,16 @@ function isRemoval(status) {
   return status.startsWith("D") || status.startsWith("R");
 }
 
+function baseDepthOf(lines, files, areas) {
+  if (lines <= LIGHT_MAX_LINES && files <= LIGHT_MAX_FILES) return "light";
+  if (lines <= STANDARD_MAX_LINES && files <= STANDARD_MAX_FILES && areas <= STANDARD_MAX_AREAS) return "standard";
+  return "deep";
+}
+
+function raisedOneStep(depth) {
+  return DEPTHS[Math.min(DEPTHS.indexOf(depth) + 1, DEPTHS.length - 1)];
+}
+
 function sum(values) {
   return values.reduce((total, value) => total + value, 0);
 }
@@ -181,8 +197,8 @@ function profileOf(ranges) {
     "sensitive-path": paths.some(isSensitive),
   };
   const risk = RISK_ORDER.filter((riskClass) => matched[riskClass]);
-  const baseDepth = lines <= LIGHT_MAX_LINES && files <= LIGHT_MAX_FILES ? "light" : "standard";
-  const depth = baseDepth === "light" && risk.length > 0 ? "standard" : baseDepth;
+  const baseDepth = baseDepthOf(lines, files, areas);
+  const depth = risk.length > 0 ? raisedOneStep(baseDepth) : baseDepth;
   return { depth, baseDepth, lines, files, areas, risk };
 }
 

@@ -21,6 +21,19 @@ each finding.
   LOW. You choose it.
 - **Report.** Use the report template in your agent file. Every finding
   carries a specific `file:line`.
+- **Review depth.** Your dispatch can carry `Review depth: <depth>` and a
+  `Change profile:` line. Read a missing or unknown depth token as
+  `standard`.
+  - At `deep`, put one line in this form directly after the `### Summary`
+    table:
+
+    ```text
+    Coverage: read <k> of <n> changed files; not read: <path (reason), ... | none>; outside the range: <path, ... | none>.
+    ```
+
+    Here, `outside the range` names unchanged code you read because the
+    range makes it newly reachable.
+  - At other depths, nothing changes.
 - **Verdict and tiers.** The verdict rule is "Verdict Criteria" → "Security
   Reviewer" in the [code reviewer brief](references/code-reviewer.md): any
   CRITICAL or HIGH finding is FAIL, with no override. The

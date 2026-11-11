@@ -334,11 +334,15 @@ The orchestrator delegates this phase to the `team-code-review` skill
    `skills/team-code-review/scripts/change-profile.mjs` measures the round's
    pinned review range: changed lines, files, and areas, plus four risk
    classes (`config`, `multi-repo`, `removal`, `sensitive-path`). It picks
-   the review depth `light` (at most 20 lines and 3 files, and no risk
-   class) or `standard`, which is the full review. All four reviewers run at
-   every depth. At `light`, the code-reviewer runs no cross-model pass. A
-   script fault halts the phase before dispatch, and the round writes no
-   record. Then 4 reviewers run in parallel: `code-reviewer`,
+   one of three review depths. `light` covers at most 20 lines and 3 files.
+   `standard` covers at most 400 lines, 20 files, and 6 areas. `deep`
+   covers every larger change. Any risk class raises the base depth one
+   step, and `deep` stays `deep`. All four reviewers run at every depth. At
+   `light`, the code-reviewer runs no cross-model pass. At `deep`, the
+   code-reviewer's `### Checks` holds a `Coverage:` line, and step 4
+   retries a report without one once, then halts with no record. A script
+   fault halts the phase before dispatch, and the round writes no record.
+   Then 4 reviewers run in parallel: `code-reviewer`,
    `technical-writer`, `ux-reviewer`, `verifier`. Each
    dispatch names the round's pinned review range, from the merge-base to
    HEAD.
@@ -396,7 +400,9 @@ The orchestrator delegates this phase to the `team-security-review` skill
 `team-code-review` loop by citation and owns only a per-step delta table. It
 dispatches `security-reviewer` alone over the same pinned range. It profiles
 that range in the same step as CODE REVIEW, writes `## Depth` in each record,
-and states the PASS record's depth at hand-off. CRITICAL
+and states the PASS record's depth at hand-off. `security-reviewer` gets the
+two depth lines, and at `deep` it writes the `Coverage:` line after its
+`### Summary` table, under the same step 4 retry. CRITICAL
 and HIGH findings are Blocking. MEDIUM and LOW findings are Minor and stay
 in the record for the PR's `review-notes` comment. The loop has no count
 cap, never consults the user, and appends

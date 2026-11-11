@@ -9,8 +9,8 @@ delta runs as written.
 |---|---|
 | 1. **Read state.** | List the `$ARGUMENTS/security-review-<n>.md` files whose `<n>` is numeric. Ignore a file with a non-numeric suffix, such as `security-review-final.md`. The TodoWrite item is `Security review round <n>`. |
 | 2. **Pin the range.** | No change. |
-| 3. **Dispatch.** | Dispatch `security-reviewer` alone. Its payload carries `Security round: <n>` in place of `Review round: <n>`, plus the canonical artifact directory, the range lines, and the intent paths. Send no `Locked acceptance tests` line. The tree check runs as written around this one dispatch. |
-| 4. **Validate each report.** | Only the failure line case and the no-parseable-verdict case apply. |
+| 3. **Dispatch.** | Dispatch `security-reviewer` alone. Its payload carries `Security round: <n>` in place of `Review round: <n>`, plus the canonical artifact directory, the range lines, the `Review depth:` and `Change profile:` lines from step 2 after the range lines, and the intent paths. Send no `Locked acceptance tests` line. The tree check runs as written around this one dispatch. |
+| 4. **Validate each report.** | The failure line case, the no-parseable-verdict case, and the `Coverage: ` case apply, with the `Coverage: ` case applied to `security-reviewer`. |
 | 5. **Tier sort.** | The one reviewer span: from the `#### [SEVERITY] <title>` heading through that finding's last field. The tree-check line is unchanged. The `### Major` tier always reads `None.`, because no security severity maps to Major. The heading stays, so one record-state rule serves both record families. |
 | 6. **Persist the cross-model record.** | Skip. `security-reviewer` runs no cross-model pass. |
 | 7. **Write the record.** | The file is `security-review-<n>.md`, with `phase: security-review`. `## Reports` holds one `### security-reviewer` subsection. |

@@ -64,10 +64,14 @@ unavailable.
 | MEDIUM   | 0     |
 | LOW      | 0     |
 
+Coverage: read <k> of <n> changed files; not read: <path (reason), ... | none>; outside the range: <path, ... | none>.
+
 **Verdict:** PASS | FAIL (if any CRITICAL or HIGH findings exist)
 ```
 
 List skeptic-refuted findings under a `### Refuted by verification` section.
+Write the `Coverage:` line only when your dispatch names `Review depth: deep`,
+per the security reviewer brief.
 
 ## Rules
 

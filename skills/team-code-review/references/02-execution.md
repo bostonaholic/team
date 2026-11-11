@@ -69,6 +69,11 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
    - A `code-reviewer` `issue (pre-existing)` finding lacking the
      `file: <merge-base-sha>:<path>:<line>` line, or whose SHA is not one of
      this round's merge-bases.
+   - The round's depth is `deep`, and the `code-reviewer` report has no line
+     that starts `Coverage: `. The retry error quotes the `Coverage:` line
+     form from the
+     [code reviewer brief](../team/references/code-reviewer.md). Test only
+     the prefix, never the counts in the line.
 5. **Tier sort.** Sort every finding into `### Blocking`, `### Major`, and
    `### Minor and below` per "Severity Tiers and the Auto-Fix Boundary" in
    the [finding format](../team/references/findings.md). One line per
