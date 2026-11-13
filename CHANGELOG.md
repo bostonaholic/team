@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.178.0] - 2026-11-13
+
 ### Fixed
 
 - **Links in playbooks and references now resolve from the file that contains them.** 202 links and backticked paths in 50 files under `skills/` were written relative to the skill directory, so an agent that resolved them from the playbook or reference directory read a missing file and stopped the step. Every one now resolves from its own file, and each link-base header says so. The phase table and each dispatch step link the agent definition under the plugin's `agents/` directory, and the phase loop names the gate file for each gate, so agents no longer guess `skills/team/agents/<name>.md` or a gate filename. A new `.claude/scripts/check-links.mjs` check runs on every PR and fails when a link does not resolve. **What this asks of you:** restart every agent session after you update.
@@ -1592,7 +1594,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.177.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.178.0...HEAD
+[0.178.0]: https://github.com/bostonaholic/team/compare/v0.177.0...v0.178.0
 [0.177.0]: https://github.com/bostonaholic/team/compare/v0.176.0...v0.177.0
 [0.176.0]: https://github.com/bostonaholic/team/compare/v0.175.0...v0.176.0
 [0.175.0]: https://github.com/bostonaholic/team/compare/v0.174.0...v0.175.0
