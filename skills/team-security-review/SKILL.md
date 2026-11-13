@@ -17,7 +17,7 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 ## Core contracts
 
 - Run after CODE REVIEW passes. Require the `team-code-review` entry conditions, plus a newest `review-<n>.md` that is PASS and current.
-- Dispatch `security-reviewer` alone. No other phase dispatches it.
+- Dispatch [`security-reviewer`](../../agents/security-reviewer.md) alone. No other phase dispatches it.
 - Run the review loop that the `team-code-review` execution reference states, with the deltas in [Execution](references/02-execution.md).
 - Write one `security-review-<n>.md` per completed round. Never overwrite a record.
 - Seed TodoWrite with `Security review round <n>`. Retry as `Security review round <n+1> (<b> Blocking, <m> Major open)`.

@@ -1,6 +1,6 @@
 # Review Findings
 
-Resolve links in this file from the installed `skills/team/` directory.
+Resolve links in this file from this file's directory.
 
 ## Finding Format
 
@@ -73,7 +73,7 @@ Every finding has one tier.
 **A non-blocking finding never costs a round.** Each auto-fix reruns the
 implementer and the phase's reviewers. Minor reaches the human in PR review,
 regardless of importance
-([human control rules](principles/human-control.md)). Never present findings
+([human control rules](../principles/human-control.md)). Never present findings
 mid-run. Tag each Minor-and-below entry in the `review-notes` comment by
 reviewer.
 

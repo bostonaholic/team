@@ -46,7 +46,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 ## Execution
 
 1. Use the directory resolved in `## Input`.
-2. Dispatch `planner`, which writes `$ARGUMENTS/8-plan.md` with file-level
+2. Dispatch [`planner`](../../agents/planner.md), which writes `$ARGUMENTS/8-plan.md` with file-level
    steps and per-slice acceptance test mappings.
 3. **Stop once `$ARGUMENTS/8-plan.md` exists.**
 

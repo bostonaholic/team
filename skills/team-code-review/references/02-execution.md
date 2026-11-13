@@ -3,7 +3,7 @@ written, and `team-security-review` runs it with the per-step deltas in its own
 execution reference, so a change to a step number or bold label here changes
 SECURITY REVIEW too. Before step 1, read the record schema and record states
 (malformed, current, stale) in the
-[artifact schema](../team/references/artifacts.md).
+[artifact schema](../../team/references/artifacts.md).
 
 1. **Read state.** List the `$ARGUMENTS/review-<n>.md` files with a numeric
    `<n>`; ignore non-numeric suffixes such as `review-final.md`. Classify the
@@ -29,9 +29,9 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
      when stdout is not exactly six lines keyed `depth`, `base_depth`,
      `lines`, `files`, `areas`, `risk`, in that order. Name the stderr line,
      or `malformed change profile` on exit 0. The round writes no record.
-3. **Dispatch the four reviewers in parallel:** `code-reviewer`,
-   `technical-writer`, `ux-reviewer`, `verifier`, per
-   [host dispatch](../team/references/15-host-dispatch.md). Each payload
+3. **Dispatch the four reviewers in parallel:** [`code-reviewer`](../../../agents/code-reviewer.md),
+   [`technical-writer`](../../../agents/technical-writer.md), [`ux-reviewer`](../../../agents/ux-reviewer.md), [`verifier`](../../../agents/verifier.md), per
+   [host dispatch](../../team/references/15-host-dispatch.md). Each payload
    carries the canonical artifact directory, `Review round: <n>`, step 2's
    range line(s), and the intent paths (`1-task.md`, plus `8-plan.md` when
    present).
@@ -72,11 +72,11 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
    - The round's depth is `deep`, and the `code-reviewer` report has no line
      that starts `Coverage: `. The retry error quotes the `Coverage:` line
      form from the
-     [code reviewer brief](../team/references/code-reviewer.md). Test only
+     [code reviewer brief](../../team/references/code-reviewer.md). Test only
      the prefix, never the counts in the line.
 5. **Tier sort.** Sort every finding into `### Blocking`, `### Major`, and
    `### Minor and below` per "Severity Tiers and the Auto-Fix Boundary" in
-   the [finding format](../team/references/findings.md). One line per
+   the [finding format](../../team/references/findings.md). One line per
    finding: `[<reviewer>]`, then the complete finding text with line breaks
    joined by single spaces. Drop no word; add no `file:line` the source
    lacks. The finding text spans:
@@ -124,17 +124,17 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
      TodoWrite ledger with this tier sort's counts, inserting
      `, reconsider approach` before the `)` when the dispatch carries the
      reconsider line.
-   - Dispatch `implementer` in review-fix mode (the Review-fix dispatch
-     section of the [implement playbook](../team/playbooks/implement.md))
+   - Dispatch [`implementer`](../../../agents/implementer.md) in review-fix mode (the Review-fix dispatch
+     section of the [implement playbook](../../team/playbooks/implement.md))
      with the canonical artifact directory, the typed class(es), this round's
      `### Blocking` and `### Major` lines, and any reconsider line. On a
      dispatch crash, retry once with the error, then halt loudly.
    - On return, sort the implementer's return per
-     [host dispatch](../team/references/15-host-dispatch.md) into one of
+     [host dispatch](../../team/references/15-host-dispatch.md) into one of
      three classes, checked in this order:
      - **Blocked:** a blocker line, or a `BLOCKED` line 1, whatever line 1 says.
        Run the clean-tree entry guard's command
-       ([input](references/01-input.md), Entry guards, 4), but a dirty path
+       ([input](01-input.md), Entry guards, 4), but a dirty path
        never re-dispatches. Halt loudly naming the absolute `docs/plans/<id>/`
        path, the newest `review-<n>.md` path, line 1, and each blocker line.
        Name any mismatch between line 1 and the blocker lines, and each dirty
@@ -151,7 +151,7 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
      prompt listing a blocking or major finding is a defect. The loop has no
      count cap and ends only when no Blocking or Major finding remains; the
      operator is the outer bound
-     ([execution rules](../team/references/execution.md)).
+     ([execution rules](../../team/references/execution.md)).
 
    **Recovery** (after an operator stop or a context-exhausted session):
    re-invoke `/team-code-review` bare; the round number continues from the

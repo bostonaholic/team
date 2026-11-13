@@ -1,6 +1,6 @@
 # Slicing Work Reference
 
-The `7-structure.md` format. Slicing rules live in the [structure playbook](playbooks/structure.md).
+The `7-structure.md` format. Slicing rules live in the [structure playbook](../playbooks/structure.md).
 
 A slice is **vertical** if you can demo the change after that slice is done, even if the demo is narrow.
 

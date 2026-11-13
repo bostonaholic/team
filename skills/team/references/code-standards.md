@@ -60,7 +60,7 @@ Every item gates progress: **Single Responsibility**; **Clear Naming**; **No Mag
 - A function calls functions one abstraction level below its own, never two or more.
 - Catch only the exact throwing call and specific exception; chain the original cause.
 - Follow neighboring project style, naming, and patterns.
-- Remove what the change replaces or leaves unused before adding its replacement; add no guard the spec does not demand ([focused work rules](principles/focused-work.md)).
+- Remove what the change replaces or leaves unused before adding its replacement; add no guard the spec does not demand ([focused work rules](../principles/focused-work.md)).
 
 ## When Reviewing
 
@@ -68,7 +68,7 @@ Every item gates progress: **Single Responsibility**; **Clear Naming**; **No Mag
 - Check for Design-First evidence in interfaces and boundaries.
 - Rank failure isolation (Armstrong) and interface contracts (Liskov) above formatting (Knuth).
 - Name the principle, cite `file:line`, and state the current consequence; a finding with neither principle nor consequence is not actionable.
-- Flag validators, guards, options, and parallel mechanisms that no design, plan, or test demands ([focused work rules](principles/focused-work.md)).
+- Flag validators, guards, options, and parallel mechanisms that no design, plan, or test demands ([focused work rules](../principles/focused-work.md)).
 
 ## When to refactor
 

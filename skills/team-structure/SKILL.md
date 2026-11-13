@@ -63,7 +63,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
      that the design has not passed review, and suggest
      `/team-design $ARGUMENTS` — never slice an unreviewed design.
    - **Exit 2:** stop and report the stderr line.
-2. Dispatch `structure-planner`, which writes `$ARGUMENTS/7-structure.md`
+2. Dispatch [`structure-planner`](../../agents/structure-planner.md), which writes `$ARGUMENTS/7-structure.md`
    with vertical slices and plain frontmatter (`topic`, `date`,
    `phase: structure`) — no approval fields.
 3. **Stop once `$ARGUMENTS/7-structure.md` exists.**

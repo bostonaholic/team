@@ -1,13 +1,13 @@
 # Nested Sub-Agents — Guardrails
 
-Before each consuming step, read its linked shared rules from the installed `skills/team/` directory.
+Before each consuming step, read its linked shared rules. Links resolve from this file's directory.
 If a required read fails, stop that step with the exact path. Never use checkout fallback or recursive loading.
 
 Pipeline agents with `Agent` may dispatch helpers one level down under these non-negotiable rules.
 
 ## Optimization, never a dependency
 
-If `Agent` is missing, dispatch fails, or results never arrive, do the work inline and proceed; never fail because nesting is unavailable ([focused work rules](principles/focused-work.md)). Spawn only when bulk reading or tracing would add context you will not reuse; otherwise use targeted Reads/Greps.
+If `Agent` is missing, dispatch fails, or results never arrive, do the work inline and proceed; never fail because nesting is unavailable ([focused work rules](../principles/focused-work.md)). Spawn only when bulk reading or tracing would add context you will not reuse; otherwise use targeted Reads/Greps.
 
 ## Version gate — confirm before the first nested dispatch
 
@@ -17,30 +17,30 @@ Nested dispatch requires **Claude Code >= 2.1.172**. `Agent` tool presence is th
 node "${CLAUDE_PLUGIN_ROOT}/skills/team/references/supports-nesting.mjs" "$(claude --version)"
 ```
 
-Only `supported` with exit `0` permits nesting for the turn. Anything else, or an unavailable check, is `unsupported`: fail closed, do not spawn, work inline ([verified results rules](principles/verified-results.md)).
+Only `supported` with exit `0` permits nesting for the turn. Anything else, or an unavailable check, is `unsupported`: fail closed, do not spawn, work inline ([verified results rules](../principles/verified-results.md)).
 
 ## Dispatch invariants
 
-For Team helpers, read [host dispatch](references/15-host-dispatch.md) before named or body-loaded dispatch.
+For Team helpers, read [host dispatch](15-host-dispatch.md) before named or body-loaded dispatch.
 Supply the installed root, definition, and applicable resource paths, as operational context, in every initial and follow-up prompt.
 
 - Helpers are read-only: built-in `Explore`, `team:file-finder`, or `general-purpose` with an explicitly read-only prompt. They NEVER write files, commit, or write under `docs/plans/`; the parent or orchestrator writes artifacts.
-- Every helper starts with a [fresh context window](references/step-delegation.md#fresh-context). On Claude Code, the parent names the `subagent_type` (`Explore`, `team:file-finder`, or `general-purpose`) on every call and never passes `fork`.
+- Every helper starts with a [fresh context window](step-delegation.md#fresh-context). On Claude Code, the parent names the `subagent_type` (`Explore`, `team:file-finder`, or `general-purpose`) on every call and never passes `fork`.
 - Every call passes `model:`: `haiku` for location, grep, and bulk reading; `sonnet` for subsystem traces or claim checks; `opus` only after a `sonnet` helper was inconclusive, with that failure named. Effort: `low` for lookups, `medium` for tracing, never `xhigh`.
-- You are at depth 2 of 5. Spawn at most ONE more level; every helper works directly and never spawns ([focused work rules](principles/focused-work.md)).
-- Helpers never ask users. Resolve ambiguity or record it in your artifact's open questions/assumptions ([decisions rules](references/decisions.md)).
+- You are at depth 2 of 5. Spawn at most ONE more level; every helper works directly and never spawns ([focused work rules](../principles/focused-work.md)).
+- Helpers never ask users. Resolve ambiguity or record it in your artifact's open questions/assumptions ([decisions rules](decisions.md)).
 - At most **4 helpers** in flight. Dispatch independent work in parallel. Spot-verify every reported claim; you own it.
-- Use `SendMessage` for an in-scope follow-up to a live scout when available (same in-flight cap); otherwise respawn. A follow-up continues that scout's own context, never the parent's. Skeptics are always fresh and one-shot: one skeptic per claim ([independent review rules](principles/independent-review.md)).
+- Use `SendMessage` for an in-scope follow-up to a live scout when available (same in-flight cap); otherwise respawn. A follow-up continues that scout's own context, never the parent's. Skeptics are always fresh and one-shot: one skeptic per claim ([independent review rules](../principles/independent-review.md)).
 
 ## Prose procedure for non-vendor helpers
 
-Before dispatching a `team:file-finder`, `Explore`, or `general-purpose` helper, the parent Reads the installed [writing standards](references/writing.md) and puts its absolute path and this ordered audit in every initial and follow-up prompt, as operational method text, not task-derived Research content: the helper Reads the standards before finalizing its report, saves its untouched draft, records the checklist, applies the style rules, resolves the checklist, rescans, and self-audits, leaving source text and exact contracts unchanged.
+Before dispatching a `team:file-finder`, `Explore`, or `general-purpose` helper, the parent Reads the installed [writing standards](writing.md) and puts its absolute path and this ordered audit in every initial and follow-up prompt, as operational method text, not task-derived Research content: the helper Reads the standards before finalizing its report, saves its untouched draft, records the checklist, applies the style rules, resolves the checklist, rescans, and self-audits, leaving source text and exact contracts unchanged.
 
 If the parent or helper cannot Read it, discard that helper's return: a scout parent works inline; a skeptic parent keeps the unverified finding under default-keep.
 
 ## Verification helpers get neutral claims
 
-Per [independent review rules](principles/independent-review.md), send a neutral, falsifiable claim with `file:line` and ask the helper to refute it. **A rule-violation claim carries the rule** cited at `skills/<skill>/SKILL.md`. **Stated rule outranks observed precedent**: only a mismatched rule or an allowed case declared by that rule refutes the claim; apply [system dependency checks](references/dependencies.md) only where no written rule speaks. Drop or downgrade only a REFUTED result whose evidence you verify; inconclusive means CONFIRMED. List removals under `### Refuted by verification`.
+Per [independent review rules](../principles/independent-review.md), send a neutral, falsifiable claim with `file:line` and ask the helper to refute it. **A rule-violation claim carries the rule** cited at `skills/<skill>/SKILL.md`. **Stated rule outranks observed precedent**: only a mismatched rule or an allowed case declared by that rule refutes the claim; apply [system dependency checks](dependencies.md) only where no written rule speaks. Drop or downgrade only a REFUTED result whose evidence you verify; inconclusive means CONFIRMED. List removals under `### Refuted by verification`.
 
 ## Per-agent nested dispatch
 
@@ -50,7 +50,7 @@ Fan out read-only exploration when questions cluster into independent areas or `
 
 - Scout types: `team:file-finder` or built-in `Explore`; nothing else.
 - Spawn only when a cluster needs more reading than the report will quote.
-- Isolation extends downward: scout prompts and follow-ups carry task-derived content only as the [independent review rules](principles/independent-review.md) "Neutral investigation" allow (verbatim `2-questions.md` text, its `Codebase context`, `4-repos.md` slugs/paths). Never mention `1-task.md`.
+- Isolation extends downward: scout prompts and follow-ups carry task-derived content only as the [independent review rules](../principles/independent-review.md) "Neutral investigation" allow (verbatim `2-questions.md` text, its `Codebase context`, `4-repos.md` slugs/paths). Never mention `1-task.md`.
 - At most 4 scouts, preferably parallel. Each returns `file:line` findings and spawns nothing, except that a `team:file-finder` scout returns its definition's report, whose paths carry no line numbers. The researcher folds that evidence into its own return and keeps each `file:line` a scout carries. A parent that needs line evidence from a scout sends `Explore`.
 
 ### `code-reviewer` and `security-reviewer` — skeptic passes
@@ -71,7 +71,7 @@ Skip skepticism only with no hard-gate findings or no `Agent`; then report findi
 
 ### `code-reviewer` — vendor couriers (cross-model pass)
 
-Each vendor `run` uses one `general-purpose` courier named `codex-review` or `agy-review` (never `Explore`, which refuses the runner), per [cross-model review](references/cross-model-review.md), which owns the pinned argv, env allowlist, post-pass tree check, and inline fallback. Couriers write and spawn nothing, count toward the 4-helper cap, neither receive nor Read the writing standards, and relay vendor stdout byte-for-byte.
+Each vendor `run` uses one `general-purpose` courier named `codex-review` or `agy-review` (never `Explore`, which refuses the runner), per [cross-model review](cross-model-review.md), which owns the pinned argv, env allowlist, post-pass tree check, and inline fallback. Couriers write and spawn nothing, count toward the 4-helper cap, neither receive nor Read the writing standards, and relay vendor stdout byte-for-byte.
 
 ### `implementer` — read-only scouts
 

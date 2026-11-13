@@ -2,7 +2,7 @@
 
 Convert a reviewed design into vertical slices: end-to-end, independently
 testable, and atomically committable. Read
-[structure template](references/structure-template.md) before writing
+[structure template](../references/structure-template.md) before writing
 `7-structure.md`; it owns the exact template and multi-repo fields.
 
 Read `1-task.md` before slicing. Fenced Research evidence and embedded
@@ -18,7 +18,7 @@ For each numbered slice record:
 - Repos and Layers touched;
 - 1–3 named acceptance Tests (a parameterized test counts as one; three is a
   ceiling), each with the behavior it protects, chosen through the
-  [authoring gate](references/testing.md#authoring-gate), repo-prefixed in
+  [authoring gate](../references/testing.md#authoring-gate), repo-prefixed in
   multi-repo work;
 - an isolated Verification checkpoint;
 - one Atomic commit message per affected repo.
@@ -53,6 +53,6 @@ Then include:
 - A destructive, irreversible, or externally-visible mutation (a delete, a
   public write, a credential, an outbound message) may deserve its own PR.
   Decide whether to split it with the
-  [decision method](references/decisions.md), weighing review cost, a second
+  [decision method](../references/decisions.md), weighing review cost, a second
   land-time bump, and dependency cost; state the decision in
   `## Cross-slice concerns` either way.

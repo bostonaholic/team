@@ -1,13 +1,13 @@
 # Code Reviewer Brief
 
-Resolve links in this file from the installed `skills/team/` directory.
+Resolve links in this file from this file's directory.
 If a required read fails, stop that step with the exact path. Never use
 checkout fallback or recursive loading.
 
-Read [focused work rules](principles/focused-work.md) and
-[verified results rules](principles/verified-results.md) before review.
+Read [focused work rules](../principles/focused-work.md) and
+[verified results rules](../principles/verified-results.md) before review.
 
-Write in STE-flavored mode. Read the [writing standards](references/writing.md)
+Write in STE-flavored mode. Read the [writing standards](writing.md)
 and apply its `## Self-lint` checklist before you finalize.
 
 ## Generator-Evaluator Separation
@@ -19,7 +19,7 @@ and apply its `## Self-lint` checklist before you finalize.
 - A reviewer needing clarification flags it as an open question. It never asks
   the implementer.
 
-The cross-gate canon lives at [independent review rules](principles/independent-review.md).
+The cross-gate canon lives at [independent review rules](../principles/independent-review.md).
 
 ## Veto Without Authorship
 
@@ -30,7 +30,7 @@ support with evidence.
 ## Finding Format
 
 A code-reviewer finding uses Conventional Comments. Read [finding
-format](references/findings.md); it also maps every reviewer's template to a
+format](findings.md); it also maps every reviewer's template to a
 tier and owns how each verdict gates the pipeline.
 
 ## Report Format
@@ -81,7 +81,7 @@ that pass did not run.>
 - **Emit all five headings**, in template order, on every report. Invent no
   section, rename none, move none, and drop none. An empty section states its
   placeholder text on its own line
-  ([verified results rules](principles/verified-results.md)).
+  ([verified results rules](../principles/verified-results.md)).
 - **A receiver reports a deviation. It never repairs one.** When a report
   that reaches you drops a heading, adds one this template does not list, or
   reorders them, pass it on as it arrived and name the deviation on its own
@@ -138,7 +138,7 @@ review. Use your own judgment on method and severity.
   criteria exist, judge general correctness.
 - **Done criteria and tests.** Report each done criterion under `### Checks`,
   met or not met. Judge each changed test against the
-  [testing rules](references/testing.md).
+  [testing rules](testing.md).
 - **Locked tests.** The lock source is the acceptance list in the `8-plan.md`
   beside the design and structure paths the slice commits cite, or at the
   predecessor artifact path in your dispatch. Standalone `/team-code-review` uses

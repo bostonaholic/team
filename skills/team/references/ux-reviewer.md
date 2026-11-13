@@ -1,7 +1,7 @@
 # UX Reviewer Brief
 
 This brief is read by the `ux-reviewer` agent.
-Resolve links in this file from the installed `skills/team/` directory.
+Resolve links in this file from this file's directory.
 If a required read fails, stop that step with the exact path. Never use
 checkout fallback or recursive loading.
 
@@ -12,9 +12,9 @@ surface.
 
 ## Generator-Evaluator Separation
 
-Read the [code reviewer brief](references/code-reviewer.md) for the shared
+Read the [code reviewer brief](code-reviewer.md) for the shared
 canon. The orchestrator applies the tier map in the [finding
-format](references/findings.md).
+format](findings.md).
 
 ## Detection and surface
 
@@ -176,7 +176,7 @@ means every planned shot is present; `partial` means some were skipped.
 - Stop every server and process you started, by process ID, even on failure.
 - Report defects; never change code.
 - Test the changed behavior and the adjacent flows that share the changed
-  components ([system dependency lens](references/dependencies.md)
+  components ([system dependency lens](dependencies.md)
   `## When reviewing`), not unrelated functionality.
 - If the server has not started within 60 seconds, report a startup failure
   as the primary finding and stop.

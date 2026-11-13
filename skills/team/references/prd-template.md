@@ -1,6 +1,6 @@
 # PRD template
 
-Use this body for `3-prd.md` when the PRD criteria apply ([question playbook](playbooks/question.md)).
+Use this body for `3-prd.md` when the PRD criteria apply ([question playbook](../playbooks/question.md)).
 
 ## Problem Statement
 

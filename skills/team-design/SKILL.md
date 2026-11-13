@@ -11,7 +11,7 @@ If a required read fails, stop that step and report its resolved path. Never use
 
 Before each dispatch or retry, read [host dispatch](../team/references/15-host-dispatch.md) and supply its resolved installed paths.
 
-Before review dispatch, supply the installed plugin root, the resolved `skills/team/references/design-reviewer.md` path, the absolute installed `skills/team/` directory as the base of that brief's links, and the resolved paths of the manuals its `## Review brief` links, all in `skills/team/references/`: `code-reviewer.md`, `code-standards.md`, `design-template.md`, `decisions.md`, `findings.md`, `writing.md`, and `cross-model-review.md` when the prompt carries `## External review input`. Require reads before work.
+Before review dispatch, supply the installed plugin root, the resolved `skills/team/references/design-reviewer.md` path, the absolute installed `skills/team/references/` directory as the base of that brief's links, and the resolved paths of the manuals its `## Review brief` links, all in `skills/team/references/`: `code-reviewer.md`, `code-standards.md`, `design-template.md`, `decisions.md`, `findings.md`, `writing.md`, and `cross-model-review.md` when the prompt carries `## External review input`. Require reads before work.
 
 # Team Design
 
@@ -42,7 +42,7 @@ discovery command resolves it. Resolve `<team-skill-dir>` to the absolute direct
 1. Use the directory resolved in `## Input`.
 2. If `$ARGUMENTS/6-design.md` already exists, skip to step 3 — never re-draft
    an existing design ([durable state rules](../team/principles/durable-state.md)).
-   Otherwise dispatch `design-author`; it writes `$ARGUMENTS/6-design.md`
+   Otherwise dispatch [`design-author`](../../agents/design-author.md); it writes `$ARGUMENTS/6-design.md`
    with frontmatter `revision: 0`. Go to step 3 only when it returns `DONE`,
    or, inline, when the body's `## Return` reaches `DONE`. Route any other
    return per host dispatch.
@@ -71,7 +71,7 @@ discovery command resolves it. Resolve `<team-skill-dir>` to the absolute direct
       its stderr.
    d. **Act on the verdict:**
       - **APPROVE or COMMENT** — the review passes. Advance.
-      - **REQUEST CHANGES** — re-dispatch `design-author` with the reviewer's
+      - **REQUEST CHANGES** — re-dispatch [`design-author`](../../agents/design-author.md) with the reviewer's
         findings verbatim; it re-drafts and increments `revision: <n+1>`.
         When it returns `DONE`, a fresh round runs. No round cap; the loop
         ends on the verdict.

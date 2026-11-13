@@ -5,7 +5,7 @@ When the design review passes:
 1. **Detect mode.** If `docs/plans/<id>/4-repos.md` exists (**multi-repo
    mode**), create one secondary worktree per additional repo it lists, all on
    branch `<id>`. Otherwise (**single-repo mode**) do nothing here. Read the
-   [worktree playbook](../team-worktree/playbooks/worktree.md) for the topology
+   [worktree playbook](../../team-worktree/playbooks/worktree.md) for the topology
    and call the Skill tool with `team-worktree` for the procedure.
    Create them **without a confirmation prompt**: the "Confirm with the user"
    dialog in `skills/team-worktree/SKILL.md` applies only to standalone

@@ -26,7 +26,7 @@ Before two or more dependent steps, seed one todo per step. Omit one-item ledger
 Without a todo tool, state the ledger once inline and name each completed step.
 Track numbered steps; for unnumbered work, natural units such as slices or findings, never guidance sentences. Mark `in_progress` at start and `completed` when done.
 The orchestrator owns one phase ledger. Agents own their local sub-step ledgers. Never merge or read across those ledgers.
-Standalone skills own their ledgers. The [feature playbook](playbooks/feature.md) owns the orchestrator's phase-specific seed rules.
+Standalone skills own their ledgers. The [feature playbook](../playbooks/feature.md) owns the orchestrator's phase-specific seed rules.
 
 ## Docs and code
 

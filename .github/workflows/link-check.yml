@@ -1,0 +1,24 @@
+# Link check — fails a PR whose distributed Markdown links or backticked
+# shipped-file paths do not resolve from the file that contains them. Agents
+# stop a step when a required read fails, so a broken link halts a run.
+name: Link check
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check-links:
+    name: Check plugin links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check links
+        run: node .claude/scripts/check-links.mjs
+      - name: Test the link checker
+        run: node --test tests/check-links.test.mjs

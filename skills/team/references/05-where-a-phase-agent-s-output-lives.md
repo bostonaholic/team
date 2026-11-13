@@ -1,4 +1,4 @@
-Before each dispatch or retry, read [host dispatch](references/15-host-dispatch.md).
+Before each dispatch or retry, read [host dispatch](15-host-dispatch.md).
 
 ## Where a phase agent's output lives
 
@@ -13,4 +13,4 @@ return. **Dispatch every phase agent so its full result returns to you.** If a
 result arrives truncated, or as a notification stub with the body held
 elsewhere, re-dispatch rather than work from the preview.
 Each dispatch takes declared inputs and returns one bounded output
-([focused work rules](principles/focused-work.md)).
+([focused work rules](../principles/focused-work.md)).

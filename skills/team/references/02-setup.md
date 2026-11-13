@@ -17,7 +17,7 @@
    `1-task.md`'s `ticketId`); otherwise `null`.
 3. **Move the ticket to in-progress** as the run's first action when steps
    1–2 resolved a `ticketId` or issue, per the ticket-lifecycle rules in
-   [tracking rules](../team-pr/references/tracking.md). Best-effort: skip
+   [tracking rules](../../team-pr/references/tracking.md). Best-effort: skip
    silently with no tracker mechanism; never block on it.
 4. **Derive `<id>`:** choose a 2–4 word `<kebab-topic>` from the
    description, then run
@@ -27,7 +27,7 @@
    ticket its stderr names and rerun.
 5. **Seed the TodoWrite ledger** with one item per phase, in order:
    `Worktree → Question → Research → Design → Structure → Plan → Implement → Code review → Security review → PR`,
-   with `Worktree` `in_progress` ([execution rules](references/execution.md)).
+   with `Worktree` `in_progress` ([execution rules](execution.md)).
    With no TodoWrite, use the Rules reference's substitute file ledger. The
    home worktree and `docs/plans/<id>/` are created at WORKTREE, not here.
 6. **Resolve the canonical artifact directory.** If `git worktree list` shows
@@ -42,7 +42,7 @@
      A `6-design.md` with no passing review resumes **at the review step**,
      never a re-draft; ignore `approved` fields from older runs.
    - IMPLEMENT is complete only by "IMPLEMENT complete" ("Branch state" in the
-     [artifact schema](references/artifacts.md)).
+     [artifact schema](artifacts.md)).
    - CODE REVIEW is complete only when the newest `review-<n>.md` is PASS and
      current per that schema. Otherwise, with IMPLEMENT complete, resume at
      CODE REVIEW.
@@ -56,7 +56,7 @@
    Then mark the first incomplete phase `in_progress`. **Never re-dispatch a
    phase whose artifact already exists** (re-running QUESTION overwrites
    `1-task.md`). Already-done is done, never an error
-   ([durable state rules](principles/durable-state.md)).
+   ([durable state rules](../principles/durable-state.md)).
 
 **Research-isolation invariant.** You hold the description in your own
 context. Downstream of QUESTION it must NEVER appear in any artifact or agent

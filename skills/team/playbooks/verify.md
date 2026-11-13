@@ -1,6 +1,6 @@
 # Verify playbook
 
-Resolve links from the installed `skills/team/` directory and read each step's linked rules before it. If a read fails, stop that step and report the resolved path; never use checkout fallback or recursive loading.
+Resolve links from this file's directory and read each step's linked rules before it. If a read fails, stop that step and report the resolved path; never use checkout fallback or recursive loading.
 
 ## Two roles, two verdicts
 
@@ -90,14 +90,14 @@ Distinguish tests, runtime observations, and unavailable checks.
   on retry, race unresolved`). Red → green without a code change is a flake
   or intermittent bug, not PASS.
 - **A baseline is comparable only under the same isolation.** When this run is
-  the before side of a before/after comparison ([durable state rules](principles/durable-state.md)),
+  the before side of a before/after comparison ([durable state rules](../principles/durable-state.md)),
   run both sides the same way: a false red recorded as the pre-change state
   reclassifies a later regression as pre-existing.
 - **Coverage is reported, not gated.** If a coverage tool is configured, run it
   and report the delta for changed files (e.g. "73% → 78%"). Never gate on an
   absolute threshold; require an upward trend. Pair with mutation testing when
   available. Report test count and coverage as data, never as proof the tests
-  are good ([value bar](references/testing.md#value-bar)).
+  are good ([value bar](../references/testing.md#value-bar)).
 
 ## Separate three failures
 
