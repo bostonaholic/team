@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.177.0] - 2026-11-13
+
 ### Changed
 
 - **A stacked PR body now lists the whole stack.** `team-pr` adds a `## Stack` table of every PR in the stack, bottom to top, with this PR's row bold, when the PR's base is another open PR's head branch or another open PR builds on it. When the stack changes, the table is rewritten in every open PR of the stack.
@@ -1586,7 +1588,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.176.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.177.0...HEAD
+[0.177.0]: https://github.com/bostonaholic/team/compare/v0.176.0...v0.177.0
 [0.176.0]: https://github.com/bostonaholic/team/compare/v0.175.0...v0.176.0
 [0.175.0]: https://github.com/bostonaholic/team/compare/v0.174.0...v0.175.0
 [0.174.0]: https://github.com/bostonaholic/team/compare/v0.173.0...v0.174.0
