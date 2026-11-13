@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **CODE REVIEW no longer runs the test suite.** The implementer runs the tests while building, and CI reports failures. The `code-reviewer` now reads each changed test and judges that it asserts the behavior the done criteria state and that it is a correct test; APPROVE no longer needs a passing suite. The `verifier` runs format, lint, typecheck, and build only, and never Test or a coverage tool. `skills/team/playbooks/verify.md` keeps its Test step for the implementer and the mechanical gate. **What this asks of you:** restart every agent session after you update, and rely on your CI for test results on the PR.
+
 ## [0.174.0] - 2026-11-11
 
 ### Changed
