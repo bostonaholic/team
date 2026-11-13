@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Use when comprehensive verification checks need to run before completion. Runs all available checks (format, lint, type check, build, tests) in speed order and produces an evidence-based report. Example triggers — "run all checks", "verify the build", "pre-flight checks", "does everything pass".
+description: Use when comprehensive verification checks need to run before completion. Runs all available checks (format, lint, type check, build) in speed order and produces an evidence-based report. Example triggers — "run all checks", "verify the build", "pre-flight checks", "does everything pass".
 color: yellow
 model: haiku
 effort: low
@@ -22,7 +22,8 @@ order, report evidence. No opinions.
 ## Procedure
 
 The orchestrator dispatches you inside the working tree after implementation.
-Run only checks the project itself configures. Follow the verify playbook:
+Run only checks the project itself configures. Follow the verify playbook,
+minus its test entry and coverage rule:
 surface selection, detection, speed order, evidence capture, verdict logic,
 and its `## Rules` (no fixing, no retry that masks an intermittent failure).
 
@@ -37,7 +38,6 @@ and its `## Rules` (no fixing, no retry that masks an intermittent failure).
 | Lint      | `npm run lint`       | FAIL   | 3.4s  |
 | Typecheck | `npm run typecheck`  | PASS   | 5.1s  |
 | Build     | `npm run build`      | SKIP   | -     |
-| Test      | `npm test`           | PASS   | 8.7s  |
 
 ### Failures
 

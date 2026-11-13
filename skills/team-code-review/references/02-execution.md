@@ -113,8 +113,8 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
    `None.`; otherwise `verdict: FAIL`. A failed write halts loudly. CODE
    REVIEW never reaches step 9 without a PASS record on disk.
 8. **Fix loop.** On FAIL:
-   - Record the typed failure class(es) (lint, typecheck, build, test,
-     review, suggestion, ux).
+   - Record the typed failure class(es) (lint, typecheck, build, review,
+     suggestion, ux).
    - Count the FAIL streak: consecutive FAIL records, newest first, up to the
      first PASS, in number order ignoring gaps; a malformed record counts as
      FAIL. When the three newest records are all FAIL, the fix dispatch carries

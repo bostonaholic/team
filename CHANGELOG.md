@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.175.0] - 2026-11-13
+
+### Changed
+
+- **CODE REVIEW no longer runs the test suite.** The implementer runs the tests while building, and CI reports failures. The `code-reviewer` judges each changed test against the testing rules, and APPROVE no longer needs a passing suite. The `verifier` runs format, lint, typecheck, and build only. **What this asks of you:** restart every agent session after you update, and rely on your CI for test results on the PR.
+
 ## [0.174.0] - 2026-11-11
 
 ### Changed
@@ -1570,7 +1576,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.174.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.175.0...HEAD
+[0.175.0]: https://github.com/bostonaholic/team/compare/v0.174.0...v0.175.0
 [0.174.0]: https://github.com/bostonaholic/team/compare/v0.173.0...v0.174.0
 [0.173.0]: https://github.com/bostonaholic/team/compare/v0.172.0...v0.173.0
 [0.172.0]: https://github.com/bostonaholic/team/compare/v0.171.0...v0.172.0

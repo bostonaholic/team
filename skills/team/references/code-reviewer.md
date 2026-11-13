@@ -57,8 +57,7 @@ when there are none.>
 
 ### Checks
 
-<Each done criterion, met or not met. The test-suite command and its
-result. Any other check run, with its result.>
+<Each done criterion, met or not met. Any check run, with its result.>
 
 ### Refuted by verification
 
@@ -98,20 +97,19 @@ that pass did not run.>
 
 ### Verifier
 
-- **PASS:** All detected checks (format, lint, typecheck, build, test) pass.
+- **PASS:** All detected checks (format, lint, typecheck, build) pass.
 - **FAIL:** Any check fails; the pipeline re-dispatches the implementer.
 
 ### Code Reviewer
 
-- **✅ APPROVE:** All done criteria met, no blocking issues, tests pass.
+- **✅ APPROVE:** All done criteria met, no blocking issues.
 - **❌ REQUEST CHANGES:** Blocking issues found. The pipeline MUST re-dispatch
   the implementer. No override.
 - **💬 COMMENT:** Non-blocking suggestions only. Implementation is correct.
 
 Pre-existing findings alone give COMMENT, or APPROVE when nothing else is
 noted. REQUEST CHANGES needs at least one Blocking-tier finding that the
-branch owns. An unmet done criterion or a failing test suite is an
-`issue (blocking)` finding.
+branch owns. An unmet done criterion is an `issue (blocking)` finding.
 
 A finding whose only fix is to edit a locked acceptance test is
 `suggestion (non-blocking)`, because no agent may edit a locked test during
@@ -139,8 +137,8 @@ review. Use your own judgment on method and severity.
   names and the done criteria in the plan or commits the branch carries. When no
   criteria exist, judge general correctness.
 - **Done criteria and tests.** Report each done criterion under `### Checks`,
-  met or not met. Run the project's test suite and report the command and
-  its result.
+  met or not met. Judge each changed test against the
+  [testing rules](references/testing.md).
 - **Locked tests.** The lock source is the acceptance list in the `8-plan.md`
   beside the design and structure paths the slice commits cite, or at the
   predecessor artifact path in your dispatch. Standalone `/team-code-review` uses
@@ -168,5 +166,5 @@ review. Use your own judgment on method and severity.
     `outside the range` names each unchanged file you read to judge a
     caller, consumer, or sibling of the change.
 
-  Depth changes nothing else. The test-suite run, the skeptic pass, the five
-  headings, and the verdict rules hold at every depth.
+  Depth changes nothing else. The skeptic pass, the five headings, and the
+  verdict rules hold at every depth.

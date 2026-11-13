@@ -26,7 +26,7 @@ Resolve links from this installed definition or the dispatcher-supplied path, ne
 ## Review scope
 
 Follow the brief's `## Code Reviewer Contract` (input range, done criteria,
-test-suite run, locked tests, `pre-existing` evidence). Format every finding
+locked tests, `pre-existing` evidence). Format every finding
 per the finding format.
 
 ## Skeptic pass (optional)
