@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.176.0] - 2026-11-13
+
 ### Fixed
 
 - **The cross-model `codex-review` and `agy-review` couriers now run the vendor command instead of refusing it.** `skills/team/references/cross-model-review.md` dispatched them as `Explore` agents, which are read-only and refused to run `external-review.mjs`, so every round fell back to an inline run. Couriers are now `general-purpose` agents on `haiku`, and the errand says running the pinned runner is the whole job. The errand also asked for a 660000 ms Bash timeout, above Claude Code's 600000 ms foreground maximum, so a slow vendor call was backgrounded and its output lost. The runner's `TIMEOUT_MS` drops from 600 s to 540 s and the courier asks for 600000 ms, so the runner's own timeout skip always prints first. The errand now also forbids an exit-code line after the stdout, which made replies malformed. `external-review.mjs` gains `AGY_PROMPT_CAP_BYTES` (48 KB): every logged agy call above that size ran out the full timeout with no review, so `run agy` now prints `skip: agy prompt is <n> bytes, over the 49152-byte agy cap` and starts nothing. codex keeps the 128 KB cap. **What this asks of you:** restart every agent session after you update.
@@ -1580,7 +1582,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.175.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.176.0...HEAD
+[0.176.0]: https://github.com/bostonaholic/team/compare/v0.175.0...v0.176.0
 [0.175.0]: https://github.com/bostonaholic/team/compare/v0.174.0...v0.175.0
 [0.174.0]: https://github.com/bostonaholic/team/compare/v0.173.0...v0.174.0
 [0.173.0]: https://github.com/bostonaholic/team/compare/v0.172.0...v0.173.0
