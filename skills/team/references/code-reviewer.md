@@ -97,7 +97,7 @@ that pass did not run.>
 
 ### Verifier
 
-- **PASS:** All detected static checks (format, lint, typecheck, build) pass.
+- **PASS:** All detected checks (format, lint, typecheck, build) pass.
 - **FAIL:** Any check fails; the pipeline re-dispatches the implementer.
 
 ### Code Reviewer
@@ -109,9 +109,7 @@ that pass did not run.>
 
 Pre-existing findings alone give COMMENT, or APPROVE when nothing else is
 noted. REQUEST CHANGES needs at least one Blocking-tier finding that the
-branch owns. An unmet done criterion is an `issue (blocking)` finding. So
-is a changed test that asserts the wrong behavior, or that cannot fail when
-the behavior breaks.
+branch owns. An unmet done criterion is an `issue (blocking)` finding.
 
 A finding whose only fix is to edit a locked acceptance test is
 `suggestion (non-blocking)`, because no agent may edit a locked test during
@@ -139,11 +137,8 @@ review. Use your own judgment on method and severity.
   names and the done criteria in the plan or commits the branch carries. When no
   criteria exist, judge general correctness.
 - **Done criteria and tests.** Report each done criterion under `### Checks`,
-  met or not met. Never run the test suite: the implementer runs it while
-  building, and CI reports failures. Read each changed test against the
-  [testing rules](references/testing.md) and judge two things: that it
-  asserts the behavior the done criteria state, and that it is a correct
-  test.
+  met or not met. Judge each changed test against the
+  [testing rules](references/testing.md).
 - **Locked tests.** The lock source is the acceptance list in the `8-plan.md`
   beside the design and structure paths the slice commits cite, or at the
   predecessor artifact path in your dispatch. Standalone `/team-code-review` uses
@@ -171,5 +166,5 @@ review. Use your own judgment on method and severity.
     `outside the range` names each unchanged file you read to judge a
     caller, consumer, or sibling of the change.
 
-  Depth changes nothing else. The test review, the skeptic pass, the five
-  headings, and the verdict rules hold at every depth.
+  Depth changes nothing else. The skeptic pass, the five headings, and the
+  verdict rules hold at every depth.

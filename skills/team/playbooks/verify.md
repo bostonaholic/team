@@ -52,10 +52,6 @@ Run every detected check, fastest first: 1. **Format** (`--check` mode),
 2. **Lint**, 3. **Type check** (e.g. `tsc --noEmit`, mypy), 4. **Build**
 (production), 5. **Test**.
 
-The verifier agent runs the static checks only. Test and coverage are not
-detected checks for it, and it never runs them: the implementer runs the
-suite while building, and CI reports test failures.
-
 Checks interfere: a production build and a dev-server-backed browser suite
 usually share one build directory, so the second fails on the first's state.
 Clear the build directory and run the browser suite alone. A suite that boots
