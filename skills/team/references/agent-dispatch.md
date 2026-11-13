@@ -71,7 +71,7 @@ Skip skepticism only with no hard-gate findings or no `Agent`; then report findi
 
 ### `code-reviewer` — vendor couriers (cross-model pass)
 
-Each vendor `run` uses one read-only `Explore` courier named `codex-review` or `agy-review`, per [cross-model review](references/cross-model-review.md), which owns the pinned argv, env allowlist, post-pass tree check, and inline fallback. Couriers write and spawn nothing, count toward the 4-helper cap, neither receive nor Read the writing standards, and relay vendor stdout byte-for-byte.
+Each vendor `run` uses one `general-purpose` courier named `codex-review` or `agy-review` (never `Explore`, which refuses the runner), per [cross-model review](references/cross-model-review.md), which owns the pinned argv, env allowlist, post-pass tree check, and inline fallback. Couriers write and spawn nothing, count toward the 4-helper cap, neither receive nor Read the writing standards, and relay vendor stdout byte-for-byte.
 
 ### `implementer` — read-only scouts
 
