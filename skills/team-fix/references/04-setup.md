@@ -3,7 +3,7 @@
 1. **Resolve the input** to a bug description, per `## Input`.
 2. **Move the ticket to in-progress** as the first action, before other work,
    when the input resolved to a ticket id or issue. Follow the
-   ticket-lifecycle rules in [tracking rules](../team-pr/references/tracking.md);
+   ticket-lifecycle rules in [tracking rules](../../team-pr/references/tracking.md);
    best-effort, never blocking.
 3. **Derive `<id>`:** choose a 2–4 word `<kebab-topic>` and run
    `"<team-skill-dir>/scripts/plan-id.sh" [--ticket <ticketId>] <kebab-topic>`,

@@ -47,7 +47,7 @@ changes directory.
 
 Run these in each worktree in scope, before any dispatch. Each refusal or
 stop writes no record. The "Branch state" section of the
-[artifact schema](../team/references/artifacts.md) defines the default
+[artifact schema](../../team/references/artifacts.md) defines the default
 branch, base ref, merge-base, and branch commits.
 
 1. **Default branch.** If `git -C <worktree-path> rev-parse --abbrev-ref HEAD`

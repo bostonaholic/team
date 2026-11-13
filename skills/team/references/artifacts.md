@@ -1,6 +1,6 @@
 # Artifact Frontmatter
 
-Schema contract for durable pipeline state under `docs/plans/<id>/`. Phase behavior lives in the [feature playbook](playbooks/feature.md); files are the phase interface ([durable state rules](principles/durable-state.md)).
+Schema contract for durable pipeline state under `docs/plans/<id>/`. Phase behavior lives in the [feature playbook](../playbooks/feature.md); files are the phase interface ([durable state rules](../principles/durable-state.md)).
 
 ## Artifact inventory
 
@@ -32,7 +32,7 @@ Never put `ticketId`, `route`, or `routeStatus` on `2-questions.md` or any later
 
 The one definition of branch progress for every reader. Resolve each term per worktree in scope.
 
-- **Worktrees in scope.** The home worktree, resolved by the order in the [team-code-review input](../team-code-review/references/01-input.md#worktrees), plus the companions `4-repos.md` lists in multi-repo mode.
+- **Worktrees in scope.** The home worktree, resolved by the order in the [team-code-review input](../../team-code-review/references/01-input.md#worktrees), plus the companions `4-repos.md` lists in multi-repo mode.
 - **Default branch.** `git -C <worktree> symbolic-ref --short refs/remotes/origin/HEAD` minus the `origin/` prefix. When that fails, the first of `main` and `master` that exists: test `refs/remotes/origin/<name>` with an `origin` remote, else `refs/heads/<name>`. When no name resolves, halt and name the worktree path.
 - **Base ref.** `origin/<default>` when `git -C <worktree> remote get-url origin` succeeds, else the local `<default>`. **Why:** Team never moves the local default branch, so a lagging local ref would count upstream commits as branch work.
 - **Merge-base.** `git -C <worktree> merge-base <base-ref> HEAD`. On non-zero exit, halt and name the worktree path and base ref. Never substitute another ref.
@@ -42,7 +42,7 @@ The one definition of branch progress for every reader. Resolve each term per wo
 ## Review records
 
 - Never restore the retired `^approved:` frontmatter gate; review records alone determine passage.
-- `design-review-<n>.md`: written by the orchestrator through `scripts/record-design-review.mjs` at the highest `<n>` + 1, or 1. Frontmatter `topic`, `date`, `phase: design-review`, `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`; body is the verbatim report. Highest-round APPROVE or COMMENT passes. REQUEST CHANGES re-dispatches `design-author` with findings verbatim and increments numeric `revision`; missing/non-numeric means `0`, so the first rewrite writes `revision: 1`.
+- `design-review-<n>.md`: written by the orchestrator through `../scripts/record-design-review.mjs` at the highest `<n>` + 1, or 1. Frontmatter `topic`, `date`, `phase: design-review`, `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`; body is the verbatim report. Highest-round APPROVE or COMMENT passes. REQUEST CHANGES re-dispatches `design-author` with findings verbatim and increments numeric `revision`; missing/non-numeric means `0`, so the first rewrite writes `revision: 1`.
 - `review-<n>.md` and `security-review-<n>.md`: two record families, one schema. The session that runs `team-code-review` writes `review-<n>.md`, one per completed CODE REVIEW round, with `phase: review`. The session that runs `team-security-review` writes `security-review-<n>.md`, one per completed SECURITY REVIEW round, with `phase: security-review`. Each family numbers its own records at the highest numeric `<n>` + 1, or 1. A `review-<n>.md` name starts with `review-`, so `security-review-<n>.md` and `design-review-<n>.md` files are never `review-<n>.md` records. Never overwrite a record. Ignore a non-numeric suffix such as `review-final.md` or `security-review-final.md`. Frontmatter `topic`, `date`, `phase`, `verdict: <PASS|FAIL>`. Body sections, in order:
   - `## Scope`: one `<repo-slug>: <merge-base-sha>..<head-sha>` line per repo with commits beyond its merge-base, full SHAs pinned at dispatch. `<repo-slug>` is the `4-repos.md` slug, or `home` in single-repo mode.
   - `## Depth`: the six `key=value` lines that `skills/team-code-review/scripts/change-profile.mjs` printed for the round, verbatim. No record state reads the section, so a record without it stays well-formed.
@@ -72,4 +72,4 @@ Every artifact in one directory has the identical `topic`: the `<id>` minus its 
 
 ## Conditional artifacts
 
-Before writing or validating `4-repos.md` (`phase: repos`) or `3-prd.md` (`phase: prd`), read [conditional-artifacts.md](conditional-artifacts.md) for their templates and ownership rules. `4-repos.md` presence enables multi-repo mode; absence means single-repo. `3-prd.md` is conditional per `## Conditional PRD` in the [question playbook](playbooks/question.md), referenced by `1-task.md`, autonomous, and has no `approved`/`revision`.
+Before writing or validating `4-repos.md` (`phase: repos`) or `3-prd.md` (`phase: prd`), read [conditional-artifacts.md](conditional-artifacts.md) for their templates and ownership rules. `4-repos.md` presence enables multi-repo mode; absence means single-repo. `3-prd.md` is conditional per `## Conditional PRD` in the [question playbook](../playbooks/question.md), referenced by `1-task.md`, autonomous, and has no `approved`/`revision`.

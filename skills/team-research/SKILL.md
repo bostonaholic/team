@@ -37,7 +37,7 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 ## Execution
 
 1. Use the directory resolved in `## Input`.
-2. Dispatch `file-finder` and `researcher` in **parallel**, passing each
+2. Dispatch [`file-finder`](../../agents/file-finder.md) and [`researcher`](../../agents/researcher.md) in **parallel**, passing each
    the path `$ARGUMENTS/2-questions.md`. If `$ARGUMENTS/4-repos.md` exists,
    include its path too. Do **not** pass the original description,
    `1-task.md`, or any framing.

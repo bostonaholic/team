@@ -16,7 +16,7 @@ carry PASS and are current:
    ahead**, bodies cross-linked.
 4. **Ticket — link now, in-review when ready.** If `1-task.md` has `ticketId`
    set, apply the ticket-lifecycle rules in
-   [tracking rules](../team-pr/references/tracking.md): link through the
+   [tracking rules](../../team-pr/references/tracking.md): link through the
    conditional closing line at the top of the body (in multi-repo mode only
    the home repo's PR carries the closing keyword; companions get a
    non-closing qualified reference). Keep the ticket in-progress while the PR
@@ -26,5 +26,5 @@ carry PASS and are current:
    `docs/plans/<id>/` path. Mark all TodoWrite items complete.
 6. **Leave the worktree(s) in place.** Clean up a worktree only after its PR
    merges or on explicit user request, following "Ship (teardown)" in the
-   [worktree playbook](../team-worktree/playbooks/worktree.md) for every
+   [worktree playbook](../../team-worktree/playbooks/worktree.md) for every
    involved repo.

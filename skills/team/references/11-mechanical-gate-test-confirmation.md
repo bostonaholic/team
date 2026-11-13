@@ -5,12 +5,12 @@ When the `test-architect` returns `DONE`, or, inline, when the body's
 
 1. Run the test suite.
 2. Run every **static** check the project defines (typecheck, lint, format,
-   build), detected as the [verify playbook](playbooks/verify.md) does, minus
+   build), detected as the [verify playbook](../playbooks/verify.md) does, minus
    its test entry.
 3. Require `Expected results derived independently: YES` in the test-architect
    report.
 
-Steps 1 and 2 run in one fresh subagent per [step delegation](references/step-delegation.md).
+Steps 1 and 2 run in one fresh subagent per [step delegation](step-delegation.md).
 Its brief carries the verify playbook path and the test-architect's test files.
 It returns each static check's result and, for each failing test, `assertion` or `crash` with its failure line.
 Rerun one reported assertion failure yourself, then decide steps 4 to 6 inline.
@@ -27,10 +27,10 @@ For a **zero behavior change** contract, the current suite is the acceptance
 suite and its correct state is green, not red:
 
 1. Capture the baseline (the suite and every static check) **before** any file
-   moves ([durable state rules](principles/durable-state.md)). A check that
+   moves ([durable state rules](../principles/durable-state.md)). A check that
    could not run is UNKNOWN, never a pass.
 2. Skip the `test-architect` dispatch and record the reason on a named line
-   ([verified results rules](principles/verified-results.md)). The inverted
+   ([verified results rules](../principles/verified-results.md)). The inverted
    gate starts on this recorded skip, never on `DONE`, because no
    `test-architect` return exists.
 3. Advance only when the checks **reproduce that baseline**. A check red

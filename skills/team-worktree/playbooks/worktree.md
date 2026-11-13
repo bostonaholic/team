@@ -13,7 +13,7 @@ invoked `/team`) gets a worktree: branch `<id>` off `origin/HEAD`, at
 ## Multi-repo
 
 With `docs/plans/<id>/4-repos.md`, each listed repo gets the same layout
-(commands: `references/04-execution.md`); a repo outside the home repo's
+(commands: `../references/04-execution.md`); a repo outside the home repo's
 sibling set is refused and reported. Only the **home repo's worktree** holds
 the canonical `docs/plans/<id>/`; agents read artifacts from the home
 worktree path the orchestrator passes in.
@@ -37,7 +37,7 @@ confirms the repo set.
 
 A session already inside a linked worktree reuses it in place on a
 non-default branch and refuses on the default branch, per
-`references/03-detect-existing-worktree.md`.
+`../references/03-detect-existing-worktree.md`.
 
 ### Why first
 

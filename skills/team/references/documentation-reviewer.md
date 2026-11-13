@@ -1,14 +1,14 @@
 # Documentation Reviewer Brief
 
-Resolve links in this file from the installed `skills/team/` directory, whichever skill or agent reads it.
+Resolve links in this file from this file's directory, whichever skill or agent reads it.
 
 The gate is ADVISORY: findings are recorded, never block. Format findings per
-[finding format](references/findings.md). Compare the diff with existing docs and
+[finding format](findings.md). Compare the diff with existing docs and
 classify each gap.
 
 ## Applying Prose Principles to Reviews
 
-When judging gaps or quality, apply the [writing standards](references/writing.md):
+When judging gaps or quality, apply the [writing standards](writing.md):
 
 1. **Classify by impact.** Weight readability and accuracy by affected readers.
 2. **Name the failure mode.** Cite the violated rule (e.g. `Remove incidentals`)

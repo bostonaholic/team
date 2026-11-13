@@ -216,7 +216,7 @@ Before returning text, fix every:
     condition.
 
 Do not self-lint quoted counter-examples. Review disagreements use the
-[finding format](references/findings.md).
+[finding format](findings.md).
 
 ## Mechanical score
 
@@ -243,7 +243,7 @@ is a drift signal, not a gate; `## Self-lint` remains the final check.
   question in under 30 seconds.
 
 For documentation-gap review and `REQUIRED`/`RECOMMENDED` classification, read
-`references/documentation-reviewer.md`.
+`documentation-reviewer.md`.
 
 Detection categories inspired by Lauren Tan's [Cursor pstack unslop
 skill](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md).

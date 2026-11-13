@@ -35,17 +35,17 @@ path.
 ## Worktrees and entry guards
 
 Resolve the home worktree and the companion worktrees by the `## Worktrees`
-section of the [team-code-review input](../team-code-review/references/01-input.md).
+section of the [team-code-review input](../../team-code-review/references/01-input.md).
 Then run entry guards 1 to 4 from its `## Entry guards` section, as written,
 in each worktree in scope. In guard 4, the re-run command is
 `/team-security-review docs/plans/<id>/`. Then run guard 5:
 
 5. **CODE REVIEW passed.** Classify the newest `$ARGUMENTS/review-<n>.md` per the
-   record states in the [artifact schema](../team/references/artifacts.md).
+   record states in the [artifact schema](../../team/references/artifacts.md).
    When it is missing, FAIL, malformed, or stale, stop before any dispatch.
    Tell the user **"Next: run `/team-code-review docs/plans/<id>/`"**. Write no
    record.
 
 Guard 5 runs at entry only. Inside one session, the loop keeps running after
 its own fix commits make the `review-<n>.md` record stale. The hand-off in
-[execution](references/02-execution.md) step 9 then routes the run back through CODE REVIEW.
+[execution](02-execution.md) step 9 then routes the run back through CODE REVIEW.

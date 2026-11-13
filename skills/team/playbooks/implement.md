@@ -1,12 +1,12 @@
 # Implement playbook
 
-Resolve links from the installed `skills/team/` directory and read each step's linked rules before it. If a read fails, stop that step and report the resolved path; never use checkout fallback or recursive loading.
+Resolve links from this file's directory and read each step's linked rules before it. If a read fails, stop that step and report the resolved path; never use checkout fallback or recursive loading.
 
 IMPLEMENT has two owners: the test-architect writes the immutable acceptance suite; the implementer executes slices against it.
 
 ## Test-author contract
 
-Acceptance tests are the immutable scope fence ([human control rules](principles/human-control.md)). Read the [testing rules](references/testing.md) first: its [authoring gate](references/testing.md#authoring-gate), [junk patterns](references/testing.md#junk-patterns), and audit checklist apply to every test.
+Acceptance tests are the immutable scope fence ([human control rules](../principles/human-control.md)). Read the [testing rules](../references/testing.md) first: its [authoring gate](../references/testing.md#authoring-gate), [junk patterns](../references/testing.md#junk-patterns), and audit checklist apply to every test.
 
 ### Core rule
 
@@ -20,7 +20,7 @@ Answer the authoring gate before writing each test. If a test fails the gate and
 
 ### 2. Make sure that tests fail correctly
 
-Run the full suite. Every new test must FAIL through its assertion, never ERROR; every existing test must pass ([verified results rules](principles/verified-results.md)). Then make the project's static checks, including typecheck, pass. Report the test result, the static-check result, and whether every new test passes the testing checklist's `Independently derived expectation` check.
+Run the full suite. Every new test must FAIL through its assertion, never ERROR; every existing test must pass ([verified results rules](../principles/verified-results.md)). Then make the project's static checks, including typecheck, pass. Report the test result, the static-check result, and whether every new test passes the testing checklist's `Independently derived expectation` check.
 
 ### 3. Fix errors, not failures
 
@@ -38,7 +38,7 @@ Consume `docs/plans/<id>/`, implement one vertical slice at a time, and commit e
 
 ### Commit and clean-tree rule
 
-Commit per [commit discipline](../team-pr/references/commit.md); never bypass signing, never commit `docs/plans/`. In multi-repo mode, commit in each worktree touched. Hand off with every worktree in scope clean outside `docs/plans/`: `git status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'` prints nothing. CODE REVIEW reviews only commits and refuses a dirty tree.
+Commit per [commit discipline](../../team-pr/references/commit.md); never bypass signing, never commit `docs/plans/`. In multi-repo mode, commit in each worktree touched. Hand off with every worktree in scope clean outside `docs/plans/`: `git status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'` prints nothing. CODE REVIEW reviews only commits and refuses a dirty tree.
 
 ### Initial dispatch (after the test-architect's failing tests are confirmed)
 
@@ -53,7 +53,7 @@ Before changing production code, audit every immutable acceptance test against t
 - Security: fix the vulnerability directly; never weaken the fix.
 - Tests: change code, never the immutable tests. Code review: fix every finding the dispatch names. Lint/format/typecheck/build: rerun until passing; use `--fix` first where available.
 - When a finding names a bug class, fix every instance of that class in the review range in this one round.
-- Complete **Root Cause Analysis (5 Whys)** ([diagnosis reference](../team-fix/references/diagnosis.md), [bug fix rules](../team-fix/playbooks/bug-fix.md)) for a non-obvious failure whose first fix is a guess; skip it for an obvious typo, named assertion, or one-line correction.
+- Complete **Root Cause Analysis (5 Whys)** ([diagnosis reference](../../team-fix/references/diagnosis.md), [bug fix rules](../../team-fix/playbooks/bug-fix.md)) for a non-obvious failure whose first fix is a guess; skip it for an obvious typo, named assertion, or one-line correction.
 - Under a `Reconsider approach:` line, complete that Root Cause Analysis for each open finding class, then replace the approach that produces the class, inside scope, instead of patching the cited lines. Scope is the plan's named changes; when `8-plan.md` is absent, the `1-task.md` acceptance criteria.
 
 Then run the full suite and resolve every failure type from the round. Commit the fixes and report each with its commit SHA. The dispatching skill then runs a fresh round.
@@ -62,15 +62,15 @@ Then run the full suite and resolve every failure type from the round. Commit th
 
 - Follow plan order. `[sequential]` steps depend on prior steps; `[parallel]` steps may reorder.
 - A slice finishes only when its acceptance tests and all prior-slice tests pass.
-- Use the slice `Commit:` subject byte for byte; the "IMPLEMENT complete" rule in the "Branch state" section of the [artifact schema](references/artifacts.md) matches it exactly. Single repo: one commit citing design/structure paths. Multi-repo slice: one commit with that subject in each named repo; each body cites the same paths and says `part of slice <N>: <name>`.
-- After the last slice, run the full suite and every static check the project defines, detected as the [verify playbook](playbooks/verify.md) does. Fix each failure inside plan scope and commit. Report each check's result, then return per the implementer's `## Return`.
+- Use the slice `Commit:` subject byte for byte; the "IMPLEMENT complete" rule in the "Branch state" section of the [artifact schema](../references/artifacts.md) matches it exactly. Single repo: one commit citing design/structure paths. Multi-repo slice: one commit with that subject in each named repo; each body cites the same paths and says `part of slice <N>: <name>`.
+- After the last slice, run the full suite and every static check the project defines, detected as the [verify playbook](verify.md) does. Fix each failure inside plan scope and commit. Report each check's result, then return per the implementer's `## Return`.
 
 ### TDD and scope invariants
 
 - Write only minimal code exercised by the current slice's tests. Do not preempt later slices or refactor before green. Stop if code has no test.
-- Every step-level test follows the [testing rules](references/testing.md). Observe every step-level test fail before changing production code; if it covers existing behavior, mutation-check that behavior instead. A test that stays green is invalid. Removing a base-branch test whose covered behavior remains needs the [removal evidence](references/testing.md#removal-evidence) fields in the commit body.
-- Apply [boil the ocean rules](principles/boil-the-ocean.md) and [focused work rules](principles/focused-work.md): finish the slice completely; remove what it replaces before adding the replacement; add no guard its tests do not exercise.
-- Apply [human control rules](principles/human-control.md): the plan authorizes exactly its named changes. Do NOT change acceptance tests or invent files/directories absent from the plan. Record concerns but satisfy tests as written.
+- Every step-level test follows the [testing rules](../references/testing.md). Observe every step-level test fail before changing production code; if it covers existing behavior, mutation-check that behavior instead. A test that stays green is invalid. Removing a base-branch test whose covered behavior remains needs the [removal evidence](../references/testing.md#removal-evidence) fields in the commit body.
+- Apply [boil the ocean rules](../principles/boil-the-ocean.md) and [focused work rules](../principles/focused-work.md): finish the slice completely; remove what it replaces before adding the replacement; add no guard its tests do not exercise.
+- Apply [human control rules](../principles/human-control.md): the plan authorizes exactly its named changes. Do NOT change acceptance tests or invent files/directories absent from the plan. Record concerns but satisfy tests as written.
 
 ### Blockers
 

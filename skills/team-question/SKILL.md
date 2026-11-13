@@ -52,7 +52,7 @@ Run the QUESTION phase only, then stop. The phase writes, in `docs/plans/<id>/`:
    - `questions-only`: re-read `1-task.md` instead of overwriting it; the
      questioner only writes `2-questions.md`.
    - `complete`: skip dispatch and go to the report.
-5. Dispatch the `questioner` agent with the full description and the
+5. Dispatch the [`questioner`](../../agents/questioner.md) agent with the full description and the
    target directory `docs/plans/<id>/`. It writes the artifacts above.
 6. **Stop once the rerun reports `state=complete`**: rerun the step 2 command
    with `--date <date>` from its first `date=` line. Do not continue to

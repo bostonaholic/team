@@ -1,6 +1,6 @@
 # Commit discipline
 
-Write at seventh-grade, STE-flavored level; read the [writing standards](../team/references/writing.md) and apply its `## Self-lint` before finalizing.
+Write at seventh-grade, STE-flavored level; read the [writing standards](../../team/references/writing.md) and apply its `## Self-lint` before finalizing.
 
 Each commit records one independently correct decision: what changed, why, and how to understand/revert it without surrounding context.
 

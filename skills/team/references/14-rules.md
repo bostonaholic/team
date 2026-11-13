@@ -1,11 +1,11 @@
-Before this operation, read [artifact schema](references/artifacts.md).
-Resolve these links from the installed `SKILL.md` directory. If a read fails, stop and report its resolved path.
+Before this operation, read [artifact schema](artifacts.md).
+Resolve these links from this file's directory. If a read fails, stop and report its resolved path.
 
 ## Rules
 
 - Artifacts in `docs/plans/<id>/` are the single durable record of pipeline
   state. Write phase findings to disk before advancing
-  ([durable state rules](principles/durable-state.md)).
+  ([durable state rules](../principles/durable-state.md)).
 - TodoWrite is the live, session-scoped ledger, rebuilt from artifacts on
   entry to any `/team-*` command. Where the host offers no TodoWrite,
   `docs/plans/<id>/ledger.md` substitutes for it, never supplements it: same
@@ -14,7 +14,7 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
   artifact schema. It carries no round state; CODE REVIEW round results live
   in `review-<n>.md` and SECURITY REVIEW's in `security-review-<n>.md` on
   every host. Report which ledger the run used
-  ([verified results rules](principles/verified-results.md)).
+  ([verified results rules](../principles/verified-results.md)).
 - **Subagents never pause for user input**, directly or through the
   orchestrator. Each resolves its open questions with its recommended option
   and records each choice as an explicit assumption in its artifact.
@@ -31,7 +31,7 @@ Resolve these links from the installed `SKILL.md` directory. If a read fails, st
 - On any unexpected failure, report to the user and suggest re-invoking the
   same /team-* command with `docs/plans/<id>/`. After a halt, suggest it only
   once the operator removes or finishes each file the halt names, per
-  [host dispatch](references/15-host-dispatch.md). The operator reverts the
+  [host dispatch](15-host-dispatch.md). The operator reverts the
   agent's changes to a named test path only when the halt says that the
   named tests never passed the gate. A test that the halt says passed the
   gate stays. When the halt says that the gate status is unknown, the
@@ -52,5 +52,5 @@ repo. Absent, the pipeline runs in single-repo mode.
 ### Design-review record convention
 
 Passage lives only in `design-review-<n>.md` ("Review records" in the artifact
-schema), checked with `scripts/design-review-status.sh`; `6-design.md` carries
+schema), checked with `../scripts/design-review-status.sh`; `6-design.md` carries
 no approval frontmatter.

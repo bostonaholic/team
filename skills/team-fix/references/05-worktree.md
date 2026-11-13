@@ -26,7 +26,7 @@ default branch. Everything after runs in the checkout it resolves.
 
 Create the home worktree on branch `<id>` off `origin/HEAD`: call the Skill tool with `team-worktree` for
 the single-repo "Create the worktree(s)" procedure, and read the
-[worktree playbook](../team-worktree/playbooks/worktree.md) for topology:
+[worktree playbook](../../team-worktree/playbooks/worktree.md) for topology:
 
 ```sh
 git fetch origin --quiet

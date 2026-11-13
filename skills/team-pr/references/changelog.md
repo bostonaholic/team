@@ -2,7 +2,7 @@
 
 Maintain an existing curated user-facing `CHANGELOG.md` under [Keep a Changelog](https://keepachangelog.com). Every entry answers “How does this affect me?”
 
-Write at seventh-grade, STE-flavored level. Before finalizing, read the [writing standards](../team/references/writing.md) and apply its `## Self-lint`.
+Write at seventh-grade, STE-flavored level. Before finalizing, read the [writing standards](../../team/references/writing.md) and apply its `## Self-lint`.
 
 ## Structure
 

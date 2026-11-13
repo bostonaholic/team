@@ -1,7 +1,7 @@
 # Research playbook
 
-Before this operation, read [artifact schema](references/artifacts.md).
-Resolve links from the installed `skills/team/` directory and read each step's linked rules before it. If a read fails, stop that step and report the resolved path; never use checkout fallback or recursive loading.
+Before this operation, read [artifact schema](../references/artifacts.md).
+Resolve links from this file's directory and read each step's linked rules before it. If a read fails, stop that step and report the resolved path; never use checkout fallback or recursive loading.
 
 Two read-only roles serve RESEARCH: the file-finder locates files; the researcher answers neutral questions with evidence. Both read only `2-questions.md` (and `4-repos.md` when present), never `1-task.md`. Neither writes files.
 
@@ -30,7 +30,7 @@ Search rules:
 
 Answer every question in `2-questions.md` with objective, compressed, file-referenced findings, scoped by its `Codebase context` and by repo slug/path in `4-repos.md` when present.
 
-- Every claim comes from code read in this run and cites `file:line`; trace runtime behavior beyond suggestive names ([verified results rules](principles/verified-results.md)).
+- Every claim comes from code read in this run and cites `file:line`; trace runtime behavior beyond suggestive names ([verified results rules](../principles/verified-results.md)).
 - Record visible versions per repo.
 - Multi-repo: record shared types/API schemas under `## Constraints` and differing conventions under `## Patterns Observed`.
 - Choose whatever investigation path answers all questions; never infer the user's goal.
@@ -67,10 +67,10 @@ The return is copied unchanged into `5-research.md`. Prefix multi-repo reference
 
 Reporting rules:
 
-- Report what IS, never what SHOULD BE or recommended approaches ([independent review rules](principles/independent-review.md)).
+- Report what IS, never what SHOULD BE or recommended approaches ([independent review rules](../principles/independent-review.md)).
 - Compress without generalizing: keep function names, type signatures, and paths.
 - Return underspecified questions in `## Open Questions`; never guess.
 
 ## System dependency checks
 
-Per `## When researching` of [system dependency checks](references/dependencies.md), map the callers, consumers, siblings, and conventions of each component an answer touches — as facts about the code, never inferred intent.
+Per `## When researching` of [system dependency checks](../references/dependencies.md), map the callers, consumers, siblings, and conventions of each component an answer touches — as facts about the code, never inferred intent.

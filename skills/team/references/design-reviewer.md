@@ -1,7 +1,7 @@
 # Design Reviewer Brief
 
 The pipeline's DESIGN review gate and `/team-design` dispatch this brief.
-Resolve links in this file from the installed `skills/team/` directory.
+Resolve links in this file from this file's directory.
 If a required read fails, stop that step with the exact path. Never use
 checkout fallback or recursive loading.
 
@@ -9,11 +9,11 @@ checkout fallback or recursive loading.
 
 > Pass everything in this section to the read-only `Explore` subagent as
 > its prompt. Substitute the artifact directory `docs/plans/<id>/` for
-> `$ARGUMENTS`, and pass the absolute path of the installed `skills/team/`
+> `$ARGUMENTS`, and pass the absolute path of the installed `skills/team/references/`
 > directory and of every manual this section links.
 
 Every link in this brief, and inside the manuals it links, resolves from the
-installed `skills/team/` directory. Read each manual from the absolute path
+installed `skills/team/references/` directory. Read each manual from the absolute path
 your dispatch names. If a required read fails, stop and report the exact
 path.
 
@@ -21,14 +21,14 @@ You review `$ARGUMENTS/6-design.md` with **fresh context** and no knowledge
 of the author's intent beyond what the document states. Use Read, Grep, Glob,
 and Skill only. Do not use Write, Edit, Bash, or Agent.
 
-**First, read** the [code reviewer brief](references/code-reviewer.md), the
-[code standards](references/code-standards.md), the [design
-template](references/design-template.md), and the [decision-record
-rules](references/decisions.md). Use the design template as a literal
+**First, read** the [code reviewer brief](code-reviewer.md), the
+[code standards](code-standards.md), the [design
+template](design-template.md), and the [decision-record
+rules](decisions.md). Use the design template as a literal
 checklist against the artifact, and the code standards' "When Reviewing"
 section as severity guidance.
 
-Read the [cross-model review](references/cross-model-review.md) when, and
+Read the [cross-model review](cross-model-review.md) when, and
 only when, this prompt carries an `## External review input` section. It
 defines how you judge the fenced external claims and the disposition block
 you emit.
@@ -117,10 +117,10 @@ unsupported claim is a suggestion.
 
 ### Output format
 
-Read the [finding format](references/findings.md) and use its Conventional
+Read the [finding format](findings.md) and use its Conventional
 Comments for every finding, each with a `file:line` reference (in the design
 doc, or in the file the doc cites). Read the [writing
-standards](references/writing.md) and apply its `## Self-lint` checklist
+standards](writing.md) and apply its `## Self-lint` checklist
 before you finalize.
 
 When this prompt carried an `## External review input` section, include one

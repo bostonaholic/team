@@ -778,7 +778,7 @@ They add no skill registrations. Read conditional artifact templates only when t
 
 Both named and body-loaded dispatches supply the installed root, agent definition, and applicable resource paths before work.
 Standalone agents resolve their installed definition or receive its path from the dispatcher.
-Skill links resolve from the loaded `SKILL.md`; agent links resolve from the installed `agents/<name>.md`.
+Every link resolves from the directory of the file that contains it: a `SKILL.md`, one of its references or playbooks, or an installed `agents/<name>.md`. `.claude/scripts/check-links.mjs` fails on any link that does not.
 Claude uses its plugin root. Codex and Antigravity use the supplied installed path. OpenCode keeps its canonical realpath base.
 A missing resource stops its consuming step with the resolved path. No source-checkout fallback or recursive loading applies.
 

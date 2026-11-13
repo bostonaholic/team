@@ -1,7 +1,7 @@
-The [team-code-review execution reference](../team-code-review/references/02-execution.md)
+The [team-code-review execution reference](../../team-code-review/references/02-execution.md)
 is the only statement of the review loop. Read it completely first, with the
 record schema and record states in the
-[artifact schema](../team/references/artifacts.md). Then run its steps 1 to 9
+[artifact schema](../../team/references/artifacts.md). Then run its steps 1 to 9
 in order, with each delta below in place of the text it names. A step with no
 delta runs as written.
 
@@ -9,7 +9,7 @@ delta runs as written.
 |---|---|
 | 1. **Read state.** | List the `$ARGUMENTS/security-review-<n>.md` files whose `<n>` is numeric. Ignore a file with a non-numeric suffix, such as `security-review-final.md`. The TodoWrite item is `Security review round <n>`. |
 | 2. **Pin the range.** | No change. |
-| 3. **Dispatch.** | Dispatch `security-reviewer` alone. Its payload carries `Security round: <n>` in place of `Review round: <n>`, plus the canonical artifact directory, the range lines, the `Review depth:` and `Change profile:` lines from step 2 after the range lines, and the intent paths. Send no `Locked acceptance tests` line. The tree check runs as written around this one dispatch. |
+| 3. **Dispatch.** | Dispatch [`security-reviewer`](../../../agents/security-reviewer.md) alone. Its payload carries `Security round: <n>` in place of `Review round: <n>`, plus the canonical artifact directory, the range lines, the `Review depth:` and `Change profile:` lines from step 2 after the range lines, and the intent paths. Send no `Locked acceptance tests` line. The tree check runs as written around this one dispatch. |
 | 4. **Validate each report.** | The failure line case, the no-parseable-verdict case, and the `Coverage: ` case apply, with the `Coverage: ` case applied to `security-reviewer`. |
 | 5. **Tier sort.** | The one reviewer span: from the `#### [SEVERITY] <title>` heading through that finding's last field. The tree-check line is unchanged. The `### Major` tier always reads `None.`, because no security severity maps to Major. The heading stays, so one record-state rule serves both record families. |
 | 6. **Persist the cross-model record.** | Skip. `security-reviewer` runs no cross-model pass. |

@@ -18,10 +18,9 @@ names) in both dispatch forms; the receiver
 reads those resources before acting. Never add the user's original description
 downstream of QUESTION, or the implementer's account of its own work to a
 reviewer's payload.
-Resolve skill links from the loaded `SKILL.md` directory and agent links from
-the installed definition's directory. A resource's explicitly local template
-link resolves beside that resource. Read conditional templates only when needed.
-Include [execution rules](references/execution.md) for every multi-step Team agent, including retries and review-fix dispatch. File-finder remains single-step.
+Resolve each link from the directory of the file that contains it. Read
+conditional templates only when needed.
+Include [execution rules](execution.md) for every multi-step Team agent, including retries and review-fix dispatch. File-finder remains single-step.
 Keep remaining skill preloads. Do not crawl links or preload the resource tree.
 If any required read fails, stop its consuming step and report the resolved path.
 Never substitute a source-checkout file for a missing installed resource.
@@ -45,7 +44,7 @@ Resolve every dispatch in this order:
    payload the named path receives.
 3. **Inline fallback.** If the host cannot spawn a subagent, run a **producer**
    agent's body in the orchestrator's own context. Never run a **reviewer**
-   inline; stop and report instead ([independent review rules](principles/independent-review.md)).
+   inline; stop and report instead ([independent review rules](../principles/independent-review.md)).
    The RESEARCH phase dispatch of `file-finder` and `researcher`, from the
    `/team` orchestrator or from `/team-research`, never runs inline either.
    Stop and report the host limitation and the artifact directory, because
@@ -60,7 +59,7 @@ Capability mapping for the body-load path:
   hosts use their default model and record the substitution.
 - **Tools.** Grant only the tools named in the definition's `tools:`.
   Reviewers receive no `Write` or `Edit` tool and no shell mutation
-  ([independent review rules](principles/independent-review.md)).
+  ([independent review rules](../principles/independent-review.md)).
 - **Preloaded skills.** Where the host ignores the `skills:` YAML block, name
   the definition's preloaded skill paths in the payload for the subagent to
   read before it acts.

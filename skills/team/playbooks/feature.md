@@ -1,7 +1,7 @@
 # Feature playbook
 
-Before this operation, read [artifact schema](references/artifacts.md).
-Resolve links from the installed `skills/team/` directory and read each step's linked rules before it. If a read fails, stop that step and report the resolved path; never use checkout fallback or recursive loading.
+Before this operation, read [artifact schema](../references/artifacts.md).
+Resolve links from this file's directory and read each step's linked rules before it. If a read fails, stop that step and report the resolved path; never use checkout fallback or recursive loading.
 
 Ten sequential phases; none are skippable.
 
@@ -20,7 +20,7 @@ Ten sequential phases; none are skippable.
 | **SECURITY REVIEW** | `security-review-<n>.md` each round; fix commits | AGGREGATE: security hard gate |
 | **PR** | GitHub draft PR | terminal: record URL; close ledger |
 
-WORKTREE is router-owned and has no agent; see "Why first" in `../team-worktree/playbooks/worktree.md`.
+WORKTREE is router-owned and has no agent; see "Why first" in `../../team-worktree/playbooks/worktree.md`.
 
 IMPLEMENT has three sub-phases: (1) test-architect writes failing acceptance tests; (2) a mechanical gate requires assertion failures, not crashes, plus passing static checks — for a zero-behavior-change refactor it inverts to a reproduced green pre-change baseline and the test-architect dispatch is skipped with a recorded reason; (3) implementer commits green slices.
 
@@ -30,17 +30,17 @@ SECURITY REVIEW runs `skills/team-security-review/`: `security-reviewer` alone r
 
 ## Artifact and isolation invariants
 
-The [artifact schema](references/artifacts.md) owns every artifact schema. Research is blind ([independent review rules](principles/independent-review.md)).
+The [artifact schema](../references/artifacts.md) owns every artifact schema. Research is blind ([independent review rules](../principles/independent-review.md)).
 
 ## Gates
 
 - **HARD:** block until satisfied or explicitly overridden by the user (e.g. REQUEST CHANGES, gating security findings, test failures).
-- **SOFT:** add eligible findings to the PR's `review-notes` comment; never ask mid-run. "Severity Tiers and the Auto-Fix Boundary" in the [finding format](references/findings.md) alone defines gating, auto-fix, and which lower-tier findings qualify ([durable state rules](principles/durable-state.md), [human control rules](principles/human-control.md)).
-- **ADVISORY:** non-blocking, no acknowledgment (e.g. documentation gaps, style); deterministic checks enforce rules where possible ([verified results rules](principles/verified-results.md)).
+- **SOFT:** add eligible findings to the PR's `review-notes` comment; never ask mid-run. "Severity Tiers and the Auto-Fix Boundary" in the [finding format](../references/findings.md) alone defines gating, auto-fix, and which lower-tier findings qualify ([durable state rules](../principles/durable-state.md), [human control rules](../principles/human-control.md)).
+- **ADVISORY:** non-blocking, no acknowledgment (e.g. documentation gaps, style); deterministic checks enforce rules where possible ([verified results rules](../principles/verified-results.md)).
 
 ## State and transitions
 
-These rows add to Setup step 7 resume detection. "IMPLEMENT complete" is the rule in the "Branch state" section of the [artifact schema](references/artifacts.md).
+These rows add to Setup step 7 resume detection. "IMPLEMENT complete" is the rule in the "Branch state" section of the [artifact schema](../references/artifacts.md).
 
 | Latest durable state | Next/current phase |
 |---|---|
@@ -56,6 +56,6 @@ Worktree check: `git worktree list --porcelain | grep -q <id>`; multi-repo paths
 ## Scope and sequencing rules
 
 - Never implement without structure; slices follow playbooks/structure.md.
-- Add no feature, test, or abstraction beyond structure. Expand the artifact first; material expansion returns to DESIGN review ([human control rules](principles/human-control.md)).
+- Add no feature, test, or abstraction beyond structure. Expand the artifact first; material expansion returns to DESIGN review ([human control rules](../principles/human-control.md)).
 - Move backward one phase only: a structure flaw returns to STRUCTURE, a design flaw to DESIGN.
 - Never enter PR while a HARD gate, Blocking, or Major finding remains.

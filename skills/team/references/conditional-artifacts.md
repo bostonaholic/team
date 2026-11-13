@@ -35,7 +35,7 @@ Names are unique short slugs such as `frontend`, `api`, or `shared-types`, used 
 
 ## `3-prd.md`
 
-The questioner writes `docs/plans/<id>/3-prd.md` when the `## Conditional PRD` criteria of the [question playbook](playbooks/question.md) apply: vague, multi-story, cross-cutting, or behavior-replacing work.
+The questioner writes `docs/plans/<id>/3-prd.md` when the `## Conditional PRD` criteria of the [question playbook](../playbooks/question.md) apply: vague, multi-story, cross-cutting, or behavior-replacing work.
 
 ```yaml
 ---

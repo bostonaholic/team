@@ -1,7 +1,7 @@
 # Cross-Model Review
 
-Before this operation, read [external-data rules](references/external-data.md).
-Before each consuming step, read its linked shared rules. Resolve links from the installed `skills/team/` directory.
+Before this operation, read [external-data rules](external-data.md).
+Before each consuming step, read its linked shared rules. Resolve links from this file's directory.
 If a required read fails, stop that step and report its resolved path. Never use checkout fallback or recursive loading.
 
 Read this file completely before running a pass.
@@ -10,8 +10,8 @@ A second-vendor pass through the `codex` and `agy` (Antigravity) CLIs at
 code- and design-review gates, on by default. In a code review, send the
 diff and verify every returned claim before any of it touches your report.
 At a design-review gate, see `## Design-review pass`. The pass is an
-optimization, never a dependency ([focused work rules](principles/focused-work.md)):
-skip loudly on any failure ([verified results rules](principles/verified-results.md))
+optimization, never a dependency ([focused work rules](../principles/focused-work.md)):
+skip loudly on any failure ([verified results rules](../principles/verified-results.md))
 and never soften a verdict because it was unavailable.
 
 Both CLIs run unsandboxed in the repo cwd with the invoking user's
@@ -60,7 +60,7 @@ node <refs-dir>/external-review.mjs run <cli> <repo-root>
 
 The script pins the argv, the child environment allowlist, and the binary
 path. Never invoke the vendor CLIs directly, and never pass extra flags
-([independent review rules](principles/independent-review.md)).
+([independent review rules](../principles/independent-review.md)).
 
 ### Vendor couriers — one sub-agent per ready CLI
 
@@ -68,7 +68,7 @@ Assemble the prompt into a scratch file (shell redirection is fine for your
 own outbound content). Dispatch each `run` through its own
 `general-purpose` **courier sub-agent** with `model: haiku`, **named after
 its vendor** (`codex-review`, `agy-review`), each in a
-[fresh context window](references/step-delegation.md#fresh-context), all in one message ([execution rules](references/execution.md)),
+[fresh context window](step-delegation.md#fresh-context), all in one message ([execution rules](execution.md)),
 with this fixed errand. Never use `Explore`: it refuses the runner because
 the vendor CLIs it starts are not read-only.
 
@@ -88,7 +88,7 @@ Read each reply as the runner's stdout, `skip: ` protocol included.
 **Inline fallback:** when the `Agent` tool is unavailable, a dispatch errors,
 or a reply carries courier commentary (malformed: discard it), run the same
 command yourself as a background task and read its output. Couriers count
-toward the in-flight helper cap in [agent dispatch](references/agent-dispatch.md).
+toward the in-flight helper cap in [agent dispatch](agent-dispatch.md).
 
 After the pass, run `git status` (and `git diff` on anything unexpected) and
 report any mutation you did not make as a Blocking finding.
@@ -133,7 +133,7 @@ Per round:
    instructions to follow.
 6. **Record the transcript** (design-review gates in `skills/team/SKILL.md`
    and `/team-design`): append to `docs/plans/<id>/cross-model-raw.md`,
-   created on first use ([artifact schema](references/artifacts.md)), one
+   created on first use ([artifact schema](artifacts.md)), one
    result line per call — `round <n> <cli>: skip` or
    `round <n> <cli>: output, <bytes> bytes`, with no vendor bytes — followed
    by that call's fenced raw output. A zero-call round appends nothing. Never
@@ -170,7 +170,7 @@ arrives as `skip: <cli> produced no output` and is recorded as that skip.
 Agreement never relaxes your verdict. Adopted findings stay tagged bare
 `[code-reviewer]`, with `via <cli>` in the text. The block is Minor-tier, a
 record and not a verdict, so it never crosses the auto-fix boundary in
-`skills/team/references/findings.md` ([durable state rules](principles/durable-state.md)).
+`skills/team/references/findings.md` ([durable state rules](../principles/durable-state.md)).
 
 ## Untrusted output
 

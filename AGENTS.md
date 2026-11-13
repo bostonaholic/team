@@ -28,6 +28,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Plugin manifests | `.claude-plugin/` (Claude Code), `.codex-plugin/` + `.agents/plugins/` (Codex), root `plugin.json` (Antigravity) | End users |
 | Registry sync validation | `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
 | Pre-merge version gate | `.claude/hooks/pre-merge-guard.mjs` | Plugin developers |
+| Link check (every link resolves from its own file) | `.claude/scripts/check-links.mjs`, run by `.github/workflows/link-check.yml` | Plugin developers |
 | Dev scripts | `.claude/scripts/` | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
 | Work tracking | [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1) | Plugin developers |
@@ -116,6 +117,6 @@ All work, including features, bugs, and chores, is tracked on the [GitHub Projec
 
 Node 22 is already on the image. The environment install puts Ruby 3.3.6 and Bundler 2.7.1 on `PATH`. Docs gems install into gitignored `docs/vendor/bundle`.
 
-- Plugin checks, from the repo root: `node --test tests/*.test.mjs` and `git diff --check`. There is no `npm test` script.
+- Plugin checks, from the repo root: `node --test tests/*.test.mjs`, `node .claude/scripts/check-links.mjs`, and `git diff --check`. There is no `npm test` script.
 - Docs, from `docs/`: `bundle exec jekyll build`, or `bundle exec jekyll serve --host 0.0.0.0 --port 4000` at http://localhost:4000. The environment start command detaches that server when port 4000 is free.
 - OpenCode dev install: `script/dev-install opencode` registers `opencode/team.js`. The Claude Code, Codex, and Antigravity CLIs are not installed, so `claude plugin validate .` cannot run here.
