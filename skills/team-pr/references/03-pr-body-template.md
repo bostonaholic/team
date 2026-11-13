@@ -24,6 +24,9 @@ Closes #<n>
 ## Pre-merge
 [Conditional merge requirements]
 
+## Stack
+[Conditional on a stacked PR: table of every PR in the stack, in merge order]
+
 ## References
 - [Available, reviewer-accessible supporting references; omit unavailable artifacts]
 ```
@@ -63,6 +66,20 @@ This change spans multiple repos. The companion PRs are:
 - [<repo-name>] <pr-url>
 - [<repo-name>] <pr-url>
 ```
+
+**`## Stack` (conditional):** the PR is stacked when its base branch is another open PR's head branch, or another open PR's base branch is its head branch. Follow both directions (`gh pr list --head <branch>` and `gh pr list --base <branch>`, each with `--state open`) to find every PR in the stack. List them bottom (merges first) to top, with columns `Order`, `PR` (`#<n>`), and `Concern`. Bold this PR's row:
+
+```markdown
+## Stack
+
+| Order | PR       | Concern                          |
+| ----- | -------- | -------------------------------- |
+| 1     | #101     | Add the parser                   |
+| **2** | **#102** | **Wire the parser into the CLI** |
+| 3     | #103     | Document the new flag            |
+```
+
+When the stack gains, loses, or reorders a PR, rewrite the table in every open PR of the stack. Omit the section for a PR that is not stacked.
 
 ### Screenshots section rendering
 
