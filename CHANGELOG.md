@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A stacked PR body now lists the whole stack.** `team-pr` adds a `## Stack` table of every PR in the stack, bottom to top, with this PR's row bold, when the PR's base is another open PR's head branch or another open PR builds on it. When the stack changes, the table is rewritten in every open PR of the stack.
+
 ## [0.176.0] - 2026-11-13
 
 ### Fixed
