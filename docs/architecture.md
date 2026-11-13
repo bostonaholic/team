@@ -1258,7 +1258,7 @@ all governed by `skills/team/references/agent-dispatch.md`:
   + the phase's reviewers re-run), so the pass pays for itself.
 - **Vendor couriers** (`code-reviewer`; the orchestrator uses the same
   pattern at the design-review gate as ordinary dispatch): each cross-model
-  vendor call runs through one `Explore` courier named after its CLI
+  vendor call runs through one `general-purpose` courier named after its CLI
   (`codex-review`, `agy-review`), so each external model's review is
   visible as its own agent while it runs. The courier's errand is fixed —
   run the pinned runner command, return its stdout verbatim — and the

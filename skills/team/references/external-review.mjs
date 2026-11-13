@@ -41,8 +41,8 @@
  * no relative imports — the script runs from any install path.
  *
  * The pure pieces below are exported for L1 tests
- * (tests/cross-model-review.test.ts); the CLI runs only when executed
- * directly, so `bun test` imports are side-effect free.
+ * (tests/external-review.test.mjs); the CLI runs only when executed
+ * directly, so test imports are side-effect free.
  */
 
 import { spawn } from "node:child_process";
@@ -54,12 +54,23 @@ import { pathToFileURL } from "node:url";
  * In-process kill timer for a hung CLI (macOS ships no `timeout` binary).
  * Generous by design: a real cross-vendor review of a large diff takes
  * many minutes, so the timer exists to reap a *hung* CLI (agy's headless
- * mode has documented hang bugs), never to budget a working one.
+ * mode has documented hang bugs), never to budget a working one. It sits a
+ * minute under Claude Code's 600000 ms foreground Bash maximum, so the
+ * runner prints its own timeout skip before the host can kill or background
+ * the command.
  */
-export const TIMEOUT_MS = 600_000;
+export const TIMEOUT_MS = 540_000;
 
 /** Hard ceiling on the prompt sent to an external vendor: 128 KB. */
 export const PROMPT_CAP_BYTES = 128 * 1024;
+
+/**
+ * agy's own prompt ceiling: 48 KB. Every agy call logged above it (58 KB to
+ * 106 KB prompts) ran out the full timeout with no review, while calls of
+ * 20 KB to 45 KB sometimes returned one. Skipping before the spawn saves a
+ * wait that would end in a skip anyway.
+ */
+export const AGY_PROMPT_CAP_BYTES = 48 * 1024;
 
 /** Hard ceiling on the output read back from an external vendor: 32 KB. */
 export const OUTPUT_CAP_BYTES = 32 * 1024;
@@ -273,6 +284,14 @@ async function run(cli, repoRoot, timeoutMs) {
   const prompt = await readStdin();
   if (!promptWithinCap(prompt)) {
     return usage(`prompt exceeds ${PROMPT_CAP_BYTES} bytes`);
+  }
+
+  const promptBytes = Buffer.byteLength(prompt, "utf8");
+  if (cli === "agy" && promptBytes > AGY_PROMPT_CAP_BYTES) {
+    process.stdout.write(
+      `skip: agy prompt is ${promptBytes} bytes, over the ${AGY_PROMPT_CAP_BYTES}-byte agy cap\n`,
+    );
+    return 0;
   }
 
   const { command, args } = buildArgv(cli, prompt);
