@@ -14,15 +14,22 @@
    - Exit 0 (`render`): the entries file feeds the upload.
    - Exit 1 (`capture-gap`), not a non-UI change: run the brief's capture procedure, then the script again. A second exit 1 returns its `reason` as the capture gap.
    - Exit 2 is a fault: return its stderr line as the capture gap.
+   On a step 10 refresh, capture again only when the pushed commits change the interface. When they do, run the brief's capture procedure, then the script once. Exit 0 feeds the upload of the new images. Exit 1 returns its `reason` as the capture gap, and exit 2 returns its stderr line. When the pushed commits do not change the interface, skip the capture and the script and return `unchanged`. Upload does not run. The attached images and the `## Capture gap` heading stay as the last run left them.
    A screenshot problem never blocks the PR. In standalone mode, capture into a run-scoped `$(mktemp -d)` directory and bind it as `$ARGUMENTS` for the capture and upload steps.
 5. **Standalone path** — no matching artifact directory (single-repo only):
    - From step 2: `ahead=0` with `dirty=0`, or with `dirty` above 0 and `git status` showing nothing worth shipping: report "Nothing to ship." and stop.
    - No review record applies. Warn the user once that they take responsibility for correctness.
 6. **Update an existing CHANGELOG.md** under `## [Unreleased]` before committing, per [Changelog Update](05-changelog-update.md); never create one. In multi-repo mode, per repo with only that repo's entries.
-7. **Open a draft PR automatically — do not stop to ask.** Uncommitted final changes (typically `CHANGELOG.md`) land as one trailing ship commit before Open. Dispatch Open per repo: it pushes the branch and opens a draft PR from that repo's inputs file. Multi-repo mode opens **one draft PR per repo with commits**.
-8. In multi-repo mode, after every Open returns, write `## Companion PRs` into each inputs file, then dispatch Open again per repo with that repo's PR URL to refresh its body, so each PR links the others.
+7. **Open a draft PR automatically — do not stop to ask.** Uncommitted final changes (typically `CHANGELOG.md`) land as one trailing ship commit before Open. With no uncommitted change, make no ship commit. Dispatch Open per repo: it pushes the branch and opens a draft PR from that repo's inputs file. Given a PR URL, Open refreshes that PR's body instead. Multi-repo mode opens **one draft PR per repo with commits**.
+8. In multi-repo mode, after every Open returns, write `## Companion PRs` into each inputs file, then dispatch Open again per repo with that repo's PR URL to refresh its body, so each PR links the others. A step 10 refresh writes it before Open instead.
 9. **Tracking ticket — link now, in-review when ready.** If `ticketId` is non-null, apply [tracking rules](tracking.md). The main session writes the closing line string they give under `## Closing line` in each inputs file.
-10. **After every push to a PR, refresh its description** — the initial open and every push that adds, removes, or changes commits (review feedback, fixups, rebases). Run the order in `## Step dispatch` again from step 1, and each Open refreshes its PR's body from the inputs file. Review comments run again after each push to the home PR, unless the body has a line exactly `## Review notes`.
+10. **After every push to a PR, refresh its description** — the initial open and every push that adds, removes, or changes commits (review feedback, fixups, rebases). Run the order in `## Step dispatch` again from step 1 as a refresh, in either mode. The second run follows these rules:
+   - Changelog adds no bullet for a change `## [Unreleased]` already lists ([Changelog Update](05-changelog-update.md)). A refresh with no new change makes no ship commit (step 7).
+   - Screenshots captures again only when the pushed commits change the interface (step 4).
+   - Open gets each PR's URL and refreshes that PR's body.
+   - Multi-repo: write `## Companion PRs` in order step 3, from the known PR URLs. Skip order step 5.
+   - Review comments run again after each push to the home PR, unless the body has a line exactly `## Review notes`.
+   The ship-commit push inside a refresh starts no new refresh, because that refresh's Open runs after the push.
 11. **Leave the worktree(s) in place.** Clean up only after merge or on explicit user request, via the "Ship (teardown)" procedure in the [worktree playbook](../../team-worktree/playbooks/worktree.md), for every involved repo.
 
 ## Step dispatch
@@ -31,10 +38,10 @@ Read [step delegation](../../team/references/step-delegation.md) before the firs
 
 | Subagent | Brief adds | Edits | Returns |
 | --- | --- | --- | --- |
-| Inputs | [Input](01-input.md); `1-task.md`, `6-design.md`, and the bound review and security record paths and statuses in resume mode; skip `CHANGELOG.md`, which Changelog owns | writes only `<scratch>/pr-inputs-<repo-slug>.md`, and never its `## Closing line`, `## Capture gap`, `## Changelog`, or `## Companion PRs` heading | the inputs file path |
-| Screenshots | step 4 above; the [ux reviewer brief](../../team/references/ux-reviewer.md) | the capture directory, its manifest, and `entries.json` | UI-impact decision, then the script's printed JSON, or the skip reason |
-| Changelog | [Changelog Update](05-changelog-update.md); the [writing standards](../../team/references/writing.md) | `CHANGELOG.md` only; no commit | the added bullets, or the skip reason |
-| Open | the inputs path, plus the PR URL in the companion refresh; the [writing standards](../../team/references/writing.md) | the push and the PR | the PR URL, the title, and `opened` or `refreshed` |
+| Inputs | [Input](01-input.md); `1-task.md`, `6-design.md`, and the bound review and security record paths and statuses in resume mode; skip `CHANGELOG.md`, which Changelog owns | writes only `<scratch>/pr-inputs-<repo-slug>.md`, and never its `## Closing line`, `## Capture gap`, `## Changelog`, or `## Companion PRs` heading; a refresh keeps those headings | the inputs file path |
+| Screenshots | step 4 above; the [ux reviewer brief](../../team/references/ux-reviewer.md); on a refresh, the pushed commit range | the capture directory, its manifest, and `entries.json` | UI-impact decision, then the script's printed JSON, `unchanged`, or the skip reason |
+| Changelog | [Changelog Update](05-changelog-update.md); the [writing standards](../../team/references/writing.md) | `CHANGELOG.md` only; no commit | this branch's bullets under `## [Unreleased]`, both added and already listed, or the skip reason |
+| Open | the inputs path, plus the PR URL in the companion refresh and in every step 10 refresh; the [writing standards](../../team/references/writing.md) | the push and the PR | the PR URL, the title, and `opened` or `refreshed` |
 | Upload | the home PR URL, `entries.json`, and the companion PR URLs from Open's returns; [Screenshot Upload](04-screenshot-upload.md) | each PR's screenshots | each PR's outcome, and each failure with its reason |
 | Review comments | the PR URL; the bound review and security record paths and statuses; [Review Comments](07-review-comments.md) | PR comments only | posted, skipped, and failed comment counts |
 
@@ -43,15 +50,15 @@ The main session writes these headings into `<scratch>/pr-inputs-<repo-slug>.md`
 | Heading | Value | When |
 | --- | --- | --- |
 | `## Closing line` | the string from [tracking rules](tracking.md) | after Inputs, Screenshots, and Changelog all return, before Open starts |
-| `## Capture gap` | the capture gap from the Screenshots return | same |
+| `## Capture gap` | the capture gap from the Screenshots return; on `unchanged`, the heading stays as it is | same |
 | `## Changelog` | that repo's Changelog return, verbatim | same |
-| `## Companion PRs` | one `- [<repo-name>] <pr-url>` line per other repo's PR | multi-repo only, after every Open returns, before the companion refresh starts |
+| `## Companion PRs` | one `- [<repo-name>] <pr-url>` line per other repo's PR | multi-repo only, after every Open returns, before the companion refresh starts; on a step 10 refresh, with the other headings, from the known PR URLs |
 
 Order, for every run:
 
 1. Inline: steps 1, 2, 3, and 5.
 2. Together: Inputs per repo, Screenshots once, Changelog per repo.
-3. Inline, after all return: `## Closing line`, `## Capture gap`, and `## Changelog` per repo, then the ship commit per repo.
+3. Inline, after all return: `## Closing line`, `## Capture gap`, and `## Changelog` per repo, then the ship commit per repo that has uncommitted changes. On a step 10 refresh in multi-repo mode, write `## Companion PRs` here too, before the ship commit.
 4. Open per repo, in parallel.
-5. Multi-repo: inline `## Companion PRs` per file, then Open in refresh mode per repo, with each URL from step 4's return.
-6. Together: Upload when `manifest-entries.mjs` exited 0, and Review comments on the home PR.
+5. Multi-repo, except on a step 10 refresh: inline `## Companion PRs` per file, then Open in refresh mode per repo, with each URL from step 4's return.
+6. Together: Upload when `manifest-entries.mjs` exited 0 in this run, and Review comments on the home PR.
