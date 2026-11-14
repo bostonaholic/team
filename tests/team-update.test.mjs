@@ -14,7 +14,7 @@ import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 
 const SCRIPTS = resolve("skills/team-update/scripts");
-const FAKE_CLI = resolve("tests/fixtures/team-migrate-cli.mjs");
+const FAKE_CLI = resolve("tests/fixtures/plugin-host-cli.mjs");
 const RELEASE_ENTRIES = [".claude-plugin", ".codex-plugin", ".agents", "plugin.json", "README.md", "skills", "agents", "opencode", "script"];
 const MANIFESTS = [".claude-plugin/plugin.json", ".codex-plugin/plugin.json", "plugin.json"];
 const TEAM_VERSION = JSON.parse(readFileSync(".claude-plugin/plugin.json", "utf8")).version;
@@ -216,7 +216,7 @@ test("a harness without Team gets a left line and no step", (t) => {
   assert.equal(plan.status, 0, plan.stdout + plan.stderr);
   assert.match(plan.stdout, /Harnesses with Team from a release: claude$/m);
   for (const harness of ["codex", "antigravity", "cursor"]) {
-    assert.match(plan.stdout, new RegExp(`^ {2}- ${harness}: Team is not installed; run /team-migrate or follow INSTALL\\.md`, "m"));
+    assert.match(plan.stdout, new RegExp(`^ {2}- ${harness}: Team is not installed; follow INSTALL\\.md`, "m"));
   }
   assert.match(plan.stdout, /^ {2}- opencode: Team is not installed/m, "the OpenCode config directory exists");
   assert.deepEqual(stepsOf(plan), ["claude plugin marketplace update team-dev", "claude plugin update team@team-dev --scope user"]);
@@ -238,8 +238,8 @@ test("Team installed with its marketplace missing gets a left line, not a market
   assert.equal(plan.status, 0, plan.stdout + plan.stderr);
   assert.deepEqual(stepsOf(plan), []);
   assert.match(plan.stdout, /^Nothing to do\.$/m);
-  assert.match(plan.stdout, /^ {2}- claude: Team's 'team-dev' marketplace is missing; run \/team-migrate$/m);
-  assert.match(plan.stdout, /^ {2}- codex: Team's 'team-dev' marketplace is missing; run \/team-migrate$/m);
+  assert.match(plan.stdout, /^ {2}- claude: Team's 'team-dev' marketplace is missing; follow INSTALL\.md to add it$/m);
+  assert.match(plan.stdout, /^ {2}- codex: Team's 'team-dev' marketplace is missing; follow INSTALL\.md to add it$/m);
   const apply = fx.run(["apply", plan.id]);
   assert.equal(apply.status, 0, apply.stdout + apply.stderr);
   assert.deepEqual(fx.changes(), []);
@@ -298,7 +298,7 @@ test("Antigravity, OpenCode, and Cursor behind update the release clone, then re
   assert.match(planOf(fx).stdout, /^Nothing to do\.$/m);
 });
 
-test("it never installs the collection, retires a copy, or runs a dev uninstall", (t) => {
+test("it installs no other plugin, adds no marketplace, retires no copy, and runs no dev uninstall", (t) => {
   const fx = fixture(t);
   fx.installAll(OLD_VERSION);
   mkdirSync(join(fx.home, ".agents/skills/shipit"), { recursive: true });
@@ -307,7 +307,7 @@ test("it never installs the collection, retires a copy, or runs a dev uninstall"
   assert.equal(plan.status, 0, plan.stdout + plan.stderr);
   const apply = fx.run(["apply", plan.id]);
   assert.equal(apply.status, 0, apply.stdout + apply.stderr);
-  assert.ok(!fx.calls().some((call) => /bostonaholic\/skills|bostonaholic@skills|uninstall|marketplace (add|remove)/.test(call)), fx.calls().join("\n"));
+  assert.ok(!fx.calls().some((call) => /uninstall|marketplace (add|remove)|(claude plugin install|codex plugin add) (?!team@team-dev(\s|$))/.test(call)), fx.calls().join("\n"));
   assert.ok(existsSync(join(fx.home, ".agents/skills/shipit/SKILL.md")));
   assert.ok(!existsSync(join(fx.home, ".agents/skills-retired")));
 });

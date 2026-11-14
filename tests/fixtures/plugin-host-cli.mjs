@@ -1,18 +1,17 @@
 // Stateful stand-ins for claude, codex, agy, and ps, used by
-// tests/team-migrate.test.mjs. Each stub in the scratch bin/ runs
-// `node team-migrate-cli.mjs <tool> <args...>`.
+// tests/team-update.test.mjs. Each stub in the scratch bin/ runs
+// `node plugin-host-cli.mjs <tool> <args...>`.
 //
 //   FAKE_STATE  JSON file holding both hosts' marketplaces and plugins
 //   FAKE_TREES  directory of <owner>/<repo> source trees a GitHub source maps to
 //   FAKE_LOG    every call is appended here, one line each
 //   FAKE_PS     lines `ps -axo pid=,comm=` prints
 // A call whose words equal the state's `failOn` fails, to stop a run midway.
-import { appendFileSync, cpSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { basename, dirname, join } from "node:path";
+import { appendFileSync, cpSync, existsSync, lstatSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 const [tool, ...args] = process.argv.slice(2);
 const HOME = process.env.HOME;
-const CLAUDE_DIR = process.env.CLAUDE_CONFIG_DIR || join(HOME, ".claude");
 const CODEX_DIR = process.env.CODEX_HOME || join(HOME, ".codex");
 
 appendFileSync(process.env.FAKE_LOG, `${[tool, ...args].join(" ")}\n`);
@@ -36,22 +35,6 @@ const lexists = (path) => {
 // A marketplace entry's tree: a directory source is its path, a GitHub one maps into FAKE_TREES.
 const treeOf = (market) => (market.path ? market.path : join(process.env.FAKE_TREES, market.repo));
 const manifest = (tree, file) => readJson(join(tree, ".claude-plugin", file));
-function skillDirs(tree) {
-  const found = [];
-  const walk = (dir, depth) => {
-    if (!existsSync(dir) || depth > 3) return;
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const path = join(dir, entry.name);
-      if (existsSync(join(path, "SKILL.md"))) found.push(path);
-      else walk(path, depth + 1);
-    }
-  };
-  walk(join(tree, "skills"), 0);
-  return found;
-}
-const bareSkills = (dir) =>
-  existsSync(dir) ? readdirSync(dir).filter((name) => !name.startsWith(".") && existsSync(join(dir, name, "SKILL.md"))) : [];
 
 function sourceOf(arg, host) {
   if (arg.startsWith("/")) {
@@ -96,35 +79,12 @@ function host(name) {
       side.plugins = side.plugins.filter((plugin) => plugin.id !== id);
       console.log(`Uninstalled ${id}`);
     },
-    // Every skill the host loads: each loadable plugin's, prefixed, then bare copies.
-    skills(bareDirs) {
-      const loaded = side.plugins.filter((plugin) => {
-        const market = side.markets[plugin.id.split("@")[1]];
-        return market && existsSync(treeOf(market));
-      });
-      return {
-        loaded,
-        names: [
-          ...loaded.flatMap((plugin) =>
-            skillDirs(treeOf(side.markets[plugin.id.split("@")[1]])).map((dir) => `${plugin.id.split("@")[0]}:${basename(dir)}`),
-          ),
-          ...bareDirs.flatMap(bareSkills),
-        ],
-      };
-    },
   };
 }
 
 function claude() {
   const claudeHost = host("claude");
   const command = args.filter((arg) => !arg.startsWith("--") && !["user"].includes(arg)).join(" ");
-  if (args[0] === "-p") {
-    const { loaded, names } = claudeHost.skills([join(CLAUDE_DIR, "skills")]);
-    const plugins = loaded.map((plugin) => ({ name: plugin.id.split("@")[0], source: plugin.id }));
-    console.log(JSON.stringify({ type: "system", subtype: "init", skills: names, plugins }));
-    console.log(JSON.stringify({ type: "result", subtype: "success", result: "OK" }));
-    return;
-  }
   const [, verb, ...rest] = command.split(" ");
   if (command === "plugin marketplace list") {
     console.log(JSON.stringify(Object.entries(state.claude.markets).map(([name, market]) => ({ name, ...market }))));
@@ -157,11 +117,6 @@ function codex() {
   } else if (command === "plugin list") {
     const installed = state.codex.plugins.map((plugin) => ({ pluginId: plugin.id, version: plugin.version, installed: true }));
     console.log(JSON.stringify({ installed, available: [] }));
-  } else if (args[0] === "debug" && args[1] === "prompt-input") {
-    const { names } = codexHost.skills([join(HOME, ".agents", "skills"), join(CODEX_DIR, "skills")]);
-    const text = ["<skills_instructions>", ...names.map((skill, n) => `- ${skill}: A skill. (file: r${n}/SKILL.md)`)].join("\n");
-    console.log(JSON.stringify([{ type: "message", role: "developer", content: [{ type: "input_text", text }] }]));
-    return;
   } else if (args[0] === "plugin" && args[1] === "marketplace") {
     const [action, target] = args.slice(2);
     if (action === "add") codexHost.addMarket(target);

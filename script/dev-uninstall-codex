@@ -4,7 +4,7 @@ set -euo pipefail
 # Mirrors script/dev-uninstall for Codex CLI.
 #
 # Removes the native plugin install, the marketplace registration, and the
-# cached plugin tree, plus the collection symlink an earlier version of
+# cached plugin tree, plus the skills-tree symlink an earlier version of
 # script/dev-install-codex left at ~/.agents/skills/team. The goal is that
 # nothing Team wrote survives: no cache directory, no marketplace row, no
 # dangling link.

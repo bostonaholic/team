@@ -20,7 +20,7 @@ set -euo pipefail
 # until this script runs again. That is the documented behavior of a local
 # plugin, and re-running is the documented remedy.
 #
-# It also removes the collection symlink an earlier version of this script
+# It also removes the skills-tree symlink an earlier version of this script
 # created at ~/.agents/skills/team. That link exposed the checkout's whole
 # skills/ tree as one nested standalone skill, so Codex registered every skill
 # a second time, under both roots, and each description was truncated to about

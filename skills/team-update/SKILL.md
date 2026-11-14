@@ -8,9 +8,9 @@ effort: low
 # Team Update
 
 Update Team to its latest release tag in every agent harness where it is
-already installed from a release. It installs Team nowhere new, retires no
-skill copy, and leaves the `bostonaholic/skills` plugin alone. To set up a
-machine from scratch or from before Team v0.147.0, use `/team-migrate`.
+already installed from a release. It installs Team nowhere new and retires no
+skill copy. To install Team in a harness that lacks it, follow Team's
+`INSTALL.md`.
 
 **Explicit only.** It runs plugin host commands and reinstalls files in the
 user's home, so the model never starts it on its own.
