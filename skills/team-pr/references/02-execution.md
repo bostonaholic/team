@@ -27,7 +27,7 @@
 
 ## Skill check
 
-Before the first edit, make sure that `opening-prs` appears in the session's skill list. Claude Code lists it as `bostonaholic:opening-prs`. When it is absent, print `Missing skill <name>. Install or update the bostonaholic/skills collection (README "Skills that moved"), then run /team-pr <artifact-dir>.` with the missing name and this run's artifact directory, and stop. `attaching-pr-screenshots` is not on the list: its absence adds an operator note and never stops the run.
+Before the first edit, make sure that `opening-prs` and `writing-commit-messages` appear in the session's skill list. Claude Code lists them with the `bostonaholic:` prefix, such as `bostonaholic:opening-prs`. When it is absent, print `Missing skill <name>. Install or update the bostonaholic/skills collection (README "Skills that moved"), then run /team-pr <artifact-dir>.` with the missing name and this run's artifact directory, and stop. `attaching-pr-screenshots` is not on the list: its absence adds an operator note and never stops the run.
 
 ## Step dispatch
 
