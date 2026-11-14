@@ -79,6 +79,8 @@ stamp_cachebuster() {
   # replace the suffix rather than appending a second one.
   MANIFEST_BACKUP="$(mktemp "${TMPDIR:-/tmp}/team-codex-manifest.XXXXXX")"
   cp "$MANIFEST" "$MANIFEST_BACKUP"
+  # The JavaScript template literals are intentionally protected from the shell.
+  # shellcheck disable=SC2016
   STAMPED_VERSION="$(MANIFEST="$MANIFEST" node -e '
     const fs = require("node:fs");
     const path = process.env.MANIFEST;
