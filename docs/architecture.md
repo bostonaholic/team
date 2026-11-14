@@ -184,7 +184,10 @@ declares `review-<n>.md`. SECURITY REVIEW declares `security-review-<n>.md`.
 
 `docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
 ux-reviewer during CODE REVIEW for UI-touching changes and consumed by team-pr.
-The upload itself, and every mechanic it needs, lives in `skills/team-pr/` (its `screenshot-*.md` references and `scripts/`).
+The upload and its mechanics live in the collection's `attaching-pr-screenshots`
+skill. Team keeps the caller policy in
+`skills/team-pr/references/04-screenshot-upload.md` and
+`skills/team-pr/scripts/manifest-entries.mjs`.
 
 `docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
 the DESIGN review gate and the CODE REVIEW phase — one
@@ -434,8 +437,8 @@ requested one. Open the draft PR automatically through the
 `opening-prs` skill from the bostonaholic/skills collection, which pushes the
 branch. The PR phase never waits for approval. Then
 surface the tracking ticket, if `1-task.md` carries `ticketId`. When the
-branch impacts a UI, the PR body also gets a `## Screenshots` section,
-populated by team-pr's own screenshot upload, which attaches
+branch impacts a UI, the PR body also gets a `## Screenshots` section from
+the collection's `attaching-pr-screenshots` skill, which attaches
 the PNGs and rewrites the body. UI impact is decided from the full branch diff;
 when ux-reviewer produced no capture manifest (`docs/plans/<id>/screenshots/`,
 see the artifact-layout note in section 2), the PR phase captures per the

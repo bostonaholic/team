@@ -39,7 +39,7 @@ Read [step delegation](../../team/references/step-delegation.md) before the firs
 | Screenshots | step 4 above; the [ux reviewer brief](../../team/references/ux-reviewer.md) | the capture directory, its manifest, and `entries.json` | UI-impact decision, then the script's printed JSON, or the skip reason |
 | Changelog | [Changelog Update](05-changelog-update.md) | `CHANGELOG.md` only; no commit | the added bullets, or the absent-file skip |
 | Open | call `opening-prs` with the inputs path, plus the PR URL in the companion refresh; the [writing standards](../../team/references/writing.md) | the push and the PR | the PR URL, the title, and `opened` or `refreshed` |
-| Upload | the PR URL from Open's return; the manifest; [Screenshot Upload](04-screenshot-upload.md) | the PR body's `## Screenshots` section | uploaded asset count, or the degraded-note reason |
+| Upload | call `attaching-pr-screenshots` with the home PR URL, `entries.json`, and the companion PR URLs from Open's returns; [Screenshot Upload](04-screenshot-upload.md) | each PR's `## Screenshots` section | the home `result.json` path, its outcome, each companion outcome, and the `operator_note` from `result.json` |
 | Review comments | the PR URL; the bound review and security record paths and statuses; [Review Comments](07-review-comments.md) | PR comments only | posted, skipped, and failed comment counts |
 
 The main session writes these headings into `<scratch>/pr-inputs-<repo-slug>.md` with the file-writing tool, never a shell command, and omits a heading it holds no value for:

@@ -95,7 +95,8 @@ error in the brief, then halt and report ([execution rules](execution.md)).
 On `BLOCKED: <name> unavailable`, run the one retry in the main session when
 its skill list shows `<name>`, and say so once in the final report, as
 `## Fallback` does. Otherwise apply the caller's stated fallback, which for a
-required skill is a stop. A second failure halts and reports.
+required skill is a stop, and an operator note for `attaching-pr-screenshots`.
+A second failure halts and reports.
 
 ## Fallback
 

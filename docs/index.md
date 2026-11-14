@@ -135,7 +135,7 @@ As plugins, the skills carry the `bostonaholic:` prefix instead of `team:`. Upda
 
 **Set up before v0.147.0?** Update Team, then run `/team-migrate` (`team:team-migrate` on Codex). It finds every harness on the machine, shows one plan, and after you confirm it installs Team and the collection natively everywhere, removes local-checkout installs and their pull hooks, and moves old-name skill copies to a `-retired` folder. It deletes no skill copy, and a second run changes nothing. To update Team later in every harness that has it, run `/team-update` (`team:team-update` on Codex): it plans, asks once, and updates only installs that came from a release. It installs nothing new, and it leaves a dev install from a local checkout for you to pull.
 
-The PR phase needs the collection: `/team-pr` and the `/team` PR phase open and refresh PRs through `opening-prs`. The rest of the pipeline keeps its own copies of the reviewer briefs, the screenshot upload, and the worktree teardown.
+The PR phase needs the collection: `/team-pr` and the `/team` PR phase open and refresh PRs through `opening-prs` and upload screenshots through `attaching-pr-screenshots`. The rest of the pipeline keeps its own copies of the reviewer briefs and the worktree teardown.
 
 ## Read next
 
