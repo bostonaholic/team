@@ -16,7 +16,7 @@ Create one isolated git worktree per involved repo, all on branch `<id>`, withou
 - Detect a linked checkout with `git rev-parse --git-dir` and `git rev-parse --git-common-dir`.
 - **Non-default branch** in an existing linked checkout → skip worktree creation for this repo.
 - **Default branch** → report and stop.
-- Single-repo: `git worktree add .claude/worktrees/<branch>`. Each `4-repos.md` entry: `git -C <repo> worktree add .claude/worktrees/<branch>`.
+- Single-repo: create `.claude/worktrees/<branch>` with the host's native worktree support when offered, else `git worktree add`. Each `4-repos.md` entry: `git -C <repo> worktree add .claude/worktrees/<branch>`.
 - Record every created path under `## Worktrees` in `4-repos.md`.
 
 ## Procedure references
