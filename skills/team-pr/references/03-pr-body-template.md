@@ -50,7 +50,7 @@ Merge risk classifies the whole change (data, deployments, dependencies, externa
 (d) verification that genuinely gates the merge, including any a human must re-run (it goes here, not in `## How to Verify`), never verification that merely informs the reviewer.
 Post-merge follow-ups do not belong here. **Omit the section entirely when empty — never emit a bare heading.**
 
-**Checkbox discipline.** A `- [ ]` item blocks merge via the `square-task-list-completed` bot until ticked: use it only for pre-merge actions, plain `- ` bullets otherwise. Tick only items this run completed and verified itself, in the same turn; anything left for the user or a later step stays unchecked.
+**Checkbox discipline.** Treat a `- [ ]` item as a merge gate until ticked: use it only for pre-merge actions, plain `- ` bullets otherwise. Tick only items this run completed and verified itself, in the same turn; anything left for the user or a later step stays unchecked.
 
 **Dependency direction (multi-repo).** Only the PR that has to wait carries the "merge/deploy X first" checkbox. The PR being waited on gets at most a plain bullet naming the deploy order. The waiting side is the one inert without the other (a UI that no-ops until its backend ships). When neither side is inert, emit no dependency item.
 
