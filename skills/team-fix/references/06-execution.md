@@ -28,7 +28,7 @@ returned.
 | Green | `reproduction.md`; the Red return; playbook `Step 3`; the rationale-tracing rule above | production code only; never the new test; no commit | changed files, root cause in one line, the test command's passing output |
 | Verify | the Red and Green returns; playbook `Step 4` | temporary mutation-check revert, restored before return | full-suite result, original-input rerun, mutation-check result, related instances |
 | Ship | the Red, Green, and Verify returns; [Ship](07-ship.md); the [writing standards](../../team/references/writing.md); the [external data rules](../../team/references/external-data.md) | the two commits, the capture directory, `entries.json`, the inputs file, the push, and the draft PR | commit SHAs, the PR URL, and either the `entries.json` path, the capture gap, or the UI skip reason |
-| Upload | the PR URL; `entries.json`; [Screenshot Upload](../../team-pr/references/04-screenshot-upload.md) | the PR's screenshots | the PR's outcome, and each failure with its reason |
+| Upload | the PR URL; `entries.json`; [Screenshot Upload](../../team-pr/references/04-screenshot-upload.md), with the run's `docs/plans/<id>/` as its `$ARGUMENTS` | the PR's screenshots | the PR's outcome, and each failure with its reason |
 
 Dispatch Upload only when Ship returns an `entries.json` path.
 
