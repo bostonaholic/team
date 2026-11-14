@@ -8,7 +8,7 @@
 
 Team is a plugin that orchestrates specialized agents to implement features end-to-end across Claude Code, Codex CLI, and Antigravity CLI. The orchestrator (the main session) walks a linear phase table, and persists state as artifact files in `docs/plans/<id>/`. That per-id directory carries YAML frontmatter with phase and revision metadata. The orchestrator coordinates live progress through TodoWrite, and dispatches each specialist from its portable `agents/<name>.md` definition. See [docs/architecture.md](docs/architecture.md) for the full design.
 
-> **North star: read [docs/vision.md](docs/vision.md) and [docs/ethos.md](docs/ethos.md).** Team is a *loop-driven development system*: a human fills the Backlog and reviews finished work. Everything in between (groom → start → implement → open PR) runs autonomously. The ethos explains *why* the autonomous middle can be trusted. Every agent should understand this end state, which is the target the whole project moves toward.
+> **North star: read [VISION.md](VISION.md), [docs/vision.md](docs/vision.md), and [docs/ethos.md](docs/ethos.md).** [VISION.md](VISION.md) states how Team is built: a process composed from its own phase skills that owns no PR, commit, or changelog content. Team is a *loop-driven development system*: a human fills the Backlog and reviews finished work. Everything in between (groom → start → implement → open PR) runs autonomously. The ethos explains *why* the autonomous middle can be trusted. Every agent should understand this end state, which is the target the whole project moves toward.
 
 ## Installing Team
 

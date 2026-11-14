@@ -13,6 +13,7 @@ expected to follow. It links out to the docs site rather than duplicating it.
 
 | Read | Why |
 |------|-----|
+| [VISION.md](VISION.md) | How Team is built: a process composed from its own phase skills, with no content rules. |
 | [Vision](docs/vision.md) | The loop-driven end state Team builds toward. |
 | [Ethos](docs/ethos.md) | Why the autonomous middle can be trusted: the principles behind every design choice. |
 | [Architecture](docs/architecture.md) | How Team is built: agents as microservices, the QRSPI pipeline, artifact frontmatter, phase inference. |
