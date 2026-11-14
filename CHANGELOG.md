@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.179.0] - 2026-11-13
+
+### Fixed
+
+- **PR bodies now link every PR number in full.** GitHub does not autolink a PR's own `#<n>` inside its body, so the bolded self row of a `## Stack` table rendered as plain text. The [`/team-pr` body template](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/03-pr-body-template.md) now writes each PR number as `[#<n>](<pr-url>)`. **What this asks of you:** nothing. [#569](https://github.com/bostonaholic/team/pull/569)
+
 ## [0.178.0] - 2026-11-13
 
 ### Fixed
@@ -1594,7 +1600,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.178.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.179.0...HEAD
+[0.179.0]: https://github.com/bostonaholic/team/compare/v0.178.0...v0.179.0
 [0.178.0]: https://github.com/bostonaholic/team/compare/v0.177.0...v0.178.0
 [0.177.0]: https://github.com/bostonaholic/team/compare/v0.176.0...v0.177.0
 [0.176.0]: https://github.com/bostonaholic/team/compare/v0.175.0...v0.176.0
