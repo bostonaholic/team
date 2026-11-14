@@ -27,7 +27,10 @@ returned.
 | Red | `reproduction.md`; playbook `Step 2`; the [testing rules](../../team/references/testing.md) | test files only; no commit | test path, run command, failing assertion line, static-check results |
 | Green | `reproduction.md`; the Red return; playbook `Step 3`; the rationale-tracing rule above | production code only; never the new test; no commit | changed files, root cause in one line, the test command's passing output |
 | Verify | the Red and Green returns; playbook `Step 4` | temporary mutation-check revert, restored before return | full-suite result, original-input rerun, mutation-check result, related instances |
-| Ship | the Red, Green, and Verify returns; [Ship](07-ship.md) | the two commits, push, draft PR, screenshots | commit SHAs, PR URL, screenshot status |
+| Ship | the Red, Green, and Verify returns; [Ship](07-ship.md); the [writing standards](../../team/references/writing.md); call `writing-commit-messages` and `opening-prs` | the two commits, the capture directory, `entries.json`, the inputs file, the push, and the draft PR | commit SHAs, the PR URL, and either the `entries.json` path, the capture gap, or the UI skip reason |
+| Upload | the PR URL; `entries.json`; [Screenshot Upload](../../team-pr/references/04-screenshot-upload.md); call `attaching-pr-screenshots` | the PR's `## Screenshots` section | the `result.json` path and its outcome |
+
+Dispatch Upload only when Ship returns an `entries.json` path.
 
 **Red gate (inline, between Red and Green).** Rerun the Red command yourself.
 Advance only when the new test fails through the reported assertion, not a

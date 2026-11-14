@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team-pr` and `/team-fix` now write commits, the changelog, PRs, and screenshots through skills in the [bostonaholic/skills](https://github.com/bostonaholic/skills) collection.** Team no longer keeps its own copies of these rules and scripts. Ship calls `writing-commit-messages`, `updating-changelogs`, `opening-prs`, and `attaching-pr-screenshots`. When `opening-prs`, `updating-changelogs`, or `writing-commit-messages` is missing, the run prints `Missing skill <name>` and stops before its first edit. When `attaching-pr-screenshots` is missing, the PR still opens with an operator note and no screenshots. **What this asks of you:** install or update the bostonaholic/skills collection to a release that includes these four skills, then restart every agent session. [#570](https://github.com/bostonaholic/team/pull/570)
+
 ## [0.179.0] - 2026-11-13
 
 ### Fixed

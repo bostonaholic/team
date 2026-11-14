@@ -216,7 +216,7 @@ reporting, mismatch handling, and unsupported-host limits.
   the bundled skill scripts (`supports-nesting.mjs`, `ste-lint.mjs`,
   `external-review.mjs`, `discover-topic.sh`, `team`'s shared `scripts/*`
   (among them `plan-id.sh`, `design-review-status.sh`, `render-research.mjs`,
-  and `record-design-review.mjs`), `team-pr`'s `scripts/splice.mjs` plus its
+  and `record-design-review.mjs`), `team-pr`'s
   `scripts/*.sh`, `team-question`'s `scripts/prepare-plan-dir.sh`,
   `team-worktree`'s `scripts/*.sh`, and `team-fix`'s
   `scripts/branch-gate.sh`),

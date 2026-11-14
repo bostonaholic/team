@@ -4,7 +4,7 @@ description: Use when the implementation plan needs to be executed slice by slic
 color: green
 model: opus
 effort: high
-tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Agent, SendMessage
+tools: Read, Write, Edit, Grep, Glob, Bash, TodoWrite, Agent, SendMessage, Skill
 permissionMode: acceptEdits
 ---
 

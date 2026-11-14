@@ -184,7 +184,10 @@ declares `review-<n>.md`. SECURITY REVIEW declares `security-review-<n>.md`.
 
 `docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
 ux-reviewer during CODE REVIEW for UI-touching changes and consumed by team-pr.
-The upload itself, and every mechanic it needs, lives in `skills/team-pr/` (its `screenshot-*.md` references and `scripts/`).
+The upload and its mechanics live in the collection's `attaching-pr-screenshots`
+skill. Team keeps the caller policy in
+`skills/team-pr/references/04-screenshot-upload.md` and
+`skills/team-pr/scripts/manifest-entries.mjs`.
 
 `docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
 the DESIGN review gate and the CODE REVIEW phase — one
@@ -428,13 +431,14 @@ both PASS and current
 `team-pr` first binds the review status from the newest `review-<n>.md` and
 the security status from the newest `security-review-<n>.md`, before any
 edit, so its own changelog edit cannot make either record stale.
-Then it updates an existing CHANGELOG.md (filter for user-facing commits since last
-release); if the root file is absent, leave it absent unless the user explicitly
-requested one. Push the branch and open a draft PR automatically with
-`gh pr create --draft`. The PR phase never waits for approval. Then
+Then it updates an existing CHANGELOG.md through the collection's
+`updating-changelogs` skill, which adds user-facing bullets for the commits since
+the last release and leaves an absent file absent. Open the draft PR automatically through the
+`opening-prs` skill from the bostonaholic/skills collection, which pushes the
+branch. The PR phase never waits for approval. Then
 surface the tracking ticket, if `1-task.md` carries `ticketId`. When the
-branch impacts a UI, the PR body also gets a `## Screenshots` section,
-populated by team-pr's own screenshot upload, which attaches
+branch impacts a UI, the PR body also gets a `## Screenshots` section from
+the collection's `attaching-pr-screenshots` skill, which attaches
 the PNGs and rewrites the body. UI impact is decided from the full branch diff;
 when ux-reviewer produced no capture manifest (`docs/plans/<id>/screenshots/`,
 see the artifact-layout note in section 2), the PR phase captures per the
@@ -1079,8 +1083,8 @@ gate and verdict decisions, each step whose reads are no larger than its
 return, and the TodoWrite ledger. A subagent pays off only for read-heavy,
 isolated work that reads more than it returns.
 Dependent steps run one at a time; independent steps fan out in one turn.
-`/team-fix` delegates Reproduce, Red, Green, Verify, and Ship. `/team-pr`
-delegates input gathering, screenshots, the changelog, body authoring,
+`/team-fix` delegates Reproduce, Red, Green, Verify, Ship, and Upload. `/team-pr`
+delegates input gathering, screenshots, the changelog, Open,
 upload, and review comments. The mechanical test gate delegates its
 evidence run. The host mapping (Claude Code `Agent`, Codex `spawn_agent`
 with `fork_turns: "none"`, Antigravity `invoke_subagent`), the fresh-context

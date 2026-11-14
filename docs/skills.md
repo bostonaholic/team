@@ -133,11 +133,11 @@ Reviews the branch for security defects after CODE REVIEW passes, and fixes CRIT
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
-Opens PRs with project terms, evidence, and risk.
+Runs the PR phase and opens PRs through the collection's `opening-prs`.
 
 **Used by:** `team`
 
-**Uses:** None
+**Uses:** `attaching-pr-screenshots`, `opening-prs`, `updating-changelogs`, `writing-commit-messages`
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
@@ -145,7 +145,7 @@ Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
-**Uses:** `team-worktree`
+**Uses:** `attaching-pr-screenshots`, `opening-prs`, `team-worktree`, `writing-commit-messages`
 
 ## Setup migration and update
 
@@ -245,9 +245,6 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [design reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/team/references/design-reviewer.md)
 - [cross-model review](https://github.com/bostonaholic/team/blob/main/skills/team/references/cross-model-review.md)
 - [agent dispatch](https://github.com/bostonaholic/team/blob/main/skills/team/references/agent-dispatch.md)
-- [commit discipline](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/commit.md)
-- [changelog rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/changelog.md)
 - [tracking rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/tracking.md)
 - [worktree playbook](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/playbooks/worktree.md)
 - [provisioned-resource teardown](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/playbooks/provisioned-teardown.md)
-- [screenshot upload rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/screenshot-rules.md)
