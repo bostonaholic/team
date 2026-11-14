@@ -67,9 +67,9 @@ This change spans multiple repos. The companion PRs are:
 - [<repo-name>] <pr-url>
 ```
 
-**PR references.** Write every PR number in the body as a full link, `[#<n>](<pr-url>)`, never a bare `#<n>`. GitHub does not autolink a PR's own number inside its body, so a bare self-reference renders as plain text.
+**PR references.** Write every PR number in the body as a full link, `[#<n>](https://github.com/<owner>/<repo>/pull/<n>)`, never a bare `#<n>`. GitHub does not autolink a PR's own number inside its body, so a bare self-reference renders as plain text.
 
-**`## Stack` (conditional):** the PR is stacked when its base branch is another open PR's head branch, or another open PR's base branch is its head branch. Follow both directions (`gh pr list --head <branch>` and `gh pr list --base <branch>`, each with `--state open`) to find every PR in the stack. List them bottom (merges first) to top, with columns `Order`, `PR` (`[#<n>](<pr-url>)`), and `Concern`. Bold this PR's row:
+**`## Stack` (conditional):** the PR is stacked when its base branch is another open PR's head branch, or another open PR's base branch is its head branch. Follow both directions (`gh pr list --head <branch>` and `gh pr list --base <branch>`, each with `--state open`) to find every PR in the stack. List them bottom (merges first) to top, with columns `Order`, `PR` (`[#<n>](https://github.com/<owner>/<repo>/pull/<n>)`), and `Concern`. Bold this PR's row:
 
 ```markdown
 ## Stack
