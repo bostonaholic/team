@@ -145,7 +145,7 @@ Runs the compressed bug-fix pipeline.
 
 **Used by:** None
 
-**Uses:** `team-worktree`
+**Uses:** `attaching-pr-screenshots`, `opening-prs`, `team-worktree`, `writing-commit-messages`
 
 ## Setup migration and update
 

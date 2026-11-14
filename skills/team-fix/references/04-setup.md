@@ -1,6 +1,12 @@
 ## Setup
 
-1. **Resolve the input** to a bug description, per `## Input`.
+1. **Resolve the input** to a bug description, per `## Input`. Then make sure
+   that `opening-prs` and `writing-commit-messages` appear in the session's
+   skill list; Claude Code lists them with the `bostonaholic:` prefix. When one
+   is absent, print `Missing skill <name>. Install or update the
+   bostonaholic/skills collection (README "Skills that moved"), then run
+   /team-fix <input>.` with the missing name and this run's input, and stop
+   before step 2 moves the ticket.
 2. **Move the ticket to in-progress** as the first action, before other work,
    when the input resolved to a ticket id or issue. Follow the
    ticket-lifecycle rules in [tracking rules](../../team-pr/references/tracking.md);
