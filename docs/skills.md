@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: the pipeline entry-point slash commands, the bug-fix pipeline, and the setup migration, each with the skills it loads."
+description: "The Team plugin's skills: the pipeline entry-point slash commands, the bug-fix pipeline, and the setup update, each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -41,10 +41,8 @@ This page carries both directions of each skill-to-skill edge.
 For what separates a load from a citation, and for how a skill is loaded, see
 [architecture.md §6](architecture.md#6-skills).
 
-The catalog has 14 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
+The catalog has 13 registered skills, all commands. The six shared principle documents, playbooks, templates, and operational rules are ordinary installed resources.
 They are read at the consuming operation and add no picker entries.
-
-Skills outside the pipeline moved out of Team; see [Skills that moved](index.md#skills-that-moved).
 
 ## Entry-point skills
 
@@ -147,19 +145,10 @@ Runs the compressed bug-fix pipeline.
 
 **Uses:** `team-worktree`
 
-## Setup migration and update
+## Setup update
 
-Explicit-only commands that change the user's agent setup rather than a
+An explicit-only command that changes the user's agent setup rather than a
 repository.
-
-### [team-migrate](https://github.com/bostonaholic/team/blob/main/skills/team-migrate/SKILL.md)
-
-Moves a machine set up before v0.147.0 onto the Team and bostonaholic/skills
-plugins in every harness, with no moved skill missing or shown twice.
-
-**Used by:** None
-
-**Uses:** None
 
 ### [team-update](https://github.com/bostonaholic/team/blob/main/skills/team-update/SKILL.md)
 
@@ -245,9 +234,6 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [design reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/team/references/design-reviewer.md)
 - [cross-model review](https://github.com/bostonaholic/team/blob/main/skills/team/references/cross-model-review.md)
 - [agent dispatch](https://github.com/bostonaholic/team/blob/main/skills/team/references/agent-dispatch.md)
-- [commit discipline](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/commit.md)
-- [changelog rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/changelog.md)
 - [tracking rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/tracking.md)
 - [worktree playbook](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/playbooks/worktree.md)
 - [provisioned-resource teardown](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/playbooks/provisioned-teardown.md)
-- [screenshot upload rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/screenshot-rules.md)

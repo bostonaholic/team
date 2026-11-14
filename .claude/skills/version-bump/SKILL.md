@@ -188,8 +188,7 @@ Every line must show the **new** version. None may still show the old one.
 
 ### 4. Cut the changelog section
 
-In `CHANGELOG.md` (Keep a Changelog format, entry style per
-`skills/team-pr/references/changelog.md`):
+In `CHANGELOG.md` (Keep a Changelog format):
 
 - Move the entire `[Unreleased]` body into a new `## [X.Y.Z] - YYYY-MM-DD`
   (today's date) section inserted directly **below** `## [Unreleased]`. Leave

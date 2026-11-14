@@ -26,58 +26,7 @@ Install the Team plugin from https://github.com/bostonaholic/team, refer to the 
 
 Or 🔗 [check the installation instructions](INSTALL.md).
 
-## Skills that moved
-
-Team now ships only its pipeline. Its other 18 skills moved to the `bostonaholic/skills` collection, which installs without Team, and took gerund names there:
-
-| Team command | Now in bostonaholic/skills |
-| --- | --- |
-| `/agent-prompt` | `/composing-agent-prompts` |
-| `/audit-complexity` | `/auditing-complexity` |
-| `/audit-tests` | `/auditing-tests` |
-| `/code-review` | `/reviewing-code` |
-| `/eng-design-doc-review` | `/reviewing-design-docs` |
-| `/groom-backlog` | `/grooming-backlogs` |
-| `/how` | `/explaining-architecture` |
-| `/no-comments` | `/removing-comments` |
-| `/paparazzi` | `/capturing-screenshots` |
-| `/pr-open-comments` | `/addressing-pr-comments` |
-| `/pr-rebase` | `/rebasing-branches` |
-| `/pr-screenshots` | `/attaching-pr-screenshots` |
-| `/pr-watch-as-author` | `/watching-authored-prs` |
-| `/pr-watch-as-reviewer` | `/watching-reviewed-prs` |
-| `/prove` | `/proving-claims` |
-| `/retro` | `/running-retros` |
-| `/shipit` | `/landing-prs` |
-| `/why` | `/investigating-design-rationale` |
-
-The standalone `pr-cleanup` command is retired. Team retains its internal pipeline cleanup.
-
-Install the collection as a plugin on Claude Code:
-
-```bash
-claude plugin marketplace add bostonaholic/skills
-claude plugin install bostonaholic@skills
-```
-
-On Codex:
-
-```bash
-codex plugin marketplace add bostonaholic/skills
-codex plugin add bostonaholic@skills
-```
-
-On other agents, such as Antigravity or OpenCode, pick skills with the command below. To install one skill, add `--skill <name>`.
-
-```bash
-npx skills@latest add bostonaholic/skills
-```
-
-As plugins, the skills carry the `bostonaholic:` prefix instead of `team:`. Update Team first, then install the skills. Docs: https://skills.bostonaholic.dev
-
-**Set up before v0.147.0?** Update Team, then run `/team-migrate` (`team:team-migrate` on Codex). It finds every harness on the machine, shows one plan, and after you confirm it installs Team and the collection natively everywhere, removes local-checkout installs and their pull hooks, and moves old-name skill copies to a `-retired` folder. It deletes no skill copy, and a second run changes nothing. To update Team later in every harness that has it, run `/team-update` (`team:team-update` on Codex): it plans, asks once, and updates only installs that came from a release. It installs nothing new, and it leaves a dev install from a local checkout for you to pull.
-
-The pipeline does not need these skills. It keeps its own copies of the reviewer briefs, the screenshot upload, and the worktree teardown.
+To update Team later in every harness that has it, run `/team-update` (`team:team-update` on Codex): it plans, asks once, and updates only installs that came from a release. It installs nothing new, and it leaves a dev install from a local checkout for you to pull.
 
 ## Usage
 
@@ -184,7 +133,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **14 skills** in `skills/`: the `/team` orchestrator, the ten phase commands, `/team-fix`, and the explicit-only `/team-migrate` and `/team-update`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
+- **13 skills** in `skills/`: the `/team` orchestrator, the ten phase commands, `/team-fix`, and the explicit-only `/team-update`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, per-round code-review records live in `review-<n>.md`, per-round security-review records in `security-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The PR phase and `/team-fix` Ship now state steps only, and `/team-migrate` is removed.** `/team-pr` and the `/team` PR phase list the steps: commit, update an existing `CHANGELOG.md` under `## [Unreleased]`, push, open a draft PR per repo, attach screenshots when the branch changes a UI, and refresh the body after every push. `/team-fix` Ship lists its commit, push, draft PR, and screenshot steps the same way. Both pass the facts, such as the why, check results, review status, and the ticket closing line. Team no longer carries PR body, commit message, or changelog style rules, or screenshot upload scripts, so the skills your agent has loaded shape that text. IMPLEMENT commits use the plan's slice subject. `/team-update` keeps its plan and release clone, and now points a harness without Team to `INSTALL.md`. **What this asks of you:** to install Team in a new harness, follow `INSTALL.md`. Restart every agent session after you update. [#570](https://github.com/bostonaholic/team/pull/570)
+
 ## [0.179.0] - 2026-11-13
 
 ### Fixed
