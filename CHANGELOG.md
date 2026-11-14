@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **PR bodies now link every PR number in full.** GitHub does not autolink a PR's own `#<n>` inside its body, so the bolded self row of a `## Stack` table rendered as plain text. The [`/team-pr` body template](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/03-pr-body-template.md) now writes each PR number as `[#<n>](<pr-url>)`. **What this asks of you:** nothing. [#569](https://github.com/bostonaholic/team/pull/569)
+
 ## [0.178.0] - 2026-11-13
 
 ### Fixed
