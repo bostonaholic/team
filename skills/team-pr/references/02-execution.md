@@ -20,16 +20,16 @@
    - From step 2: `ahead=0` with `dirty=0`, or with `dirty` above 0 and `git status` showing nothing worth shipping: report "Nothing to ship." and stop.
    - No review record applies. Warn the user once that they take responsibility for correctness.
 6. **Update an existing CHANGELOG.md** under `## [Unreleased]` before committing, per [Changelog Update](05-changelog-update.md); never create one. In multi-repo mode, per repo with only that repo's entries.
-7. **Open a draft PR automatically — do not stop to ask.** Uncommitted final changes (typically `CHANGELOG.md`) land as one trailing ship commit before Open. With no uncommitted change, make no ship commit. Dispatch Open per repo: it pushes the branch and opens a draft PR from that repo's inputs file. Given a PR URL, Open refreshes that PR's body instead. Multi-repo mode opens **one draft PR per repo with commits**.
+7. **Open a draft PR automatically — do not stop to ask.** Uncommitted final changes (typically `CHANGELOG.md`) land as one trailing ship commit before Open. With no uncommitted change, make no ship commit. Dispatch Open per repo. Open always pushes the branch first. It then opens a draft PR from that repo's inputs file, or, given a PR URL, refreshes that PR's body. Multi-repo mode opens **one draft PR per repo with commits**.
 8. In multi-repo mode, after every Open returns, write `## Companion PRs` into each inputs file, then dispatch Open again per repo with that repo's PR URL to refresh its body, so each PR links the others. A step 10 refresh writes it before Open instead.
 9. **Tracking ticket — link now, in-review when ready.** If `ticketId` is non-null, apply [tracking rules](tracking.md). The main session writes the closing line string they give under `## Closing line` in each inputs file.
-10. **After every push to a PR, refresh its description** — the initial open and every push that adds, removes, or changes commits (review feedback, fixups, rebases). Run the order in `## Step dispatch` again from step 1 as a refresh, in either mode. The second run follows these rules:
+10. **After each later push to an open PR, refresh its description.** A later push comes after the PR exists and adds, removes, or changes commits (review feedback, fixups, rebases). The first run's own push and its ship commit start no refresh. Run the order in `## Step dispatch` again from step 1 as a refresh, in either mode. A refresh follows these rules:
    - Changelog adds no bullet for a change `## [Unreleased]` already lists ([Changelog Update](05-changelog-update.md)). A refresh with no new change makes no ship commit (step 7).
    - Screenshots captures again only when the pushed commits change the interface (step 4).
    - Open gets each PR's URL and refreshes that PR's body.
    - Multi-repo: write `## Companion PRs` in order step 3, from the known PR URLs. Skip order step 5.
    - Review comments run again after each push to the home PR, unless the body has a line exactly `## Review notes`.
-   The ship-commit push inside a refresh starts no new refresh, because that refresh's Open runs after the push.
+   A refresh's ship commit starts no further refresh, because the refresh's Open pushes it before the body refresh (step 7).
 11. **Leave the worktree(s) in place.** Clean up only after merge or on explicit user request, via the "Ship (teardown)" procedure in the [worktree playbook](../../team-worktree/playbooks/worktree.md), for every involved repo.
 
 ## Step dispatch
