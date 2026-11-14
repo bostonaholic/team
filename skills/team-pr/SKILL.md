@@ -1,6 +1,6 @@
 ---
 name: team-pr
-description: 'Use for opening PRs only on explicit request. Never infer from passed verification. Includes project terms, evidence, and risk.'
+description: 'Use for opening PRs only on explicit request. Never infer from passed verification. Commits, updates an existing changelog, pushes, and opens a draft PR per repo.'
 effort: medium
 argument-hint: "[docs/plans/<id>/]"
 ---
