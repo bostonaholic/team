@@ -18,7 +18,7 @@
 5. **Standalone path** — no matching artifact directory (single-repo only):
    - From step 2: `ahead=0` with `dirty=0`, or with `dirty` above 0 and `git status` showing nothing worth shipping: report "Nothing to ship." and stop.
    - No review record applies. Warn the user once that they take responsibility for correctness.
-6. **Update an existing CHANGELOG.md** before committing, per [Changelog Update](05-changelog-update.md) (its absent-file rule included). In multi-repo mode, per repo with only that repo's entries.
+6. **Update an existing CHANGELOG.md** before committing, per [Changelog Update](05-changelog-update.md). In multi-repo mode, per repo with only that repo's entries.
 7. **Open a draft PR automatically — do not stop to ask.** Uncommitted final changes (typically `CHANGELOG.md`) land as one trailing ship commit before Open. Dispatch Open per repo, which calls `opening-prs` with that repo's inputs file. Multi-repo mode opens **one draft PR per repo with commits**.
 8. In multi-repo mode, after every Open returns, write `## Companion PRs` into each inputs file, then dispatch Open again per repo with that repo's PR URL, so each PR links the others.
 9. **Tracking ticket — link now, in-review when ready.** If `ticketId` is non-null, apply [tracking rules](tracking.md). The main session writes the closing line string they give under `## Closing line` in each inputs file.
@@ -27,7 +27,7 @@
 
 ## Skill check
 
-Before the first edit, make sure that `opening-prs` and `writing-commit-messages` appear in the session's skill list. Claude Code lists them with the `bostonaholic:` prefix, such as `bostonaholic:opening-prs`. When it is absent, print `Missing skill <name>. Install or update the bostonaholic/skills collection (README "Skills that moved"), then run /team-pr <artifact-dir>.` with the missing name and this run's artifact directory, and stop. `attaching-pr-screenshots` is not on the list: its absence adds an operator note and never stops the run.
+Before the first edit, make sure that `opening-prs`, `updating-changelogs`, and `writing-commit-messages` appear in the session's skill list. Claude Code lists them with the `bostonaholic:` prefix, such as `bostonaholic:opening-prs`. When one is absent, print `Missing skill <name>. Install or update the bostonaholic/skills collection (README "Skills that moved"), then run /team-pr <artifact-dir>.` with the missing name and this run's artifact directory, and stop. `attaching-pr-screenshots` is not on the list: its absence adds an operator note and never stops the run.
 
 ## Step dispatch
 
@@ -37,7 +37,7 @@ Read [step delegation](../../team/references/step-delegation.md) before the firs
 | --- | --- | --- | --- |
 | Inputs | [Input](01-input.md); `1-task.md`, `6-design.md`, and the bound review and security record paths and statuses in resume mode; skip `CHANGELOG.md`, which Changelog owns | writes only `<scratch>/pr-inputs-<repo-slug>.md`, and never its `## Closing line`, `## Capture gap`, `## Changelog`, or `## Companion PRs` heading | the inputs file path |
 | Screenshots | step 4 above; the [ux reviewer brief](../../team/references/ux-reviewer.md) | the capture directory, its manifest, and `entries.json` | UI-impact decision, then the script's printed JSON, or the skip reason |
-| Changelog | [Changelog Update](05-changelog-update.md) | `CHANGELOG.md` only; no commit | the added bullets, or the absent-file skip |
+| Changelog | call `updating-changelogs`; [Changelog Update](05-changelog-update.md); the [writing standards](../../team/references/writing.md) | `CHANGELOG.md` only; no commit | the added bullets, or the skip reason |
 | Open | call `opening-prs` with the inputs path, plus the PR URL in the companion refresh; the [writing standards](../../team/references/writing.md) | the push and the PR | the PR URL, the title, and `opened` or `refreshed` |
 | Upload | call `attaching-pr-screenshots` with the home PR URL, `entries.json`, and the companion PR URLs from Open's returns; [Screenshot Upload](04-screenshot-upload.md) | each PR's `## Screenshots` section | the home `result.json` path, its outcome, each companion outcome, and the `operator_note` from `result.json` |
 | Review comments | the PR URL; the bound review and security record paths and statuses; [Review Comments](07-review-comments.md) | PR comments only | posted, skipped, and failed comment counts |

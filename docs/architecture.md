@@ -431,9 +431,9 @@ both PASS and current
 `team-pr` first binds the review status from the newest `review-<n>.md` and
 the security status from the newest `security-review-<n>.md`, before any
 edit, so its own changelog edit cannot make either record stale.
-Then it updates an existing CHANGELOG.md (filter for user-facing commits since last
-release); if the root file is absent, leave it absent unless the user explicitly
-requested one. Open the draft PR automatically through the
+Then it updates an existing CHANGELOG.md through the collection's
+`updating-changelogs` skill, which adds user-facing bullets for the commits since
+the last release and leaves an absent file absent. Open the draft PR automatically through the
 `opening-prs` skill from the bostonaholic/skills collection, which pushes the
 branch. The PR phase never waits for approval. Then
 surface the tracking ticket, if `1-task.md` carries `ticketId`. When the

@@ -137,7 +137,7 @@ Runs the PR phase and opens PRs through the collection's `opening-prs`.
 
 **Used by:** `team`
 
-**Uses:** `attaching-pr-screenshots`, `opening-prs`, `writing-commit-messages`
+**Uses:** `attaching-pr-screenshots`, `opening-prs`, `updating-changelogs`, `writing-commit-messages`
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
@@ -245,7 +245,6 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [design reviewer brief](https://github.com/bostonaholic/team/blob/main/skills/team/references/design-reviewer.md)
 - [cross-model review](https://github.com/bostonaholic/team/blob/main/skills/team/references/cross-model-review.md)
 - [agent dispatch](https://github.com/bostonaholic/team/blob/main/skills/team/references/agent-dispatch.md)
-- [changelog rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/changelog.md)
 - [tracking rules](https://github.com/bostonaholic/team/blob/main/skills/team-pr/references/tracking.md)
 - [worktree playbook](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/playbooks/worktree.md)
 - [provisioned-resource teardown](https://github.com/bostonaholic/team/blob/main/skills/team-worktree/playbooks/provisioned-teardown.md)

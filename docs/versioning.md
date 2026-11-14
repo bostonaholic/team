@@ -256,7 +256,7 @@ script reads. Its tests use this override.
 is cut only when the PR lands.
 
 - **While drafting** (`team-pr`): add this PR's user-facing bullets under
-  `## [Unreleased]` (entry style per `skills/team-pr/references/changelog.md`). No dated
+  `## [Unreleased]` (entry style per https://github.com/bostonaholic/skills/blob/main/skills/engineering/updating-changelogs/SKILL.md). No dated
   section and no footer compare link, because the PR carries no version yet.
 - **At land time** (`version-bump`): *move* the `[Unreleased]` body into a new
   dated section, leaving `[Unreleased]` empty again:

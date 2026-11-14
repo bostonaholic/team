@@ -21,7 +21,7 @@ Two modes:
 
 Each is detailed in [Execution](references/02-execution.md) at the step named.
 
-1. **Update an existing CHANGELOG.md** after step 3 binds the review and security statuses, and commit before opening any PR; never create one unrequested (step 6).
+1. **Update an existing CHANGELOG.md** after step 3 binds the review and security statuses, and commit before opening any PR (step 6).
 2. **Open a draft PR automatically — do not stop to ask:** Open calls `opening-prs` (step 7), then report the PR and how to mark it ready for review.
 3. Multi-repo: Open opens one draft PR per repo, then refreshes each with the companion PR links (step 8). [Tracking rules](references/tracking.md) own the in-review transition and the home-only closing rule.
 4. After each push, run the step order again, and each Open refreshes its PR (step 10).
