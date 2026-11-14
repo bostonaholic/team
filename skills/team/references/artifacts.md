@@ -23,7 +23,7 @@ Every artifact starts with `topic: <kebab-case>`, `date: <YYYY-MM-DD>`, and `pha
 
 `1-task.md` alone carries `ticketId: <id>` or `null`, and the selected route ([routing](routing.md)):
 
-- `route: investigate | plan | prototype | feature | fix | refactor`: recorded before dispatch. Optional; absent means the legacy unprefixed full feature workflow.
+- `route: investigate | plan | prototype | feature | fix | refactor`: recorded before dispatch. Optional; absent means the unprefixed full feature workflow.
 - `routeStatus: complete`: present only when a limited-scope route (`investigate`, `plan`, `prototype`) has finished its deliverable, so resume never reads a finished plan as permission to implement.
 
 Never put `ticketId`, `route`, or `routeStatus` on `2-questions.md` or any later artifact.
@@ -41,7 +41,7 @@ The one definition of branch progress for every reader. Resolve each term per wo
 
 ## Review records
 
-- Never restore the retired `^approved:` frontmatter gate; review records alone determine passage.
+- Review records alone determine passage; `6-design.md` carries no `approved:` field, and any found is ignored.
 - `design-review-<n>.md`: written by the orchestrator through `../scripts/record-design-review.mjs` at the highest `<n>` + 1, or 1. Frontmatter `topic`, `date`, `phase: design-review`, `verdict: <APPROVE|REQUEST CHANGES|COMMENT>`; body is the verbatim report. Highest-round APPROVE or COMMENT passes. REQUEST CHANGES re-dispatches `design-author` with findings verbatim and increments numeric `revision`; missing/non-numeric means `0`, so the first rewrite writes `revision: 1`.
 - `review-<n>.md` and `security-review-<n>.md`: two record families, one schema. The session that runs `team-code-review` writes `review-<n>.md`, one per completed CODE REVIEW round, with `phase: review`. The session that runs `team-security-review` writes `security-review-<n>.md`, one per completed SECURITY REVIEW round, with `phase: security-review`. Each family numbers its own records at the highest numeric `<n>` + 1, or 1. A `review-<n>.md` name starts with `review-`, so `security-review-<n>.md` and `design-review-<n>.md` files are never `review-<n>.md` records. Never overwrite a record. Ignore a non-numeric suffix such as `review-final.md` or `security-review-final.md`. Frontmatter `topic`, `date`, `phase`, `verdict: <PASS|FAIL>`. Body sections, in order:
   - `## Scope`: one `<repo-slug>: <merge-base-sha>..<head-sha>` line per repo with commits beyond its merge-base, full SHAs pinned at dispatch. `<repo-slug>` is the `4-repos.md` slug, or `home` in single-repo mode.
