@@ -38,7 +38,7 @@ Consume `docs/plans/<id>/`, implement one vertical slice at a time, and commit e
 
 ### Commit and clean-tree rule
 
-Commit per [commit discipline](../../team-pr/references/commit.md); never bypass signing, never commit `docs/plans/`. In multi-repo mode, commit in each worktree touched. Hand off with every worktree in scope clean outside `docs/plans/`: `git status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'` prints nothing. CODE REVIEW reviews only commits and refuses a dirty tree.
+Commit each slice with the plan's `**Commit:**` subject byte for byte and the body rules in `### Slice-by-slice execution`; never bypass signing, never commit `docs/plans/`. In multi-repo mode, commit in each worktree touched. Hand off with every worktree in scope clean outside `docs/plans/`: `git status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'` prints nothing. CODE REVIEW reviews only commits and refuses a dirty tree.
 
 ### Initial dispatch (after the test-architect's failing tests are confirmed)
 

@@ -1,3 +1,3 @@
 ## Changelog Update
 
-Before creating the ship commit, read [changelog rules](changelog.md) and update `CHANGELOG.md` per its ship-phase procedure, one plain-language user-facing bullet per included change.
+After step 3 binds the review and security statuses and before the ship commit, add this branch's changes to an existing `CHANGELOG.md` under `## [Unreleased]`. Never create the file. In multi-repo mode, update each repo's file with only that repo's entries.

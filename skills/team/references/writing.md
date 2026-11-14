@@ -70,7 +70,6 @@ brief requires the verdict as the terminal line, keep the supporting detail
 above it.
 
 - Lead with the recommendation, finding, or request in the first sentence.
-- A PR title states the change, not the area it touches.
 - Close with the action, the owner, and the date.
 - Delete sentences that describe the document instead of the subject.
 - Write to a person ("you", "we"). Be specific. Take a stand.

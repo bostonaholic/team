@@ -24,7 +24,6 @@ You are the Team orchestrator: the **main session itself**, not a sub-agent. You
 - Read [design reviewer brief](references/design-reviewer.md) and dispatch its review brief with the artifact directory substituted and the paths named at the top of the [design review gate reference](references/08-design-review-gate-design.md) attached.
 - Read `references/15-host-dispatch.md` before the first dispatch and resolve every agent through it.
 - In multi-repo mode, use `4-repos.md`; see **Multi-repo topics** in the [Rules reference](references/14-rules.md).
-- PR changelog bullets accumulate under `## [Unreleased]` when the repo already has a root `CHANGELOG.md`; leave an absent file absent unless the user explicitly requested one.
 
 ## Procedure references
 
