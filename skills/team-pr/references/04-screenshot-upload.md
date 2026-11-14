@@ -9,7 +9,7 @@ Caller policy only: whether and when to run. Mechanics, section shape, and the b
 Do **not** call for a non-UI branch (the section is omitted). Otherwise run `node "<team-pr-skill-dir>/scripts/manifest-entries.mjs" "$ARGUMENTS" "$ARGUMENTS/entries.json"`. A rerun after Execution step 4 rewrites the same file.
 
 - Exit 0: continue. The printed `entries_file` is the entries file's absolute path ([schema](screenshot-input-and-result.md#the-entries-file)); bind `ENTRIES_DIR` to its directory, where `result.json` comes back.
-- Exit 1 or 2: do not upload. The body's capture-failure or degraded note stands.
+- Exit 1 or 2: do not upload. The capture gap reaches the body through the inputs file ([Execution](02-execution.md#step-dispatch)).
 
 ### Run the upload
 
@@ -25,11 +25,11 @@ RESULT_FILE="$ENTRIES_DIR/result.json"   # the upload writes it beside the entri
 [ -r "$RESULT_FILE" ] || exit 2
 ```
 
-- `section` — the exact markdown written, or null. Null means the open-time degraded note stands as the final section.
+- `section` — the exact markdown written, or null. Null means the body keeps the `## Screenshots` section it had, or none.
 - `operator_note` — carried verbatim into the operator-facing completion report, never into a PR body.
 - `failures` — named in the report, one line per entry.
 
-Never edit `## Screenshots` a second time from `team-pr`: it renders the degraded form once at open (Execution step 7), and the upload's single write replaces it.
+Never edit `## Screenshots` a second time from `team-pr`.
 
 ### Multi-repo
 

@@ -133,11 +133,11 @@ Reviews the branch for security defects after CODE REVIEW passes, and fixes CRIT
 
 ### [team-pr](https://github.com/bostonaholic/team/blob/main/skills/team-pr/SKILL.md)
 
-Opens PRs with project terms, evidence, and risk.
+Runs the PR phase and opens PRs through the collection's `opening-prs`.
 
 **Used by:** `team`
 
-**Uses:** None
+**Uses:** `opening-prs`
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 

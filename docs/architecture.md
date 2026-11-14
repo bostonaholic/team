@@ -430,8 +430,9 @@ the security status from the newest `security-review-<n>.md`, before any
 edit, so its own changelog edit cannot make either record stale.
 Then it updates an existing CHANGELOG.md (filter for user-facing commits since last
 release); if the root file is absent, leave it absent unless the user explicitly
-requested one. Push the branch and open a draft PR automatically with
-`gh pr create --draft`. The PR phase never waits for approval. Then
+requested one. Open the draft PR automatically through the
+`opening-prs` skill from the bostonaholic/skills collection, which pushes the
+branch. The PR phase never waits for approval. Then
 surface the tracking ticket, if `1-task.md` carries `ticketId`. When the
 branch impacts a UI, the PR body also gets a `## Screenshots` section,
 populated by team-pr's own screenshot upload, which attaches
@@ -1080,7 +1081,7 @@ return, and the TodoWrite ledger. A subagent pays off only for read-heavy,
 isolated work that reads more than it returns.
 Dependent steps run one at a time; independent steps fan out in one turn.
 `/team-fix` delegates Reproduce, Red, Green, Verify, and Ship. `/team-pr`
-delegates input gathering, screenshots, the changelog, body authoring,
+delegates input gathering, screenshots, the changelog, Open,
 upload, and review comments. The mechanical test gate delegates its
 evidence run. The host mapping (Claude Code `Agent`, Codex `spawn_agent`
 with `fork_turns: "none"`, Antigravity `invoke_subagent`), the fresh-context

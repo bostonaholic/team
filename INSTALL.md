@@ -12,6 +12,8 @@ harness that lacks it and leaves a local-checkout install for you to pull. An
 Antigravity copy carries no source marker, so a behind copy made from a local
 checkout is replaced.
 
+The PR phase calls skills from the [bostonaholic/skills](https://github.com/bostonaholic/skills) collection: `/team-pr` and the `/team` PR phase open and refresh PRs through `opening-prs`. Install or update the collection before you run `/team-pr`, with `npx skills@latest add bostonaholic/skills` or as the plugin the [README](README.md) describes. Without it, the PR phase stops before its first edit and names the missing skill.
+
 ## Claude Code
 
 ### Native plugin installation
