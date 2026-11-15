@@ -256,8 +256,9 @@ Not supported by OpenCode. Team publishes no package for it; the plugin is
 
 ### Local git checkout installation
 
-Requires **Node.js** for registration/removal and **OpenCode** for use. From a
-local Team checkout or linked Git worktree:
+Requires **Node.js** for registration/removal and **OpenCode 2.0 or later** for
+use. OpenCode 1.x rejects the plugin at startup. From a local Team checkout or
+linked Git worktree:
 
 ```bash
 script/dev-install opencode
@@ -272,8 +273,8 @@ Registration links `plugins/team.js` to that checkout's `opencode/team.js`.
 The config directory is nonempty `OPENCODE_CONFIG_DIR`, otherwise
 `${XDG_CONFIG_HOME:-$HOME/.config}/opencode`. Relative overrides resolve against
 where you run the command. Spaces and Unicode work. Team rejects canonical
-checkout and skill paths containing `$`, backticks, or `@` because OpenCode
-interprets those characters in command templates. Relocate such a checkout before installing.
+checkout and skill paths containing `$`, backticks, or `@`, a rule kept from
+OpenCode 1.x command templates. Relocate such a checkout before installing.
 
 Restart OpenCode after installation, removal, or checkout edits. New processes
 read current canonical skills without reinstalling or copying them. Keep the
@@ -303,5 +304,5 @@ separate command and nothing to reinstall.
 commands, and this lifecycle. Full QRSPI execution, specialist/nested dispatch,
 and reviewer isolation on OpenCode remain unverified.
 Methodology skills marked `user-invocable: false` also appear as commands.
-See [OpenCode support](docs/cross-host-portability.md#opencode) for command permissions, native argument preprocessing,
+See [OpenCode support](docs/cross-host-portability.md#opencode) for command permissions, argument handling,
 external skill sources, and discovery diagnostics.
