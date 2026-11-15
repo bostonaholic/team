@@ -76,6 +76,6 @@ is a defect: re-dispatch with a fresh agent.
 Report:
 
 - Path to `$ARGUMENTS/5-research.md`
-- Key findings (3–5 bullets)
+- Key findings, briefly
 - Open questions count (read the `## Open Questions` items; a "none" bullet is not a question)
 - Tell the user: **"Next: run `/team-design docs/plans/<id>/`"**
