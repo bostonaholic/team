@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.181.0] - 2026-11-15
+
 ### Fixed
 
-- **Team loads in OpenCode 2.x again.** OpenCode 2 rejected `opencode/team.js` at startup, so no Team command or skill appeared. The adapter now exports an OpenCode 2 plugin definition. Each skill is still a command, and each skill without `disable-model-invocation: true` is still a native skill. Arguments now reach the model as literal text: shell syntax such as `` !`printf example` `` no longer runs before the model call. OpenCode 1.x is no longer supported. **What this asks of you:** use OpenCode 2.0 or later, then restart OpenCode.
+- **Team loads in OpenCode 2.x again.** OpenCode 2 rejected `opencode/team.js` at startup, so no Team command or skill appeared. The adapter now exports an OpenCode 2 plugin definition. Each skill is still a command, and each skill without `disable-model-invocation: true` is still a native skill. Arguments now reach the model as literal text: shell syntax such as `` !`printf example` `` no longer runs before the model call. OpenCode 1.x is no longer supported. **What this asks of you:** use OpenCode 2.0 or later, then restart OpenCode. [#572](https://github.com/bostonaholic/team/pull/572)
 
 ## [0.180.0] - 2026-11-15
 
@@ -1610,7 +1612,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.180.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.181.0...HEAD
+[0.181.0]: https://github.com/bostonaholic/team/compare/v0.180.0...v0.181.0
 [0.180.0]: https://github.com/bostonaholic/team/compare/v0.179.0...v0.180.0
 [0.179.0]: https://github.com/bostonaholic/team/compare/v0.178.0...v0.179.0
 [0.178.0]: https://github.com/bostonaholic/team/compare/v0.177.0...v0.178.0
