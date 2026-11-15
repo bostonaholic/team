@@ -73,7 +73,7 @@ above it.
 - Close with the action, the owner, and the date.
 - Delete sentences that describe the document instead of the subject.
 - Write to a person ("you", "we"). Be specific. Take a stand.
-- Keep it to one page; a longer document opens with a standalone summary.
+- Size it to the decision; a longer document opens with a standalone summary.
 
 ## Plain language
 
