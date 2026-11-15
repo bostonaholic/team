@@ -8,7 +8,7 @@
 
 Team is a plugin that orchestrates specialized agents to implement features end-to-end across Claude Code, Codex CLI, and Antigravity CLI. The orchestrator (the main session) walks a linear phase table, and persists state as artifact files in `docs/plans/<id>/`. That per-id directory carries YAML frontmatter with phase and revision metadata. The orchestrator coordinates live progress through TodoWrite, and dispatches each specialist from its portable `agents/<name>.md` definition. See [docs/architecture.md](docs/architecture.md) for the full design.
 
-> **North star: read [docs/vision.md](docs/vision.md) and [docs/ethos.md](docs/ethos.md).** Team is a *loop-driven development system*: a human fills the Backlog and reviews finished work. Everything in between (groom → start → implement → open PR) runs autonomously. The ethos explains *why* the autonomous middle can be trusted. Every agent should understand this end state, which is the target the whole project moves toward.
+> **North star: read [VISION.md](VISION.md), [docs/vision.md](docs/vision.md), and [docs/ethos.md](docs/ethos.md).** [VISION.md](VISION.md) states how Team is built: a process composed from its own phase skills that owns no PR, commit, or changelog content. Team is a *loop-driven development system*: a human fills the Backlog and reviews finished work. Everything in between (groom → start → implement → open PR) runs autonomously. The ethos explains *why* the autonomous middle can be trusted. Every agent should understand this end state, which is the target the whole project moves toward.
 
 ## Installing Team
 
@@ -65,7 +65,6 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 | `/team-code-review` | 4-reviewer adversarial review with a Blocking/Major fix loop, on stated intent or as the CODE REVIEW phase — it commits fixes |
 | `/team-security-review` | Security review with a CRITICAL/HIGH fix loop, on stated intent or as the SECURITY REVIEW phase — it commits fixes |
 | `/team-pr` | Commit + open PR, on stated intent or as the PR phase — it pushes and moves the ticket |
-| `/team-migrate` | Move a machine set up before v0.147.0 onto native Team plus the `bostonaholic/skills` plugin in every harness, on explicit request only — it rewrites plugin registrations and moves old skill copies aside after one confirmation |
 | `/team-update` | Update Team to the latest release in every harness that already has it from a release, on explicit request only — it installs Team nowhere new, retires no copy, and leaves dev installs alone, after one confirmation |
 
 ## Agents (13)
@@ -80,7 +79,7 @@ Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) 
 
 ## Skills
 
-See `skills/*/SKILL.md`. Team ships only its pipeline: the `/team` orchestrator, the ten phase commands (`/team-worktree` through `/team-pr`), the `/team-fix` bug-fix pipeline, the explicit-only `/team-migrate` setup migration, and the explicit-only `/team-update` release update. Entry point skills double as slash commands. Methodology skills are loaded by agents. Shared principles live in six ordinary documents under `skills/team/principles/`. The reviewer briefs (code, security, documentation, UX, design) and the finding format live under `skills/team/references/`; the reviewer agents and the design-review gate read them by path. Execution, decisions, external-data, and bug-fix rules have scoped resource owners. Question, Research, Design, Structure, Plan, Implement, and bug-fix procedures live in playbooks with shared templates and dependency, testing, and diagnosis references. Consumers read applicable installed paths before work. Twelve agents read execution rules from their bodies; file-finder keeps its single-step contract. The 14 commands remain registered. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
+See `skills/*/SKILL.md`. Team ships only its pipeline: the `/team` orchestrator, the ten phase commands (`/team-worktree` through `/team-pr`), the `/team-fix` bug-fix pipeline, and the explicit-only `/team-update` release update. Entry point skills double as slash commands. Methodology skills are loaded by agents. Shared principles live in six ordinary documents under `skills/team/principles/`. The reviewer briefs (code, security, documentation, UX, design) and the finding format live under `skills/team/references/`; the reviewer agents and the design-review gate read them by path. Execution, decisions, external-data, and bug-fix rules have scoped resource owners. Question, Research, Design, Structure, Plan, Implement, and bug-fix procedures live in playbooks with shared templates and dependency, testing, and diagnosis references. Consumers read applicable installed paths before work. Twelve agents read execution rules from their bodies; file-finder keeps its single-step contract. The 13 commands remain registered. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 
 ## Hooks
 

@@ -10,7 +10,7 @@ When a run resolves its input to a ticket id or issue, move that ticket to its t
 
 ## PR open: link the PR to the ticket
 
-When the PR phase opens a pull request and `1-task.md`'s frontmatter has `ticketId` set, **link the PR to the ticket**. On GitHub, render the link as a closing line, **the first line of the PR body** (`Closes #<n>`). For another tracker, use its PR↔issue link mechanism.
+When the PR phase opens a pull request and `1-task.md`'s frontmatter has `ticketId` set, **link the PR to the ticket**. On GitHub, the link is a closing line (`Closes #<n>`). For another tracker, use its PR↔issue link mechanism.
 
 ### Interpreting `ticketId`
 
@@ -19,11 +19,11 @@ At PR-open time:
 - A bare number → `Closes #<n>` (a GitHub issue in the origin repo).
 - A qualified reference (`owner/repo#<n>`) or an issue URL → `Closes` plus that value, e.g. `Closes https://github.com/owner/repo/issues/42`.
 - Any other non-null shape → still `Closes` plus the value verbatim. Note the unrecognized shape in the completion report, and never block on it. On GitHub such a value (e.g. `Closes ENG-1234`) auto-closes nothing; the tracker-move rules here advance the ticket.
-- Null, absent, empty, or whitespace-only → omit the closing line entirely. No placeholder, no empty line.
+- Null, absent, empty, or whitespace-only → omit the closing line entirely.
 
 ### Multi-repo: the home PR alone closes the ticket
 
-In multi-repo mode, only the **home** repo's PR carries the closing keyword (`Closes #<n>`), so the ticket closes exactly once, when the home PR merges. Companion PRs carry a **non-closing** reference in the same first-line position, in the qualified form (`owner/repo#<n>` or the issue URL):
+In multi-repo mode, only the **home** repo's PR carries the closing keyword (`Closes #<n>`), so the ticket closes exactly once, when the home PR merges. Companion PRs carry a **non-closing** reference, in the qualified form (`owner/repo#<n>` or the issue URL):
 
 ```
 Part of owner/repo#<n>

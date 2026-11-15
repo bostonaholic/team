@@ -184,7 +184,9 @@ declares `review-<n>.md`. SECURITY REVIEW declares `security-review-<n>.md`.
 
 `docs/plans/<id>/screenshots/` (PNGs plus `manifest.md`) is written by
 ux-reviewer during CODE REVIEW for UI-touching changes and consumed by team-pr.
-The upload itself, and every mechanic it needs, lives in `skills/team-pr/` (its `screenshot-*.md` references and `scripts/`).
+Team keeps only the caller policy for attaching them, in
+`skills/team-pr/references/04-screenshot-upload.md` and
+`skills/team-pr/scripts/manifest-entries.mjs`.
 
 `docs/plans/<id>/cross-model-notes.md` is written by the orchestrator at
 the DESIGN review gate and the CODE REVIEW phase — one
@@ -428,17 +430,16 @@ both PASS and current
 `team-pr` first binds the review status from the newest `review-<n>.md` and
 the security status from the newest `security-review-<n>.md`, before any
 edit, so its own changelog edit cannot make either record stale.
-Then it updates an existing CHANGELOG.md (filter for user-facing commits since last
-release); if the root file is absent, leave it absent unless the user explicitly
-requested one. Push the branch and open a draft PR automatically with
-`gh pr create --draft`. The PR phase never waits for approval. Then
+Then it updates an existing CHANGELOG.md under `## [Unreleased]` and leaves an
+absent file absent. It pushes the branch and opens a draft PR automatically.
+The PR phase never waits for approval. Then
 surface the tracking ticket, if `1-task.md` carries `ticketId`. When the
-branch impacts a UI, the PR body also gets a `## Screenshots` section,
-populated by team-pr's own screenshot upload, which attaches
-the PNGs and rewrites the body. UI impact is decided from the full branch diff;
+branch impacts a UI, the PR phase attaches the captured screenshots to the PR.
+Team states these steps and passes the facts; it carries no rules for the
+PR body, commit messages, or changelog text. UI impact is decided from the full branch diff;
 when ux-reviewer produced no capture manifest (`docs/plans/<id>/screenshots/`,
 see the artifact-layout note in section 2), the PR phase captures per the
-ux-reviewer brief before rendering the section.
+ux-reviewer brief before attaching them.
 When `docs/plans/<id>/cross-model-notes.md` exists, team-pr posts its
 blocks as PR review comments
 (`skills/team-pr/references/07-review-comments.md`), replacing the final
@@ -943,9 +944,9 @@ command.
 
 The field is honored by Claude Code only. Codex reads no invocability
 field at all, so it lists every registered methodology skill in
-its `$` picker and a user can invoke any of them. Guarded commands such as
-`team-migrate` and `team-update` avoid that leak with `disable-model-invocation: true` plus
-`allow_implicit_invocation: false` in their `agents/openai.yaml`, which keeps them out of Codex's implicit
+its `$` picker and a user can invoke any of them. The guarded
+`team-update` command avoids that leak with `disable-model-invocation: true` plus
+`allow_implicit_invocation: false` in its `agents/openai.yaml`, which keeps it out of Codex's implicit
 catalog. There is no fix on
 Team's side, and the workarounds that look plausible all fail — see
 [cross-host-portability.md](cross-host-portability.md#57-codex-port)
@@ -1063,8 +1064,8 @@ An overage requires a reviewed reason stating its exact line count.
    Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
    Twelve agent bodies read execution rules. File-finder retains its single-step contract.
-   Resources use no skill frontmatter or discovery metadata. Keep the 14 commands registered.
-   Guarded commands such as `team-migrate` and `team-update` carry skill frontmatter and
+   Resources use no skill frontmatter or discovery metadata. Keep the 13 commands registered.
+   Guarded commands such as `team-update` carry skill frontmatter and
    `agents/openai.yaml`, register as commands, and set `disable-model-invocation:
    true` so the model never applies them on its own. Do not add unguarded
    principle registrations, recursive loading, compatibility stubs, or a resource registry.
@@ -1079,8 +1080,8 @@ gate and verdict decisions, each step whose reads are no larger than its
 return, and the TodoWrite ledger. A subagent pays off only for read-heavy,
 isolated work that reads more than it returns.
 Dependent steps run one at a time; independent steps fan out in one turn.
-`/team-fix` delegates Reproduce, Red, Green, Verify, and Ship. `/team-pr`
-delegates input gathering, screenshots, the changelog, body authoring,
+`/team-fix` delegates Reproduce, Red, Green, Verify, Ship, and Upload. `/team-pr`
+delegates input gathering, screenshots, the changelog, Open,
 upload, and review comments. The mechanical test gate delegates its
 evidence run. The host mapping (Claude Code `Agent`, Codex `spawn_agent`
 with `fork_turns: "none"`, Antigravity `invoke_subagent`), the fresh-context

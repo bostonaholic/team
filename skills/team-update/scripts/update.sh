@@ -13,17 +13,16 @@
 # when that plan still has the id the user confirmed. With DRY_RUN=true it
 # prints each command instead of running it.
 #
-# This is not team-migrate. It installs Team into no harness that lacks it,
-# retires no skill copy, and never touches the bostonaholic/skills collection.
-# It sources team-migrate's lib.sh for harness detection, the plan steps, and
-# the plan runner, so both scripts plan and run a step the same way.
+# It installs Team into no harness that lacks it and retires no skill copy.
+# It sources lib.sh beside it for harness detection, the plan steps, and the
+# plan runner.
 #
 # Decisions:
 #   Release installs   Claude Code and Codex from the GitHub marketplace;
 #                      Antigravity as a copied directory; OpenCode as a link
 #                      into the release clone; Cursor as a copy marked with
-#                      the release clone. Each is updated with team-migrate's
-#                      own steps: marketplace refresh then plugin update, or
+#                      the release clone. Each is updated with the steps in
+#                      lib.sh: marketplace refresh then plugin update, or
 #                      release clone update then reinstall.
 #   Not installed      A harness on the machine without Team gets a `left`
 #                      line, never a step.
@@ -39,8 +38,8 @@
 #                      regular file, a Cursor copy without Team's marker) is
 #                      left alone with a `left` line, not a blocker, so one
 #                      odd harness does not stop the others. A Claude Code or
-#                      Codex marketplace from another source does block, as
-#                      in team-migrate: plan_team names the remedy.
+#                      Codex marketplace from another source does block:
+#                      plan_team names the remedy.
 #   Antigravity copy   A copy carries no source marker, so a copy made from a
 #                      local checkout is replaced like one from the release
 #                      clone. It needs the release clone only when its version
@@ -69,8 +68,8 @@ export LC_ALL=C
 
 # shellcheck disable=SC2034  # names this script in lib.sh's messages
 TOOL=team-update
-# shellcheck source=../../team-migrate/scripts/lib.sh
-. "$(cd "$(dirname "$0")" && pwd)/../../team-migrate/scripts/lib.sh"
+# shellcheck source=SCRIPTDIR/lib.sh
+. "$(cd "$(dirname "$0")" && pwd)/lib.sh"
 
 parse_command "$@"
 has git || die "git is not on PATH"
@@ -81,7 +80,7 @@ keep() {  # <harness> [dir: the harness needs the release clone]
   if [ "${2:-}" = dir ]; then DIR_HARNESSES="$DIR_HARNESSES $1"; fi
 }
 leave() { LEFT="$LEFT$1$NL"; }
-absent() { leave "$1: Team is not installed; run /team-migrate or follow INSTALL.md to install it"; }
+absent() { leave "$1: Team is not installed; follow INSTALL.md to install it"; }
 dev_install() { leave "$1: dev install from $2; pull that checkout and rerun script/dev-install"; }
 foreign() { leave "$1: $2 was not made by Team's install; leaving it"; }
 
@@ -91,7 +90,7 @@ classify_claude() {
   source="$(field "$CLAUDE_MARKETS" "$TEAM_MARKETPLACE" 2)"
   case "$source" in
     directory) dev_install claude "$(field "$CLAUDE_MARKETS" "$TEAM_MARKETPLACE" 3)" ;;
-    "") leave "claude: Team's '$TEAM_MARKETPLACE' marketplace is missing; run /team-migrate" ;;
+    "") leave "claude: Team's '$TEAM_MARKETPLACE' marketplace is missing; follow INSTALL.md to add it" ;;
     *) keep claude ;;
   esac
 }
@@ -104,7 +103,7 @@ classify_codex() {
   source="$(field "$CODEX_MARKETS" "$TEAM_MARKETPLACE" 2)"
   case "$source" in
     local) dev_install codex "$(field "$CODEX_MARKETS" "$TEAM_MARKETPLACE" 4)" ;;
-    "") leave "codex: Team's '$TEAM_MARKETPLACE' marketplace is missing; run /team-migrate" ;;
+    "") leave "codex: Team's '$TEAM_MARKETPLACE' marketplace is missing; follow INSTALL.md to add it" ;;
     *) keep codex ;;
   esac
 }
@@ -138,7 +137,7 @@ classify_cursor() {
 compute_update() {
   local harness installed
   # shellcheck disable=SC2034  # plan_team and the plan runner read these
-  STEPS="" BLOCKS="" LEFT="" TEAM_REMOVED=false RELEASE_MOVES=false DIR_HARNESSES=""
+  STEPS="" BLOCKS="" LEFT="" RELEASE_MOVES=false DIR_HARNESSES=""
   installed="$(harnesses)"
   TEAM_TAG="$(latest_tag "$TEAM_URL")" || TEAM_TAG=""
   [ -n "$TEAM_TAG" ] || die "cannot read Team's release tags from $TEAM_URL"
@@ -162,8 +161,6 @@ plan_header() {
   echo "  Latest: Team $TEAM_TAG"
   echo "  Harnesses with Team from a release: ${HARNESSES:-none}"
 }
-
-before_apply() { :; }
 
 done_message() {
   echo "Done. Run plan again to confirm, then restart every agent session to load the update."
