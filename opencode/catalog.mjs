@@ -69,7 +69,12 @@ function header(source, file) {
     if (!values.has(key)) fail(`missing ${key}`);
   }
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(values.get("name"))) fail("invalid skill name");
-  return { name: values.get("name"), description: values.get("description"), guarded: values.get("disable-model-invocation") === true };
+  return {
+    name: values.get("name"),
+    description: values.get("description"),
+    guarded: values.get("disable-model-invocation") === true,
+    content: lines.slice(end + 1).join("\n"),
+  };
 }
 
 function inspectTree(directory, base) {

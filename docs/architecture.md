@@ -1112,7 +1112,8 @@ checks its shape and length.
 
 ## OpenCode adapter
 
-Distributed `opencode/team.js` exports only the native plugin function. It resolves
+Distributed `opencode/team.js` exports only the OpenCode 2.x plugin definition
+(`id` and `setup`); OpenCode 2.0 is the minimum. It resolves
 its real checkout and imports `opencode/catalog.mjs`, the same catalog validator
 used by `script/dev-opencode.mjs`. The Bash lifecycle entry scripts require Node.
 `script/dev-install`/`dev-uninstall` and `dev.yml` route the OpenCode target to them.
@@ -1123,23 +1124,24 @@ each header once, and walks each tree once without following links. It rejects
 nested skill files, symlinks, invalid/ambiguous consumed frontmatter, duplicate
 names, empty catalogs, and canonical template-marker paths. References and
 scripts remain canonical files. Install validates before registration; plugin
-initialization validates before returning config contributions. Existing command
-collisions and invalid consumed config types fail before any config mutation.
+setup validates before registering anything. An existing command with a Team
+skill's name fails setup before any command or skill is added.
 
-All skills receive native configured commands containing canonical file/base
-pointers and `$ARGUMENTS`, without embedded bodies, model overrides, or agent
-overrides. This includes methodology skills marked `user-invocable: false`.
-Frontmatter `disable-model-invocation: true` excludes only Team's added native
-skill paths. Those skills still have explicit commands. Existing external skill
-sources may expose their own guarded copies or resolve duplicate names to other
-files. Team commands retain canonical pointers, but later plugins/MCP can collide.
+All skills receive native commands. Each sends a prompt containing canonical
+file/base pointers and the user's arguments to the invoking session, without
+embedded bodies, model overrides, or agent overrides. This includes methodology
+skills marked `user-invocable: false`.
+Frontmatter `disable-model-invocation: true` excludes a skill only from the
+skills Team adds to the native registry. Those skills still have explicit
+commands. A skill already registered under the same id is kept, so external
+skill sources may expose their own guarded copies or resolve duplicate names to
+other files. Team commands retain canonical pointers, but later plugins/MCP can collide.
 
 Command-file reads use native `read` and `external_directory` permission. Unguarded
-cached skill loading uses `skill` permission. `read: deny` does not block that
-route. Supplied arguments retain native preprocessing, including shell syntax
-such as `` !`printf example` `` that can run before a model call, outside
-model-tool rules including `bash: deny`. File pointers preserve body text. They
-do not make arguments inert. See [OpenCode support](cross-host-portability.md#opencode)
+skill loading uses `skill` permission. `read: deny` does not block that
+route. Supplied arguments are sent as literal text: OpenCode 2.x does not
+preprocess plugin command arguments, so shell syntax such as
+`` !`printf example` `` does not run. See [OpenCode support](cross-host-portability.md#opencode)
 for usage and resolved-skill versus command-template diagnostics.
 
 Lifecycle operations canonicalize the existing plugin parent, acquire its atomic

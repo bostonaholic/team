@@ -619,23 +619,30 @@ entries, nested `SKILL.md`, duplicate names, ambiguous consumed frontmatter, and
 empty catalogs. Ordinary references and scripts stay available. Headers are read
 once. Bodies stay on disk. Canonical paths containing `$`, backticks, or `@` are
 rejected before registration or config contribution. Spaces and Unicode are
-supported. Existing command collisions or wrong consumed config types reject the
-whole contribution before paths or commands change.
+supported.
 
-Every skill gets a native configured command with its description and a quoted
-absolute file/base pointer. The template declares explicit invocation, requests
-a filesystem read, resolves relative references against the canonical base, and
-supplies `$ARGUMENTS`. It embeds no skill body and sets no model or agent override.
-This preserves literal shell examples and argument references inside canonical
-skill content. Even the guarded `disable-model-invocation: true` skills appear
-in the command menu.
+`opencode/team.js` default-exports an OpenCode 2.x plugin definition: an `id`
+and a `setup` function. Setup reads OpenCode's command list first. A command
+that already has a Team skill's name rejects the whole contribution before any
+command or skill is added, and OpenCode reports the plugin as failed.
 
-`disable-model-invocation: true` excludes a directory from **Team's added
-`skills.paths` only**. Other paths retain their order and exact duplicates are
-removed. Team does not rewrite user-owned skill sources. An external source can
-expose its own guarded copies or win resolution of a duplicate skill name.
-Inspect the resolved skill's location separately from the command template:
-Team's configured commands retain canonical pointers despite duplicate skill
+Every skill gets a native command with its description. When invoked, the
+command sends one prompt to the invoking session through `session.prompt`. The
+prompt declares explicit invocation, requests a filesystem read of a quoted
+absolute file/base pointer, resolves relative references against the canonical
+base, and ends with the user's arguments. It embeds no skill body and sets no
+model or agent override. This preserves literal shell examples and argument
+references inside canonical skill content. Even the guarded
+`disable-model-invocation: true` skills appear in the command menu.
+
+Each skill without `disable-model-invocation: true` is also added to OpenCode's
+skill registry, with its id (the directory name), name, description, canonical
+`SKILL.md` path, and body. OpenCode 2.x plugins cannot contribute a skills
+directory, so the body is read once when the plugin loads. Guarded skills are
+**not added as skills**. Team does not replace a skill already registered under
+the same id: that copy keeps resolution, guarded or not.
+Inspect the resolved skill's location separately from the command prompt:
+Team's commands retain canonical pointers despite duplicate skill
 sources. Later plugins or MCP commands can still collide; the initialization
 collision check cannot guarantee ownership after other contributors run.
 
@@ -643,22 +650,16 @@ collision check cannot guarantee ownership after other contributors run.
 
 A Team command requests a filesystem read subject to native `read` and
 `external_directory` rules. An unguarded skill-tool call instead uses `skill`
-permission and returns content cached by native discovery. `read: deny` does
+permission and returns the body read when the plugin loaded. `read: deny` does
 **not** deny that cached route. Guarded skills remain available as explicit
 command-file read requests. Team leaves existing `read`, `external_directory`,
 `skill`, and `bash` rules unchanged and adds no permission overrides.
 
-OpenCode preprocesses supplied command arguments. For example, the native syntax
-below can run `printf` before any model call:
-
-```text
-/team-question !`printf example`
-```
-
-This shell substitution runs outside model-tool permission checks, including
-`bash: deny`. Native file references and placeholders also retain their native
-argument behavior. Canonical file pointers protect skill **body text**, not
-untrusted arguments. Team adds no argument escaping or expansion adapter.
+OpenCode 2.x does not preprocess the arguments of a plugin command. Shell
+syntax such as `` !`printf example` `` and placeholders such as `$1` reach the
+model as literal text; nothing runs before the model call. Files attached to the
+invocation are passed through with the prompt. Team adds no argument escaping
+or expansion adapter.
 
 ### Lifecycle and support limits
 
@@ -676,7 +677,10 @@ files without the lifecycle lock are unsupported. A new OpenCode process reads
 current checkout content. No generated catalog, cache copy, provider call, or
 persistent Team process is introduced.
 
-Native discovery was observed on OpenCode 1.18.20. Support covers registration,
+The adapter requires OpenCode 2.0 or later; OpenCode 1.x rejects the 2.x
+definition at startup. Loading, command and skill discovery, collision
+rejection, and one command invocation were observed on OpenCode 2.2.6. Support
+covers registration,
 skill/command discovery, and the developer lifecycle. The adapter registers
 skills and commands only; it ships no runtime hooks. Full QRSPI execution,
 specialist/nested-agent dispatch, and translated reviewer permissions remain

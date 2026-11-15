@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Team loads in OpenCode 2.x again.** OpenCode 2 rejected `opencode/team.js` at startup, so no Team command or skill appeared. The adapter now exports an OpenCode 2 plugin definition. Each skill is still a command, and each skill without `disable-model-invocation: true` is still a native skill. Arguments now reach the model as literal text: shell syntax such as `` !`printf example` `` no longer runs before the model call. OpenCode 1.x is no longer supported. **What this asks of you:** use OpenCode 2.0 or later, then restart OpenCode.
+
 ## [0.180.0] - 2026-11-15
 
 ### Changed
