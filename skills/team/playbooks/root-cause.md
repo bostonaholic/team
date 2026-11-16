@@ -10,7 +10,7 @@ The ROOT CAUSE step runs on the `fix` route, after WORKTREE and before QUESTION.
 - [Diagnosis reference](../../team-fix/references/diagnosis.md): the 4-phase investigation, the 5 Whys chain, and the escalation rules.
 - [Testing rules](../references/testing.md): the authoring gate, the retention bar, and regression tests.
 
-Each procedure step names the rule it uses. A bound or rule that this playbook states adds to the linked rule and replaces none of it.
+Each procedure step names the rule it uses. When a linked rule conflicts with this playbook's steps or `## Boundaries`, this playbook wins. For example, the bug-fix playbook Triage sends a Test impl, Infra, or Tooling bug to a fix, but here every class continues to step 2, and you fix nothing.
 
 ## Trust
 
