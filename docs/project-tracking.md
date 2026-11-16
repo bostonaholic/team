@@ -256,8 +256,7 @@ like this:
   the first action of the run. It moves from whichever entry column holds it:
   **Ready**, **Backlog**, or **Bugs**. Give `/team` or `/team-fix` a ticket id
   or an issue. Its Setup step then does the generic, best-effort "move to
-  in-progress" that `skills/team/SKILL.md` and `skills/team-fix/SKILL.md`
-  define. The runtime stays tracker-agnostic. **This repo's concrete binding**
+  in-progress" that `skills/team/SKILL.md` defines. The runtime stays tracker-agnostic. **This repo's concrete binding**
   is the board scripts under `.claude/scripts/`. For an issue number `<N>`:
   ```sh
   .claude/scripts/project-item-id.sh <N> | .claude/scripts/project-set-status.sh "In progress"
@@ -267,7 +266,7 @@ like this:
   it. The move never blocks the pipeline. You no longer need to move the card
   by hand before you launch.
 - **Opening the PR** → the PR phase links the PR to the issue. This covers
-  `/team-pr`, the `/team` PR gate, and `/team-fix` Ship. The link is
+  `/team-pr` and the `/team` PR gate. The link is
   `Closes #<N>`, so the issue closes on merge. `tracking.md` gives the
   closing-line string, and the PR phase passes it with the PR's facts.
   In a multi-repo run, only the home repo's PR carries the closing keyword.

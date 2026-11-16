@@ -53,7 +53,7 @@ full run or drives one phase of the QRSPI pipeline.
 
 Runs the 10-phase QRSPI feature pipeline, or a leading-argument route.
 
-**Used by:** None
+**Used by:** `team-fix`
 
 **Uses:** `team-code-review`, `team-pr`, `team-security-review`, `team-worktree`
 
@@ -101,7 +101,7 @@ Produces the tactical implementation plan.
 
 Prepares isolated git worktrees.
 
-**Used by:** `team`, `team-fix`
+**Used by:** `team`
 
 **Uses:** None
 
@@ -139,11 +139,11 @@ Commits, updates an existing changelog, pushes, and opens a draft PR per repo.
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
-Runs the compressed bug-fix pipeline.
+Same as `/team fix`: it routes to `team` with the `fix` route.
 
 **Used by:** None
 
-**Uses:** `team-worktree`
+**Uses:** `team`
 
 ## Setup update
 

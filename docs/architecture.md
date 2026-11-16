@@ -1124,7 +1124,6 @@ gate and verdict decisions, each step whose reads are no larger than its
 return, and the TodoWrite ledger. A subagent pays off only for read-heavy,
 isolated work that reads more than it returns.
 Dependent steps run one at a time; independent steps fan out in one turn.
-`/team-fix` delegates Reproduce, Red, Green, Verify, Ship, and Upload.
 On the `fix` route, `/team` delegates ROOT CAUSE to one general step. `/team-pr`
 delegates input gathering, screenshots, the changelog, Open,
 upload, and review comments. The mechanical test gate delegates its
