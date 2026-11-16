@@ -42,9 +42,10 @@ beyond the structure's list. Record "task-required, fails <class>" as a note
 line under that slice's table in your report.
 
 Match the project's test conventions. Group tests by slice so one slice runs
-in isolation. If a slice's list is happy-path only against the design's
-`## Edge cases`, and no cited existing test already fails on that regression,
-return the scope-defect line for the missing case; never invent tests.
+in isolation. If a slice's list is happy-path only against the edge cases the
+design lists under `## Desired end state` and `## Interface`, and no cited
+existing test already fails on that regression, return the scope-defect line
+for the missing case; never invent tests.
 
 ## Output
 

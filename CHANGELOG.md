@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.183.0] - 2026-11-15
+
+### Fixed
+
+- **The test architect checks the design's real edge-case sections.** Its gap check looked for a `## Edge cases` section the design template does not have, so happy-path-only slices passed unflagged. It now reads the edge cases listed under `## Desired end state` and `## Interface`. [#500](https://github.com/bostonaholic/team/pull/500)
+
 ## [0.182.2] - 2026-11-15
 
 ### Fixed
@@ -1630,7 +1636,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.182.2...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.183.0...HEAD
+[0.183.0]: https://github.com/bostonaholic/team/compare/v0.182.2...v0.183.0
 [0.182.2]: https://github.com/bostonaholic/team/compare/v0.182.1...v0.182.2
 [0.182.1]: https://github.com/bostonaholic/team/compare/v0.182.0...v0.182.1
 [0.182.0]: https://github.com/bostonaholic/team/compare/v0.181.0...v0.182.0
