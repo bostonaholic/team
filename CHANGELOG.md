@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.184.0] - 2026-11-15
+
+### Changed
+
+- **`/team-worktree` prefers the host's native worktree support.** It creates `.claude/worktrees/<branch>` through the host's worktree feature when one is offered, and falls back to `git worktree add` otherwise. [#497](https://github.com/bostonaholic/team/pull/497)
+
 ## [0.183.0] - 2026-11-15
 
 ### Fixed
@@ -1636,7 +1642,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.183.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.184.0...HEAD
+[0.184.0]: https://github.com/bostonaholic/team/compare/v0.183.0...v0.184.0
 [0.183.0]: https://github.com/bostonaholic/team/compare/v0.182.2...v0.183.0
 [0.182.2]: https://github.com/bostonaholic/team/compare/v0.182.1...v0.182.2
 [0.182.1]: https://github.com/bostonaholic/team/compare/v0.182.0...v0.182.1
