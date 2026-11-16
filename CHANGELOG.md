@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.190.0] - 2026-11-16
+
 ### Changed
 
-- **`/team fix` and `/team-fix` find the root cause and write a failing reproduction test before any fix.** `/team-fix` routes to `/team fix`, and the compressed pipeline is gone. The run adds a ROOT CAUSE phase after WORKTREE, then runs the full QRSPI pipeline to a draft PR. Each root link gets a test that fails before the fix, passes after it, and stays in the suite. A run never works or ships on the default branch: a failed worktree creation switches to the run's branch first, and `/team-pr` refuses to push from the default branch. **What this asks of you:** expect a full pipeline run from either command, even for a known cause. Finish or discard any in-flight `/team-fix` run before you upgrade. Start on a clean tree, in a repo with a project test runner that can run the reproduction; otherwise the run halts at ROOT CAUSE and names what is missing.
+- **`/team fix` and `/team-fix` find the root cause and write a failing reproduction test before any fix.** `/team-fix` routes to `/team fix`, and the compressed pipeline is gone. The run adds a ROOT CAUSE phase after WORKTREE, then runs the full QRSPI pipeline to a draft PR. Each root link gets a test that fails before the fix, passes after it, and stays in the suite. A run never works or ships on the default branch: a failed worktree creation switches to the run's branch first, and `/team-pr` refuses to push from the default branch. **What this asks of you:** expect a full pipeline run from either command, even for a known cause. Finish or discard any in-flight `/team-fix` run before you upgrade. Start on a clean tree, in a repo with a project test runner that can run the reproduction; otherwise the run halts at ROOT CAUSE and names what is missing. [#573](https://github.com/bostonaholic/team/pull/573)
 
 ## [0.189.0] - 2026-11-15
 
@@ -1676,7 +1678,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.189.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.190.0...HEAD
+[0.190.0]: https://github.com/bostonaholic/team/compare/v0.189.0...v0.190.0
 [0.189.0]: https://github.com/bostonaholic/team/compare/v0.188.0...v0.189.0
 [0.188.0]: https://github.com/bostonaholic/team/compare/v0.187.0...v0.188.0
 [0.187.0]: https://github.com/bostonaholic/team/compare/v0.186.0...v0.187.0
