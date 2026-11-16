@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.182.2] - 2026-11-15
+
+### Fixed
+
+- **`/team` references point at the files that hold their rules.** Several references named files or sections that had been split or moved, or described retired migration steps. They now name the current files. [#501](https://github.com/bostonaholic/team/pull/501)
+
 ## [0.182.1] - 2026-11-15
 
 ### Changed
@@ -1624,7 +1630,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.182.1...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.182.2...HEAD
+[0.182.2]: https://github.com/bostonaholic/team/compare/v0.182.1...v0.182.2
 [0.182.1]: https://github.com/bostonaholic/team/compare/v0.182.0...v0.182.1
 [0.182.0]: https://github.com/bostonaholic/team/compare/v0.181.0...v0.182.0
 [0.181.0]: https://github.com/bostonaholic/team/compare/v0.180.0...v0.181.0

@@ -23,4 +23,4 @@ phase: repos
 ---
 ```
 
-Do not write `## Worktrees`; the orchestrator adds it during WORKTREE.
+Do not write `## Worktrees`; the orchestrator adds it after the design review.
