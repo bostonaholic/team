@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`discover-topic.sh` finds plan directories on Linux.** GNU `stat -f %m` prints filesystem info instead of failing, so every directory was skipped and phase commands found no topic. The script now tries GNU `stat -c %Y` first and falls back to BSD `stat -f %m`. [#574](https://github.com/bostonaholic/team/pull/574)
+
 ## [0.190.0] - 2026-11-16
 
 ### Changed
