@@ -73,9 +73,9 @@ brief meets the same missing reproduction.
    that it can be the user's own work or a leftover of an earlier attempt.
    Otherwise, record three baselines: `git rev-parse HEAD`,
    `git symbolic-ref --short HEAD`, and the plan list: each file path under
-   the artifact directory with its `git hash-object <path>` hash. When either
-   git command exits non-zero, as `git symbolic-ref` does on a detached HEAD,
-   halt before dispatch. Name the worktree path, the command, and its exit
+   the artifact directory with its `git hash-object <path>` hash. When any
+   of these commands exits non-zero, as `git symbolic-ref` does on a detached
+   HEAD, halt before dispatch. Name the worktree path, the command, and its exit
    status, and record no baseline.
 2. Dispatch one fresh general subagent per
    [step delegation](step-delegation.md), with this brief:
