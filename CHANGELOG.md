@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.182.0] - 2026-11-15
+
+### Changed
+
+- **Documents are sized to the decision instead of capped at one page.** The writing standard told every document to keep to one page. It now says to include what the reader needs to decide or act, which matches the earlier removal of artifact length caps. A longer document still opens with a standalone summary. [#504](https://github.com/bostonaholic/team/pull/504)
+
 ## [0.181.0] - 2026-11-15
 
 ### Fixed
@@ -1612,7 +1618,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.181.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.182.0...HEAD
+[0.182.0]: https://github.com/bostonaholic/team/compare/v0.181.0...v0.182.0
 [0.181.0]: https://github.com/bostonaholic/team/compare/v0.180.0...v0.181.0
 [0.180.0]: https://github.com/bostonaholic/team/compare/v0.179.0...v0.180.0
 [0.179.0]: https://github.com/bostonaholic/team/compare/v0.178.0...v0.179.0
