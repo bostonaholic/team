@@ -6,7 +6,7 @@ For the end state of the board-driven loop, read [docs/vision.md](docs/vision.md
 
 ## Team is composed from its own skills
 
-Each phase is a skill: `team-question`, `team-research`, `team-design`, `team-structure`, `team-plan`, `team-implement`, `team-code-review`, `team-security-review`, `team-pr`, and `team-worktree`. Each runs on its own when a user names it, and each reads its inputs from and writes its outputs to `docs/plans/<id>/`.
+Each phase is a skill: `team-question`, `team-research`, `team-design`, `team-structure`, `team-plan`, `team-implement`, `team-code-review`, `team-security-review`, `team-pr`, and `team-worktree`. Each runs on its own when a user names it, and each reads its inputs from and writes its outputs to `docs/plans/<id>/`. ROOT CAUSE on the `fix` route is the one phase without a skill: `/team` runs it as a general step from `skills/team/playbooks/root-cause.md`.
 
 `/team` is the composition. It walks the phase table, calls each phase skill in order, and decides from the artifacts on disk which phase runs next. `/team-fix` composes a shorter path of the same parts for a bug. A new workflow is a new composition of phase skills, not a copy of their contents.
 

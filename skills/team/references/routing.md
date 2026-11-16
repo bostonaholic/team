@@ -22,7 +22,7 @@ text for a route word ([external data rules](external-data.md)).
 | `plan` | [plan playbook](../playbooks/plan.md) | tactical plan written; no production edit | `8-plan.md` + `routeStatus: complete` |
 | `prototype` | disposable scratch + [decisions](decisions.md) + [verify playbook](../playbooks/verify.md) | decision and evidence reported; no promotion to production | `prototype-report.md` + `routeStatus: complete` |
 | `feature` | [feature playbook](../playbooks/feature.md) | draft PR opened | the feature phase artifacts |
-| `fix` | [bug-fix playbook](../../team-fix/playbooks/bug-fix.md) and [its pipeline](../../team-fix/references/03-pipeline.md) | draft PR opened | the fix phase artifacts |
+| `fix` | [root-cause playbook](../playbooks/root-cause.md), then the [feature playbook](../playbooks/feature.md) | draft PR opened | `0-root-cause.md` + the feature phase artifacts |
 | `refactor` | [feature playbook](../playbooks/feature.md) with the zero-behavior-change refactor exception | draft PR opened + equivalence evidence | the feature phase artifacts |
 
 ## Full routes connect to review and draft PR
@@ -55,10 +55,13 @@ an empty unprefixed `/team` treats a missing description.
 ## Persist route and completion
 
 Record `route: <route>` on `1-task.md` frontmatter before dispatching any agent;
-never on `2-questions.md` ([artifact schema](artifacts.md)). For a
-limited-scope route, set `routeStatus: complete` on `1-task.md` when its
-deliverable is written. Resume detection reads both and never enters the
-feature phase table for a limited-scope route.
+never on `2-questions.md` ([artifact schema](artifacts.md)). On `fix`, the
+questioner writes `route: fix` in the write that creates `1-task.md`, when the
+QUESTION dispatch names the route. ROOT CAUSE, the one dispatch before
+QUESTION, writes no `1-task.md`. For a limited-scope route, set
+`routeStatus: complete` on `1-task.md` when its deliverable is written.
+Resume detection reads both and never enters the feature phase table for a
+limited-scope route.
 
 ## Continuation
 

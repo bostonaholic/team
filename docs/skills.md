@@ -209,6 +209,7 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [independent review](https://github.com/bostonaholic/team/blob/main/skills/team/principles/independent-review.md)
 - [verified results](https://github.com/bostonaholic/team/blob/main/skills/team/principles/verified-results.md)
 - [feature playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/feature.md)
+- [root cause playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/root-cause.md)
 - [question playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/question.md)
 - [research playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/research.md)
 - [design playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/design.md)

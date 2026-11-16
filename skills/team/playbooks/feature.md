@@ -3,13 +3,14 @@
 Before this operation, read [artifact schema](../references/artifacts.md).
 Resolve links from this file's directory and read each step's linked rules before it. If a read fails, stop that step and report the resolved path; never use checkout fallback or recursive loading.
 
-Ten sequential phases; none are skippable.
+Ten sequential phases on each route except `fix`, which runs eleven with ROOT CAUSE second; none are skippable.
 
 ## Phase Sequence
 
 | Phase | Produces | Gate |
 |---|---|---|
 | **WORKTREE** | branch `<id>` worktree from `origin/HEAD`; author `docs/plans/<id>/` inside it | HARD: exists before QUESTION |
+| **ROOT CAUSE** | `0-root-cause.md`, on `fix` only ([root-cause playbook](root-cause.md)) | HARD: the look and the tree check pass before QUESTION |
 | **QUESTION** | `1-task.md` (full, human-only) and `2-questions.md` (neutral codebase context; no goal) | HARD: both on disk |
 | **RESEARCH** | `5-research.md` | HARD: on disk |
 | **DESIGN** | `6-design.md` and `design-review-<n>.md` each round | REVIEW: APPROVE/COMMENT advance; REQUEST CHANGES redrafts and reviews again |
@@ -40,11 +41,18 @@ The [artifact schema](../references/artifacts.md) owns every artifact schema. Re
 
 ## State and transitions
 
-These rows add to Setup step 7 resume detection. "IMPLEMENT complete" is the rule in the "Branch state" section of the [artifact schema](../references/artifacts.md).
+These rows add to Setup step 7 resume detection. "IMPLEMENT complete" is the rule in the "Branch state" section of the [artifact schema](../references/artifacts.md). On `fix`, the `fix:` rows apply in order, and the first match wins. The [phase loop](../references/03-the-phase-loop.md) defines the look, the QUESTION look, and the resume tree check.
 
 | Latest durable state | Next/current phase |
 |---|---|
-| worktree exists; no `1-task.md` | WORKTREE |
+| not `fix`: worktree exists; no `1-task.md` | WORKTREE |
+| `fix`: `1-task.md` without `routeStatus: complete`, and no `0-root-cause.md` or no `route: fix` | halt before any dispatch |
+| `fix`: worktree exists; no `0-root-cause.md`, `1-task.md`, or `2-questions.md` | WORKTREE, then ROOT CAUSE |
+| `fix`: `0-root-cause.md` passes the look; no `2-questions.md`; no `1-task.md`, or one with `route: fix` | resume tree check, then QUESTION |
+| `fix`: `0-root-cause.md` passes the look; `1-task.md` passes the QUESTION look; `2-questions.md` | RESEARCH or later, by step 7 and the rows below |
+| `fix`: `2-questions.md`; no `1-task.md` | halt before any dispatch |
+| `fix`: `0-root-cause.md` fails the look | halt before any dispatch |
+| `fix`: `0-root-cause.md` passes the look; `1-task.md` with `route: fix` fails the QUESTION look; `2-questions.md` | halt before any dispatch |
 | `8-plan.md`; IMPLEMENT not complete | IMPLEMENT |
 | IMPLEMENT complete; no PASS record that is current | CODE REVIEW |
 | newest `review-<n>.md` PASS and current; no current PASS `security-review-<n>.md` | SECURITY REVIEW |

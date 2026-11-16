@@ -78,4 +78,4 @@ Report the worktree paths and tell the user:
 > This handoff is for **standalone, post-PLAN** invocation. In a full `/team`
 > run WORKTREE is the **leading** phase: the orchestrator supplies `<id>`,
 > skips this skill's `8-plan.md`-gated discovery, and proceeds to QUESTION,
-> not `/team-implement`.
+> or to ROOT CAUSE first on `fix`, not `/team-implement`.

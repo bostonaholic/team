@@ -53,7 +53,7 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 
 | Command | Phase |
 |---------|-------|
-| `/team <desc>` | Full 10-phase QRSPI pipeline, on stated pipeline intent — it commits, pushes, opens a PR, and moves the ticket. A leading-argument route selects a bounded task instead: `/team investigate|plan|prototype` stop at their deliverable with no commit, push, or PR; `/team feature|fix|refactor` run their full pipeline to a draft PR |
+| `/team <desc>` | Full 10-phase QRSPI pipeline, on stated pipeline intent — it commits, pushes, opens a PR, and moves the ticket. A leading-argument route selects a bounded task instead: `/team investigate|plan|prototype` stop at their deliverable with no commit, push, or PR; `/team feature|fix|refactor` run their full pipeline to a draft PR, and `/team fix` runs a ROOT CAUSE phase after WORKTREE, then the full pipeline |
 | `/team-fix <bug>` | Compressed bug-fix pipeline (no QRSPI ceremony), on stated pipeline intent, never on a plain "fix this bug" |
 | `/team-worktree` | Leading WORKTREE phase: create the home worktree — a branch, so on stated intent or as phase 1 of a `/team` run. In a full run it is automatic and first. Standalone, it consumes `8-plan.md` post-PLAN for manual recovery or multi-repo setup |
 | `/team-question <desc>` | Decompose intent into a task record and neutral research questions |

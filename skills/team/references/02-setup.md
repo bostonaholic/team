@@ -4,6 +4,8 @@
    worktree or artifact. Only a full route (`feature`, `fix`, `refactor`, or
    unprefixed) runs the leading WORKTREE phase; a limited-scope route writes
    in place under the home `docs/plans/<id>/` and stops at its deliverable.
+   On `fix`, ROOT CAUSE runs after WORKTREE and before QUESTION, per the
+   [phase loop](03-the-phase-loop.md).
 1. **Resolve `$ARGUMENTS`** (after routing, its remaining task tokens) to a
    description:
    - Ticket identifier (e.g. `ENG-1234`): look it up in the tracker.
@@ -28,6 +30,9 @@
 5. **Seed the TodoWrite ledger** with one item per phase, in order:
    `Worktree → Question → Research → Design → Structure → Plan → Implement → Code review → Security review → PR`,
    with `Worktree` `in_progress` ([execution rules](execution.md)).
+   On `fix` only, seed
+   `Worktree → Root cause → Question → Research → Design → Structure → Plan → Implement → Code review → Security review → PR`
+   instead.
    With no TodoWrite, use the Rules reference's substitute file ledger. The
    home worktree and `docs/plans/<id>/` are created at WORKTREE, not here.
 6. **Resolve the canonical artifact directory.** If `git worktree list` shows
@@ -52,6 +57,17 @@
      leaves the `review-<n>.md` record stale, so that run resumes at CODE
      REVIEW.
    - Resume never re-dispatches `test-architect` or `implementer`.
+   - On `fix`, ROOT CAUSE is complete only when `0-root-cause.md` exists and
+     passes the look, and QUESTION is complete only when `1-task.md` passes
+     the QUESTION look ([phase loop](03-the-phase-loop.md)). The `fix:` rows
+     in the [feature playbook](../playbooks/feature.md#state-and-transitions)
+     apply first, in order, and the first match wins. The third `fix:` row
+     is the one exception to the sentence below, "Never re-dispatch a phase
+     whose artifact already exists": it re-runs QUESTION over a `1-task.md`
+     with `route: fix` and no `2-questions.md`. The questioner wrote that
+     `1-task.md` from the same `0-root-cause.md`, so the rewrite loses no
+     input. Before QUESTION, that row runs the resume tree check, step 7 of
+     the **ROOT CAUSE** paragraph in the [phase loop](03-the-phase-loop.md).
 
    Then mark the first incomplete phase `in_progress`. **Never re-dispatch a
    phase whose artifact already exists** (re-running QUESTION overwrites
@@ -60,4 +76,5 @@
 
 **Research-isolation invariant.** You hold the description in your own
 context. Downstream of QUESTION it must NEVER appear in any artifact or agent
-payload outside `1-task.md` and the questioner's own outputs.
+payload outside `0-root-cause.md`, `1-task.md`, and the questioner's own
+outputs.
