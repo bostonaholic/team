@@ -102,8 +102,8 @@ brief meets the same missing reproduction.
 5. Route the return:
    - When the tree check fails, halt with no retry, whatever line 1 says.
    - On `BLOCKED`, in any of its five classes, halt with no retry.
-   - On `DONE`, run the look. A pass marks `Root cause` completed and
-     `Question` in progress.
+   - On `DONE`, run the look. On a pass, loop step 7 marks `Root cause`
+     completed and `Question` in progress.
    - On `DONE` with a failed look, on `FAILED`, or on an unrecognized line 1,
      retry once with the retry inputs. The tree equals the HEAD commit, so
      nothing needs a restore. The retry may overwrite a `0-root-cause.md`
