@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.186.0] - 2026-11-15
+
+### Fixed
+
+- **`/team-implement` never implements on the default branch.** Run standalone, it stops when the checkout or a linked worktree is on the default branch, and offers in-place implementation only on another branch. **What this asks of you:** switch to a feature branch or worktree before running `/team-implement`. [#489](https://github.com/bostonaholic/team/pull/489)
+
 ## [0.185.0] - 2026-11-15
 
 ### Changed
@@ -1648,7 +1654,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.185.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.186.0...HEAD
+[0.186.0]: https://github.com/bostonaholic/team/compare/v0.185.0...v0.186.0
 [0.185.0]: https://github.com/bostonaholic/team/compare/v0.184.0...v0.185.0
 [0.184.0]: https://github.com/bostonaholic/team/compare/v0.183.0...v0.184.0
 [0.183.0]: https://github.com/bostonaholic/team/compare/v0.182.2...v0.183.0
