@@ -33,5 +33,7 @@ A `/team` run authors `docs/plans/<id>/` inside an isolated worktree on branch
    worktree already on it; do not recreate.
 5. **Edge — home-worktree creation fails.** Report loudly and run
    **in place for the entire run**: author `docs/plans/<id>/` at the home-repo
-   root and thread that absolute path downstream; never block on it ("Fallback"
-   in `skills/team-worktree/playbooks/worktree.md`).
+   root and thread that absolute path downstream; never block on the worktree
+   failure itself ("Fallback" in `skills/team-worktree/playbooks/worktree.md`).
+   On the default branch, switch to branch `<id>` first, and stop when HEAD
+   stays on the default branch, per that Fallback.

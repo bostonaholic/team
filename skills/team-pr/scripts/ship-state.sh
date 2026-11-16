@@ -18,7 +18,8 @@
 # Exit codes:
 #
 #   0  reported
-#   2  fault: usage, not a git worktree, or no origin/<base> ref to count against
+#   2  fault: usage, not a git worktree, no origin/<base> ref to count against,
+#      or HEAD on the base branch (nothing ships from the default branch)
 
 set -eu
 
@@ -40,6 +41,11 @@ BASE="${BASE#origin/}"
 
 if ! git -C "$WORKTREE" rev-parse --verify -q "refs/remotes/origin/$BASE" >/dev/null; then
   printf 'ship-state.sh: no origin/%s ref in %s; fetch origin or set origin/HEAD\n' "$BASE" "$WORKTREE" >&2
+  exit 2
+fi
+
+if [ "$(git -C "$WORKTREE" rev-parse --abbrev-ref HEAD)" = "$BASE" ]; then
+  printf 'ship-state.sh: HEAD is on the base branch %s in %s; ship from a feature branch\n' "$BASE" "$WORKTREE" >&2
   exit 2
 fi
 
