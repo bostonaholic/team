@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.182.1] - 2026-11-15
+
+### Changed
+
+- **Implement and verify state their rules without all-caps emphasis.** "Write ALL … BEFORE" and the "Do NOT" lines now read as plain instructions, which current models follow without over-applying. The rules themselves are unchanged. [#502](https://github.com/bostonaholic/team/pull/502)
+
 ## [0.182.0] - 2026-11-15
 
 ### Changed
@@ -1618,7 +1624,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.182.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.182.1...HEAD
+[0.182.1]: https://github.com/bostonaholic/team/compare/v0.182.0...v0.182.1
 [0.182.0]: https://github.com/bostonaholic/team/compare/v0.181.0...v0.182.0
 [0.181.0]: https://github.com/bostonaholic/team/compare/v0.180.0...v0.181.0
 [0.180.0]: https://github.com/bostonaholic/team/compare/v0.179.0...v0.180.0

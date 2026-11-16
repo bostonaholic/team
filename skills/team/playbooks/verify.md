@@ -81,8 +81,10 @@ Distinguish tests, runtime observations, and unavailable checks.
 
 ## Rules
 
-- Do NOT fix failures. Report them exactly as they occur.
-- Do NOT interpret results beyond pass/fail. No suggestions, no opinions.
+- Do not fix failures. Report them exactly as they occur.
+- Do not interpret check results beyond pass/fail. Add no suggestions or
+  opinions about them. The one allowed note is the missing-checks
+  recommendation above.
 - If a check hangs for more than 120 seconds, kill it and report TIMEOUT.
 - **Do NOT retry to mask intermittent failures.** Each check runs once; report
   any failure. If the same test passed in a previous run (e.g. a re-dispatch
