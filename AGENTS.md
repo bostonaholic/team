@@ -29,6 +29,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Registry sync validation | `.claude/hooks/check-registry-sync.mjs` | Plugin developers |
 | Pre-merge version gate | `.claude/hooks/pre-merge-guard.mjs` | Plugin developers |
 | Link check (every link resolves from its own file) | `.claude/scripts/check-links.mjs`, run by `.github/workflows/link-check.yml` | Plugin developers |
+| Script tests | `tests/*.test.mjs`, run by `.github/workflows/test.yml` | Plugin developers |
 | Dev scripts | `.claude/scripts/` | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
 | Work tracking | [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1) | Plugin developers |
