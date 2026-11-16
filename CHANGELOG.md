@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.188.0] - 2026-11-15
+
+### Added
+
+- **Testing rules cover claimed races.** A test that claims to prove a race drives each side on its own connection, and detects blocking with a timeout instead of reading the engine's lock table. [#416](https://github.com/bostonaholic/team/pull/416)
+
 ## [0.187.0] - 2026-11-15
 
 ### Changed
@@ -1660,7 +1666,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.187.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.188.0...HEAD
+[0.188.0]: https://github.com/bostonaholic/team/compare/v0.187.0...v0.188.0
 [0.187.0]: https://github.com/bostonaholic/team/compare/v0.186.0...v0.187.0
 [0.186.0]: https://github.com/bostonaholic/team/compare/v0.185.0...v0.186.0
 [0.185.0]: https://github.com/bostonaholic/team/compare/v0.184.0...v0.185.0
