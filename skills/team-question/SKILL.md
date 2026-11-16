@@ -31,14 +31,15 @@ Run the QUESTION phase only, then stop. The phase writes, in `docs/plans/<id>/`:
      the repo's `README` / `CLAUDE.md` to propose a likely topic; use
      `AskUserQuestion` with labeled options only for a genuine gap in intent.
      Never bare-stop with a "describe it" demand when context is available.
-   - Ticket-only: ask the user for context, or fetch the issue body through a
+   - Ticket-only: ask the user for context, or read the issue body through a
      configured tracker integration.
    - Issue URL: run `gh issue view <url> --json title,body` (or equivalent)
      and use the title plus body as the description.
    - Free text: use directly.
 
    A ticket identifier (e.g. `ENG-1234`) is recorded as `ticketId` in
-   `1-task.md` frontmatter. The orchestrator calls no ticketing system.
+   `1-task.md` frontmatter. Standalone QUESTION may read a ticket but
+   makes no tracker writes; in a full `/team` run, setup owns the pickup move.
 2. **Choose `<kebab-topic>`**: a 2–4 word kebab-case slug derived from the
    description. Resolve `<team-question-skill-dir>` to the absolute directory
    containing this `SKILL.md`. From the repository root, run
