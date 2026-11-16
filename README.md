@@ -34,10 +34,10 @@ To update Team later in every harness that has it, run `/team-update` (`team:tea
 /team Add rate limiting middleware to all API endpoints
 ```
 
-For well-understood bugs, skip the QRSPI ceremony:
+For a bug, find the root cause and fix it with a failing reproduction test first (`/team-fix` is the same command):
 
 ```
-/team-fix Users see stale cache after profile update
+/team fix Users see stale cache after profile update
 ```
 
 Or run individual phases:
@@ -116,7 +116,8 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 ```
 
 - **Worktree.** Orchestrator prepares an isolated git worktree first and authors `docs/plans/<id>/` inside it, keeping the home checkout's `git status` clean for the whole run.
-- **Question.** Decompose intent into a full task record (`1-task.md`) and neutral research questions (`2-questions.md`). The questioner is the only agent that ever sees the user's original description.
+- **Root cause** *(`fix` route only)*. One subagent reproduces the bug, traces it to its root cause, and writes `docs/plans/<id>/0-root-cause.md`, which becomes the questioner's task.
+- **Question.** Decompose intent into a full task record (`1-task.md`) and neutral research questions (`2-questions.md`). On every route except `fix`, the questioner is the only agent that ever sees the user's original description. On `fix`, the ROOT CAUSE step sees it first.
 - **Research** *(isolated)*. Parallel agents (file-finder + researcher) consume only `2-questions.md`. They never see the task. This structurally prevents opinion-bias in research findings.
 - **Design** *(design review)*. Design author drafts an alignment doc, resolving its own open questions as recorded assumptions. An adversarial design review gates advancement.
 - **Structure.** Break the design into vertical slices with verification checkpoints. Produced autonomously. Advances to Plan with no gate.
@@ -133,7 +134,7 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 ## Components
 
 - **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
-- **13 skills** in `skills/`: the `/team` orchestrator, the ten phase commands, `/team-fix`, and the explicit-only `/team-update`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
+- **13 skills** in `skills/`: the `/team` orchestrator, the ten phase commands, the `/team-fix` alias for `/team fix`, and the explicit-only `/team-update`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
 - **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, per-round code-review records live in `review-<n>.md`, per-round security-review records in `security-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
 

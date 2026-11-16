@@ -99,7 +99,7 @@ Every artifact opens with YAML frontmatter. Common fields:
 ---
 topic: <kebab-case>
 date: 2026-04-30
-phase: design        # task | questions | prd | repos | research | design | structure | plan
+phase: design        # root-cause | task | questions | prd | repos | research | design | structure | plan
 ---
 ```
 
@@ -107,6 +107,7 @@ Per-phase additions:
 
 | Phase     | Extra frontmatter                                                       |
 |-----------|-------------------------------------------------------------------------|
+| root-cause | (none. Written before QUESTION, on the `fix` route only.)               |
 | task      | `ticketId: <id>` (or `null`)                                            |
 | questions | (none)                                                                  |
 | prd       | (none. Not gated. The questioner writes it conditionally.)        |
@@ -150,7 +151,14 @@ phase loop's PR predecessor check, and `/team-pr` read it.
 
 | Latest artifact present                                                           | Current phase        |
 |-----------------------------------------------------------------------------------|----------------------|
-| worktree exists for `<id>`, no `1-task.md` yet                                    | WORKTREE (next up)   |
+| not `fix`: worktree exists for `<id>`, no `1-task.md` yet | WORKTREE (next up) |
+| `fix`: `1-task.md`, and no `0-root-cause.md` or no `route: fix` | halt (before any dispatch) |
+| `fix`: worktree exists for `<id>`, no `0-root-cause.md`, `1-task.md`, or `2-questions.md` | WORKTREE, then ROOT CAUSE (next up) |
+| `fix`: `0-root-cause.md` passes the look, no `2-questions.md`, and no `1-task.md` or one with `route: fix` | resume tree check, then QUESTION (next up) |
+| `fix`: `0-root-cause.md` passes the look, `1-task.md` passes the QUESTION look, and `2-questions.md` | the rows below, with `0-root-cause.md` ignored |
+| `fix`: `2-questions.md`, no `1-task.md` | halt (before any dispatch) |
+| `fix`: `0-root-cause.md` exists and fails the look | halt (before any dispatch) |
+| `fix`: `0-root-cause.md` passes the look, `1-task.md` with `route: fix` fails the QUESTION look, and `2-questions.md` | halt (before any dispatch) |
 | `1-task.md` + `2-questions.md` only                                               | RESEARCH (next up)   |
 | `5-research.md`                                                                   | DESIGN (next up)     |
 | `6-design.md` alone (no passing design review)                                    | DESIGN (review next) |
@@ -162,6 +170,7 @@ phase loop's PR predecessor check, and `/team-pr` read it.
 | newest `review-<n>.md` and newest `security-review-<n>.md` both PASS and current  | PR (next up)         |
 | PR opened or commit shipped                                                       | SHIPPED              |
 
+On `fix`, the `fix:` rows apply first, in order, and the first match wins.
 Worktree presence: `git worktree list --porcelain | grep -q <id>`.
 The merge-base is taken against `origin/<default>`, the ref each worktree
 is cut from, and against the local default branch only when the repo has no
@@ -212,6 +221,9 @@ phase needs the prior phase's artifact on disk.
 WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEMENT → CODE REVIEW → SECURITY REVIEW → PR → SHIPPED
 ```
 
+On the `fix` route, ROOT CAUSE runs between WORKTREE and QUESTION, for
+eleven phases.
+
 ### Phase 1: Worktree
 
 **Action:** orchestrator-emit (the leading phase) **Predecessor:** none.
@@ -229,7 +241,7 @@ dispatch (the main session does not `cd`).
 `<repo>/.claude/worktrees/<id>`.
 
 **Multi-repo:** the questioner writes `4-repos.md` autonomously at
-QUESTION, one phase after WORKTREE. The design-author writes it at DESIGN
+QUESTION, after WORKTREE. The design-author writes it at DESIGN
 when the questioner missed the multi-repo signals. Only the home worktree
 is created here. Secondary worktrees are created
 **after the design review**, one per listed repo. Each repo path must
@@ -250,16 +262,50 @@ repos' worktrees do not duplicate the artifacts. See
 **Fallback:** if home-worktree creation fails (shallow clone, certain CI
 systems, permissions), the orchestrator reports it and falls back to
 in-place for the entire run: `docs/plans/<id>/` lives at the home-repo
-root and the threaded path is the home-repo root.
+root and the threaded path is the home-repo root. When that checkout is on
+the default branch, the run first switches it to branch `<id>`, and stops
+if HEAD stays on the default branch.
+
+### The `fix` route: Root cause
+
+**Action:** one fresh general step subagent, on the `fix` route only.
+**Predecessor:** worktree prepared (+ bug report in `$ARGUMENTS`).
+**Artifact:** `docs/plans/<id>/0-root-cause.md`.
+
+Between WORKTREE and QUESTION, the orchestrator runs ROOT CAUSE from the
+[root-cause playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/root-cause.md).
+The tree must be clean outside `docs/plans/`, and HEAD must be on a branch.
+The subagent triages and reproduces the bug, and drills the 5 Whys chain to
+one or more root links in the home repo. For each root link, it names a
+project test command in which a test can fail on that link. Its last act
+writes `0-root-cause.md`. The questioner then takes that file as its task,
+copies its triage, root cause, and reproduction into `1-task.md`, and records
+`route: fix`.
+
+The run halts before QUESTION, with no retry, on each of five `BLOCKED`
+returns: `not reproduced`, `no root cause`, `external cause`,
+`environment inaccessible`, and `no reproduction test`. A `BLOCKED` return
+writes no `0-root-cause.md`. The run also halts when HEAD, the branch, or the
+clean tree changed during the step. The
+[phase loop](https://github.com/bostonaholic/team/blob/main/skills/team/references/03-the-phase-loop.md)
+owns these routes, the look that checks `0-root-cause.md`, and the resume
+tree check.
+
+At STRUCTURE, each root link gets one reproduction test, listed first in the
+slice that changes that link. Slice 1 changes a root link, so the first test
+the test-architect writes reproduces the bug. The commit of each slice with
+a reproduction test records that test's Red run in its body: the command and
+the failing assertion line. Each reproduction test stays in the suite.
 
 ### Phase 2: Question
 
 **Agent:** `questioner`
-**Predecessor:** worktree prepared (+ description in `$ARGUMENTS`)
+**Predecessor:** worktree prepared (+ description in `$ARGUMENTS`); on `fix`, `0-root-cause.md`
 **Artifacts:** `docs/plans/<id>/{task,questions}.md`
 
-Decomposes the user's intent into two artifacts. Only the questioner ever
-sees the user's description. There is no separate `brief.md`. Neutral
+Decomposes the user's intent into two artifacts. On every route except
+`fix`, only the questioner ever sees the user's description. On `fix`, the
+ROOT CAUSE step sees it first. There is no separate `brief.md`. Neutral
 codebase context lives in a "Codebase context" section at the top of
 `2-questions.md`.
 
@@ -1080,7 +1126,7 @@ gate and verdict decisions, each step whose reads are no larger than its
 return, and the TodoWrite ledger. A subagent pays off only for read-heavy,
 isolated work that reads more than it returns.
 Dependent steps run one at a time; independent steps fan out in one turn.
-`/team-fix` delegates Reproduce, Red, Green, Verify, Ship, and Upload. `/team-pr`
+On the `fix` route, `/team` delegates ROOT CAUSE to one general step. `/team-pr`
 delegates input gathering, screenshots, the changelog, Open,
 upload, and review comments. The mechanical test gate delegates its
 evidence run. The host mapping (Claude Code `Agent`, Codex `spawn_agent`

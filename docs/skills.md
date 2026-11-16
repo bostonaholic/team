@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: the pipeline entry-point slash commands, the bug-fix pipeline, and the setup update, each with the skills it loads."
+description: "The Team plugin's skills: the pipeline entry-point slash commands, the `/team-fix` alias for `/team fix`, and the setup update, each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills
@@ -53,7 +53,7 @@ full run or drives one phase of the QRSPI pipeline.
 
 Runs the 10-phase QRSPI feature pipeline, or a leading-argument route.
 
-**Used by:** None
+**Used by:** `team-fix`
 
 **Uses:** `team-code-review`, `team-pr`, `team-security-review`, `team-worktree`
 
@@ -101,7 +101,7 @@ Produces the tactical implementation plan.
 
 Prepares isolated git worktrees.
 
-**Used by:** `team`, `team-fix`
+**Used by:** `team`
 
 **Uses:** None
 
@@ -139,11 +139,11 @@ Commits, updates an existing changelog, pushes, and opens a draft PR per repo.
 
 ### [team-fix](https://github.com/bostonaholic/team/blob/main/skills/team-fix/SKILL.md)
 
-Runs the compressed bug-fix pipeline.
+Same as `/team fix`: it routes to `team` with the `fix` route.
 
 **Used by:** None
 
-**Uses:** `team-worktree`
+**Uses:** `team`
 
 ## Setup update
 
@@ -209,6 +209,7 @@ Read these ordinary documents at their consuming step. They add no registrations
 - [independent review](https://github.com/bostonaholic/team/blob/main/skills/team/principles/independent-review.md)
 - [verified results](https://github.com/bostonaholic/team/blob/main/skills/team/principles/verified-results.md)
 - [feature playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/feature.md)
+- [root cause playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/root-cause.md)
 - [question playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/question.md)
 - [research playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/research.md)
 - [design playbook](https://github.com/bostonaholic/team/blob/main/skills/team/playbooks/design.md)

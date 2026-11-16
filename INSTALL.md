@@ -120,10 +120,10 @@ Then run a phase end-to-end:
 /team Add rate limiting middleware to all API endpoints
 ```
 
-For a focused bug fix that skips the QRSPI ceremony:
+For a bug fix (`/team-fix` is the same command):
 
 ```bash
-/team-fix Users see stale cache after profile update
+/team fix Users see stale cache after profile update
 ```
 
 ## Codex CLI

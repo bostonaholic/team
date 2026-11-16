@@ -55,9 +55,20 @@ test("reports origin/HEAD's branch, commits ahead, and uncommitted paths", (t) =
 test("falls back to main when origin/HEAD is unset", (t) => {
   const s = scratchClone(t);
   s.git("remote", "set-head", "origin", "--delete");
+  s.git("checkout", "-q", "-b", "feature");
   const run = s.run();
   assert.equal(run.status, 0, run.stderr);
   assert.equal(run.stdout, "base=main\nahead=0\ndirty=0\n");
+});
+
+test("HEAD on the base branch exits 2 and prints nothing", (t) => {
+  const s = scratchClone(t, "trunk");
+  s.git("remote", "set-head", "origin", "trunk");
+  s.commit();
+  const run = s.run();
+  assert.equal(run.status, 2);
+  assert.equal(run.stdout, "");
+  assert.match(run.stderr, /HEAD is on the base branch trunk/);
 });
 
 test("a missing origin/<base> ref exits 2", (t) => {

@@ -49,7 +49,8 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 | Phase | What happens |
 |-------|-------------|
 | **Worktree** | The orchestrator prepares an isolated git worktree first. It authors `docs/plans/<id>/` inside that worktree. Your home checkout stays clean for the whole run. |
-| **Question** | Decompose intent into `1-task.md` + neutral `2-questions.md`. The questioner is the only agent that ever sees your original description. |
+| **Root cause** *(`fix` route only)* | One subagent reproduces the bug, traces it to its root cause, and writes `0-root-cause.md`, which becomes the questioner's task. |
+| **Question** | Decompose intent into `1-task.md` + neutral `2-questions.md`. On every route except `fix`, the questioner is the only agent that ever sees your original description. On `fix`, the ROOT CAUSE step sees it first. |
 | **Research** *(isolated)* | Parallel agents (file-finder + researcher) consume only `2-questions.md`. They never see the task. This isolation prevents opinion bias. |
 | **Design** *(design review)* | The design author drafts an alignment doc. It resolves its own open questions as recorded assumptions. An adversarial design review gates advancement. |
 | **Structure** | Break the design into vertical slices with verification checkpoints. It advances to Plan with no gate. |

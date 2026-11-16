@@ -8,6 +8,7 @@ Schema contract for durable pipeline state under `docs/plans/<id>/`. Phase behav
 
 | Artifact | Path under `docs/plans/<id>/` | Created by | Required |
 | --- | --- | --- | --- |
+| Root cause | `0-root-cause.md` | ROOT CAUSE step | on `fix` |
 | Task | `1-task.md` | questioner | yes |
 | Questions | `2-questions.md` | questioner | yes |
 | PRD | `3-prd.md` | questioner | when PRD criteria apply |
@@ -19,11 +20,11 @@ Schema contract for durable pipeline state under `docs/plans/<id>/`. Phase behav
 
 ## Frontmatter schema
 
-Every artifact starts with `topic: <kebab-case>`, `date: <YYYY-MM-DD>`, and `phase: task | questions | prd | repos | research | design | structure | plan`. Design adds `revision: 0`. PRD and structure are not gated; plan derives mechanically from structure.
+Every artifact starts with `topic: <kebab-case>`, `date: <YYYY-MM-DD>`, and `phase: root-cause | task | questions | prd | repos | research | design | structure | plan`. Design adds `revision: 0`. PRD and structure are not gated; plan derives mechanically from structure.
 
 `1-task.md` alone carries `ticketId: <id>` or `null`, and the selected route ([routing](routing.md)):
 
-- `route: investigate | plan | prototype | feature | fix | refactor`: recorded before dispatch. Optional; absent means the unprefixed full feature workflow.
+- `route: investigate | plan | prototype | feature | fix | refactor`: recorded before dispatch. On `fix`, the questioner records `route: fix` in the write that creates `1-task.md`. Optional; absent means the unprefixed full feature workflow.
 - `routeStatus: complete`: present only when a limited-scope route (`investigate`, `plan`, `prototype`) has finished its deliverable, so resume never reads a finished plan as permission to implement.
 
 Never put `ticketId`, `route`, or `routeStatus` on `2-questions.md` or any later artifact.

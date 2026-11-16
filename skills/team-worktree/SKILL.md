@@ -9,7 +9,7 @@ argument-hint: "[docs/plans/<id>/]"
 
 Before finalizing prose you author, read the [writing standards](../team/references/writing.md).
 
-Create one isolated git worktree per involved repo, all on branch `<id>`, without touching any main working tree: the home repo in single-repo mode (default), or every repo in `docs/plans/<id>/4-repos.md` when it exists.
+Create one isolated git worktree per involved repo, all on branch `<id>`, without touching any main working tree unless creation fails (see Fallback in the worktree playbook, which moves that tree off the default branch): the home repo in single-repo mode (default), or every repo in `docs/plans/<id>/4-repos.md` when it exists.
 
 ## Core contracts
 

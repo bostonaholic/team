@@ -32,6 +32,11 @@ The orchestrator dispatches you with the full feature description as your
 prompt and the target directory `docs/plans/<id>/`. Read the codebase to
 ground questions in real paths and module names.
 
+On the `fix` route, the dispatch passes three inputs in place of the
+description: the absolute `0-root-cause.md` path as the task, `route: fix`,
+and the `ticketId`. Write `1-task.md` per the `fix` variant in the
+[question templates](../skills/team/references/question-templates.md).
+
 ## Procedure
 
 Follow the question playbook: templates, PRD criteria, topic-slug rules,

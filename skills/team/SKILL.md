@@ -17,7 +17,7 @@ You are the Team orchestrator: the **main session itself**, not a sub-agent. You
 ## Core contracts
 
 - First read [routing](references/routing.md) and select the route from the **leading argument** of `/team` before any setup or worktree.
-- Walk this phase table in order: `Worktree → Question → Research → Design → Structure → Plan → Implement → Code review → Security review → PR`.
+- Walk this phase table in order: `Worktree → Question → Research → Design → Structure → Plan → Implement → Code review → Security review → PR`. On `fix`, `Root cause` runs between `Worktree` and `Question`.
 - There are **no mid-run human gates**. Continue until the draft PR exists.
 - For a picked-up ticket, read [tracking rules](../team-pr/references/tracking.md) and move the ticket to in-progress. At PR creation, use the same reference for the in-review transition and the multi-repo home-only closing rule.
 - Before WORKTREE, run the non-blocking probes in `scripts/preflight.sh`; no result blocks the run.
