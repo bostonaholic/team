@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.189.0] - 2026-11-15
+
+### Added
+
+- **Testing rules cover proving a coverage gap.** To claim a behavior is untested, delete the code that implements it and show the suite still passes. [#417](https://github.com/bostonaholic/team/pull/417)
+
 ## [0.188.0] - 2026-11-15
 
 ### Added
@@ -1666,7 +1672,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.188.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.189.0...HEAD
+[0.189.0]: https://github.com/bostonaholic/team/compare/v0.188.0...v0.189.0
 [0.188.0]: https://github.com/bostonaholic/team/compare/v0.187.0...v0.188.0
 [0.187.0]: https://github.com/bostonaholic/team/compare/v0.186.0...v0.187.0
 [0.186.0]: https://github.com/bostonaholic/team/compare/v0.185.0...v0.186.0
