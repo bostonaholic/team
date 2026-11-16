@@ -63,6 +63,7 @@ Then run the full suite and resolve every failure type from the round. Commit th
 - Follow plan order. `[sequential]` steps depend on prior steps; `[parallel]` steps may reorder.
 - A slice finishes only when its acceptance tests and all prior-slice tests pass.
 - Use the slice `Commit:` subject byte for byte; the "IMPLEMENT complete" rule in the "Branch state" section of the [artifact schema](../references/artifacts.md) matches it exactly. Single repo: one commit citing design/structure paths. Multi-repo slice: one commit with that subject in each named repo; each body cites the same paths and says `part of slice <N>: <name>`.
+- On `fix`, a reproduction test is a planned test whose `7-structure.md` behavior line holds the `reproduces Root link <file:line>` token. The commit of a slice that holds one records each such test's Red run in its body: the command and the failing assertion line from the initial-dispatch baseline run.
 - After the last slice, run the full suite and every static check the project defines, detected as the [verify playbook](verify.md) does. Fix each failure inside plan scope and commit. Report each check's result, then return per the implementer's `## Return`.
 
 ### TDD and scope invariants

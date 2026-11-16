@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`/team fix` finds the root cause and writes a failing reproduction test before any fix.** It used to run the compressed `/team-fix` pipeline. It now adds a ROOT CAUSE phase after WORKTREE, then runs the full QRSPI pipeline to a draft PR. Each root link gets a test that fails before any production change, passes after the fix, and stays in the suite. **What this asks of you:** run `/team-fix` for a quick fix whose cause you know. Start `/team fix` on a clean tree. The repo needs a project test runner that can run the reproduction, because `/team fix` otherwise halts at ROOT CAUSE and names what is missing.
+
 ## [0.189.0] - 2026-11-15
 
 ### Added

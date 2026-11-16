@@ -289,6 +289,12 @@ clean tree changed during the step. The
 owns these routes, the look that checks `0-root-cause.md`, and the resume
 tree check.
 
+At STRUCTURE, each root link gets one reproduction test, listed first in the
+slice that changes that link. Slice 1 changes a root link, so the first test
+the test-architect writes reproduces the bug. The commit of each slice with
+a reproduction test records that test's Red run in its body: the command and
+the failing assertion line. Each reproduction test stays in the suite.
+
 ### Phase 2: Question
 
 **Agent:** `questioner`

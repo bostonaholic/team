@@ -42,6 +42,23 @@ Then include:
   skeleton (hardcoded internals allowed; the user-visible surface works),
   not infrastructure.
 - Cite non-obvious design decisions. Name files and behavior, never bodies.
+- When `1-task.md` carries `route: fix`, read the `Test runner:` lines of its
+  `### Reproduction`, one line per root link. For each root link:
+  - Plan one reproduction test at that link's owner boundary. Take its inputs
+    from `### Reproduction` and `### Root cause`. Its assertion is the link's
+    correct behavior.
+  - List the test first in the slice that changes that link. Slice 1 changes
+    a root link, so the first test written reproduces the bug.
+  - Change at most three root links in one slice, so its reproduction tests
+    stay inside the ceiling of three tests.
+  - Put the token `reproduces Root link <file:line>` on the test's behavior
+    line, with the `file:line` of its `Root link:` line.
+  - For a root link in a configuration, workflow, or build file, the test
+    runs the project's code that reads the file, or reads the file and
+    asserts the corrected value. Mark that test
+    "task-required, fails Restates the source"
+    ([authoring gate](../references/testing.md#authoring-gate)). PLAN
+    carries the mark through unchanged.
 
 ## Slicing heuristics
 
