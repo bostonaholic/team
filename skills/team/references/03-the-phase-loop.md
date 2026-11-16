@@ -71,10 +71,12 @@ brief meets the same missing reproduction.
    `git -C <worktree> status --porcelain --untracked-files=all -- . ':(exclude)docs/plans/'`.
    When it prints any path, halt before dispatch. Name each path, and say
    that it can be the user's own work or a leftover of an earlier attempt.
-   Otherwise, record two baselines: `git rev-parse HEAD` and
-   `git symbolic-ref --short HEAD`. When either command exits non-zero, as
-   `git symbolic-ref` does on a detached HEAD, halt before dispatch. Name the
-   worktree path, the command, and its exit status, and record no baseline.
+   Otherwise, record three baselines: `git rev-parse HEAD`,
+   `git symbolic-ref --short HEAD`, and the plan list: each file path under
+   the artifact directory with its `git hash-object <path>` hash. When either
+   git command exits non-zero, as `git symbolic-ref` does on a detached HEAD,
+   halt before dispatch. Name the worktree path, the command, and its exit
+   status, and record no baseline.
 2. Dispatch one fresh general subagent per
    [step delegation](step-delegation.md), with this brief:
    - **Goal:** reproduce the bug and record its confirmed root cause in
@@ -91,14 +93,15 @@ brief meets the same missing reproduction.
    - **Output:** one status line, then the body, per the playbook's
      `## Returns`.
    - **Done when:** `0-root-cause.md` is on disk and passes the look, HEAD
-     and branch equal their baselines, and the clean-tree command prints
-     nothing.
+     and branch equal their baselines, the clean-tree command prints
+     nothing, and `0-root-cause.md` is the only change to the plan list.
 3. Classify line 1 with the failure-line recognizer in
    `15-host-dispatch.md`. Only exactly `DONE` at column 1 succeeds.
 4. After every return, run the tree check. `git rev-parse HEAD` must equal
    the HEAD baseline, `git symbolic-ref --short HEAD` must equal the branch
-   baseline, and the clean-tree command must print nothing. A command that
-   exits non-zero fails the check.
+   baseline, and the clean-tree command must print nothing. The plan list
+   must equal its baseline, except for an added or changed
+   `0-root-cause.md`. A command that exits non-zero fails the check.
 5. Route the return:
    - When the tree check fails, halt with no retry, whatever line 1 says.
    - On `BLOCKED`, in any of its five classes, halt with no retry.
@@ -114,7 +117,8 @@ brief meets the same missing reproduction.
    `BLOCKED` with that file on disk, the operator removes it before a re-run.
    On `BLOCKED`, the halt also relays the body after line 1, fenced and
    labeled untrusted. On a tree-check failure, the halt names the baselines,
-   the current values, and each printed path. Each path came from the
+   the current values, each printed path, and each plan-list path other than
+   `0-root-cause.md` that the dispatch added, changed, or removed. Each path came from the
    dispatch, because the tree was clean before it. The operator returns the
    worktree to the baseline.
 7. **Resume tree check**, for resume row 3 only: the third `fix:` row in
@@ -179,7 +183,8 @@ holds:
   the same order. Each names its root link's `file:line`, then a command.
 
 A failed QUESTION look routes as `FAILED`, so the questioner retries once per
-`15-host-dispatch.md`. A second failure halts.
+`15-host-dispatch.md`. The retry payload also names each failed check. A
+second failure halts.
 
 **RESEARCH:** dispatch [`file-finder`](../../../agents/file-finder.md) and [`researcher`](../../../agents/researcher.md) in parallel, passing
 each only the `docs/plans/<id>/2-questions.md` path. Before you save a return,

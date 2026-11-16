@@ -28,7 +28,7 @@
     ],
     "defaultPrompt": [
       "Run the Team pipeline on this feature.",
-      "Fix this bug with the Team bug-fix pipeline.",
+      "Find this bug's root cause and fix it with Team.",
       "Draft a reviewed design for this change."
     ],
     "websiteURL": "https://team.bostonaholic.dev"

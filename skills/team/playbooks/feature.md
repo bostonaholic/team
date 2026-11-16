@@ -41,17 +41,17 @@ The [artifact schema](../references/artifacts.md) owns every artifact schema. Re
 
 ## State and transitions
 
-These rows add to Setup step 7 resume detection. "IMPLEMENT complete" is the rule in the "Branch state" section of the [artifact schema](../references/artifacts.md). On `fix`, the `fix:` rows apply in order, and the first match wins. The [phase loop](../references/03-the-phase-loop.md) defines the look, the QUESTION look, and the resume tree check.
+These rows add to Setup step 7 resume detection. "IMPLEMENT complete" is the rule in the "Branch state" section of the [artifact schema](../references/artifacts.md). On `fix`, the `fix:` rows apply in order, and the first match wins. The first `fix:` row's halt names the artifact directory and its `1-task.md`, which another route, standalone `/team-question`, or a QUESTION retry that failed its look wrote; the operator removes that directory's artifacts or starts `/team fix` under another topic. The [phase loop](../references/03-the-phase-loop.md) defines the look, the QUESTION look, and the resume tree check.
 
 | Latest durable state | Next/current phase |
 |---|---|
 | not `fix`: worktree exists; no `1-task.md` | WORKTREE |
-| `fix`: `1-task.md` without `routeStatus: complete`, and no `0-root-cause.md` or no `route: fix` | halt before any dispatch |
+| `fix`: `1-task.md`, and no `0-root-cause.md` or no `route: fix` | halt before any dispatch |
 | `fix`: worktree exists; no `0-root-cause.md`, `1-task.md`, or `2-questions.md` | WORKTREE, then ROOT CAUSE |
 | `fix`: `0-root-cause.md` passes the look; no `2-questions.md`; no `1-task.md`, or one with `route: fix` | resume tree check, then QUESTION |
 | `fix`: `0-root-cause.md` passes the look; `1-task.md` passes the QUESTION look; `2-questions.md` | RESEARCH or later, by step 7 and the rows below |
 | `fix`: `2-questions.md`; no `1-task.md` | halt before any dispatch |
-| `fix`: `0-root-cause.md` fails the look | halt before any dispatch |
+| `fix`: `0-root-cause.md` exists and fails the look | halt before any dispatch |
 | `fix`: `0-root-cause.md` passes the look; `1-task.md` with `route: fix` fails the QUESTION look; `2-questions.md` | halt before any dispatch |
 | `8-plan.md`; IMPLEMENT not complete | IMPLEMENT |
 | IMPLEMENT complete; no PASS record that is current | CODE REVIEW |

@@ -116,6 +116,7 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 ```
 
 - **Worktree.** Orchestrator prepares an isolated git worktree first and authors `docs/plans/<id>/` inside it, keeping the home checkout's `git status` clean for the whole run.
+- **Root cause** *(`fix` route only)*. One subagent reproduces the bug, traces it to its root cause, and writes `docs/plans/<id>/0-root-cause.md`, which becomes the questioner's task.
 - **Question.** Decompose intent into a full task record (`1-task.md`) and neutral research questions (`2-questions.md`). On every route except `fix`, the questioner is the only agent that ever sees the user's original description. On `fix`, the ROOT CAUSE step sees it first.
 - **Research** *(isolated)*. Parallel agents (file-finder + researcher) consume only `2-questions.md`. They never see the task. This structurally prevents opinion-bias in research findings.
 - **Design** *(design review)*. Design author drafts an alignment doc, resolving its own open questions as recorded assumptions. An adversarial design review gates advancement.

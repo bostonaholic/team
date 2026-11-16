@@ -152,12 +152,12 @@ phase loop's PR predecessor check, and `/team-pr` read it.
 | Latest artifact present                                                           | Current phase        |
 |-----------------------------------------------------------------------------------|----------------------|
 | not `fix`: worktree exists for `<id>`, no `1-task.md` yet | WORKTREE (next up) |
-| `fix`: `1-task.md` without `routeStatus: complete`, and no `0-root-cause.md` or no `route: fix` | halt (before any dispatch) |
+| `fix`: `1-task.md`, and no `0-root-cause.md` or no `route: fix` | halt (before any dispatch) |
 | `fix`: worktree exists for `<id>`, no `0-root-cause.md`, `1-task.md`, or `2-questions.md` | WORKTREE, then ROOT CAUSE (next up) |
 | `fix`: `0-root-cause.md` passes the look, no `2-questions.md`, and no `1-task.md` or one with `route: fix` | resume tree check, then QUESTION (next up) |
 | `fix`: `0-root-cause.md` passes the look, `1-task.md` passes the QUESTION look, and `2-questions.md` | the rows below, with `0-root-cause.md` ignored |
 | `fix`: `2-questions.md`, no `1-task.md` | halt (before any dispatch) |
-| `fix`: `0-root-cause.md` fails the look | halt (before any dispatch) |
+| `fix`: `0-root-cause.md` exists and fails the look | halt (before any dispatch) |
 | `fix`: `0-root-cause.md` passes the look, `1-task.md` with `route: fix` fails the QUESTION look, and `2-questions.md` | halt (before any dispatch) |
 | `1-task.md` + `2-questions.md` only                                               | RESEARCH (next up)   |
 | `5-research.md`                                                                   | DESIGN (next up)     |
@@ -262,7 +262,9 @@ repos' worktrees do not duplicate the artifacts. See
 **Fallback:** if home-worktree creation fails (shallow clone, certain CI
 systems, permissions), the orchestrator reports it and falls back to
 in-place for the entire run: `docs/plans/<id>/` lives at the home-repo
-root and the threaded path is the home-repo root.
+root and the threaded path is the home-repo root. When that checkout is on
+the default branch, the run first switches it to branch `<id>`, and stops
+if HEAD stays on the default branch.
 
 ### The `fix` route: Root cause
 

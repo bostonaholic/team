@@ -1,6 +1,6 @@
 ---
 title: Skills
-description: "The Team plugin's skills: the pipeline entry-point slash commands, the bug-fix pipeline, and the setup update, each with the skills it loads."
+description: "The Team plugin's skills: the pipeline entry-point slash commands, the `/team-fix` alias for `/team fix`, and the setup update, each with the skills it loads."
 audience: [user, developer]
 nav_order: 5
 nav_label: skills

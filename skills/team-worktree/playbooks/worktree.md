@@ -123,5 +123,6 @@ If worktree creation fails in any repo (shallow clones, certain CI systems):
    place. Never block the pipeline on the worktree failure itself.
 3. Leave the default branch ("Default branch" in the
    [artifact schema](../../team/references/artifacts.md#branch-state)): when
-   that main working tree is on it, run `git -C <repo> switch -c <id>`. If
-   HEAD is still on the default branch, stop; no work runs there.
+   that main working tree is on it, run `git -C <repo> switch <id>` when
+   branch `<id>` exists, else `git -C <repo> switch -c <id>`. If HEAD is
+   still on the default branch, stop; no work runs there.

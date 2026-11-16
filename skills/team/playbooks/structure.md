@@ -55,7 +55,8 @@ Then include:
     line, with the `file:line` of its `Root link:` line.
   - For a root link in a configuration, workflow, or build file, the test
     runs the project's code that reads the file, or reads the file and
-    asserts the corrected value. Mark that test
+    asserts the corrected value. Only a test that reads the file gets the
+    mark, which you write on its behavior line:
     "task-required, fails Restates the source"
     ([authoring gate](../references/testing.md#authoring-gate)). PLAN
     carries the mark through unchanged.

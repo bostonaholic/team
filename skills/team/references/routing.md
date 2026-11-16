@@ -68,5 +68,7 @@ limited-scope route.
 A completed limited-scope route does not continue on its own. An explicit
 later request to implement (a fresh `/team feature`/`/team fix`/`/team refactor`,
 or an unprefixed `/team`) starts the full route after its normal prerequisite
-checks, without inheriting the limited-scope route's completion. Missing
+checks, without inheriting the limited-scope route's completion. A `fix`
+run never reuses another route's `1-task.md`: it halts at the first `fix:`
+resume row in the [feature playbook](../playbooks/feature.md). Missing
 `route` means the unprefixed full feature workflow and grants no new effect.
