@@ -1,0 +1,122 @@
+# Evals — runs agent-behavior evals (evals/<skill>/<skill>-{guard,trigger}/)
+# with `claude plugin eval`.
+#
+# - pull_request: the guard and trigger cases of each skill the PR changes.
+#   A change to shared files (skills/team/, agents/, the manifests, this
+#   workflow) runs every case.
+# - schedule (weekly) and workflow_dispatch: every case.
+#
+# Each run costs money. Runs authenticate with workload identity federation (the
+# github-*-evals rule in the Claude Console), so a run with no GitHub OIDC token
+# (fork PRs) skips. PR runs report but do not block until pass rates are known.
+name: Evals
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - "agents/**"
+      - "evals/**"
+      - ".claude-plugin/**"
+      - ".github/workflows/evals.yml"
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    name: Run evals
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ANTHROPIC_FEDERATION_RULE_ID: fdrl_01CkTjBQiMdKwrowLmXhPvzH
+      ANTHROPIC_ORGANIZATION_ID: df6ac3ed-0e28-4d37-b001-a1c8581dd554
+      ANTHROPIC_SERVICE_ACCOUNT_ID: svac_01LnAHma3W4K8HSbxmQnQ1PP
+      ANTHROPIC_WORKSPACE_ID: wrkspc_01FThJqiTnohwy8ucKb5TAgn
+      ANTHROPIC_IDENTITY_TOKEN_FILE: /tmp/anthropic-oidc-token
+    steps:
+      - name: Skip without a GitHub OIDC token
+        run: |
+          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "OIDC=1" >> "$GITHUB_ENV"
+          else
+            echo "::notice::No GitHub OIDC token (fork PR); evals skipped."
+          fi
+      - uses: actions/checkout@v7
+        if: env.OIDC == '1'
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        if: env.OIDC == '1'
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - name: Install Claude Code
+        if: env.OIDC == '1'
+        run: npm install -g @anthropic-ai/claude-code@2.1.325
+      - name: Keep a GitHub OIDC token for Anthropic
+        if: env.OIDC == '1'
+        run: |
+          fetch() {
+            curl -fsS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://api.anthropic.com" |
+              jq -r .value > "$ANTHROPIC_IDENTITY_TOKEN_FILE.tmp"
+            mv "$ANTHROPIC_IDENTITY_TOKEN_FILE.tmp" "$ANTHROPIC_IDENTITY_TOKEN_FILE"
+          }
+          fetch
+          # A GitHub token expires within minutes and Anthropic exchanges each one
+          # once, so keep a fresh one in the file for the rest of the job.
+          export -f fetch
+          nohup bash -c 'while sleep 60; do fetch || echo "OIDC token refresh failed" >&2; done' >/dev/null 2>&1 &
+      - name: Select cases
+        if: env.OIDC == '1'
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "CASES=all" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          changed="$(git diff --name-only "$BASE_SHA...HEAD")"
+          if grep -qE '^(skills/team/|agents/|\.claude-plugin/|\.github/workflows/evals\.yml$)' <<< "$changed"; then
+            echo "CASES=all" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          skills="$(printf '%s\n' "$changed" | sed -nE 's#^(skills|evals)/([^/]+)/.*#\2#p' | sort -u)"
+          cases=""
+          for skill in $skills; do
+            for kind in guard trigger; do
+              [ -d "evals/$skill/$skill-$kind" ] && cases="$cases $skill-$kind"
+            done
+          done
+          echo "CASES=${cases# }" >> "$GITHUB_ENV"
+      - name: Run evals
+        if: env.OIDC == '1' && env.CASES != ''
+        run: |
+          flags=(--ablation none --model sonnet --no-publish --trust-plugin --max-cost-usd 10)
+          if [ "$CASES" = "all" ]; then
+            claude plugin eval . "${flags[@]}"
+            exit
+          fi
+          status=0
+          for name in $CASES; do
+            echo "::group::$name"
+            claude plugin eval . --case "$name" "${flags[@]}" || status=1
+            echo "::endgroup::"
+          done
+          exit "$status"
+      - uses: actions/upload-artifact@v7
+        if: always() && env.OIDC == '1' && env.CASES != ''
+        with:
+          name: eval-results
+          path: evals/results/
+          if-no-files-found: ignore

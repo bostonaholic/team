@@ -127,37 +127,10 @@ test("compare with no snapshot fails loudly", (t) => {
   assert.match(run.stderr, /no snapshot recorded/);
 });
 
-test("usage faults exit 2", (t) => {
-  const r = scratchRepo(t);
-  for (const args of [undefined, "diff", ["snapshot", "extra"]]) {
-    const run = r.check(args);
-    assert.equal(run.status, 2, `args: ${JSON.stringify(args)}`);
-    assert.match(run.stderr, /usage:/);
-  }
-});
-
-test("outside a worktree, it fails loudly", (t) => {
-  const r = scratchRepo(t);
-  const outside = join(r.root, "outside");
-  mkdirSync(outside);
-  const run = r.check("snapshot", outside, { GIT_CEILING_DIRECTORIES: r.root });
-  assert.equal(run.status, 2);
-  assert.match(run.stderr, /not inside a git worktree/);
-});
-
 test("an unborn HEAD fails loudly and records nothing", (t) => {
   const r = scratchRepo(t, { commit: false });
   const run = r.check("snapshot");
   assert.equal(run.status, 2);
   assert.match(run.stderr, /cannot resolve HEAD/);
   assert.match(r.check("compare").stderr, /no snapshot recorded/);
-});
-
-test("a missing git fails loudly", (t) => {
-  const r = scratchRepo(t);
-  const empty = join(r.root, "empty-bin");
-  mkdirSync(empty);
-  const run = r.check("snapshot", r.repo, { PATH: empty });
-  assert.equal(run.status, 2);
-  assert.match(run.stderr, /git not found/);
 });

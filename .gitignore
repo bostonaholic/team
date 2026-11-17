@@ -39,3 +39,6 @@ docs/vendor/
 
 # Bun / npm dependencies
 node_modules/
+
+# Eval run output (claude plugin eval)
+evals/results/

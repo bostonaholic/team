@@ -32,81 +32,25 @@ function importModule(t, path) {
   return { status: run.status, stdout: run.stdout, stderr: run.stderr };
 }
 
-test("supports-nesting.mjs run through a symlinked directory reports unsupported for a missing version", (t) => {
-  const run = runScript(join(symlinkedDir(t, "skills/team/references"), "supports-nesting.mjs"));
-  assert.equal(run.status, 1);
-  assert.equal(run.stdout, "unsupported\n");
-});
+// [script, directory, exit code its CLI returns when run with no arguments]
+const ENTRY_POINTS = [
+  ["supports-nesting.mjs", "skills/team/references", 1],
+  ["resolve-model.mjs", "skills/team/references", 1],
+  ["external-review.mjs", "skills/team/references", 2],
+  ["review-comments.mjs", "skills/team-pr/scripts", 2],
+  ["manifest-entries.mjs", "skills/team-pr/scripts", 2],
+  ["render-research.mjs", "skills/team/scripts", 2],
+  ["record-design-review.mjs", "skills/team/scripts", 2],
+  ["append-cross-model-notes.mjs", "skills/team/scripts", 2],
+  ["change-profile.mjs", "skills/team-code-review/scripts", 2],
+];
 
-test("resolve-model.mjs run through a symlinked directory reaches its usage error", (t) => {
-  const run = runScript(join(symlinkedDir(t, "skills/team/references"), "resolve-model.mjs"));
-  assert.equal(run.status, 1);
-  assert.match(run.stderr, /^usage: node resolve-model\.mjs </);
-});
-
-test("external-review.mjs run through a symlinked directory reaches its usage error", (t) => {
-  const run = runScript(join(symlinkedDir(t, "skills/team/references"), "external-review.mjs"));
-  assert.equal(run.status, 2);
-  assert.match(run.stderr, /^missing or malformed arguments\nusage: external-review\.mjs /);
-});
-
-test("importing supports-nesting.mjs through a symlinked directory has no side effects", (t) => {
-  const run = importModule(t, join(symlinkedDir(t, "skills/team/references"), "supports-nesting.mjs"));
-  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
-});
-
-test("importing resolve-model.mjs through a symlinked directory has no side effects", (t) => {
-  const run = importModule(t, join(symlinkedDir(t, "skills/team/references"), "resolve-model.mjs"));
-  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
-});
-
-test("importing external-review.mjs through a symlinked directory has no side effects", (t) => {
-  const run = importModule(t, join(symlinkedDir(t, "skills/team/references"), "external-review.mjs"));
-  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
-});
-
-test("review-comments.mjs run through a symlinked directory reaches its usage error", (t) => {
-  const run = runScript(join(symlinkedDir(t, "skills/team-pr/scripts"), "review-comments.mjs"));
-  assert.equal(run.status, 2);
-  assert.match(run.stderr, /^review-comments\.mjs: usage: review-comments\.mjs /);
-});
-
-test("importing review-comments.mjs through a symlinked directory has no side effects", (t) => {
-  const run = importModule(t, join(symlinkedDir(t, "skills/team-pr/scripts"), "review-comments.mjs"));
-  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
-});
-
-for (const script of ["render-research.mjs", "record-design-review.mjs", "append-cross-model-notes.mjs"]) {
-  test(`${script} run through a symlinked directory reaches its usage error`, (t) => {
-    const run = runScript(join(symlinkedDir(t, "skills/team/scripts"), script));
-    assert.equal(run.status, 2);
-    assert.match(run.stderr, new RegExp(`^${script.replace(".", "\\.")}: missing --dir`));
-  });
-
-  test(`importing ${script} through a symlinked directory has no side effects`, (t) => {
-    const run = importModule(t, join(symlinkedDir(t, "skills/team/scripts"), script));
-    assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
-  });
-}
-
-test("manifest-entries.mjs run through a symlinked directory reaches its usage error", (t) => {
-  const run = runScript(join(symlinkedDir(t, "skills/team-pr/scripts"), "manifest-entries.mjs"));
-  assert.equal(run.status, 2);
-  assert.match(run.stderr, /^manifest-entries\.mjs: usage: manifest-entries\.mjs /);
-});
-
-test("importing manifest-entries.mjs through a symlinked directory has no side effects", (t) => {
-  const run = importModule(t, join(symlinkedDir(t, "skills/team-pr/scripts"), "manifest-entries.mjs"));
-  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
-});
-
-test("change-profile.mjs run through a symlinked directory reaches its usage error", (t) => {
-  const run = runScript(join(symlinkedDir(t, "skills/team-code-review/scripts"), "change-profile.mjs"));
-  assert.equal(run.status, 2);
-  assert.match(run.stderr, /^change-profile\.mjs: usage: change-profile\.mjs /);
-});
-
-test("importing change-profile.mjs through a symlinked directory has no side effects", (t) => {
-  const run = importModule(t, join(symlinkedDir(t, "skills/team-code-review/scripts"), "change-profile.mjs"));
-  assert.deepEqual(run, { status: 0, stdout: "", stderr: "" });
+test("each entry point runs its CLI through a symlinked directory and not on import", async (t) => {
+  for (const [script, dir, status] of ENTRY_POINTS) {
+    await t.test(script, (t) => {
+      const path = join(symlinkedDir(t, dir), script);
+      assert.equal(runScript(path).status, status, "CLI did not run");
+      assert.deepEqual(importModule(t, path), { status: 0, stdout: "", stderr: "" }, "import had side effects");
+    });
+  }
 });

@@ -1223,11 +1223,20 @@ version-consistency assertion, and project-board helpers.
 
 ## 8. Testing
 
-Team currently has no test suite. The previous behavioral-eval harness
-(`tests/`, `evals/`, and its CI workflows) was removed so a new testing
-methodology can be designed from scratch. What remains is static: the dev
-hooks under `.claude/hooks/`, the version scripts under `.claude/scripts/`
-and `.github/scripts/`, and `claude plugin validate .`.
+Team tests two things, each with its own tool:
+
+- **Script decisions:** `tests/*.test.mjs` (Node's test runner, run by
+  `.github/workflows/test.yml`) covers the shipped scripts where they pick,
+  gate, parse, or change state, plus repo invariants such as signed release
+  tags and resolving links.
+- **Agent behavior:** `evals/` (`claude plugin eval`, run by
+  `.github/workflows/evals.yml`) checks that each skill stays quiet on
+  ordinary work and fires on an explicit Team request.
+
+The rules for what gets a test are in [AGENTS.md](../AGENTS.md#learned-rules).
+The dev hooks under `.claude/hooks/`, the version scripts under
+`.claude/scripts/` and `.github/scripts/`, and `claude plugin validate .`
+remain static checks. `golden-master/` is a manual full-pipeline benchmark.
 
 ## 9. State management
 
