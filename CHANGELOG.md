@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.192.0] - 2026-11-17
+
 ### Fixed
 
 - **`/team-pr` marks a PR ready only after every check passes.** A failing check that branch protection does not require, such as codecov, now blocks `gh pr ready` instead of being skipped as optional. [#577](https://github.com/bostonaholic/team/pull/577)
@@ -1688,7 +1690,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.191.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.192.0...HEAD
+[0.192.0]: https://github.com/bostonaholic/team/compare/v0.191.0...v0.192.0
 [0.191.0]: https://github.com/bostonaholic/team/compare/v0.190.0...v0.191.0
 [0.190.0]: https://github.com/bostonaholic/team/compare/v0.189.0...v0.190.0
 [0.189.0]: https://github.com/bostonaholic/team/compare/v0.188.0...v0.189.0
