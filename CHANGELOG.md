@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **`/team-pr` marks a PR ready only after every check passes.** A failing check that branch protection does not require, such as codecov, now blocks `gh pr ready` instead of being skipped as optional.
+- **`/team-pr` marks a PR ready only after every check passes.** A failing check that branch protection does not require, such as codecov, now blocks `gh pr ready` instead of being skipped as optional. [#577](https://github.com/bostonaholic/team/pull/577)
 
 ## [0.191.0] - 2026-11-17
 
