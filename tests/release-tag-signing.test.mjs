@@ -28,7 +28,9 @@ test("release workflow pushes a verifiable signed tag", (t) => {
 
   run("git", ["init", "--bare", origin]);
   run("git", ["push", origin, "HEAD:refs/heads/main"]);
-  run("git", ["clone", "--no-tags", "--branch", "main", origin, work]);
+  // --no-local copies objects instead of hardlinking them, so maintenance
+  // the push started in origin cannot change a file mid-clone.
+  run("git", ["clone", "--no-local", "--no-tags", "--branch", "main", origin, work]);
   run("ssh-keygen", ["-q", "-t", "ed25519", "-N", "", "-f", key]);
   mkdirSync(bin);
   writeFileSync(join(bin, "gh"), "#!/bin/sh\n[ \"$1 $2\" = 'release view' ] && exit 1\n[ \"$1 $2\" = 'release create' ]\n");
