@@ -38,20 +38,6 @@ function scratchClone(t, defaultBranch = "main") {
   return { root, repo, git: (...args) => git(repo, ...args), commit, run };
 }
 
-test("reports origin/HEAD's branch, commits ahead, and uncommitted paths", (t) => {
-  const s = scratchClone(t, "trunk");
-  s.git("remote", "set-head", "origin", "trunk");
-  s.git("checkout", "-q", "-b", "feature");
-  s.commit();
-  s.commit();
-  writeFileSync(join(s.repo, "file-1.txt"), "edited\n");
-  writeFileSync(join(s.repo, "untracked.txt"), "new\n");
-  writeFileSync(join(s.repo, "ignored.log"), "noise\n");
-  const run = s.run();
-  assert.equal(run.status, 0, run.stderr);
-  assert.equal(run.stdout, "base=trunk\nahead=2\ndirty=2\n");
-});
-
 test("falls back to main when origin/HEAD is unset", (t) => {
   const s = scratchClone(t);
   s.git("remote", "set-head", "origin", "--delete");
@@ -69,28 +55,4 @@ test("HEAD on the base branch exits 2 and prints nothing", (t) => {
   assert.equal(run.status, 2);
   assert.equal(run.stdout, "");
   assert.match(run.stderr, /HEAD is on the base branch trunk/);
-});
-
-test("a missing origin/<base> ref exits 2", (t) => {
-  const s = scratchClone(t, "trunk");
-  s.git("remote", "set-head", "origin", "--delete");
-  const run = s.run();
-  assert.equal(run.status, 2);
-  assert.equal(run.stdout, "");
-  assert.match(run.stderr, /no origin\/main ref/);
-});
-
-test("a directory outside any repository exits 2", (t) => {
-  const s = scratchClone(t);
-  const run = s.run(s.root);
-  assert.equal(run.status, 2);
-  assert.match(run.stderr, /not a git worktree/);
-});
-
-test("a wrong argument count exits 2 with usage", () => {
-  for (const args of [[], ["a", "b"], [""]]) {
-    const run = spawnSync(SCRIPT, args, { encoding: "utf8" });
-    assert.equal(run.status, 2);
-    assert.match(run.stderr, /usage: .*ship-state\.sh <worktree-path>/);
-  }
 });

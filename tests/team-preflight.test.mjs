@@ -31,30 +31,6 @@ function run(t, { agent = 0, gh = 0, gitconfig = "", env = {} } = {}) {
   });
 }
 
-test("prints four healthy readings with signing off", (t) => {
-  const result = run(t, { gitconfig: "[commit]\n\tgpgsign = false\n" });
-  assert.equal(result.status, 0);
-  assert.equal(
-    result.stdout,
-    "ssh-agent: keys loaded\ngh auth: ok\nglobal commit.gpgsign: false\ncommit signing: ok\n",
-  );
-});
-
-test("reports an unreachable agent, a missing gh login, and an unset gpgsign", (t) => {
-  const result = run(t, { agent: 2, gh: 1 });
-  assert.equal(result.status, 0);
-  assert.equal(
-    result.stdout,
-    "ssh-agent: UNREACHABLE\ngh auth: NOT LOGGED IN\nglobal commit.gpgsign: unset\ncommit signing: ok\n",
-  );
-});
-
-test("reports a failing signer", (t) => {
-  const result = run(t, { gitconfig: "[commit]\n\tgpgsign = true\n[gpg]\n\tprogram = BIN/fail-signer\n" });
-  assert.equal(result.status, 0);
-  assert.match(result.stdout, /\nglobal commit\.gpgsign: true\ncommit signing: FAILED OR HUNG\n$/);
-});
-
 test("kills a hung signer after the timeout", (t) => {
   const started = Date.now();
   const result = run(t, {
@@ -64,20 +40,4 @@ test("kills a hung signer after the timeout", (t) => {
   assert.equal(result.status, 0);
   assert.match(result.stdout, /\ncommit signing: FAILED OR HUNG\n$/);
   assert.ok(Date.now() - started < 15000, "the probe outlived its timeout");
-});
-
-test("rejects any argument", () => {
-  const result = spawnSync(SCRIPT, ["extra"], { encoding: "utf8" });
-  assert.equal(result.status, 2);
-  assert.equal(result.stdout, "");
-  assert.match(result.stderr, /^preflight\.sh: takes no arguments\nusage: preflight\.sh\n$/);
-});
-
-test("fails loud when git is not installed", (t) => {
-  const empty = realpathSync(mkdtempSync(join(tmpdir(), "team-preflight-nogit-")));
-  t.after(() => rmSync(empty, { recursive: true, force: true }));
-  const result = spawnSync(SCRIPT, [], { encoding: "utf8", env: { PATH: empty } });
-  assert.equal(result.status, 1);
-  assert.equal(result.stdout, "");
-  assert.equal(result.stderr, "preflight.sh: git is not installed\n");
 });

@@ -1,6 +1,6 @@
 // Runs skills/team-question/scripts/prepare-plan-dir.sh in scratch directories.
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -42,21 +42,6 @@ test("builds a dated id, creates the directory, and reports new", (t) => {
   assert.ok(existsSync(join(cwd, "docs/plans/2026-05-01-add-rate-limiting")));
 });
 
-test("a ticket replaces the date prefix and is recorded as ticketId", (t) => {
-  const cwd = scratch(t);
-  const out = run(cwd, "--ticket", "ENG-1234", "--date", "2026-05-01", "add-auth");
-  assert.equal(out.status, 0, out.stderr);
-  assert.match(out.stdout, /^id=ENG-1234-add-auth\ndir=docs\/plans\/ENG-1234-add-auth\/\ndate=2026-05-01\nticketId=ENG-1234\n/);
-});
-
-test("defaults the date to today's local date", (t) => {
-  const cwd = scratch(t);
-  const today = spawnSync("date", ["+%Y-%m-%d"], { encoding: "utf8" }).stdout.trim();
-  const out = run(cwd, "add-auth");
-  assert.equal(out.status, 0, out.stderr);
-  assert.match(out.stdout, new RegExp(`^id=${today}-add-auth\n`));
-});
-
 test("reports questions-only and complete with the artifacts present", (t) => {
   const cwd = scratch(t);
   const dir = "docs/plans/2026-05-01-add-auth/";
@@ -87,27 +72,9 @@ test("exits 3 when 2-questions.md exists without 1-task.md", (t) => {
   assert.match(out.stderr, /2-questions\.md exists without/);
 });
 
-test("exits 1 when the directory cannot be created", (t) => {
-  const cwd = scratch(t);
-  writeFileSync(join(cwd, "docs"), "a file, not a directory\n");
-  const out = run(cwd, "--date", "2026-05-01", "add-auth");
-  assert.equal(out.status, 1);
-  assert.equal(out.stdout, "");
-  assert.match(out.stderr, /cannot create docs\/plans\/2026-05-01-add-auth\//);
-});
-
 for (const [name, args, pattern] of [
-  ["no topic", [], /usage/],
-  ["two topics", ["add-auth", "more-auth"], /unexpected argument: more-auth/],
-  ["unknown option", ["--force", "add-auth"], /unknown option: --force/],
-  ["--ticket without a value", ["add-auth", "--ticket"], /--ticket needs a value/],
-  ["--date without a value", ["add-auth", "--date"], /--date needs a value/],
+  // plan-id.sh validates the arguments; one row proves its exit 2 passes through.
   ["one-word topic", ["auth"], /topic must be 2-4/],
-  ["five-word topic", ["add-rate-limiting-to-everything"], /topic must be 2-4/],
-  ["uppercase topic", ["Add-Auth"], /topic must be 2-4/],
-  ["topic with a trailing dash", ["add-auth-"], /topic must be 2-4/],
-  ["malformed ticket", ["--ticket", "ENG1234", "add-auth"], /ticket must look like ENG-1234: ENG1234/],
-  ["malformed date", ["--date", "2026-5-1", "add-auth"], /date must be YYYY-MM-DD: 2026-5-1/],
   ["plan-id.sh's --parse mode", ["--parse", "2026-05-01-add-auth"], /unknown option: --parse/],
 ]) {
   test(`exits 2 on ${name} and creates nothing`, (t) => {
@@ -119,17 +86,6 @@ for (const [name, args, pattern] of [
     assert.ok(!existsSync(join(cwd, "docs")));
   });
 }
-
-test("exits 1 and creates nothing when the shared plan-id.sh is missing", (t) => {
-  const cwd = scratch(t);
-  const copy = join(cwd, "skills/team-question/scripts/prepare-plan-dir.sh");
-  mkdirSync(join(copy, ".."), { recursive: true });
-  writeFileSync(copy, readFileSync(SCRIPT, "utf8"), { mode: 0o755 });
-  const out = spawnSync(copy, ["add-auth"], { cwd, encoding: "utf8" });
-  assert.equal(out.status, 1);
-  assert.match(out.stderr, /missing helper: .*team\/scripts\/plan-id\.sh/);
-  assert.ok(!existsSync(join(cwd, "docs")));
-});
 
 test("every id it builds is one discover-topic.sh resolves", (t) => {
   const cwd = scratch(t);

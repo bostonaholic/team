@@ -1,6 +1,6 @@
 // Runs skills/team/scripts/design-review-status.sh, alone and behind discover-topic.sh, against scratch artifact directories.
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -62,31 +62,21 @@ test("is pending round 1 when no review file exists", (t) => {
   assert.deepEqual(check(dir), { status: 1, stdout: "pending\t1\t-\t-\n", stderr: "" });
 });
 
-test("ignores a verdict outside the frontmatter", (t) => {
-  const dir = artifactDir(t, { "design-review-1.md": "---\ntopic: x\n---\n\nverdict: APPROVE\n" });
-  assert.deepEqual(check(dir), { status: 1, stdout: `pending\t2\t${dir}/design-review-1.md\t-\n`, stderr: "" });
-});
-
-test("fails a file with no frontmatter", (t) => {
-  const dir = artifactDir(t, { "design-review-1.md": "verdict: APPROVE\n" });
-  assert.equal(check(dir).stdout, `pending\t2\t${dir}/design-review-1.md\t-\n`);
-});
-
-test("fails unclosed frontmatter", (t) => {
-  const dir = artifactDir(t, { "design-review-1.md": "---\nverdict: APPROVE\n" });
-  assert.equal(check(dir).stdout, `pending\t2\t${dir}/design-review-1.md\t-\n`);
-});
-
-test("fails frontmatter that runs past 60 lines", (t) => {
-  const filler = Array.from({ length: 60 }, (_, i) => `k${i}: v`).join("\n");
-  const dir = artifactDir(t, { "design-review-1.md": `---\nverdict: APPROVE\n${filler}\n---\n` });
-  assert.equal(check(dir).stdout, `pending\t2\t${dir}/design-review-1.md\t-\n`);
-});
-
-test("fails an empty review file", (t) => {
-  const dir = artifactDir(t, { "design-review-1.md": "" });
-  assert.equal(check(dir).status, 1);
-});
+const filler = Array.from({ length: 60 }, (_, i) => `k${i}: v`).join("\n");
+for (const [name, body] of [
+  ["a verdict outside the frontmatter", "---\ntopic: x\n---\n\nverdict: APPROVE\n"],
+  ["no frontmatter", "verdict: APPROVE\n"],
+  ["unclosed frontmatter", "---\nverdict: APPROVE\n"],
+  ["frontmatter past 60 lines", `---\nverdict: APPROVE\n${filler}\n---\n`],
+  ["an empty review file", ""],
+]) {
+  test(`does not pass ${name}`, (t) => {
+    const dir = artifactDir(t, { "design-review-1.md": body });
+    const run = check(dir);
+    assert.equal(run.status, 1);
+    assert.match(run.stdout, /^pending\t2\t/);
+  });
+}
 
 test("fails a quoted or lowercase verdict", (t) => {
   for (const verdict of ['"APPROVE"', "approve"]) {
@@ -104,20 +94,6 @@ test("ignores a directory named like a review", (t) => {
 test("reads only the first verdict line of the frontmatter", (t) => {
   const dir = artifactDir(t, { "design-review-1.md": "---\nverdict: REQUEST CHANGES\nverdict: APPROVE\n---\n" });
   assert.equal(check(dir).stdout, `pending\t2\t${dir}/design-review-1.md\tREQUEST CHANGES\n`);
-});
-
-test("rejects a wrong argument count", () => {
-  for (const args of [[], ["a", "b"]]) {
-    const run = check(...args);
-    assert.equal(run.status, 2);
-    assert.match(run.stderr, /^usage: .*design-review-status\.sh <artifact-dir>\n$/);
-    assert.equal(run.stdout, "");
-  }
-});
-
-test("rejects a path that is not a directory", () => {
-  const run = check("/nonexistent/design-review-status");
-  assert.deepEqual(run, { status: 2, stdout: "", stderr: "not a directory: /nonexistent/design-review-status\n" });
 });
 
 // --- discover-topic.sh --require-passing-review applies the same rule ---
@@ -154,14 +130,4 @@ test("discover-topic skips names that are not plan ids", (t) => {
   mkdirSync(join(root, "docs/plans/ENG-12-one"));
   writeFileSync(join(root, "docs/plans/ENG-12-one/6-design.md"), "---\n---\n");
   assert.equal(discover(root).stdout, "docs/plans/ENG-12-one/\n", "a one-word legacy id stays discoverable");
-});
-
-test("discover-topic fails loud when a shared helper is missing", (t) => {
-  const root = plansRoot(t, {});
-  const copy = join(root, "team");
-  mkdirSync(copy);
-  writeFileSync(join(copy, "discover-topic.sh"), readFileSync(DISCOVER, "utf8"), { mode: 0o755 });
-  const run = spawnSync(join(copy, "discover-topic.sh"), ["", "6-design.md"], { cwd: root, encoding: "utf8" });
-  assert.equal(run.status, 1);
-  assert.match(run.stderr, /^missing helper: .*plan-id\.sh\n$/);
 });

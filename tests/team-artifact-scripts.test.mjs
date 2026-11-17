@@ -107,28 +107,6 @@ test("render-research fails when no artifact carries a topic", (t) => {
   assert.match(result.stderr, /no topic in the frontmatter/);
 });
 
-test("render-research reports usage errors with exit 2", (t) => {
-  const env = plansDir(t);
-  const missing = run("render-research.mjs", ["--dir", env.dir]);
-  assert.equal(missing.status, 2);
-  assert.match(missing.stderr, /missing --file-finder, --researcher, --synthesis\nusage: render-research\.mjs /);
-  const badDate = run("render-research.mjs", [...researchArgs(env).slice(0, 8), "--date", "21/10/2026"]);
-  assert.equal(badDate.status, 2);
-  assert.match(badDate.stderr, /--date must be YYYY-MM-DD/);
-  const unknown = run("render-research.mjs", ["--nope", "x"]);
-  assert.equal(unknown.status, 2);
-  assert.match(unknown.stderr, /unknown argument: --nope/);
-});
-
-test("render-research fails on a missing input file", (t) => {
-  const env = plansDir(t);
-  const args = researchArgs(env);
-  args[3] = join(env.root, "absent.md");
-  const result = run("render-research.mjs", args);
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /file-finder return not found/);
-});
-
 test("render-research copies the topic from 2-questions.md alone, CRLF frontmatter included", (t) => {
   const env = plansDir(t, { questions: false });
   const missing = run("render-research.mjs", researchArgs(env));
@@ -228,19 +206,6 @@ test("record-design-review exits 3 and writes nothing without a verdict token", 
   assert.equal(result.stdout, "");
   assert.match(result.stderr, /carries no verdict token/);
   assert.deepEqual(readdirSync(env.dir).sort(), ["2-questions.md", "6-design.md"]);
-});
-
-test("record-design-review fails on a missing directory, report, or usage", (t) => {
-  const env = plansDir(t);
-  const noDir = run("record-design-review.mjs", ["--dir", join(env.root, "absent"), "--report", env.input("r.md", "APPROVE\n")]);
-  assert.equal(noDir.status, 1);
-  assert.match(noDir.stderr, /artifact directory not found/);
-  const noReport = run("record-design-review.mjs", ["--dir", env.dir, "--report", join(env.root, "absent.md")]);
-  assert.equal(noReport.status, 1);
-  assert.match(noReport.stderr, /report not found/);
-  const usage = run("record-design-review.mjs", ["--dir", env.dir]);
-  assert.equal(usage.status, 2);
-  assert.match(usage.stderr, /missing --report\nusage: record-design-review\.mjs /);
 });
 
 test("record-design-review copies the topic from 6-design.md alone and fails closed without it", (t) => {

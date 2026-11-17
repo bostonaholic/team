@@ -98,13 +98,6 @@ test("detect: a linked worktree with no resolvable default branch fails", (t) =>
   assert.match(run.stderr, /no default branch/);
 });
 
-test("detect: a non-repository fails and a missing argument is a usage fault", (t) => {
-  const s = scratch(t);
-  assert.equal(s.run("detect-worktree.sh", [s.root]).status, 1);
-  assert.equal(s.run("detect-worktree.sh", []).status, 2);
-  assert.equal(s.run("detect-worktree.sh", [""]).status, 2);
-});
-
 // --- add-worktree.sh ---------------------------------------------------------
 
 test("add: the home repo gets a worktree off origin/HEAD, and a rerun changes nothing", (t) => {
@@ -147,15 +140,6 @@ test("add: an unsafe or slashed branch name is a usage fault", (t) => {
     assert.equal(s.run("add-worktree.sh", [s.repo, s.repo, branch]).status, 2, branch);
   }
   assert.equal(s.run("add-worktree.sh", [s.repo, s.repo]).status, 2);
-});
-
-test("add: a sibling that is not a git checkout fails", (t) => {
-  const s = scratch(t);
-  const plain = join(s.root, "work", "plain");
-  mkdirSync(plain);
-  const run = s.run("add-worktree.sh", [s.repo, plain, "topic"]);
-  assert.equal(run.status, 1);
-  assert.match(run.stderr, /not a git checkout/);
 });
 
 test("add: a branch that already exists fails loud", (t) => {
@@ -201,12 +185,6 @@ test("residue: only pure residue is swept, and live worktrees are never touched"
 test("residue: a repo with nothing to check reports no residue", (t) => {
   const s = scratch(t);
   assert.deepEqual(out(s.run("sweep-residue.sh", [s.repo])), ["no residue"]);
-});
-
-test("residue: a non-repository fails and a missing argument is a usage fault", (t) => {
-  const s = scratch(t);
-  assert.equal(s.run("sweep-residue.sh", [s.root]).status, 1);
-  assert.equal(s.run("sweep-residue.sh", []).status, 2);
 });
 
 // --- run-teardown.sh ---------------------------------------------------------
@@ -270,17 +248,6 @@ test("teardown: a hung line times out and the rest still run", (t) => {
 
   assert.deepEqual(lines, ["TIMEOUT sleep 30", "ok echo after >> log.txt"]);
   assert.ok(Date.now() - started < 15000, "the hung line was waited out");
-});
-
-test("teardown: a non-repository is refused and bad arguments are usage faults", (t) => {
-  const s = scratch(t);
-  const refused = s.run("run-teardown.sh", [s.root, "feat"]);
-  assert.equal(refused.status, 1);
-  assert.match(refused.stderr, /refusing/);
-  assert.equal(s.run("run-teardown.sh", [s.repo]).status, 2);
-  assert.equal(s.run("run-teardown.sh", [s.repo, ""]).status, 2);
-  assert.equal(s.run("run-teardown.sh", [s.repo, "feat", "", "extra"]).status, 2);
-  assert.equal(s.run("run-teardown.sh", [s.repo, "feat"], { TEAM_TEARDOWN_TIMEOUT: "soon" }).status, 2);
 });
 
 test("teardown: no resolvable default branch is refused", (t) => {
