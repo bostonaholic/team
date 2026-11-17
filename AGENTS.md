@@ -30,6 +30,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 | Pre-merge version gate | `.claude/hooks/pre-merge-guard.mjs` | Plugin developers |
 | Link check (every link resolves from its own file) | `.claude/scripts/check-links.mjs`, run by `.github/workflows/link-check.yml` | Plugin developers |
 | Script tests | `tests/*.test.mjs`, run by `.github/workflows/test.yml` | Plugin developers |
+| Evals (agent behavior) | `evals/`, run by `.github/workflows/evals.yml` | Plugin developers |
 | Dev scripts | `.claude/scripts/` | Plugin developers |
 | Dev settings/hooks | `.claude/settings.json` | Plugin developers |
 | Work tracking | [GitHub Project board](https://github.com/users/bostonaholic/projects/5/views/1) | Plugin developers |
@@ -99,7 +100,8 @@ State is the set of artifacts in `docs/plans/<id>/*.md`, where `<id>` is `<TICKE
 
 ## Learned rules
 
-- **Test executable code, not skill Markdown.** Do not add assertions about skill or agent prose, frontmatter, links, or fenced examples. Evaluate agent behavior in a future eval suite. Script tests may use synthetic Markdown as input or inspect generated Markdown output.
+- **Unit-test script decisions, not wording.** `tests/*.test.mjs` covers a shipped script only where it decides something: it picks, gates, parses external data, or deletes, merges, or pushes. A thin wrapper over git, gh, or the filesystem gets no test; it fails loudly on its own. Assert exit codes and machine-read fields, not human-facing wording. A check every script must pass, such as the entry guard, is one table-driven test. Repo invariants (signed release tags, resolving links) are tests. Never assert on skill or agent prose, frontmatter, links, or fenced examples; script tests may use synthetic Markdown as input or inspect generated Markdown output. The suite stays under 45 s in CI: a new test that breaks that budget replaces an old one.
+- **Evals test agent behavior.** Each model-invocable skill has `evals/<skill>/<skill>-guard/` (an ordinary request fires no Team skill) and `evals/<skill>/<skill>-trigger/` (an explicit request fires that skill). `.github/workflows/evals.yml` runs the cases of each skill a PR changes, and every case weekly. A new skill adds both cases.
 
 - **No `commands/` directory.** Skills are the only entry point mechanism. They auto-register as slash commands.
 - **No project-scoped memory.** Do not save memories to `~/.claude/projects/*/memory/`. All project knowledge belongs in this file or docs linked from here. This file is checked into git and travels with the project.
@@ -117,6 +119,6 @@ All work, including features, bugs, and chores, is tracked on the [GitHub Projec
 
 Node 22 is already on the image. The environment install puts Ruby 3.3.6 and Bundler 2.7.1 on `PATH`. Docs gems install into gitignored `docs/vendor/bundle`.
 
-- Plugin checks, from the repo root: `node --test tests/*.test.mjs`, `node .claude/scripts/check-links.mjs`, and `git diff --check`. There is no `npm test` script.
+- Plugin checks, from the repo root: `node --test tests/*.test.mjs`, `node .claude/scripts/check-links.mjs`, and `git diff --check`. There is no `npm test` script. Evals cost money and run in CI; to run one locally: `claude plugin eval . --case <skill>-guard --runs 1 --ablation none --no-publish`.
 - Docs, from `docs/`: `bundle exec jekyll build`, or `bundle exec jekyll serve --host 0.0.0.0 --port 4000` at http://localhost:4000. The environment start command detaches that server when port 4000 is free.
 - OpenCode dev install: `script/dev-install opencode` registers `opencode/team.js`. The Claude Code, Codex, and Antigravity CLIs are not installed, so `claude plugin validate .` cannot run here.
