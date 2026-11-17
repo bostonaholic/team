@@ -1,0 +1,96 @@
+# Evals — runs agent-behavior evals (evals/<skill>/<skill>-{guard,trigger}/)
+# with `claude plugin eval`.
+#
+# - pull_request: the guard and trigger cases of each skill the PR changes.
+#   A change to shared files (skills/team/, agents/, the manifests, this
+#   workflow) runs every case.
+# - schedule (weekly) and workflow_dispatch: every case.
+#
+# Each run costs money, so a run without the ANTHROPIC_API_KEY secret (fork
+# PRs) skips. PR runs report but do not block until pass rates are known.
+name: Evals
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - "agents/**"
+      - "evals/**"
+      - ".claude-plugin/**"
+      - ".github/workflows/evals.yml"
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    name: Run evals
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ github.event_name == 'pull_request' }}
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - name: Skip without an API key
+        if: env.ANTHROPIC_API_KEY == ''
+        run: echo "::notice::ANTHROPIC_API_KEY is not set; evals skipped."
+      - uses: actions/checkout@v7
+        if: env.ANTHROPIC_API_KEY != ''
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        if: env.ANTHROPIC_API_KEY != ''
+        with:
+          node-version: 22
+          package-manager-cache: false
+      - name: Install Claude Code
+        if: env.ANTHROPIC_API_KEY != ''
+        run: npm install -g @anthropic-ai/claude-code@2.1.325
+      - name: Select cases
+        if: env.ANTHROPIC_API_KEY != ''
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "CASES=all" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          changed="$(git diff --name-only "$BASE_SHA...HEAD")"
+          if grep -qE '^(skills/team/|agents/|\.claude-plugin/|\.github/workflows/evals\.yml$)' <<< "$changed"; then
+            echo "CASES=all" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          skills="$(printf '%s\n' "$changed" | sed -nE 's#^(skills|evals)/([^/]+)/.*#\2#p' | sort -u)"
+          cases=""
+          for skill in $skills; do
+            for kind in guard trigger; do
+              [ -d "evals/$skill/$skill-$kind" ] && cases="$cases $skill-$kind"
+            done
+          done
+          echo "CASES=${cases# }" >> "$GITHUB_ENV"
+      - name: Run evals
+        if: env.ANTHROPIC_API_KEY != '' && env.CASES != ''
+        run: |
+          flags=(--ablation none --model sonnet --no-publish --trust-plugin --max-cost-usd 10)
+          if [ "$CASES" = "all" ]; then
+            claude plugin eval . "${flags[@]}"
+            exit
+          fi
+          status=0
+          for name in $CASES; do
+            echo "::group::$name"
+            claude plugin eval . --case "$name" "${flags[@]}" || status=1
+            echo "::endgroup::"
+          done
+          exit "$status"
+      - uses: actions/upload-artifact@v7
+        if: always() && env.ANTHROPIC_API_KEY != '' && env.CASES != ''
+        with:
+          name: eval-results
+          path: evals/results/
+          if-no-files-found: ignore
