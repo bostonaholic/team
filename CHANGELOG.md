@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.191.0] - 2026-11-17
+
+### Fixed
+
+- **`discover-topic.sh` finds plan directories on Linux.** GNU `stat -f %m` prints filesystem info instead of failing, so every directory was skipped and phase commands found no topic. The script now tries GNU `stat -c %Y` first and falls back to BSD `stat -f %m`. [#574](https://github.com/bostonaholic/team/pull/574)
+
 ## [0.190.0] - 2026-11-16
 
 ### Changed
@@ -1678,7 +1684,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replaced the earlier 6-phase RPI workflow with the 8-phase QRSPI pipeline.
 
-[Unreleased]: https://github.com/bostonaholic/team/compare/v0.190.0...HEAD
+[Unreleased]: https://github.com/bostonaholic/team/compare/v0.191.0...HEAD
+[0.191.0]: https://github.com/bostonaholic/team/compare/v0.190.0...v0.191.0
 [0.190.0]: https://github.com/bostonaholic/team/compare/v0.189.0...v0.190.0
 [0.189.0]: https://github.com/bostonaholic/team/compare/v0.188.0...v0.189.0
 [0.188.0]: https://github.com/bostonaholic/team/compare/v0.187.0...v0.188.0
