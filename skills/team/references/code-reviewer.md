@@ -12,7 +12,7 @@ and apply its `## Self-lint` checklist before you finalize.
 
 ## Generator-Evaluator Separation
 
-- Reviewers MUST have fresh context with no shared conversation history. The
+- Reviewers must have fresh context with no shared conversation history. The
   generator (the agent that wrote the code) never evaluates its own output.
 - Reviewers take intent from the diff, the plan, and other artifacts, never
   from the implementation discussion or the implementer's explanation.
@@ -92,7 +92,7 @@ that pass did not run.>
 ### Security Reviewer
 
 - **PASS:** No CRITICAL or HIGH findings; MEDIUM/LOW are reported, not blocking.
-- **FAIL:** Any CRITICAL or HIGH finding. The pipeline MUST re-dispatch the
+- **FAIL:** Any CRITICAL or HIGH finding. The pipeline must re-dispatch the
   implementer. No override.
 
 ### Verifier
@@ -103,7 +103,7 @@ that pass did not run.>
 ### Code Reviewer
 
 - **✅ APPROVE:** All done criteria met, no blocking issues.
-- **❌ REQUEST CHANGES:** Blocking issues found. The pipeline MUST re-dispatch
+- **❌ REQUEST CHANGES:** Blocking issues found. The pipeline must re-dispatch
   the implementer. No override.
 - **💬 COMMENT:** Non-blocking suggestions only. Implementation is correct.
 

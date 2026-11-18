@@ -38,7 +38,7 @@ before drafting. Never pause for user input.
 
 ## Output
 
-Write `docs/plans/<id>/6-design.md` (overwrite on revision). It MUST open with:
+Write `docs/plans/<id>/6-design.md` (overwrite on revision). It must open with:
 
 ```yaml
 ---

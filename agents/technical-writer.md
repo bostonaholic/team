@@ -58,8 +58,8 @@ veto readability findings: never recommend an edit that breaks them.
 
 ## Rules
 
-- Do NOT rewrite or generate documentation.
-- Do NOT flag missing docs for internal implementation details; only public
+- Do not rewrite or generate documentation.
+- Do not flag missing docs for internal implementation details; only public
   interfaces and user-facing behavior.
 - If all documentation is current and complete, say so clearly.
 - Prioritize accuracy over completeness: stale docs are worse than missing

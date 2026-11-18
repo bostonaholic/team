@@ -63,7 +63,7 @@ reason. Then write `8-plan.md` from the revision.
 
 ## Output
 
-Write `docs/plans/<id>/7-structure.md` (overwrite on re-dispatch). It MUST
+Write `docs/plans/<id>/7-structure.md` (overwrite on re-dispatch). It must
 open with:
 
 ```yaml
@@ -78,7 +78,7 @@ Structure is **not gated**: no `approved`/`approved_at`/`revision` fields. Copy
 `topic` verbatim from `6-design.md`. Never re-derive, re-word, or combine it
 with the ticket id.
 
-Write `docs/plans/<id>/8-plan.md`. It MUST open with:
+Write `docs/plans/<id>/8-plan.md`. It must open with:
 
 ```yaml
 ---

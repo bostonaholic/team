@@ -56,7 +56,7 @@ in the loop and never go to the user.
 
 ## Rules
 
-- Do NOT rewrite code. Identify problems; never fix them.
+- Do not rewrite code. Identify problems; never fix them.
 
 ## Return
 

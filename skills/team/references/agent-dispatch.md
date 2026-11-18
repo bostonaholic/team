@@ -24,7 +24,7 @@ Only `supported` with exit `0` permits nesting for the turn. Anything else, or a
 For Team helpers, read [host dispatch](15-host-dispatch.md) before named or body-loaded dispatch.
 Supply the installed root, definition, and applicable resource paths, as operational context, in every initial and follow-up prompt.
 
-- Helpers are read-only: built-in `Explore`, `team:file-finder`, or `general-purpose` with an explicitly read-only prompt. They NEVER write files, commit, or write under `docs/plans/`; the parent or orchestrator writes artifacts.
+- Helpers are read-only: built-in `Explore`, `team:file-finder`, or `general-purpose` with an explicitly read-only prompt. They never write files, commit, or write under `docs/plans/`; the parent or orchestrator writes artifacts.
 - Every helper starts with a [fresh context window](step-delegation.md#fresh-context). On Claude Code, the parent names the `subagent_type` (`Explore`, `team:file-finder`, or `general-purpose`) on every call and never passes `fork`.
 - Every call passes `model:`: `haiku` for location, grep, and bulk reading; `sonnet` for subsystem traces or claim checks; `opus` only after a `sonnet` helper was inconclusive, with that failure named. Effort: `low` for lookups, `medium` for tracing, never `xhigh`.
 - You are at depth 2 of 5. Spawn at most ONE more level; every helper works directly and never spawns ([focused work rules](../principles/focused-work.md)).

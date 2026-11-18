@@ -66,7 +66,7 @@ Every finding has one tier.
 
 | Tier | Findings in this tier | Action |
 |------|-----------------------|--------|
-| **Blocking** | `issue (blocking)`, a bare `issue:` with no decoration, code-reviewer REQUEST CHANGES, security CRITICAL/HIGH, any verifier failure | Auto-fixed in the loop. **Never** surfaced to the user. |
+| **Blocking** | `issue (blocking)`, a bare `issue:` with no decoration, code-reviewer REQUEST CHANGES, security CRITICAL/HIGH, any verifier failure | Auto-fixed in the loop. Never surfaced to the user. |
 | **Major** | ux-reviewer REQUEST CHANGES | Same as Blocking. |
 | **Minor and below** | `issue (pre-existing)`, `suggestion (non-blocking)`, `nitpick (non-blocking)`, security MEDIUM, security LOW, technical-writer GAPS (REQUIRED and RECOMMENDED alike), any COMMENT-level note | Recorded in the home PR's `review-notes` comment — never presented mid-run. |
 
