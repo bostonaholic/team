@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Cross-model reviews start no courier subagents.** The design gate and code review start each ready vendor CLI as a job in one foreground shell call, then read each job's output file. No courier subagent starts to run or relay a vendor CLI.
+- **`structure-planner` writes the structure and the plan.** One `structure-planner` dispatch writes `7-structure.md` and `8-plan.md`, `/team-structure` now ends at the plan, and the `planner` agent is gone. **What this asks of you:** a copy of `agents/planner.md` in `.claude/agents/` for a model override no longer runs, and you can delete it.
 
 ## [0.192.0] - 2026-11-17
 

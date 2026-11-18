@@ -54,7 +54,7 @@ nav_label: portability
 
 ## Current state
 
-Team is a Claude Code-native plugin. It ships 13 agents (`agents/*.md`), skills
+Team is a Claude Code-native plugin. It ships 12 agents (`agents/*.md`), skills
 (`skills/*/SKILL.md` + `registry.json`), host manifests for Claude Code, Codex
 CLI, and Antigravity CLI, and an `opencode/team.js` discovery adapter. It ships
 no runtime hooks. The orchestrator walks the QRSPI
@@ -505,7 +505,7 @@ installed here.
 **This host installs Team natively, through its own manifest.** Team ships
 `plugin.json` at the repo root, which is Antigravity's plugin marker, with
 `skills/` and `agents/` beside it where this host resolves components.
-`agy plugin install /path/to/team` then copies all skills and all 13 agents
+`agy plugin install /path/to/team` then copies all skills and all agents
 into `~/.gemini/config/plugins/team/`, and `import_manifest.json` records the
 source as **`antigravity`** — its native path, the same local-checkout form the
 Claude Code and Codex installs use.

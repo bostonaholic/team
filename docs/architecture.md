@@ -47,7 +47,7 @@ seeds and updates a TodoWrite ledger, and runs the gates.
   Re-invoking any `/team-*` command rebuilds the ledger by scanning
   artifacts on entry.
 - **Registry is a phase-tagged inventory.** `skills/team/registry.json`
-  lists the 13 specialist agents and the QRSPI phase each serves. The
+  lists the 12 specialist agents and the QRSPI phase each serves. The
   orchestrator dispatches through the phase table in
   `skills/team/SKILL.md`, not through the registry.
 - **File artifacts survive compaction.** Agents communicate through
@@ -335,13 +335,15 @@ the agent re-drafts with the findings verbatim and increments `revision`.
 
 **Agent:** `structure-planner`
 **Predecessor:** `6-design.md` + passing `design-review-<n>.md`
-**Artifact:** `docs/plans/<id>/7-structure.md`
+**Artifacts:** `docs/plans/<id>/7-structure.md`, then `docs/plans/<id>/8-plan.md`,
+in one `Scope: structure+plan` dispatch
 **Gate:** NONE (autonomous). Once `7-structure.md` exists the pipeline
 advances to PLAN.
 
 ### Phase 6: Plan
 
-**Agent:** `planner`
+**Agent:** `structure-planner` under `Scope: plan`. PLAN dispatches it only
+when `8-plan.md` is absent or a stated route sent the run back.
 **Predecessor:** `7-structure.md`
 **Artifact:** `docs/plans/<id>/8-plan.md`
 
@@ -499,15 +501,14 @@ asks, so the branch remains available for iteration. The final report tells the 
 
 ## 4. Agent roster
 
-13 specialist agents, organized by phase:
+12 specialist agents, organized by phase:
 
 | Phase           | Agents                                                                    |
 |-----------------|---------------------------------------------------------------------------|
 | QUESTION        | `questioner`                                                              |
 | RESEARCH        | `file-finder`, `researcher` (parallel)                                    |
 | DESIGN          | `design-author`                                                           |
-| STRUCTURE       | `structure-planner`                                                       |
-| PLAN            | `planner`                                                                 |
+| STRUCTURE, PLAN | `structure-planner`                                                       |
 | IMPLEMENT       | `test-architect`, `implementer`                                           |
 | CODE REVIEW     | `code-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` (parallel) |
 | SECURITY REVIEW | `security-reviewer`                                                       |
@@ -526,7 +527,7 @@ holds both powers, and neither role can complete a review cycle alone.
 
 | Role | Agents | Tools | `permissionMode` | Power |
 |------|--------|-------|------------------|-------|
-| Producer | `questioner`, `design-author`, `structure-planner`, `planner`, `test-architect`, `implementer` | include `Write`/`Edit` | `acceptEdits` | Changes the tree. Casts no verdict. |
+| Producer | `questioner`, `design-author`, `structure-planner`, `test-architect`, `implementer` | include `Write`/`Edit` | `acceptEdits` | Changes the tree. Casts no verdict. |
 | Reviewer | `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` | no `Write`/`Edit` | `plan` | Blocks the line. Changes nothing. |
 
 **The `tools:` grant is the enforcement, not prompt text.** A reviewer that could
@@ -588,8 +589,8 @@ report return. Line 1, column 1, and every saved return mean the agent's own
 text, after the dispatcher removes any host frame, indent, or trailer lines,
 and a return it cannot separate counts as a `FAILED` failure line.
 
-The four artifact writers (`questioner`, `design-author`, `structure-planner`,
-`planner`) give a status return. Line 1 is `DONE`, `BLOCKED: <reason>`, or
+The three artifact writers (`questioner`, `design-author`,
+`structure-planner`) give a status return. Line 1 is `DONE`, `BLOCKED: <reason>`, or
 `FAILED: <reason>`, case-sensitive, at column 1. `design-author` writes
 `DONE: <n> assumptions recorded`. After line 1 comes one absolute path per
 file written, and nothing else. A note that a writer's rules ask it to report
@@ -624,7 +625,7 @@ the failed agent once, and the review loop retries that reviewer once inside a
 fresh tree check. A second failure halts.
 
 `BLOCKED` means that a retry with the same payload cannot pass. It takes the
-agent's stated route, such as the `planner` move back to STRUCTURE, or it
+agent's stated route, such as the `test-architect` move back to PLAN, or it
 halts. It never retries. `FAILED` and an unrecognized line 1 retry once, then
 halt. Each writer makes every stop check it can before its first write, so a
 first-dispatch `BLOCKED` usually leaves no file behind.
@@ -655,7 +656,7 @@ an agent runs there on a demonstrated, concrete need `opus` cannot
 meet. The tier is empty.
 
 - **`opus` (complex work, the default):** `researcher`, `design-author`,
-  `structure-planner`, `planner`, `test-architect`, `implementer`,
+  `structure-planner`, `test-architect`, `implementer`,
   `code-reviewer`, and `security-reviewer`. Security review is complex
   work, so it runs on this rung like the rest. What is particular to
   `security-reviewer` is that it must never be overridden **up** to
@@ -761,10 +762,10 @@ Notes:
       adversarial design-review verdict), `test-architect` (the
       mechanical test gate), and `implementer` (acceptance tests plus
       the CODE REVIEW and SECURITY REVIEW verify). It does not reach `researcher`,
-      `structure-planner`, `planner`, or `code-reviewer`, because
+      `structure-planner`, or `code-reviewer`, because
       nothing evaluates the artifact or verdict they produce.
       `code-reviewer`'s one live route is the coupled reviewer set
-      below. For `researcher`, `structure-planner`, and `planner` the
+      below. For `researcher` and `structure-planner` the
       routes are two, and both are future work: the deferred work on
       #139 produces per-agent evidence and the bar's terms are extended
       to admit it (a future decision, recorded then), or a per-task
@@ -1109,7 +1110,7 @@ An overage requires a reviewed reason stating its exact line count.
    Question, Research, Design, Structure, Plan, and Implement procedures live in playbooks with shared templates and dependency, testing, and diagnosis references.
    Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
-   Twelve agent bodies read execution rules. File-finder retains its single-step contract.
+   Eleven agent bodies read execution rules. File-finder retains its single-step contract.
    Resources use no skill frontmatter or discovery metadata. Keep the 13 commands registered.
    Guarded commands such as `team-update` carry skill frontmatter and
    `agents/openai.yaml`, register as commands, and set `disable-model-invocation:

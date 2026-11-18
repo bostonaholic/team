@@ -47,4 +47,4 @@ Write `8-plan.md` as:
 2. Reuse functions, utilities, and patterns from `5-research.md`.
 3. No implementation code; state what and where.
 4. Add no tests beyond the structure; `7-structure.md` is the scope fence.
-5. Answer the [authoring gate](../references/testing.md#authoring-gate) for each structure test. Carry an entry marked "task-required, fails <class>" through unchanged. Return any other test that fails the gate as the structure-defect line in the planner's `## Return`, and write no `8-plan.md`. The run returns to STRUCTURE.
+5. Answer the [authoring gate](../references/testing.md#authoring-gate) for each structure test. Carry an entry marked "task-required, fails <class>" through unchanged. When any other test fails the gate, first revise `7-structure.md` under the [structure playbook](structure.md), with the scope of a STRUCTURE re-dispatch, taking each failed gate answer as the stated reason. Then write `8-plan.md` from the revision.

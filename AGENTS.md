@@ -41,7 +41,7 @@ This project produces a **distributed plugin**. Two contexts exist:
 
 ## Design philosophy
 
-Agents are **decoupled microservices**. Each consumes a predecessor artifact on disk, does work, and writes its output artifact to `docs/plans/` (with YAML frontmatter on every artifact). The orchestrator walks a linear phase table in `skills/team/SKILL.md`. `skills/team/registry.json` lists the 13 agents as a phase-tagged inventory.
+Agents are **decoupled microservices**. Each consumes a predecessor artifact on disk, does work, and writes its output artifact to `docs/plans/` (with YAML frontmatter on every artifact). The orchestrator walks a linear phase table in `skills/team/SKILL.md`. `skills/team/registry.json` lists the 12 agents as a phase-tagged inventory.
 
 ## Pipeline
 
@@ -61,15 +61,15 @@ Team runs **QRSPI** (Worktree-Question-Research-Design-Structure-Plan-Implement-
 | `/team-question <desc>` | Decompose intent into a task record and neutral research questions |
 | `/team-research` | Isolated codebase research (runs Question if missing) |
 | `/team-design` | Draft the design. An adversarial design review gates advancement |
-| `/team-structure` | Break design into vertical slices (autonomous) |
-| `/team-plan` | Tactical plan from the structure |
+| `/team-structure` | Break design into vertical slices, then write the tactical plan (autonomous) |
+| `/team-plan` | Tactical plan from the existing structure |
 | `/team-implement` | Test-first + slice execution, on stated intent or as the IMPLEMENT phase — it commits each slice |
 | `/team-code-review` | 4-reviewer adversarial review with a Blocking/Major fix loop, on stated intent or as the CODE REVIEW phase — it commits fixes |
 | `/team-security-review` | Security review with a CRITICAL/HIGH fix loop, on stated intent or as the SECURITY REVIEW phase — it commits fixes |
 | `/team-pr` | Commit + open PR, on stated intent or as the PR phase — it pushes and moves the ticket |
 | `/team-update` | Update Team to the latest release in every harness that already has it from a release, on explicit request only — it installs Team nowhere new, retires no copy, and leaves dev installs alone, after one confirmation |
 
-## Agents (13)
+## Agents (12)
 
 See `agents/*.md`. Each agent file uses only Claude Code's [supported frontmatter fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields) (no custom fields). Model tiering: haiku (mechanical), sonnet (bounded judgment), and opus by default for complex work (research, planning, test authoring, implementation, code review, security review). `fable` is the tier above opus, for an agent with a demonstrated, concrete need opus cannot meet; the tier is empty. Never override `security-reviewer` up to fable — Fable's cybersecurity classifiers refuse security-review content in non-interactive subagent contexts — and never down off opus either. See [docs/architecture.md](docs/architecture.md#model-tiering) for everything else: the fable prerequisites, the override escape hatch, and the re-pin bar. Effort tracks the work on its own ladder: `low` (mechanical), `medium`/`high` (judgment — the band spans both), `xhigh` (strategic artifact authors: `design-author` and `structure-planner`).
 
@@ -81,7 +81,7 @@ Four agents (`researcher`, `implementer`, `code-reviewer`, `security-reviewer`) 
 
 ## Skills
 
-See `skills/*/SKILL.md`. Team ships only its pipeline: the `/team` orchestrator, the ten phase commands (`/team-worktree` through `/team-pr`), the `/team-fix` alias for `/team fix`, and the explicit-only `/team-update` release update. Entry point skills double as slash commands. Shared principles live in six ordinary documents under `skills/team/principles/`. The reviewer briefs (code, security, documentation, UX, design) and the finding format live under `skills/team/references/`; the reviewer agents and the design-review gate read them by path. Execution, decisions, external-data, and bug-fix rules have scoped resource owners. Root cause, Question, Research, Design, Structure, Plan, Implement, and bug-fix procedures live in playbooks with shared templates and dependency, testing, and diagnosis references. Consumers read applicable installed paths before work. Twelve agents read execution rules from their bodies; file-finder keeps its single-step contract. Every skill registers as a slash command. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
+See `skills/*/SKILL.md`. Team ships only its pipeline: the `/team` orchestrator, the ten phase commands (`/team-worktree` through `/team-pr`), the `/team-fix` alias for `/team fix`, and the explicit-only `/team-update` release update. Entry point skills double as slash commands. Shared principles live in six ordinary documents under `skills/team/principles/`. The reviewer briefs (code, security, documentation, UX, design) and the finding format live under `skills/team/references/`; the reviewer agents and the design-review gate read them by path. Execution, decisions, external-data, and bug-fix rules have scoped resource owners. Root cause, Question, Research, Design, Structure, Plan, Implement, and bug-fix procedures live in playbooks with shared templates and dependency, testing, and diagnosis references. Consumers read applicable installed paths before work. Eleven agents read execution rules from their bodies; file-finder keeps its single-step contract. Every skill registers as a slash command. For design guidelines on skill extraction and load limits, see [`docs/architecture.md`](docs/architecture.md#design-guidelines).
 
 ## Hooks
 
