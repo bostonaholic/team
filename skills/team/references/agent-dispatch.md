@@ -69,10 +69,6 @@ A conflict between convention and rule is a report finding, not a refutation.
 
 Skip skepticism only with no hard-gate findings or no `Agent`; then report findings unchanged. Never soften a finding over unavailable or inconclusive verification.
 
-### `code-reviewer` — vendor couriers (cross-model pass)
-
-Each vendor `run` uses one `general-purpose` courier named `codex-review` or `agy-review` (never `Explore`, which refuses the runner), per [cross-model review](cross-model-review.md), which owns the pinned argv, env allowlist, post-pass tree check, and inline fallback. Couriers write and spawn nothing, count toward the 4-helper cap, neither receive nor Read the writing standards, and relay vendor stdout byte-for-byte.
-
 ### `implementer` — read-only scouts
 
 Spawn a built-in `Explore` or `team:file-finder` scout when a slice touches a subsystem the plan does not explain and direct mapping would mean reading more than ~3 files you will not edit.

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Cross-model reviews start no courier subagents.** The design gate and code review start each ready vendor CLI as a job in one foreground shell call, then read each job's output file. No courier subagent starts to run or relay a vendor CLI.
+
 ## [0.192.0] - 2026-11-17
 
 ### Fixed

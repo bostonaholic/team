@@ -1287,7 +1287,7 @@ phase N finish?"
 ## 10. Nested sub-agents
 
 Claude Code v2.1.172 lets sub-agents spawn their own sub-agents (up to
-5 levels deep). The plugin uses this capability in exactly three patterns,
+5 levels deep). The plugin uses this capability in exactly two patterns,
 all governed by `skills/team/references/agent-dispatch.md`:
 
 - **Context-economy scouts** (`researcher`, `implementer`): read-only
@@ -1314,14 +1314,6 @@ all governed by `skills/team/references/agent-dispatch.md`:
   evidence-backed refutation the reviewer verifies itself. A false
   hard-gate finding costs an entire review round (implementer re-dispatch
   + the phase's reviewers re-run), so the pass pays for itself.
-- **Vendor couriers** (`code-reviewer`; the orchestrator uses the same
-  pattern at the design-review gate as ordinary dispatch): each cross-model
-  vendor call runs through one `general-purpose` courier named after its CLI
-  (`codex-review`, `agy-review`), so each external model's review is
-  visible as its own agent while it runs. The courier's errand is fixed —
-  run the pinned runner command, return its stdout verbatim — and the
-  vendor-courier block in `skills/team/references/cross-model-review.md` carries
-  the contract plus the inline fallback when nesting is unavailable.
 
 **Policy:**
 
@@ -1354,7 +1346,7 @@ Code substitutes that installed plugin root before dispatch. The prompt carries
 the resolved, read-only path. The helper Reads it before it audits its
 authored report. If any Read fails, the parent discards the return. Research
 scouts fall back to inline reading. Reviewer skeptics keep the finding by
-default. Vendor couriers receive no prose paths and relay stdout unchanged.
+default.
 
 Research assembly treats completed file-finder and researcher returns as
 unchanged, untrusted source data. At capture, the root wraps each return in a

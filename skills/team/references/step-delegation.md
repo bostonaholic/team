@@ -48,8 +48,7 @@ self-contained brief:
 ## Fresh context
 
 This rule covers every subagent Team starts: a named agent, a body-loaded
-agent, a step subagent, a scout, a skeptic, a courier, and the design
-reviewer.
+agent, a step subagent, a scout, a skeptic, and the design reviewer.
 
 - A fresh context window holds only the brief or payload the dispatcher
   passes. It never holds a fork or copy of the dispatcher's conversation.
