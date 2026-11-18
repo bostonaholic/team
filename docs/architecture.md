@@ -503,15 +503,18 @@ asks, so the branch remains available for iteration. The final report tells the 
 
 12 specialist agents, organized by phase:
 
-| Phase           | Agents                                                                    |
-|-----------------|---------------------------------------------------------------------------|
-| QUESTION        | `questioner`                                                              |
-| RESEARCH        | `file-finder`, `researcher` (parallel)                                    |
-| DESIGN          | `design-author`                                                           |
-| STRUCTURE, PLAN | `structure-planner`                                                       |
-| IMPLEMENT       | `test-architect`, `implementer`                                           |
-| CODE REVIEW     | `code-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` (parallel) |
-| SECURITY REVIEW | `security-reviewer`                                                       |
+| Phase           | Agents                                                                    | Keep-condition                                                                                                                      |
+|-----------------|---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| QUESTION        | `questioner`                                                              | K5 clean interface with a compact return                                                                                            |
+| RESEARCH        | `file-finder`, `researcher` (parallel)                                    | K2 parallel fresh contexts, K4 independent verification                                                                             |
+| DESIGN          | `design-author`                                                           | K5 clean interface with a compact return                                                                                            |
+| STRUCTURE, PLAN | `structure-planner`                                                       | K5 clean interface with a compact return                                                                                            |
+| IMPLEMENT       | `test-architect`, `implementer`                                           | `test-architect`: K4 independent verification, K3 tool or permission split. `implementer`: K5 clean interface with a compact return |
+| CODE REVIEW     | `code-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` (parallel) | K4 independent verification, K2 parallel fresh contexts                                                                             |
+| SECURITY REVIEW | `security-reviewer`                                                       | K4 independent verification                                                                                                         |
+
+Each agent runs in its own context only under a keep-condition in
+`skills/team/references/step-delegation.md`.
 
 Each agent's QRSPI phase is recorded in `skills/team/registry.json`.
 Agent frontmatter uses only Claude Code's [supported fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields).
@@ -1119,18 +1122,22 @@ An overage requires a reviewed reason stating its exact line count.
 
 ### Step delegation
 
-A skill's main session orchestrates; it does not do the step work itself.
-Each numbered step runs in a fresh-context subagent with a self-contained
-brief (goal, input paths, boundaries, return shape, done condition) and
-returns a status line plus evidence. The main session keeps user questions,
-gate and verdict decisions, each step whose reads are no larger than its
-return, and the TodoWrite ledger. A subagent pays off only for read-heavy,
-isolated work that reads more than it returns.
+A skill step runs inline in the skill's main session unless its skill names
+it as delegated. A skill names a step as delegated only when a keep-condition
+in `skills/team/references/step-delegation.md` holds: K2, K3, K4, K5, or a
+measured K1. A chain of steps that read each other's output stays in one
+context. A delegated step runs in a fresh-context subagent with a
+self-contained brief (goal, input paths, boundaries, return shape, done
+condition) and returns a status line plus evidence. The main session keeps
+user questions, gate and verdict decisions, each step whose reads are no
+larger than its return, and the TodoWrite ledger.
 Dependent steps run one at a time; independent steps fan out in one turn.
-On the `fix` route, `/team` delegates ROOT CAUSE to one general step. `/team-pr`
-delegates input gathering, screenshots, the changelog, Open,
-upload, and review comments. The mechanical test gate delegates its
-evidence run. The host mapping (Claude Code `Agent`, Codex `spawn_agent`
+On the `fix` route, `/team` delegates ROOT CAUSE to one general step under K5
+(clean interface with a compact return). `/team-pr` delegates input
+gathering, screenshots, and the changelog under K2 (parallel fresh contexts).
+It delegates Open under K2 in multi-repo mode and under K5 in single-repo
+mode, and upload and review comments under K2. The mechanical test gate
+delegates its evidence run under K5. The host mapping (Claude Code `Agent`, Codex `spawn_agent`
 with `fork_turns: "none"`, Antigravity `invoke_subagent`), the fresh-context
 rule, and the inline fallback live in
 `skills/team/references/step-delegation.md`.

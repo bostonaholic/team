@@ -2,7 +2,7 @@
 
 Every specialist ships as a portable definition at `agents/<name>.md`: YAML
 frontmatter carries host metadata; the body is a complete role prompt. A skill
-step with no named agent runs in a fresh general subagent per
+step that its skill names as delegated runs in a fresh general subagent per
 [step delegation](step-delegation.md).
 
 Before every named or body-loaded dispatch, resolve the installed plugin root

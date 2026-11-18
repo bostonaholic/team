@@ -4,10 +4,38 @@ A skill's main session is its orchestrator. It runs each delegated step in a
 fresh-context subagent and keeps only routing, decisions, and the ledger; the
 subagent does the step's reads and edits and returns a short report and paths.
 
+## Keep-conditions
+
+A step, agent, or helper runs in its own context only when one of these
+conditions holds:
+
+- K1, measured context bloat: a measure shows that the work degrades the
+  caller's context. An unmeasured claim reads "asserted" and cannot keep a
+  unit alone.
+- K2, parallel fresh contexts: the work runs in parallel, in fresh contexts
+  that the caller discards after.
+- K3, tool or permission split: the unit needs a different tool grant, or one
+  agent cannot pick among its tools or holds conflicting rules.
+- K4, independent verification: the unit judges work that its caller or a
+  sibling produced, or it must not see the caller's framing.
+- K5, clean interface with a compact return: the unit runs on its brief alone
+  and reads much more than it returns, and its caller has later work that
+  those reads would crowd.
+
+Two fold operations remove a separate context:
+
+- Merge: join two subagents when one reads the other's output and no gate,
+  isolation rule, or independence rule sits between them.
+- Fold into the caller: move a subagent's work into the session that
+  dispatches it when no condition holds.
+
 ## What the orchestrator keeps
 
-A subagent pays off for read-heavy, isolated work, where it reads more than
-it returns and runs on its brief alone. Keep a step inline when any of these
+A step runs inline unless its skill names it as delegated. A skill names a
+step as delegated only when K2, K3, K4, K5, or a measured K1 holds. A chain of
+steps that read each other's output stays in one context.
+
+A step stays inline, even when a condition seems to hold, when any of these
 holds:
 
 - It asks the user; subagents cannot.
@@ -17,8 +45,8 @@ holds:
   `mkdir`, or a ticket move.
 - It owns a TodoWrite ledger item or writes a root-owned artifact envelope.
 
-Delegate every other numbered step. A step dispatched to a named Team agent
-follows [host dispatch](15-host-dispatch.md) instead.
+A step dispatched to a named Team agent follows
+[host dispatch](15-host-dispatch.md) instead.
 
 ## Order
 
