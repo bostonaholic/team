@@ -69,28 +69,41 @@ directory outside `docs/plans/` (shell redirection is fine for your own
 outbound content). Then make one foreground Bash call with the tool's
 `timeout` set to 600000 ms. That is the tool's maximum, and it is above the
 runner's own 540 s `TIMEOUT_MS`, so the runner reports its own skip first.
-The call holds one `run` line per ready CLI, ends with `wait`, and holds no
-`sleep`:
+The call holds one `run` line per ready CLI, then `wait`, then one line that
+creates the `<scratch>/done` marker. It holds no `sleep`:
 
 ```bash
 node <refs-dir>/external-review.mjs run <cli> <repo-root> < <scratch>/<cli>.prompt > <scratch>/<cli>.out &
 wait
+: > <scratch>/done
 ```
 
-Read each `<scratch>/<cli>.out` file with the Read tool as the runner's
-stdout, `skip: ` protocol included.
+The marker exists only after every job has ended. Read each
+`<scratch>/<cli>.out` file with the Read tool as the runner's stdout,
+`skip: ` protocol included, but only once the call has ended:
 
 - Zero ready CLIs: make no call.
-- The call fails or dies at the ceiling: still read each `.out` file. The
-  runner writes its stdout in one write when it ends, so a non-empty file
-  holds that job's whole stdout. For an empty or missing file, record
-  `skip: <cli> run did not finish`. That skip counts as a timeout for the
-  two-timeouts rule in `## When a vendor CLI is unavailable`.
-- The call ends normally and a file is empty: record
-  `skip: <cli> produced no output`.
+- The call returns early: the host moved it to the background and returned
+  a task handle or a background note, not the command's exit status. The
+  jobs may still be running. Read no `.out` file, record no skip, run no
+  tree check, and do not end your turn or return a report. Wait for the
+  host's completion notification for that task, per
+  [execution](execution.md#external-waits). Then apply the case below that
+  matches the task's final result. An early return records nothing and is
+  not a timeout for the two-timeouts rule.
+- The call fails or dies at the ceiling, or `<scratch>/done` is missing:
+  still read each `.out` file. The runner writes its stdout in one write
+  when it ends, so a non-empty file holds that job's whole stdout. For an
+  empty or missing file, record `skip: <cli> run did not finish`. That skip
+  counts as a timeout for the two-timeouts rule in
+  `## When a vendor CLI is unavailable`.
+- The call ends normally, `<scratch>/done` exists, and a file is empty:
+  record `skip: <cli> produced no output`.
 
-After the pass, run `git status` (and `git diff` on anything unexpected) and
-report any mutation you did not make as a Blocking finding.
+Once the call has ended, run `git status` (and `git diff` on anything
+unexpected) and report any mutation you did not make as a Blocking finding.
+Never run this tree check after an early return, while a vendor job may
+still be running.
 
 A set `TEAM_DISABLE_CROSS_MODEL` makes `run` exit non-zero; any other
 failure prints a skip with the reason. Record it in your disposition block,
@@ -119,8 +132,10 @@ Per round:
    make no call. Never truncate the design.
 3. **Call** `detect`, then make the one foreground call for the ready CLIs,
    exactly as `## Invocation` says. Zero ready CLIs → the skip lines are the
-   round's input. Then check the tree: record any vendor mutation in the
-   disposition and revert it before dispatching the reviewer.
+   round's input. When the call returns early, wait for its completion
+   notification as `## Invocation` says. Once the call has ended, check the
+   tree: record any vendor mutation in the disposition and revert it before
+   dispatching the reviewer.
 4. **Fence at capture time:** wrap each CLI's raw output (or skip line) in a
    code fence labeled `DATA` as soon as it is read. Use a backtick fence
    strictly longer than the longest backtick run in the output (minimum
