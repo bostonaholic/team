@@ -364,7 +364,7 @@ was resolved by the playbook refactor, plus a cross-cutting recency caveat:
    superset of this option's value with less risk.
 
 3. **Rejected: per-host maintained adapters (parallel hand-maintained trees).**
-   *Why rejected:* it costs 3× the maintenance across 13 agents, every skill, and 3
+   *Why rejected:* it costs 3× the maintenance across 12 agents, every skill, and 3
    hooks, one tree per shipped host — Claude Code, Codex CLI, and Antigravity
    CLI. It also guarantees drift, because someone must apply a fix to an agent
    body three times by hand. It throws away the fact that the bodies are *already
