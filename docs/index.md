@@ -31,7 +31,7 @@ To update Team later in every harness that has it, run `/team-update` (`team:tea
 
 ## What is Team?
 
-Team orchestrates 13 specialized agents. They range from isolated researchers to adversarial
+Team orchestrates 12 specialized agents. They range from isolated researchers to adversarial
 reviewers. Together they drive a feature through a 10-phase pipeline (QRSPI) and deliver a
 verified pull request.
 
@@ -54,7 +54,7 @@ WORKTREE → QUESTION → RESEARCH → DESIGN → STRUCTURE → PLAN → IMPLEME
 | **Research** *(isolated)* | Parallel agents (file-finder + researcher) consume only `2-questions.md`. They never see the task. This isolation prevents opinion bias. |
 | **Design** *(design review)* | The design author drafts an alignment doc. It resolves its own open questions as recorded assumptions. An adversarial design review gates advancement. |
 | **Structure** | Break the design into vertical slices with verification checkpoints. It advances to Plan with no gate. |
-| **Plan** | The planner derives a tactical implementation plan from the structure. The implementer reads it. No gate applies. |
+| **Plan** | The structure planner derives a tactical implementation plan from the structure. The implementer reads it. No gate applies. |
 | **Implement** | Test-first → slice execution. |
 | **Code review** | 4 parallel reviewers + typed fix loop, one `review-<n>.md` per round. |
 | **Security review** | The security reviewer alone + the same fix loop, one `security-review-<n>.md` per round. A security fix sends the run back through Code review. |

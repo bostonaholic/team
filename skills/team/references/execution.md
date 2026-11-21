@@ -12,10 +12,11 @@ Restructure excess output by removing whole named units. Never truncate silently
 
 ## External waits
 
-Background CI, reviewer, vendor CLI, and long-job waits in one call ending with the awaited task.
+Background CI, reviewer, and long-job waits in one call ending with the awaited task.
 Use `run_in_background: true` when supported, with `sleep <interval>; <poll command>` inside that call, one call per bounded cycle, and rely on harness completion notifications. Never poll a background task with `sleep 120; wc -c <output-file>` loops.
 When background execution is unavailable, state the fallback and use foreground chunks below the harness ceiling.
 Wait inline only below roughly one minute.
+The one foreground exception is the cross-model vendor run, which waits as [cross-model review](cross-model-review.md#invocation) says. When the host moves that call to the background, wait for its completion notification as this section says.
 Claude Code kills foreground Bash at 600 seconds. `timeout 1800` still dies at that ceiling with exit 143.
 Do not evade it with `sleep 570`, `sleep 590`, or `sleep 600`.
 

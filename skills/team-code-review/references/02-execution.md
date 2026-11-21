@@ -147,7 +147,7 @@ SECURITY REVIEW too. Before step 1, read the record schema and record states
        guard. A dirty path retries the dispatch once naming each path, then
        halts loudly.
    - Return to step 2 for a fresh round.
-   - **Never** ask the user which Blocking or Major items to address; a
+   - Never ask the user which Blocking or Major items to address; a
      prompt listing a blocking or major finding is a defect. The loop has no
      count cap and ends only when no Blocking or Major finding remains; the
      operator is the outer bound

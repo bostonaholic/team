@@ -16,7 +16,7 @@ Schema contract for durable pipeline state under `docs/plans/<id>/`. Phase behav
 | Research | `5-research.md` | researcher | yes |
 | Design | `6-design.md` | design-author | yes |
 | Structure | `7-structure.md` | structure-planner | yes |
-| Plan | `8-plan.md` | planner | yes |
+| Plan | `8-plan.md` | structure-planner | yes |
 
 ## Frontmatter schema
 

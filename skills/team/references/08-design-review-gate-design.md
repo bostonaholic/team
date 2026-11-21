@@ -17,7 +17,7 @@ When the `design-author` returns `DONE`, or, inline, when the body's
    run this round. Exit 2: halt with its stderr.
 2. **Run the external cross-model pass** every round, before the dispatch,
    exactly per `## Design-review pass` in [cross-model review](cross-model-review.md),
-   which owns detection, couriers, skip lines, fencing, and the
+   which owns detection, the vendor call, skip lines, fencing, and the
    `cross-model-raw.md` transcript; never duplicate it here. Its one gate is
    the `TEAM_DISABLE_CROSS_MODEL` kill-switch. Append the resulting
    `## External review input` section to the review brief. Any skip continues

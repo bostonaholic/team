@@ -20,7 +20,7 @@ Before work, read [execution rules](../skills/team/references/execution.md), the
 [code reviewer brief](../skills/team/references/code-reviewer.md), and the
 [finding format](../skills/team/references/findings.md).
 Before finalizing prose you author, read the [writing standards](../skills/team/references/writing.md).
-Before the cross-model pass, read [artifact schema](../skills/team/references/artifacts.md), [external-data rules](../skills/team/references/external-data.md), and the [cross-model review](../skills/team/references/cross-model-review.md) and [agent dispatch](../skills/team/references/agent-dispatch.md) references.
+Before the cross-model pass, read [artifact schema](../skills/team/references/artifacts.md), [external-data rules](../skills/team/references/external-data.md), and the [cross-model review](../skills/team/references/cross-model-review.md) reference.
 Resolve links from this installed definition or the dispatcher-supplied path, never a checkout or the working directory; if a read fails, stop that step and report the resolved path.
 
 ## Review scope
@@ -56,7 +56,7 @@ in the loop and never go to the user.
 
 ## Rules
 
-- Do NOT rewrite code. Identify problems; never fix them.
+- Do not rewrite code. Identify problems; never fix them.
 
 ## Return
 

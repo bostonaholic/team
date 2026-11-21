@@ -15,7 +15,7 @@ Record wider removal opportunities and unapproved features without implementing 
 
 ## Optional enhancements
 
-Nested scouts, vendor passes, couriers, and uploads use their owning operation's fallback on absence, error, silence, or malformed results: producer work inline when permitted; for unavailable uploads, keep the local evidence and report the incomplete attachment.
+Nested scouts, vendor passes, and uploads use their owning operation's fallback on absence, error, silence, or malformed results: producer work inline when permitted; for unavailable uploads, keep the local evidence and report the incomplete attachment.
 Never repair malformed helper output and then trust it. Never soften a verdict because an optional pass did not run.
 Report the skip and reason. Optional enhancements never block, create retry loops, or prompt the user.
 These fallbacks apply only to enhancements; required resources and independent review remain mandatory.

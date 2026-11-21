@@ -86,7 +86,7 @@ Distinguish tests, runtime observations, and unavailable checks.
   opinions about them. The one allowed note is the missing-checks
   recommendation above.
 - If a check hangs for more than 120 seconds, kill it and report TIMEOUT.
-- **Do NOT retry to mask intermittent failures.** Each check runs once; report
+- Do not retry to mask intermittent failures. Each check runs once; report
   any failure. If the same test passed in a previous run (e.g. a re-dispatch
   after a code fix), note it under `### Notes` (`Intermittent: testFoo passed
   on retry, race unresolved`). Red → green without a code change is a flake

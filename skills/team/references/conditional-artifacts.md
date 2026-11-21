@@ -31,7 +31,7 @@ phase: repos
 - ...
 ```
 
-Names are unique short slugs such as `frontend`, `api`, or `shared-types`, used as `[repo: api]`. Paths are absolute git working trees. The invocation repo is home and alone owns canonical `docs/plans/<id>/`; secondary worktrees do not duplicate artifacts. The questioner/design-author lists repos but MUST NOT write `## Worktrees`.
+Names are unique short slugs such as `frontend`, `api`, or `shared-types`, used as `[repo: api]`. Paths are absolute git working trees. The invocation repo is home and alone owns canonical `docs/plans/<id>/`; secondary worktrees do not duplicate artifacts. The questioner/design-author lists repos but must not write `## Worktrees`.
 
 ## `3-prd.md`
 

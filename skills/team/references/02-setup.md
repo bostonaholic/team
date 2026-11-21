@@ -75,6 +75,6 @@
    ([durable state rules](../principles/durable-state.md)).
 
 **Research-isolation invariant.** You hold the description in your own
-context. Downstream of QUESTION it must NEVER appear in any artifact or agent
+context. Downstream of QUESTION it must never appear in any artifact or agent
 payload outside `0-root-cause.md`, `1-task.md`, and the questioner's own
 outputs.

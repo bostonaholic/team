@@ -48,7 +48,7 @@ and record the assumption in `1-task.md`.
 
 Write into `docs/plans/<id>/`: always `1-task.md` and `2-questions.md`;
 `3-prd.md` only when the PRD criteria apply; `4-repos.md` only when the topic
-spans more than one repository. Each file MUST open with YAML frontmatter per
+spans more than one repository. Each file must open with YAML frontmatter per
 the playbook templates. `topic` is identical in `1-task.md` and
 `2-questions.md`: `<id>` minus the `<TICKET>-` or `<YYYY-MM-DD>-` prefix.
 
