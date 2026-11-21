@@ -9,7 +9,7 @@ The questioner decomposes intent into `1-task.md`, neutral codebase questions in
 
 `topic` is identical across artifacts: the `topic=` line `scripts/plan-id.sh --parse <id>` prints. The questioner chooses it once; downstream phases copy it verbatim. `ticketId` appears only in `1-task.md`.
 
-Read [question templates](../references/question-templates.md) before writing the artifacts. Write 8–15 questions answerable from code. `Codebase context` may name files, modules, and vocabulary but MUST NOT state the goal or desired outcome.
+Read [question templates](../references/question-templates.md) before writing the artifacts. Write 8–15 questions answerable from code. `Codebase context` may name files, modules, and vocabulary but must not state the goal or desired outcome.
 
 ## Conditional PRD
 

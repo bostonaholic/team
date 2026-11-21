@@ -71,7 +71,7 @@ Then run the full suite and resolve every failure type from the round. Commit th
 - Write only minimal code exercised by the current slice's tests. Do not preempt later slices or refactor before green. Stop if code has no test.
 - Every step-level test follows the [testing rules](../references/testing.md). Observe every step-level test fail before changing production code; if it covers existing behavior, mutation-check that behavior instead. A test that stays green is invalid. Removing a base-branch test whose covered behavior remains needs the [removal evidence](../references/testing.md#removal-evidence) fields in the commit body.
 - Apply [boil the ocean rules](../principles/boil-the-ocean.md) and [focused work rules](../principles/focused-work.md): finish the slice completely; remove what it replaces before adding the replacement; add no guard its tests do not exercise.
-- Apply [human control rules](../principles/human-control.md): the plan authorizes exactly its named changes. Do NOT change acceptance tests or invent files/directories absent from the plan. Record concerns but satisfy tests as written.
+- Apply [human control rules](../principles/human-control.md): the plan authorizes exactly its named changes. Do not change acceptance tests or invent files/directories absent from the plan. Record concerns but satisfy tests as written.
 
 ### Blockers
 

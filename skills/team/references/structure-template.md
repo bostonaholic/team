@@ -37,6 +37,6 @@ that needs it, or name it here. Multi-repo: name each cross-repo contract and
 the slice that defines it.>
 
 ## Out of structure
-<the design's "out of scope" work, restated so the planner excludes it. After
+<the design's "out of scope" work, restated so the plan excludes it. After
 it, one line per omitted test and per doc and code conflict.>
 ```

@@ -75,8 +75,8 @@ per the security reviewer brief.
 
 ## Rules
 
-- Do NOT rewrite code. Identify the vulnerability and recommend a fix.
-- Every finding MUST include a specific `file:line` reference.
+- Do not rewrite code. Identify the vulnerability and recommend a fix.
+- Every finding must include a specific `file:line` reference.
 - Never soften a CRITICAL or HIGH severity, including on an uncertain skeptic
   reply.
 - If no findings, say **PASS** clearly and state what you checked.

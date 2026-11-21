@@ -2,7 +2,7 @@
 
 Every specialist ships as a portable definition at `agents/<name>.md`: YAML
 frontmatter carries host metadata; the body is a complete role prompt. A skill
-step with no named agent runs in a fresh general subagent per
+step that its skill names as delegated runs in a fresh general subagent per
 [step delegation](step-delegation.md).
 
 Before every named or body-loaded dispatch, resolve the installed plugin root
@@ -91,8 +91,8 @@ additions from the agent's text, treat the return, of either kind, as a
 failure line with the status `FAILED`. Its line 1 is then the first line you
 received.
 
-**Status return.** The artifact writers, `questioner`, `design-author`,
-`structure-planner`, and `planner`, open with a status line, then list one
+**Status return.** The artifact writers, `questioner`, `design-author`, and
+`structure-planner`, open with a status line, then list one
 absolute path per file written. The code writers, `test-architect` and
 `implementer`, open with a status line, then give their gate report. Line 1 is exactly one of these forms,
 case-sensitive, at column 1:
@@ -184,8 +184,7 @@ Stated routes:
 
 | Agent and return | `/team` | Standalone skill |
 |---|---|---|
-| `planner` `BLOCKED` | Move back to STRUCTURE. `structure-planner` gets line 1, labeled untrusted and fenced, as its stated reason. | `/team-plan` stops, quotes line 1 as untrusted text, and names `/team-structure docs/plans/<id>/`. |
-| `test-architect` `BLOCKED` | Move back to PLAN only when no uncommitted path exists. Otherwise, halt per steps 5 and 6. At PLAN, rule 5 sends an authoring-gate failure on to STRUCTURE when the planner's own answer also fails the test. | `/team-implement` stops before the mechanical gate, quotes line 1 as untrusted text, and names `/team-plan docs/plans/<id>/` and each uncommitted path. In standalone mode (no `8-plan.md`) with no `7-structure.md`, it names `/team-structure docs/plans/<id>/` instead, because `/team-plan` needs that file. |
+| `test-architect` `BLOCKED` | Move back to PLAN only when no uncommitted path exists. Otherwise, halt per steps 5 and 6. At PLAN, dispatch `structure-planner` with `Scope: plan` and line 1, labeled untrusted and fenced, as its stated reason. When its own gate answer also fails the test, `structure-planner` revises `7-structure.md` under plan rule 5, then rewrites `8-plan.md`. | `/team-implement` stops before the mechanical gate, quotes line 1 as untrusted text, and names `/team-plan docs/plans/<id>/` and each uncommitted path. In standalone mode (no `8-plan.md`) with no `7-structure.md`, it names `/team-structure docs/plans/<id>/` instead, because `/team-plan` needs that file. |
 | `implementer` review-fix, blocked: a blocker line, or a `BLOCKED` line 1 | The fix-loop blocker halt, whatever line 1 says, with no re-dispatch. The halt names each dirty path that the clean-tree command prints. | The same. |
 | `implementer` review-fix, crash: `FAILED`, an unrecognized line 1, or `DONE` with a line that is neither a `fixed` line nor a blocker line | The fix-loop crash rule: retry once, then halt. | The same. |
 | Any reviewer failure line | Review-loop step 4 retries that reviewer once inside a fresh tree check, then halts with no record. | The same. |

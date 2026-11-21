@@ -15,7 +15,7 @@ Before finalizing prose you author, read the [writing standards](../team/referen
 
 Run the QUESTION phase only, then stop. The phase writes, in `docs/plans/<id>/`:
 
-- `1-task.md` — the human's full intent. **Never** read by `researcher` or
+- `1-task.md` — the human's full intent. Never read by `researcher` or
   `file-finder`.
 - `2-questions.md` — neutral research questions without intent; the only file
   `researcher` and `file-finder` read.

@@ -193,7 +193,7 @@ is consistent: the **skill** is the orchestrator or methodology, while the
 - **[Vision](vision.md)**: the loop-driven end state Team builds toward.
 - **[Ethos](ethos.md)**: the principles behind the pipeline.
 - **[Overview](index.md)**: the landing page and pipeline overview.
-- **`skills/team/registry.json`**: the phase-tagged inventory of the 13
+- **`skills/team/registry.json`**: the phase-tagged inventory of the 12
   specialist agents, in the source tree.
 
 ## Shared principle resources

@@ -133,9 +133,9 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture, the 
 
 ## Components
 
-- **13 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
+- **12 agents** in `agents/`: decoupled workers that read predecessor artifacts from `docs/plans/` and write their outputs there
 - **13 skills** in `skills/`: the `/team` orchestrator, the ten phase commands, the `/team-fix` alias for `/team fix`, and the explicit-only `/team-update`, plus shared principles, playbooks, references, and reviewer briefs under `skills/team/`
-- **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 13 agents
+- **1 registry** at `skills/team/registry.json`: phase-tagged inventory of the 12 agents
 - **State** lives in `docs/plans/<id>/*.md`, where `<id>` is `<TICKET>-<topic>` or `<YYYY-MM-DD>-<topic>`. Each artifact carries YAML frontmatter (`topic`, `date`, `phase`). `6-design.md` also carries `revision`, review verdicts live in `design-review-<n>.md`, per-round code-review records live in `review-<n>.md`, per-round security-review records in `security-review-<n>.md`, and cross-model review dispositions in `cross-model-notes.md`, with raw design-round vendor transcripts in `cross-model-raw.md`. Live in-session coordination uses TodoWrite.
 
 ## References and inspiration

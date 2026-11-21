@@ -47,7 +47,7 @@ seeds and updates a TodoWrite ledger, and runs the gates.
   Re-invoking any `/team-*` command rebuilds the ledger by scanning
   artifacts on entry.
 - **Registry is a phase-tagged inventory.** `skills/team/registry.json`
-  lists the 13 specialist agents and the QRSPI phase each serves. The
+  lists the 12 specialist agents and the QRSPI phase each serves. The
   orchestrator dispatches through the phase table in
   `skills/team/SKILL.md`, not through the registry.
 - **File artifacts survive compaction.** Agents communicate through
@@ -335,13 +335,15 @@ the agent re-drafts with the findings verbatim and increments `revision`.
 
 **Agent:** `structure-planner`
 **Predecessor:** `6-design.md` + passing `design-review-<n>.md`
-**Artifact:** `docs/plans/<id>/7-structure.md`
+**Artifacts:** `docs/plans/<id>/7-structure.md`, then `docs/plans/<id>/8-plan.md`,
+in one `Scope: structure+plan` dispatch
 **Gate:** NONE (autonomous). Once `7-structure.md` exists the pipeline
 advances to PLAN.
 
 ### Phase 6: Plan
 
-**Agent:** `planner`
+**Agent:** `structure-planner` under `Scope: plan`. PLAN dispatches it only
+when `8-plan.md` is absent or a stated route sent the run back.
 **Predecessor:** `7-structure.md`
 **Artifact:** `docs/plans/<id>/8-plan.md`
 
@@ -499,18 +501,20 @@ asks, so the branch remains available for iteration. The final report tells the 
 
 ## 4. Agent roster
 
-13 specialist agents, organized by phase:
+12 specialist agents, organized by phase:
 
-| Phase           | Agents                                                                    |
-|-----------------|---------------------------------------------------------------------------|
-| QUESTION        | `questioner`                                                              |
-| RESEARCH        | `file-finder`, `researcher` (parallel)                                    |
-| DESIGN          | `design-author`                                                           |
-| STRUCTURE       | `structure-planner`                                                       |
-| PLAN            | `planner`                                                                 |
-| IMPLEMENT       | `test-architect`, `implementer`                                           |
-| CODE REVIEW     | `code-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` (parallel) |
-| SECURITY REVIEW | `security-reviewer`                                                       |
+| Phase           | Agents                                                                    | Keep-condition                                                                                                                      |
+|-----------------|---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| QUESTION        | `questioner`                                                              | K5 clean interface with a compact return                                                                                            |
+| RESEARCH        | `file-finder`, `researcher` (parallel)                                    | K2 parallel fresh contexts, K4 independent verification                                                                             |
+| DESIGN          | `design-author`                                                           | K5 clean interface with a compact return                                                                                            |
+| STRUCTURE, PLAN | `structure-planner`                                                       | K5 clean interface with a compact return                                                                                            |
+| IMPLEMENT       | `test-architect`, `implementer`                                           | `test-architect`: K4 independent verification, K3 tool or permission split. `implementer`: K5 clean interface with a compact return |
+| CODE REVIEW     | `code-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` (parallel) | K4 independent verification, K2 parallel fresh contexts                                                                             |
+| SECURITY REVIEW | `security-reviewer`                                                       | K4 independent verification                                                                                                         |
+
+Each agent runs in its own context only under a keep-condition in
+`skills/team/references/step-delegation.md`.
 
 Each agent's QRSPI phase is recorded in `skills/team/registry.json`.
 Agent frontmatter uses only Claude Code's [supported fields](https://code.claude.com/docs/en/agents#supported-frontmatter-fields).
@@ -526,7 +530,7 @@ holds both powers, and neither role can complete a review cycle alone.
 
 | Role | Agents | Tools | `permissionMode` | Power |
 |------|--------|-------|------------------|-------|
-| Producer | `questioner`, `design-author`, `structure-planner`, `planner`, `test-architect`, `implementer` | include `Write`/`Edit` | `acceptEdits` | Changes the tree. Casts no verdict. |
+| Producer | `questioner`, `design-author`, `structure-planner`, `test-architect`, `implementer` | include `Write`/`Edit` | `acceptEdits` | Changes the tree. Casts no verdict. |
 | Reviewer | `code-reviewer`, `security-reviewer`, `technical-writer`, `ux-reviewer`, `verifier` | no `Write`/`Edit` | `plan` | Blocks the line. Changes nothing. |
 
 **The `tools:` grant is the enforcement, not prompt text.** A reviewer that could
@@ -588,8 +592,8 @@ report return. Line 1, column 1, and every saved return mean the agent's own
 text, after the dispatcher removes any host frame, indent, or trailer lines,
 and a return it cannot separate counts as a `FAILED` failure line.
 
-The four artifact writers (`questioner`, `design-author`, `structure-planner`,
-`planner`) give a status return. Line 1 is `DONE`, `BLOCKED: <reason>`, or
+The three artifact writers (`questioner`, `design-author`,
+`structure-planner`) give a status return. Line 1 is `DONE`, `BLOCKED: <reason>`, or
 `FAILED: <reason>`, case-sensitive, at column 1. `design-author` writes
 `DONE: <n> assumptions recorded`. After line 1 comes one absolute path per
 file written, and nothing else. A note that a writer's rules ask it to report
@@ -624,7 +628,7 @@ the failed agent once, and the review loop retries that reviewer once inside a
 fresh tree check. A second failure halts.
 
 `BLOCKED` means that a retry with the same payload cannot pass. It takes the
-agent's stated route, such as the `planner` move back to STRUCTURE, or it
+agent's stated route, such as the `test-architect` move back to PLAN, or it
 halts. It never retries. `FAILED` and an unrecognized line 1 retry once, then
 halt. Each writer makes every stop check it can before its first write, so a
 first-dispatch `BLOCKED` usually leaves no file behind.
@@ -655,7 +659,7 @@ an agent runs there on a demonstrated, concrete need `opus` cannot
 meet. The tier is empty.
 
 - **`opus` (complex work, the default):** `researcher`, `design-author`,
-  `structure-planner`, `planner`, `test-architect`, `implementer`,
+  `structure-planner`, `test-architect`, `implementer`,
   `code-reviewer`, and `security-reviewer`. Security review is complex
   work, so it runs on this rung like the rest. What is particular to
   `security-reviewer` is that it must never be overridden **up** to
@@ -761,10 +765,10 @@ Notes:
       adversarial design-review verdict), `test-architect` (the
       mechanical test gate), and `implementer` (acceptance tests plus
       the CODE REVIEW and SECURITY REVIEW verify). It does not reach `researcher`,
-      `structure-planner`, `planner`, or `code-reviewer`, because
+      `structure-planner`, or `code-reviewer`, because
       nothing evaluates the artifact or verdict they produce.
       `code-reviewer`'s one live route is the coupled reviewer set
-      below. For `researcher`, `structure-planner`, and `planner` the
+      below. For `researcher` and `structure-planner` the
       routes are two, and both are future work: the deferred work on
       #139 produces per-agent evidence and the bar's terms are extended
       to admit it (a future decision, recorded then), or a per-task
@@ -1109,7 +1113,7 @@ An overage requires a reviewed reason stating its exact line count.
    Question, Research, Design, Structure, Plan, and Implement procedures live in playbooks with shared templates and dependency, testing, and diagnosis references.
    Code policy lives in the code-standards reference; prose policy lives in the writing-standards reference.
    Read only applicable resources from the installed skill or agent base. Stop missing reads with the exact path.
-   Twelve agent bodies read execution rules. File-finder retains its single-step contract.
+   Eleven agent bodies read execution rules. File-finder retains its single-step contract.
    Resources use no skill frontmatter or discovery metadata. Keep the 13 commands registered.
    Guarded commands such as `team-update` carry skill frontmatter and
    `agents/openai.yaml`, register as commands, and set `disable-model-invocation:
@@ -1118,18 +1122,22 @@ An overage requires a reviewed reason stating its exact line count.
 
 ### Step delegation
 
-A skill's main session orchestrates; it does not do the step work itself.
-Each numbered step runs in a fresh-context subagent with a self-contained
-brief (goal, input paths, boundaries, return shape, done condition) and
-returns a status line plus evidence. The main session keeps user questions,
-gate and verdict decisions, each step whose reads are no larger than its
-return, and the TodoWrite ledger. A subagent pays off only for read-heavy,
-isolated work that reads more than it returns.
+A skill step runs inline in the skill's main session unless its skill names
+it as delegated. A skill names a step as delegated only when a keep-condition
+in `skills/team/references/step-delegation.md` holds: K2, K3, K4, K5, or a
+measured K1. A chain of steps that read each other's output stays in one
+context. A delegated step runs in a fresh-context subagent with a
+self-contained brief (goal, input paths, boundaries, return shape, done
+condition) and returns a status line plus evidence. The main session keeps
+user questions, gate and verdict decisions, each step whose reads are no
+larger than its return, and the TodoWrite ledger.
 Dependent steps run one at a time; independent steps fan out in one turn.
-On the `fix` route, `/team` delegates ROOT CAUSE to one general step. `/team-pr`
-delegates input gathering, screenshots, the changelog, Open,
-upload, and review comments. The mechanical test gate delegates its
-evidence run. The host mapping (Claude Code `Agent`, Codex `spawn_agent`
+On the `fix` route, `/team` delegates ROOT CAUSE to one general step under K5
+(clean interface with a compact return). `/team-pr` delegates input
+gathering, screenshots, and the changelog under K2 (parallel fresh contexts).
+It delegates Open under K2 in multi-repo mode and under K5 in single-repo
+mode, and upload and review comments under K2. The mechanical test gate
+delegates its evidence run under K5. The host mapping (Claude Code `Agent`, Codex `spawn_agent`
 with `fork_turns: "none"`, Antigravity `invoke_subagent`), the fresh-context
 rule, and the inline fallback live in
 `skills/team/references/step-delegation.md`.
@@ -1287,7 +1295,7 @@ phase N finish?"
 ## 10. Nested sub-agents
 
 Claude Code v2.1.172 lets sub-agents spawn their own sub-agents (up to
-5 levels deep). The plugin uses this capability in exactly three patterns,
+5 levels deep). The plugin uses this capability in exactly two patterns,
 all governed by `skills/team/references/agent-dispatch.md`:
 
 - **Context-economy scouts** (`researcher`, `implementer`): read-only
@@ -1314,14 +1322,6 @@ all governed by `skills/team/references/agent-dispatch.md`:
   evidence-backed refutation the reviewer verifies itself. A false
   hard-gate finding costs an entire review round (implementer re-dispatch
   + the phase's reviewers re-run), so the pass pays for itself.
-- **Vendor couriers** (`code-reviewer`; the orchestrator uses the same
-  pattern at the design-review gate as ordinary dispatch): each cross-model
-  vendor call runs through one `general-purpose` courier named after its CLI
-  (`codex-review`, `agy-review`), so each external model's review is
-  visible as its own agent while it runs. The courier's errand is fixed —
-  run the pinned runner command, return its stdout verbatim — and the
-  vendor-courier block in `skills/team/references/cross-model-review.md` carries
-  the contract plus the inline fallback when nesting is unavailable.
 
 **Policy:**
 
@@ -1354,7 +1354,7 @@ Code substitutes that installed plugin root before dispatch. The prompt carries
 the resolved, read-only path. The helper Reads it before it audits its
 authored report. If any Read fails, the parent discards the return. Research
 scouts fall back to inline reading. Reviewer skeptics keep the finding by
-default. Vendor couriers receive no prose paths and relay stdout unchanged.
+default.
 
 Research assembly treats completed file-finder and researcher returns as
 unchanged, untrusted source data. At capture, the root wraps each return in a

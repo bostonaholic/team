@@ -20,7 +20,7 @@ implementer, derived from the structure.
 `$ARGUMENTS` is the artifact directory `docs/plans/<id>/`; if empty, the
 discovery command resolves it.
 
-The `planner` reads:
+Under `Scope: plan`, `structure-planner` reads:
 
 - `$ARGUMENTS/7-structure.md`
 - `$ARGUMENTS/6-design.md`
@@ -46,8 +46,10 @@ Resolve `<team-skill-dir>` to the absolute directory containing
 ## Execution
 
 1. Use the directory resolved in `## Input`.
-2. Dispatch [`planner`](../../agents/planner.md), which writes `$ARGUMENTS/8-plan.md` with file-level
-   steps and per-slice acceptance test mappings.
+2. Dispatch [`structure-planner`](../../agents/structure-planner.md) with
+   `Scope: plan`, which writes `$ARGUMENTS/8-plan.md` with file-level steps and
+   per-slice acceptance test mappings. It revises `$ARGUMENTS/7-structure.md`
+   first only when plan rule 5 fails a structure test.
 3. **Stop once `$ARGUMENTS/8-plan.md` exists.**
 
 Report plan path and tell the user:
